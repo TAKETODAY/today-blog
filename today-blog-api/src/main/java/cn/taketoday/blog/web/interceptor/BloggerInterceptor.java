@@ -23,6 +23,8 @@ package cn.taketoday.blog.web.interceptor;
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessage;
 import cn.taketoday.http.HttpStatus;
+import cn.taketoday.http.MediaType;
+import cn.taketoday.http.ResponseEntity;
 import cn.taketoday.session.SessionHandlerInterceptor;
 import cn.taketoday.session.SessionManager;
 import cn.taketoday.session.WebSession;
@@ -35,9 +37,9 @@ import cn.taketoday.web.resource.ResourceHttpRequestHandler;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:38
  */
-public class AdminInterceptor extends SessionHandlerInterceptor {
+public class BloggerInterceptor extends SessionHandlerInterceptor {
 
-  public AdminInterceptor(SessionManager sessionManager) {
+  public BloggerInterceptor(SessionManager sessionManager) {
     super(sessionManager);
   }
 
@@ -48,12 +50,13 @@ public class AdminInterceptor extends SessionHandlerInterceptor {
       if (session.getAttribute(BlogConstant.BLOGGER_INFO) != null) {
         return chain.proceed(request);
       }
-      request.setStatus(HttpStatus.NOT_FOUND);
-      return ErrorMessage.failed("Not Found");
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+              .contentType(MediaType.APPLICATION_JSON)
+              .body(ErrorMessage.failed("Not Found"));
     }
     if (chain.getHandler() instanceof ResourceHttpRequestHandler) {
-      request.setStatus(HttpStatus.NOT_FOUND);
-      return "body:Not Found";
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+              .body("Not Found");
     }
     throw new UnauthorizedException();
   }

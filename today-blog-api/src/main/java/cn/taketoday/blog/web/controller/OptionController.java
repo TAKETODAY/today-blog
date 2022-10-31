@@ -24,7 +24,7 @@ import java.util.Map;
 
 import cn.taketoday.blog.aspect.Logger;
 import cn.taketoday.blog.service.OptionService;
-import cn.taketoday.blog.web.interceptor.AdminInterceptor;
+import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.Interceptor;
@@ -50,7 +50,7 @@ public class OptionController {
   }
 
   @GET
-  @Interceptor(exclude = AdminInterceptor.class)
+  @Interceptor(exclude = BloggerInterceptor.class)
   public Map<String, String> get() {
     return optionsService.getOptionsMap();
   }

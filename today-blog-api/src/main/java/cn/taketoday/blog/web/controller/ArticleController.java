@@ -39,10 +39,9 @@ import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.utils.BlogUtils;
 import cn.taketoday.blog.utils.Pagination;
 import cn.taketoday.blog.utils.StringUtils;
-import cn.taketoday.blog.web.interceptor.AdminInterceptor;
+import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
 import cn.taketoday.cache.CacheManager;
-import cn.taketoday.cache.annotation.EnableCaching;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.util.CollectionUtils;
@@ -243,7 +242,7 @@ public class ArticleController {
    */
   @POST
   @ResponseStatus(HttpStatus.CREATED)
-  @Interceptor(include = AdminInterceptor.class, exclude = ArticleFilterInterceptor.class)
+  @Interceptor(include = BloggerInterceptor.class, exclude = ArticleFilterInterceptor.class)
   @Logger(value = "创建文章", content = "创建新文章标题: [${from.title}]")
   public void create(@RequestBody ArticleFrom from) {
     Article article = getArticle(from);

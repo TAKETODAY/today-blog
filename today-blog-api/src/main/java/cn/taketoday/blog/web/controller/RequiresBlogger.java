@@ -25,7 +25,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cn.taketoday.blog.web.interceptor.AdminInterceptor;
+import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
 import cn.taketoday.web.annotation.Interceptor;
 
 /**
@@ -34,7 +34,7 @@ import cn.taketoday.web.annotation.Interceptor;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })
-@Interceptor(AdminInterceptor.class)
+@Interceptor(BloggerInterceptor.class)
 public @interface RequiresBlogger {
 
 }

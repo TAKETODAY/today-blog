@@ -28,7 +28,7 @@ import cn.taketoday.blog.model.Category;
 import cn.taketoday.blog.service.CategoryService;
 import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.StringUtils;
-import cn.taketoday.blog.web.interceptor.AdminInterceptor;
+import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
 import cn.taketoday.stereotype.Controller;
 import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
@@ -105,13 +105,13 @@ public class CategoriesController {
   }
 
   @GET
-  @Interceptor(exclude = AdminInterceptor.class)
+  @Interceptor(exclude = BloggerInterceptor.class)
   public List<Category> all() {
     return categoryService.getAllCategories();
   }
 
   @GET("/{name}")
-  @Interceptor(exclude = AdminInterceptor.class)
+  @Interceptor(exclude = BloggerInterceptor.class)
   public Category name(@PathVariable String name) {
     return categoryService.getCategory(name);
   }
