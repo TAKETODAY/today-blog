@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?><!--
+  Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+  Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+  
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ 
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.taketoday.blog.repository.ArticleRepository">
+
+  <resultMap id="BaseResultMap" type="cn.taketoday.blog.model.Article">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="image" jdbcType="VARCHAR" property="image" />
+    <result column="status" jdbcType="VARCHAR" property="status" typeHandler="cn.taketoday.blog.repository.PostStatusHandler" />
+
+    <result column="pv" jdbcType="INTEGER" property="pv" />
+    <result column="summary" jdbcType="VARCHAR" property="summary" />
+    <result column="category" jdbcType="VARCHAR" property="category" />
+    <result column="copyRight" jdbcType="VARCHAR" property="copyRight" />
+    <result column="lastModify" jdbcType="BIGINT" property="lastModify" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+  </resultMap>
+
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="cn.taketoday.blog.model.Article">
+    <result column="content" jdbcType="LONGVARCHAR" property="content" />
+    <result column="markdown" jdbcType="LONGVARCHAR" property="markdown" />
+  </resultMap>
+
+  <sql id="selectAllCol">
+    `id`,`title`,`image`,`status`,`pv`,`summary`,`category`,`copyRight`,`lastModify`,`password`,`content`,`markdown`
+  </sql>
+
+  <delete id="deleteById" parameterType="long">
+    delete
+    from article
+    where id = #{id}
+  </delete>
+
+  <update id="update" parameterType="cn.taketoday.blog.model.Article">
+    update article
+    <set>
+      <if test="title != null">
+        title = #{title},
+      </if>
+      <if test="copyRight != null">
+        copyRight = #{copyRight},
+      </if>
+      <if test="image != null">
+        image = #{image},
+      </if>
+      <if test="summary != null">
+        summary = #{summary},
+      </if>
+      <if test="category != null">
+        category = #{category},
+      </if>
+      <if test="pv != 0">
+        pv = #{pv},
+      </if>
+      <if test="status != null">
+        `status` = #{status.code},
+      </if>
+      <if test="content != null">
+        content = #{content},
+      </if>
+      <if test="markdown != null">
+        markdown = #{markdown},
+      </if>
+      <if test="lastModify != null">
+        lastModify = #{lastModify},
+      </if>
+        `password` = #{password}
+    </set>
+    where id = #{id}
+  </update>
+
+  <select id="findArticlesByLabel" resultMap="BaseResultMap">
+    SELECT id, title, image, summary, pv, status, password
+    FROM article
+           LEFT JOIN article_label ON article.id = article_label.articleId
+    WHERE article.status >= 0x00
+      AND article_label.labelId IN (
+      SELECT labelId
+      FROM article_label
+      WHERE labelId = (
+        SELECT id
+        FROM label
+        WHERE name = #{name}
+      )
+    )
+    LIMIT #{pageNow}, #{pageSize}
+  </select>
+
+  <select id="findArticlesByCategory" resultMap="BaseResultMap">
+    SELECT id, title, image, summary, pv, status, password
+    FROM article
+    WHERE status = 0x00
+      AND category = #{category}
+    LIMIT #{pageNow}, #{pageSize}
+  </select>
+
+  <select id="findByClickHit" resultMap="BaseResultMap">
+    SELECT id, title
+    FROM article
+    WHERE status = 0x00
+    order by pv DESC
+    LIMIT 0, #{pageSize}
+  </select>
+
+  <select id="findById" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="selectAllCol" />
+    from article
+    where id = #{id}
+  </select>
+
+  <insert id="save" parameterType="cn.taketoday.blog.model.Article">
+    insert into article (id, title, copyRight, image, summary, category, content, markdown, lastModify, password)
+    values (#{id}, #{title}, #{copyRight}, #{image}, #{summary}, #{category}, #{content}, #{markdown}, #{lastModify}, #{password})
+  </insert>
+
+  <select id="getTotalRecord" resultType="int">
+    SELECT COUNT(id)
+    FROM article
+  </select>
+
+  <select id="getStatusRecord" resultType="int">
+    SELECT COUNT(id)
+    FROM article
+    WHERE `status` = #{status.code}
+  </select>
+
+  <select id="getRecordByLabel" resultType="int">
+    SELECT COUNT(*)
+    FROM article
+           LEFT JOIN article_label ON article.id = article_label.articleId
+    WHERE status = 0
+      and article_label.labelId IN (
+      SELECT labelId
+      FROM article_label
+      WHERE labelId = (
+        SELECT id
+        FROM label
+        WHERE name = #{name}
+      )
+    )
+  </select>
+
+  <select id="getRecordByCategory" resultType="int">
+    SELECT COUNT(id)
+    FROM article
+    WHERE status = 0
+      AND category = #{category}
+  </select>
+
+  <select id="findLatest" resultMap="BaseResultMap">
+    SELECT id, title, status, summary, image, lastModify
+    FROM article
+    ORDER BY id DESC
+    LIMIT 0, 6
+  </select>
+
+  <!-- 首页文章 -->
+  <select id="findIndexArticles" resultMap="BaseResultMap">
+    SELECT id, title, image, summary, pv, status, password
+    FROM article
+    WHERE status = 0x00
+    order by id DESC
+    LIMIT #{pageNow}, #{pageSize}
+  </select>
+
+  <select id="findByStatus" resultMap="BaseResultMap">
+    SELECT
+    <include refid="selectAllCol" />
+    FROM article
+    WHERE `status` = #{status.code}
+    ORDER BY id DESC
+    LIMIT #{pageNow}, #{pageSize}
+  </select>
+
+  <select id="findAll" resultMap="BaseResultMap">
+    SELECT
+    <include refid="selectAllCol" />
+    FROM article ORDER BY id DESC
+  </select>
+
+  <select id="search" resultMap="BaseResultMap">
+    SELECT
+    <include refid="selectAllCol" />
+    FROM article
+    <include refid="search_where" />
+    LIMIT #{pageNow}, #{pageSize}
+  </select>
+
+  <select id="getSearchRecord" resultType="int">
+    SELECT COUNT(id)
+    FROM article
+    <include refid="search_where" />
+  </select>
+
+  <sql id="search_where">
+    <bind name="likeQuery" value="'%' + query + '%'" />
+    WHERE `title` like #{likeQuery} OR `content` like #{likeQuery}
+  </sql>
+
+  <!---->
+
+  <select id="find" resultMap="BaseResultMap">
+    SELECT
+    <include refid="selectAllCol" />
+    FROM article
+    <include refid="find_where" />
+    LIMIT #{pageNow}, #{pageSize}
+  </select>
+
+  <select id="getRecord" resultType="int" parameterType="cn.taketoday.blog.model.form.SearchForm">
+    SELECT COUNT(id)
+    FROM article
+    <include refid="find_where" />
+  </select>
+
+  <sql id="find_where">
+    <where>
+      <if test="args.title != null">
+        <bind name="title" value="'%' + args.title + '%'" />
+        `title` like #{title}
+      </if>
+      <if test="args.content != null">
+        <bind name="content" value="'%' + args.content + '%'" />
+        OR `content` like #{content}
+      </if>
+      <if test="args.category != null">
+        AND `category` = #{args.category}
+      </if>
+      <!--<if test="args.hasPeriod()">
+        AND info.city_announcement_time BETWEEN #{args.from} AND #{args.to}
+      </if>-->
+    </where>
+
+  </sql>
+
+
+</mapper>

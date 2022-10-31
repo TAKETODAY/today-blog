@@ -1,0 +1,180 @@
+import { store } from "../redux/store";
+import { isEmpty, isNotEmpty, isZero } from "./object";
+
+export function currentTimeMillis() {
+  return new Date().getTime()
+}
+
+const SMALL_WINDOW_WIDTH = 860;
+
+export function isSmallWindow(width) {
+  return width <= SMALL_WINDOW_WIDTH
+}
+
+export function getSizeString(value) {
+  if (isZero(value)) {
+    return "0 Bytes"
+  }
+  const srcSize = parseFloat(value);
+  const index = Math.floor(Math.log(srcSize) / Math.log(1024));
+  let size = srcSize / Math.pow(1024, index);
+  size = size.toFixed(2);//保留的小数位数
+  return size + unitArr[index];
+}
+
+const unitArr = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+
+export function getSize(value) {
+  if (isZero(value)) {
+    return "0"
+  }
+  const srcSize = parseFloat(value);
+  const index = Math.floor(Math.log(srcSize) / Math.log(1024));
+  let size = srcSize / Math.pow(1024, index);
+  size = size.toFixed(2);//保留的小数位数
+  return size
+}
+
+export function getSizeUnit(value) {
+  if (isZero(value)) {
+    return "Bytes"
+  }
+  const index = Math.floor(Math.log(parseFloat(value)) / Math.log(1024))
+  return unitArr[index]
+}
+
+
+const share = {
+  site: "https://taketoday.cn",
+  desc: "TODAY BLOG 代码是我心中的一首诗",
+  image: "https://cdn.taketoday.cn/logo.png",
+  summary: "TODAY BLOG 是记录我学习的博客。主要分享自己的心得体会,学习经验、建站经验、资源分享、知识分享、杂谈生活.",
+}
+
+export function shareQQ(options) {
+  options = Object.assign({}, share, options)
+  window.open(
+      "http://connect.qq.com/widget/shareqq/index.html?url=" + options.url +
+      "&title=" + options.desc +
+      "&desc=" + options.desc +
+      "&summary=" + options.summary +
+      "&site=" + options.site +
+      "&pics=" + options.image
+  )
+}
+
+export function shareWeiBo(options) {
+  options = { ...share, ...options }
+  window.open(
+      "http://service.weibo.com/share/share.php?url=" + options.url +
+      "&title=" + options.desc +
+      "&pic=" + options.image +
+      "&searchPic=true"
+  )
+}
+
+export function shareQQZone(options) {
+  options = { ...share, ...options }
+  window.open(
+      "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=" + options.url +
+      "&title=" + options.desc +
+      "&desc=" + options.desc +
+      "&summary=" + options.summary +
+      "&site=" + options.site +
+      "&pics=" + options.image
+  )
+}
+
+export function getSiteName() {
+  return store.getState().options["site.name"] || "TODAY BLOG"
+}
+
+export function setTitle(title, subTitle = true) {
+  let titleToUse = title
+  if (title === undefined) {
+    titleToUse = store.getState().options["site.subTitle"]
+  }
+
+  titleToUse += " - " + getSiteName()
+  if (titleToUse) {
+    window.document.title = titleToUse
+  }
+}
+
+export function getForward() {
+  return window.location.pathname
+}
+
+export function logging(...data) {
+  console.log(...data)
+}
+
+export function getSummary(str) {
+  if (isNotEmpty(str)) {
+    str = str.replace(/<\/?[^>]+>/g, ''); // 去除HTML tag
+    str = str.replace(/(\n)/g, "");
+    str = str.replace(/(\t)/g, "");
+    str = str.replace(/(\r)/g, "");
+    str = str.replace(/&nbsp;/ig, ''); // 去掉&nbsp;
+    return str.length > 256 ? str.substring(0, 256) : str;
+  }
+}
+
+export function getMeta() {
+  let ret = {}
+  const metaElements = document.querySelectorAll('meta');
+  metaElements.forEach(metaElement => {
+    const name = metaElement.getAttribute('name')
+    if ('keywords' === name) {
+      ret['keywords'] = metaElement
+    }
+    else if ('description' === name) {
+      ret['description'] = metaElement
+    }
+  })
+
+  if (isEmpty(ret['keywords'])) {
+    const metaElement = document.createElement('meta');
+    metaElement.name = 'keywords'
+    ret['keywords'] = metaElement
+    const headElement = document.querySelector("head");
+    headElement.append(metaElement)
+  }
+  if (isEmpty(ret['description'])) {
+    const metaElement = document.createElement('meta');
+    metaElement.name = 'description'
+    ret['description'] = metaElement
+    const headElement = document.querySelector("head");
+    headElement.append(metaElement)
+  }
+  return ret
+}
+
+//杨海健的个人网站，包括博客、开发工具和开源项目等，欢迎访问。
+//TODAY BLOG 代码是我心中的一首诗，电子，编程，Java，分享，STM32，51单片机，ARM，杨海健，心得
+let defaultKeywords = ''
+let defaultDescription = ''
+
+export function setDefaultSEOKeywords(keywords) {
+  defaultKeywords = keywords
+}
+
+export function setDefaultSEODescription(description) {
+  defaultDescription = description
+}
+
+export function applySEO(keywords = defaultKeywords, description = defaultDescription) {
+  const meta = getMeta();
+  const keywordsElement = meta['keywords']
+  keywordsElement.content = isEmpty(keywords) ? defaultKeywords : keywords
+  // description
+  const descriptionEle = meta['description']
+  descriptionEle.content = isEmpty(description) ? defaultDescription : description
+}
+
+export function getArticleId(id) {
+  if (id && id.endsWith('.html')) {
+    return id.substr(0, id.length - '.html'.length)
+  }
+  return id
+}

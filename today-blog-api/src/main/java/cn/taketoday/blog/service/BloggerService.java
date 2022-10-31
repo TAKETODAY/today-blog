@@ -1,0 +1,78 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.service;
+
+import cn.taketoday.blog.BlogConstant;
+import cn.taketoday.blog.model.Blogger;
+import cn.taketoday.blog.repository.BloggerRepository;
+import cn.taketoday.context.ApplicationContext;
+import cn.taketoday.stereotype.Service;
+import cn.taketoday.web.InternalServerException;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateModelException;
+
+/**
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 2019-04-07 21:57
+ */
+@Service
+public class BloggerService {
+
+  private Blogger blogger;
+  private final ApplicationContext context;
+  private final BloggerRepository bloggerRepository;
+
+  public BloggerService(BloggerRepository repository, ApplicationContext context) {
+    this.bloggerRepository = repository;
+    this.context = context;
+  }
+
+  public Blogger fetchBlogger() {
+    Blogger blogger = bloggerRepository.getBlogger();
+    setBlogger(blogger);
+    return blogger;
+  }
+
+  public void update(Blogger blogger) {
+    bloggerRepository.update(blogger);
+    setBlogger(blogger);
+  }
+
+  public synchronized void setBlogger(Blogger blogger) {
+    this.blogger = blogger;
+
+    Configuration configuration = context.getBean(Configuration.class);
+    try {
+      configuration.setSharedVariable(BlogConstant.KEY_AUTHOR_INFO, blogger);
+    }
+    catch (TemplateModelException e) {
+      throw InternalServerException.failed("博主信息更新失败");
+    }
+  }
+
+  public Blogger getBlogger() {
+    if (blogger == null) {
+      setBlogger(bloggerRepository.getBlogger());
+    }
+    return blogger;
+  }
+
+}

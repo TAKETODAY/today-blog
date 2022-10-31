@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>cn.taketoday</groupId>
+    <artifactId>today-blog</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>today-blog-api</artifactId>
+
+  <properties>
+    <today.version>4.0.0-Draft.1</today.version>
+    <revision>3.1</revision>
+  </properties>
+
+  <name>today-blog</name>
+
+  <url>https://taketoday.cn</url>
+  <packaging>jar</packaging>
+
+  <organization>
+    <name>TODAY Tech</name>
+    <url>https://taketoday.cn</url>
+  </organization>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.mybatis</groupId>
+      <artifactId>mybatis</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-web</artifactId>
+    </dependency>
+
+
+    <!-- https://mvnrepository.com/artifact/org.kohsuke/github-api -->
+    <dependency>
+      <groupId>org.kohsuke</groupId>
+      <artifactId>github-api</artifactId>
+      <version>1.301</version>
+    </dependency>
+
+    <dependency>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-framework</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-mybatis</artifactId>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/eu.bitwalker/UserAgentUtils -->
+    <dependency>
+      <groupId>eu.bitwalker</groupId>
+      <artifactId>UserAgentUtils</artifactId>
+      <version>1.21</version>
+    </dependency>
+
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
+
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/com.aliyun.oss/aliyun-sdk-oss -->
+    <dependency>
+      <groupId>com.aliyun.oss</groupId>
+      <artifactId>aliyun-sdk-oss</artifactId>
+      <version>3.13.2</version>
+      <exclusions>
+
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.mail</groupId>
+      <artifactId>jakarta.mail-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.activation</groupId>
+      <artifactId>jakarta.activation-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.mail</groupId>
+      <artifactId>jakarta.mail</artifactId>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/net.coobird/thumbnailator -->
+    <dependency>
+      <groupId>net.coobird</groupId>
+      <artifactId>thumbnailator</artifactId>
+      <version>0.4.15</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.lionsoul</groupId>
+      <artifactId>ip2region</artifactId>
+      <version>2.6.5</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.lionsoul</groupId>
+      <artifactId>ip2region-maker</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
+    <!--
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>4.1.65.Final</version>
+    </dependency>
+     -->
+
+    <!-- test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <dependencyManagement>
+    <dependencies>
+
+      <dependency>
+        <groupId>cn.taketoday</groupId>
+        <artifactId>today-infrastructure-bom</artifactId>
+        <version>${today.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>cn.taketoday</groupId>
+        <artifactId>blog-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>cn.taketoday</groupId>
+        <artifactId>blog-service</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>cn.taketoday</groupId>
+        <artifactId>blog-freemarker</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>cn.taketoday</groupId>
+        <artifactId>blog-web</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+
+    <defaultGoal>compile</defaultGoal>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>assemble</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <appendAssemblyId>false</appendAssemblyId>
+          <attach>false</attach>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+              <mainClass>cn.taketoday.blog.BlogApplication</mainClass>
+            </manifest>
+
+            <manifestEntries>
+              <Extension-Name>today.blog</Extension-Name>
+              <Implementation-Version>${project.version}</Implementation-Version>
+              <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+              <Implementation-Vendor-Id>cn.taketoday</Implementation-Vendor-Id>
+              <Export-Package>cn.taketoday.blog.*</Export-Package>
+              <Automatic-Module-Name>today.blog</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+
+
+          <excludes>
+            <exclude>**/*.properties</exclude>
+            <exclude>**/*.xml</exclude>
+            <exclude>**/*.yml</exclude>
+            <exclude>static/**</exclude>
+            <exclude>public/**</exclude>
+            <exclude>templates/**</exclude>
+            <exclude>search/**</exclude>
+            <exclude>**/*.ico</exclude>
+            <exclude>**/*.dat</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <release>${java.version}</release>
+          <compilerVersion>${java.version}</compilerVersion>
+          <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-javadoc-plugin</artifactId>
+              <version>3.3.0</version>
+              <configuration>
+                <charset>UTF-8</charset>
+                <encoding>UTF-8</encoding>
+                <docencoding>UTF-8</docencoding>
+                <failOnError>false</failOnError>
+                <failOnWarnings>false</failOnWarnings>
+              </configuration>
+              <executions>
+                <execution>
+                  <id>attach-javadocs</id>
+                  <goals>
+                    <goal>jar</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+      -->
+
+
+    </plugins>
+  </build>
+
+
+  <profiles>
+    <profile>
+      <id>dev</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>env</name>
+          <value>!release</value>
+        </property>
+      </activation>
+
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+              <descriptors>
+                <descriptor>${basedir}/src/main/assembly/dev.xml</descriptor>
+              </descriptors>
+              <finalName>blog-web</finalName>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+
+    </profile>
+
+    <profile>
+      <id>release</id>
+      <activation>
+        <property>
+          <name>env</name>
+          <value>release</value>
+        </property>
+      </activation>
+
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+              <descriptors>
+                <descriptor>${basedir}/src/main/assembly/release.xml</descriptor>
+              </descriptors>
+              <finalName>blog-web-release</finalName>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+
+</project>

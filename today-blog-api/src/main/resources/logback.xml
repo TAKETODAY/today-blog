@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><!--
+  Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+  Copyright © TODAY & 2017 - 2018 All Rights Reserved.
+  
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ -->
+<configuration>
+  <contextName>TODAY BLOG</contextName>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>
+        %red(%d{yyyy-MM-dd HH:mm:ss.SSS}) %highlight(%-5level) - %blue([%16.16t]) %cyan(%-40.40logger{40}) %4.4L - %m%n
+      </pattern>
+      <!--  <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %5p - [%16.16t] %-40.40logger{40} %4L - %m%n</pattern>-->
+    </encoder>
+  </appender>
+
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>today-blog.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>../logs/today-blog.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %5p - [%16.16t] %-40.40logger{40} %4L - %m%n</pattern>
+    </encoder>
+  </appender>
+
+  <!--
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %5p - [%16.16t] %-40.40logger{40} %L \t- %m%n</pattern>
+      <root level="INFO">
+      <root level="TRACE">
+          <appender-ref ref="FILE" />
+      </root>
+  -->
+  <logger name="org.apache" level="WARN" />
+
+  <!--  <root level="ERROR">-->
+  <!--    <root level="TRACE">-->
+    <root level="DEBUG">
+<!--  <root level="INFO">-->
+    <appender-ref ref="STDOUT" />
+    <!--    <appender-ref ref="FILE" />-->
+  </root>
+
+</configuration>
+
+
+

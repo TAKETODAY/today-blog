@@ -1,0 +1,60 @@
+{
+  "name": "blog",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "antd": "^4.10.0",
+    "axios": "^0.19.2",
+    "codemirror": "^5.59.1",
+    "codemirror-spell-checker": "^1.1.2",
+    "cropperjs": "^1.5.6",
+    "highlight.js": "^9.18.1",
+    "lodash": "^4.17.15",
+    "markdown-it": "^10.0.0",
+    "markdown-it-emoji": "^1.4.0",
+    "nprogress": "^0.2.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-redux": "^7.2.0",
+    "react-router-dom": "^5.1.2",
+    "redux": "^4.0.5",
+    "redux-thunk": "^2.3.0",
+    "core-js": "^3.8.3"
+  },
+  "scripts": {
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-app-rewired eject"
+  },
+  "proxy": "http://localhost:8080",
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.5.0",
+    "@testing-library/user-event": "^7.2.1",
+    "babel-plugin-import": "^1.13.0",
+    "compression-webpack-plugin": "^6.0.0",
+    "customize-cra": "^0.9.1",
+    "less": "^3.11.1",
+    "less-loader": "^5.0.0",
+    "lodash-webpack-plugin": "^0.11.6",
+    "react-app-rewired": "^2.1.5",
+    "react-scripts": "3.4.1",
+    "webpack": "4.42.0"
+  }
+}

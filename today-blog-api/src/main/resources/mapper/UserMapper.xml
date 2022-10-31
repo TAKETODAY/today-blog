@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!--
+  Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+  Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+  
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ 
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.taketoday.blog.repository.UserRepository">
+
+  <resultMap id="BaseResultMap" type="cn.taketoday.blog.model.User">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="site" jdbcType="VARCHAR" property="site" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="avatar" jdbcType="VARCHAR" property="avatar" />
+
+    <result column="status" jdbcType="SMALLINT" property="status"
+        typeHandler="cn.taketoday.blog.repository.UserStatusHandler" />
+
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="background" jdbcType="VARCHAR" property="background" />
+    <result column="introduce" jdbcType="VARCHAR" property="introduce" />
+    <result column="notification" jdbcType="BIT" property="notification" />
+  </resultMap>
+
+
+  <select id="findById" resultMap="BaseResultMap">
+    select *
+    from user
+    where id = #{id}
+  </select>
+
+  <delete id="deleteById" parameterType="java.lang.Long">
+    delete
+    from user
+    where id = #{id}
+  </delete>
+
+  <insert id="save" parameterType="cn.taketoday.blog.model.User">
+    insert into user (`id`, `name`, `site`, `type`, `email`, `avatar`, `introduce`)
+    values (#{id}, #{name}, #{site}, #{type}, #{email}, #{avatar}, #{introduce})
+  </insert>
+
+  <update id="update" parameterType="cn.taketoday.blog.model.User">
+    update user
+    <set>
+      <if test="name != null">
+        name = #{name},
+      </if>
+      <if test="email != null">
+        email = #{email},
+      </if>
+      <if test="site != null">
+        site = #{site},
+      </if>
+      <if test="type != null">
+        type = #{type},
+      </if>
+      <if test="password != null">
+        password = #{password},
+      </if>
+      <if test="avatar != null">
+        avatar = #{avatar},
+      </if>
+      <if test="introduce != null">
+        introduce = #{introduce},
+      </if>
+      <if test="background != null">
+        background = #{background},
+      </if>
+      <if test="notification != null">
+        notification = #{notification},
+      </if>
+    </set>
+    where id = #{id}
+  </update>
+
+  <select id="findAll" resultMap="BaseResultMap">
+    select *
+    FROM user
+  </select>
+
+  <select id="findByEmail" resultMap="BaseResultMap">
+    SELECT *
+    FROM user
+    WHERE email = #{email}
+  </select>
+
+  <select id="getRecord" resultType="int">
+    SELECT COUNT(id)
+    FROM user
+    WHERE `status` = #{status.code}
+  </select>
+
+  <select id="getTotalRecord" resultType="int">
+    SELECT COUNT(id)
+    FROM user
+  </select>
+
+  <select id="findByStatus" resultMap="BaseResultMap">
+    SELECT *
+    FROM user
+    WHERE `status` = #{status.code}
+    ORDER BY id DESC
+    LIMIT #{pageNow}, #{pageSize}
+  </select>
+
+  <select id="find" resultMap="BaseResultMap">
+    SELECT *
+    FROM user
+    ORDER BY id DESC
+    LIMIT #{pageNow}, #{pageSize}
+  </select>
+
+
+</mapper>
+

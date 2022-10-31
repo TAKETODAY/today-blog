@@ -1,0 +1,249 @@
+body {
+  margin: 0px;
+  padding: 0px;
+  color: rgb(34, 34, 34);
+  font-size: 14px;
+  font-family: Verdana, Helvetica, "Hiragino Sans GB", "Microsoft YaHei", Simsun, "Droid Sans Fallback", sans-serif;
+  text-decoration: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  background-color: #f5f5f5 !important
+}
+
+.wap-wrap {
+  font-size: 0.32rem;
+  width: 100%;
+}
+
+#maxWidth {
+  display: flex;
+  flex: 1;
+}
+
+
+body, div, dl, dt, dd, ol, ul, li, h1, h2, h3, h4, h5, h6, h7, pre, code, form, fieldset, legend, input, textarea, p, blockquote, th, td {
+  margin: 0px;
+  padding: 0px;
+}
+
+ul {
+  list-style: none;
+}
+
+li {
+  list-style: none;
+}
+
+img {
+  border: 0px currentColor;
+  vertical-align: top;
+}
+
+ol {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+a {
+  color: #337ab7;
+  text-decoration: none;
+  background-color: transparent;
+  outline: none;
+  cursor: pointer;
+  -webkit-transition: color .3s;
+  transition: color .3s;
+  -webkit-text-decoration-skip: objects;
+}
+
+
+/*label*/
+.label {
+  display: inline;
+  padding: .2em .6em .3em;
+  font-size: 75%;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+
+a.label:hover,
+a.label:focus {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.label:empty {
+  display: none;
+}
+
+.btn .label {
+  position: relative;
+  top: -1px;
+}
+
+.label-default {
+  background-color: #777;
+}
+
+.label-default[href]:hover,
+.label-default[href]:focus {
+  background-color: #5e5e5e;
+}
+
+.label-primary {
+  background-color: #337ab7;
+}
+
+.label-primary[href]:hover,
+.label-primary[href]:focus {
+  background-color: #286090;
+}
+
+.label-success {
+  background-color: #5cb85c;
+}
+
+.label-success[href]:hover,
+.label-success[href]:focus {
+  background-color: #449d44;
+}
+
+.label-info {
+  background-color: #5bc0de;
+}
+
+.label-info[href]:hover,
+.label-info[href]:focus {
+  background-color: #31b0d5;
+}
+
+.label-warning {
+  background-color: #f0ad4e;
+}
+
+.label-warning[href]:hover,
+.label-warning[href]:focus {
+  background-color: #ec971f;
+}
+
+.label-danger {
+  background-color: #d9534f;
+}
+
+.label-danger[href]:hover,
+.label-danger[href]:focus {
+  background-color: #c9302c;
+}
+a.label {
+  margin-right: 5px;
+}
+
+
+/**/
+
+pre {
+  display: block;
+  margin: 0 0 10px;
+  color: #333;
+  word-break: break-all;
+  word-wrap: break-word;
+  background-color: #f6f8fa;
+  border-radius: 3px;
+  line-height: 1.45;
+  overflow: auto;
+  padding: 16px;
+}
+
+pre code {
+  padding: 0;
+  color: inherit;
+  white-space: pre;
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.pre-scrollable {
+  max-height: 340px;
+  overflow-y: scroll;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+code {
+  background-color: rgba(27, 31, 35, .05);
+  border-radius: 3px;
+  font-size: 85%;
+  margin: 0;
+  padding: .2em .4em;
+}
+
+.markdown img {
+  background-color: #fff;
+  box-sizing: content-box;
+  max-width: 100%;
+}
+
+.markdown ol li {
+  list-style-type: decimal;
+}
+
+.markdown blockquote, .markdown details, .markdown dl, .markdown ol, .markdown p, .markdown pre, .markdown table, .markdown ul {
+  margin-bottom: 16px;
+  margin-top: 0;
+}
+
+.markdown table {
+  display: block;
+  overflow: auto;
+  width: 100%;
+}
+
+.markdown table tr {
+  background-color: #fff;
+  border-top: 1px solid #c6cbd1;
+}
+
+.markdown table th {
+  font-weight: 600;
+}
+
+.markdown table td, .markdown table th {
+  border: 1px solid #dfe2e5;
+  padding: 6px 13px;
+}
+
+.markdown table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+.markdown ul li {
+  list-style: outside;
+}
+
+.markdown ul, .markdown ol {
+  padding-left: 2em;
+}
+
+.markdown h2, .markdown h1 {
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: .3em;
+}
+
+.markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 16px;
+  margin-top: 24px;
+}
+
+/* markdown end*/

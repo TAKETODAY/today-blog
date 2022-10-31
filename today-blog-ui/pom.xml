@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>cn.taketoday</groupId>
+    <artifactId>today-blog</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>today-blog-ui</artifactId>
+  <packaging>pom</packaging>
+
+  <properties>
+    <java.version>17</java.version>
+    <npm.skipTests>true</npm.skipTests>
+
+    <!-- Update occasionally based on LTS, but don't overrun what's in Alpine:
+         https://nodejs.org/en/download/
+         https://pkgs.alpinelinux.org/packages?name=nodejs&branch=edge -->
+    <node.version>14.17.1</node.version>
+    <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+    <frontend-maven-plugin.version>1.11.0</frontend-maven-plugin.version>
+    <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
+    <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
+  </properties>
+
+  <modules>
+    <module>today-blog-ui-desktop</module>
+    <module>today-blog-ui-mobile</module>
+    <module>today-blog-ui-admin</module>
+
+  </modules>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>${exec-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>com.github.eirslett</groupId>
+          <artifactId>frontend-maven-plugin</artifactId>
+          <version>${frontend-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>${maven-clean-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>${maven-resources-plugin.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+  </build>
+
+</project>

@@ -1,0 +1,89 @@
+# Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+# Copyright @ Harry Yang & 2017 - 2022 All Rights Reserved.
+#
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+########################################################
+
+aliyun:
+  oss:
+    accessKey:
+      name:
+    accessKeyId:
+    bucket:
+    enabled: false
+    endpoint:
+    secretAccessKey:
+
+application:
+  name: today-blog-api
+
+context:
+  profiles:
+    active: dev
+
+email:
+  failed:
+    maxTryTime: 3
+
+mail:
+  debug: false
+  from:
+    userName:
+  nickName:
+  password:
+  smtp:
+    auth: true
+    host: smtp.qq.com
+    port: 465
+    socketFactory:
+      class: javax.net.ssl.SSLSocketFactory
+    ssl:
+      enable: true
+    timeout: 25000
+  transport:
+    protocol: smtp
+  userName:
+
+mybatis:
+  config-location: classpath:mybatis-config.xml
+
+server:
+  displayName: TODAY BLOG API
+  useAprConnector: true
+
+site:
+  app:
+    path:
+  assetsPath:
+  author:
+    email:
+  baiduCode:
+  cdn: ''
+  copyright:
+  description:
+  host:
+  icp:
+  keywords:
+  name: TODAY BLOG
+  otherFooter:
+  subTitle: 代码是我心中的一首诗
+  upload: ${site.serverPath}/upload/
+  version: TODAY BLOG v3.1
+
+upload:
+  encoding: UTF-8
+  fileSizeThreshold: 512MB
+  maxFileSize: 20MB
+  maxRequestSize: 100MB
+
+datasource:
+  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true
+  type: com.zaxxer.hikari.HikariDataSource
+  username: root
+  password: 88888888
+  driver-class-name: com.mysql.cj.jdbc.Driver
+  hikari:
+    maxLifetime: 1800000
+    maxPoolSize: 20
+
+

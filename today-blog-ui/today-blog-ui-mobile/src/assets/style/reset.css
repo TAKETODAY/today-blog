@@ -1,0 +1,166 @@
+/* a, abbr, acronym, address, applet, article, aside, audio, b, big, blockquote, body, canvas, caption, center, cite, code, dd, del, details, dfn, div, dl, dt, em, embed, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup, html, i, iframe, img, ins, kbd, label, legend, li, mark, menu, nav, object, ol, output, p, pre, q, ruby, s, samp, section, small, span, strike, strong, sub, summary, sup, table, tbody, td, tfoot, th, thead, time, tr, tt, u, ul, var, video { margin: 0; padding: 0; border: 0; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; -webkit-tap-highlight-color: rgba(255,255,255,0); }
+
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section { display: block; }
+
+body { font-family: Microsoft Yahei,Helvetica,Arial; }
+
+td, th { word-break: break-all; word-wrap: break-word; }
+
+table { border-collapse: collapse; border-spacing: 0; }
+
+.clearfix:after { content: "."; display: block; height: 0; clear: both; visibility: hidden; }
+
+.clearfix { zoom: 1; display: block; }
+
+button, input[type=button], input[type=password], input[type=reset], input[type=submit], input[type=text] { -webkit-appearance: none; outline: 0; }
+
+button, input { outline: 0; }
+
+:focus { outline: 0; }
+
+img { border: none; vertical-align: top; font-size:12px; }
+
+button { border: none; }
+
+a { -webkit-tap-highlight-color: rgba(255,255,255,0); text-decoration: none; color: inherit; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-text-size-adjust: none; -webkit-tap-highlight-color: transparent; }
+
+a:hover { text-decoration: none; }
+
+a:focus { text-decoration: none; outline: 0; }
+
+a:active { text-decoration: none; outline: 0; }
+
+dd, dl, dt, li, ol, ul { list-style: none; }
+
+b, em, i, strong { font-style: normal; font-weight: 400; } */
+
+
+html {
+  font-size: 100px;
+}
+
+@media screen and (max-width: 640px) {
+  html {
+    font-size: 100px !important;
+  }
+}
+
+@media screen and (max-width: 624px) {
+  html {
+    font-size: 97.5px !important;
+  }
+}
+
+@media screen and (max-width: 608px) {
+  html {
+    font-size: 95px !important;
+  }
+}
+
+@media screen and (max-width: 592px) {
+  html {
+    font-size: 92.5px !important;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  html {
+    font-size: 90px !important;
+  }
+}
+
+@media screen and (max-width: 560px) {
+  html {
+    font-size: 87.5px !important;
+  }
+}
+
+@media screen and (max-width: 544px) {
+  html {
+    font-size: 85px !important;
+  }
+}
+
+@media screen and (max-width: 528px) {
+  html {
+    font-size: 82.5px !important;
+  }
+}
+
+@media screen and (max-width: 512px) {
+  html {
+    font-size: 80px !important;
+  }
+}
+
+@media screen and (max-width: 496px) {
+  html {
+    font-size: 77.5px !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  html {
+    font-size: 75px !important;
+  }
+}
+
+@media screen and (max-width: 464px) {
+  html {
+    font-size: 72.5px !important;
+  }
+}
+
+@media screen and (max-width: 448px) {
+  html {
+    font-size: 70px !important;
+  }
+}
+
+@media screen and (max-width: 432px) {
+  html {
+    font-size: 67.5px !important;
+  }
+}
+
+@media screen and (max-width: 416px) {
+  html {
+    font-size: 65px !important;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  html {
+    font-size: 62.5px !important;
+  }
+}
+
+@media screen and (max-width: 384px) {
+  html {
+    font-size: 60px !important;
+  }
+}
+
+@media screen and (max-width: 368px) {
+  html {
+    font-size: 57.5px !important;
+  }
+}
+
+@media screen and (max-width: 352px) {
+  html {
+    font-size: 55px !important;
+  }
+}
+
+@media screen and (max-width: 336px) {
+  html {
+    font-size: 52.5px !important;
+  }
+}
+
+@media screen and (max-width: 320px) {
+  html {
+    font-size: 50px !important;
+  }
+}
