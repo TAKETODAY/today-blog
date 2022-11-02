@@ -3,6 +3,8 @@
   "version": "3.1",
   "private": true,
   "description": "TODAY BLOG Desktop UI",
+  "author": "Harry Yang <taketoday@foxmail.com>",
+  "license": "GPL",
   "dependencies": {
     "antd": "^4.10.0",
     "axios": "^0.19.2",
