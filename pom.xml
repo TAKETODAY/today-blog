@@ -46,30 +46,6 @@
         <scope>import</scope>
       </dependency>
 
-      <dependency>
-        <groupId>cn.taketoday</groupId>
-        <artifactId>blog-api</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>cn.taketoday</groupId>
-        <artifactId>blog-service</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>cn.taketoday</groupId>
-        <artifactId>blog-freemarker</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>cn.taketoday</groupId>
-        <artifactId>blog-web</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
     </dependencies>
   </dependencyManagement>
 

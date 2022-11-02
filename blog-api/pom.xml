@@ -169,6 +169,7 @@
       <artifactId>snakeyaml</artifactId>
     </dependency>
 
+<!--
     <dependency>
       <groupId>org.lionsoul</groupId>
       <artifactId>ip2region</artifactId>
@@ -180,6 +181,7 @@
       <artifactId>ip2region-maker</artifactId>
       <version>1.0.0</version>
     </dependency>
+-->
 
     <!--
     <dependency>
