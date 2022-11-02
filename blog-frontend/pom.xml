@@ -29,9 +29,9 @@
   </properties>
 
   <modules>
-    <module>today-blog-ui-desktop</module>
-    <module>today-blog-ui-mobile</module>
-    <module>today-blog-ui-admin</module>
+    <module>desktop</module>
+    <module>mobile</module>
+    <module>admin</module>
 
   </modules>
 

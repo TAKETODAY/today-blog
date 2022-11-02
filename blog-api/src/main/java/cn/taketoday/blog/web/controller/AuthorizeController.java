@@ -46,6 +46,7 @@ import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.ObjectUtils;
 import cn.taketoday.blog.utils.StringUtils;
 import cn.taketoday.blog.web.interceptor.LoginLimitInterceptor;
+import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.context.properties.bind.Binder;
 import cn.taketoday.core.MultiValueMap;
 import cn.taketoday.core.env.Environment;
@@ -89,7 +90,8 @@ public class AuthorizeController {
 
   private Map<String, OauthMetadata> oauthMetadata;
 
-  public AuthorizeController(Environment environment, BlogConfig blogConfig, UserService userService, BloggerService bloggerService) {
+  public AuthorizeController(Environment environment,
+          BlogConfig blogConfig, UserService userService, BloggerService bloggerService) {
     this.blogConfig = blogConfig;
     this.userService = userService;
     this.bloggerService = bloggerService;
@@ -112,10 +114,10 @@ public class AuthorizeController {
 
     @NotEmpty(message = "邮箱不能为空")
     @Email(message = "请您输入正确格式的邮箱")
-    private String email;
+    public String email;
 
     @NotEmpty(message = "密码不能为空")
-    private String password;
+    public String password;
   }
 
   /**
@@ -130,6 +132,7 @@ public class AuthorizeController {
    * } </pre>
    */
   @POST
+  @RequestLimit(count = 1, errorMessage = "一秒钟只能登陆一次,请稍后重试")
   @Interceptor(LoginLimitInterceptor.class)
   @Logger(title = "登录", content = "email:[${user.email}]")
   public Json login(WebSession session, @Valid @RequestBody UserFrom user) {

@@ -29,8 +29,8 @@
   </organization>
 
   <modules>
-    <module>today-blog-api</module>
-    <module>today-blog-ui</module>
+    <module>blog-api</module>
+    <module>blog-frontend</module>
 
   </modules>
 
