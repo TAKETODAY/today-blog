@@ -17,7 +17,7 @@
     <revision>3.1</revision>
   </properties>
 
-  <name>today-blog</name>
+  <name>today-blog-api</name>
 
   <url>https://taketoday.cn</url>
   <packaging>jar</packaging>
