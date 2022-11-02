@@ -1,7 +1,7 @@
 {
-  "name": "today-blog-mobile",
-  "version": "1.0.0",
-  "description": "TODAY BLOG mobile",
+  "name": "today-blog-ui-mobile",
+  "version": "3.1",
+  "description": "TODAY BLOG Mobile UI",
   "author": "TODAY <taketoday@foxmail.com>",
   "license": "NONE",
   "scripts": {
