@@ -38,7 +38,7 @@ class Labels extends React.Component {
 
 
 function labelsError(state) {
-  return { error: state.http.errors.tags }
+  return { error: state.http.errors?.tags }
 }
 
 export default connect(labelsError, {
