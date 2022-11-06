@@ -135,7 +135,7 @@ create table user
     `email`        varchar(64)                                             not null comment '邮箱',
     `introduce`    varchar(255) default '暂无'                             null comment '描述',
     `site`         varchar(255)                                            null comment '个人网站',
-    `password`     varchar(64)  default '8E33AE4E09847AB123435A358CD5CF2D' not null comment '密码默认密码：https://takecn MD5：8E33AE4E09847AB123435A358CD5CF2D',
+    `password`     varchar(64)  default '8E33AE4E09847AB123435A358CD5CF2D' not null comment '密码默认密码：https://taketoday.cn MD5：8E33AE4E09847AB123435A358CD5CF2D',
     `type`         varchar(255)                                            null comment '类型:qq,github,site,master',
     `avatar`       text                                                    null comment '头像',
     `background`   varchar(255) default '/assets/images/bg/info_back.jpg'  null comment '背景',
