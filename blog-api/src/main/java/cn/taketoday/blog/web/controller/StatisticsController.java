@@ -17,6 +17,7 @@ import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.service.StatisticsService;
 import cn.taketoday.format.annotation.DateTimeFormat;
 import cn.taketoday.web.annotation.GET;
+import cn.taketoday.web.annotation.PathVariable;
 import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RestController;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +65,7 @@ public class StatisticsController {
   //LocalDate from, LocalDate to
 
   @GET("/{type}")
-  public Map<String, Integer> statistics(StatisticsField type) {
+  public Map<String, Integer> statistics(@PathVariable StatisticsField type) {
     return statisticsService.analyze(type);
   }
 
