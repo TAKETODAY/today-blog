@@ -4,7 +4,7 @@
   "private": true,
   "description": "TODAY BLOG Desktop UI",
   "author": "Harry Yang <taketoday@foxmail.com>",
-  "license": "GPL",
+  "license": "GPL v3",
   "dependencies": {
     "antd": "^4.10.0",
     "axios": "^0.19.2",

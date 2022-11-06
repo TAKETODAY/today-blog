@@ -88,13 +88,13 @@
       {
         layout: false,
         path: '/user/login',
-        component: './User/login',
+        component: './user/login',
       },
       {
         name: 'list',
         icon: 'user',
         path: '/user/list',
-        component: './User/list',
+        component: './user/list',
       },
     ],
   },

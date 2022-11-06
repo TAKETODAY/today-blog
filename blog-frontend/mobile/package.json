@@ -3,7 +3,7 @@
   "version": "3.1",
   "description": "TODAY BLOG Mobile UI",
   "author": "Harry Yang <taketoday@foxmail.com>",
-  "license": "GPL",
+  "license": "GPL v3",
   "scripts": {
     "start": "vue-cli-service serve",
     "serve": "vue-cli-service serve",

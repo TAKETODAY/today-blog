@@ -4,7 +4,7 @@
   "private": true,
   "description": "TODAY BLOG Admin UI",
   "author": "Harry Yang <taketoday@foxmail.com>",
-  "license": "GPL",
+  "license": "GPL v3",
   "scripts": {
     "analyze": "cross-env ANALYZE=1 umi build",
     "build": "umi build",
