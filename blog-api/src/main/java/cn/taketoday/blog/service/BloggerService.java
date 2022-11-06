@@ -20,30 +20,21 @@
 
 package cn.taketoday.blog.service;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.repository.BloggerRepository;
-import cn.taketoday.context.ApplicationContext;
 import cn.taketoday.stereotype.Service;
-import cn.taketoday.web.InternalServerException;
-import freemarker.template.Configuration;
-import freemarker.template.TemplateModelException;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-07 21:57
  */
 @Service
+@RequiredArgsConstructor
 public class BloggerService {
 
   private Blogger blogger;
-  private final ApplicationContext context;
   private final BloggerRepository bloggerRepository;
-
-  public BloggerService(BloggerRepository repository, ApplicationContext context) {
-    this.bloggerRepository = repository;
-    this.context = context;
-  }
 
   public Blogger fetchBlogger() {
     Blogger blogger = bloggerRepository.getBlogger();
@@ -58,14 +49,6 @@ public class BloggerService {
 
   public synchronized void setBlogger(Blogger blogger) {
     this.blogger = blogger;
-
-    Configuration configuration = context.getBean(Configuration.class);
-    try {
-      configuration.setSharedVariable(BlogConstant.KEY_AUTHOR_INFO, blogger);
-    }
-    catch (TemplateModelException e) {
-      throw InternalServerException.failed("博主信息更新失败");
-    }
   }
 
   public Blogger getBlogger() {
