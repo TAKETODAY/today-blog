@@ -4,6 +4,14 @@
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
 ########################################################
 
+app:
+  name: today-blog-api
+
+infra:
+  output:
+    ansi:
+      enabled: always
+
 aliyun:
   oss:
     accessKey:
@@ -14,8 +22,7 @@ aliyun:
     endpoint:
     secretAccessKey:
 
-application:
-  name: today-blog-api
+
 
 context:
   profiles:

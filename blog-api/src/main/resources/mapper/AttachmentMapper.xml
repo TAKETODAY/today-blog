@@ -22,7 +22,7 @@
 
   <resultMap id="BaseResultMap" type="cn.taketoday.blog.model.Attachment">
     <id column="id" jdbcType="BIGINT" property="id" />
-    <result column="url" jdbcType="CLOB" property="url" />
+    <result column="uri" jdbcType="CLOB" property="uri" />
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="file_type" jdbcType="TINYINT" property="fileType" />
     <result column="size" jdbcType="BIGINT" property="size" />
@@ -31,7 +31,7 @@
   </resultMap>
 
   <sql id="selectAllCol">
-    `id`,`url`,`name`,`file_type`,`size`,`location`,`sync`
+    `id`,`uri`,`name`,`file_type`,`size`,`location`,`sync`
   </sql>
 
   <delete id="deleteById" parameterType="long">
@@ -49,8 +49,8 @@
       <if test="location != null">
         location = #{location},
       </if>
-      <if test="url != null">
-        url = #{url},
+      <if test="uri != null">
+        uri = #{uri},
       </if>
       <if test="fileType != null">
         file_type = #{fileType},
@@ -73,7 +73,7 @@
   </select>
 
   <insert id="save" parameterType="cn.taketoday.blog.model.Attachment">
-    insert into attachment (id, name, url, location, file_type, size, sync)
+    insert into attachment (id, name, uri, location, file_type, size, sync)
     values (#{id}, #{name}, #{url}, #{location}, #{fileType}, #{size}, #{sync})
   </insert>
 

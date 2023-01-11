@@ -24,13 +24,11 @@ import cn.taketoday.blog.aspect.Logger;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.form.AttachmentForm;
 import cn.taketoday.blog.service.AttachmentService;
-import cn.taketoday.blog.utils.BlogUtils;
 import cn.taketoday.blog.utils.Pagination;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
-import cn.taketoday.web.annotation.Multipart;
 import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.PUT;
 import cn.taketoday.web.annotation.PathVariable;
@@ -67,7 +65,7 @@ public class AttachmentController {
   @POST
   @ResponseStatus(HttpStatus.CREATED)
   @Logger(value = "上传附件", content = "文件名: [${file.getFileName()}]")
-  public Attachment upload(@Multipart MultipartFile file) {
+  public Attachment upload(MultipartFile file) {
     return attachmentService.upload(file, null);
   }
 

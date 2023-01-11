@@ -23,7 +23,7 @@ package cn.taketoday.blog.aspect;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executor;
 
 import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.model.User;
@@ -40,11 +40,11 @@ import static cn.taketoday.blog.utils.BlogUtils.remoteAddress;
  */
 public class LoggingInterceptor implements MethodInterceptor {
 
-  private final ThreadPoolExecutor executor;
+  private final Executor executor;
   private final LoggingService loggingService;
   private final UserSessionResolver sessionResolver;
 
-  public LoggingInterceptor(ThreadPoolExecutor executor,
+  public LoggingInterceptor(Executor executor,
           LoggingService loggingService, UserSessionResolver sessionResolver) {
     this.executor = executor;
     this.loggingService = loggingService;

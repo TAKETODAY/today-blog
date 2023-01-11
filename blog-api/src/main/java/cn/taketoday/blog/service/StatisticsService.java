@@ -6,14 +6,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cn.taketoday.beans.factory.annotation.Autowired;
 import cn.taketoday.blog.ApplicationException;
 import cn.taketoday.blog.model.enums.StatisticsField;
 import cn.taketoday.blog.model.form.PageViewStatistics;
 import cn.taketoday.cache.CacheManager;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.core.JdbcOperations;
-import cn.taketoday.jdbc.core.JdbcTemplate;
 import cn.taketoday.jdbc.core.PreparedStatementCallback;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.web.InternalServerException;

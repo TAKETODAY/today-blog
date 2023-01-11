@@ -25,94 +25,46 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
-import cn.taketoday.beans.factory.annotation.Qualifier;
+import cn.taketoday.aop.support.DefaultPointcutAdvisor;
+import cn.taketoday.aop.support.annotation.AnnotationMatchingPointcut;
+import cn.taketoday.beans.factory.annotation.DisableAllDependencyInjection;
+import cn.taketoday.blog.aspect.Logger;
 import cn.taketoday.blog.aspect.LoggingInterceptor;
 import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.utils.ObjectUtils;
 import cn.taketoday.cache.annotation.EnableCaching;
 import cn.taketoday.cache.support.CaffeineCacheManager;
-import cn.taketoday.context.annotation.Bean;
 import cn.taketoday.context.annotation.Configuration;
-import cn.taketoday.context.annotation.Primary;
-import cn.taketoday.context.properties.EnableConfigurationProperties;
 import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
-import cn.taketoday.core.env.Environment;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.config.JdbcProperties;
-import cn.taketoday.jdbc.core.JdbcOperations;
-import cn.taketoday.jdbc.core.JdbcTemplate;
-import cn.taketoday.jdbc.datasource.DataSourceTransactionManager;
-import cn.taketoday.jdbc.support.JdbcTransactionManager;
 import cn.taketoday.stereotype.Component;
 import cn.taketoday.stereotype.Singleton;
-import cn.taketoday.transaction.PlatformTransactionManager;
-import cn.taketoday.transaction.support.TransactionTemplate;
-import cn.taketoday.web.config.WebMvcConfiguration;
-import cn.taketoday.web.registry.ViewControllerHandlerMapping;
+import cn.taketoday.web.config.WebMvcConfigurer;
+import cn.taketoday.web.handler.ViewControllerHandlerMapping;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-05-26 17:28
  */
 @EnableCaching
-@EnableConfigurationProperties(JdbcProperties.class)
+@DisableAllDependencyInjection
 @Configuration(proxyBeanMethods = false)
-public class AppConfig implements WebMvcConfiguration {
-
-  private final ThreadPoolExecutor executor =
-          new ThreadPoolExecutor(4, 20,
-                  10, TimeUnit.SECONDS,
-                  new LinkedBlockingQueue<>(500),
-                  new ThreadPoolExecutor.CallerRunsPolicy());
-
-  @Singleton
-  public ThreadPoolExecutor executor() {
-    return executor;
-  }
-
-  @Primary
-  @Singleton
-  JdbcTemplate jdbcTemplate(DataSource dataSource, JdbcProperties properties) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    JdbcProperties.Template template = properties.getTemplate();
-    jdbcTemplate.setFetchSize(template.getFetchSize());
-    jdbcTemplate.setMaxRows(template.getMaxRows());
-    if (template.getQueryTimeout() != null) {
-      jdbcTemplate.setQueryTimeout((int) template.getQueryTimeout().getSeconds());
-    }
-    return jdbcTemplate;
-  }
-
-  @Bean
-  public TransactionTemplate transactionTemplate(PlatformTransactionManager transactionManager) {
-    return new TransactionTemplate(transactionManager);
-  }
-
-  @Singleton
-  DataSourceTransactionManager transactionManager(@Qualifier("repositoryManager") RepositoryManager s, Environment environment, DataSource dataSource) {
-    return createTransactionManager(environment, dataSource);
-  }
-
-  private DataSourceTransactionManager createTransactionManager(Environment environment, DataSource dataSource) {
-    return environment.getProperty("dao.exceptiontranslation.enabled", Boolean.class, Boolean.TRUE)
-           ? new JdbcTransactionManager(dataSource) : new DataSourceTransactionManager(dataSource);
-  }
+public class AppConfig implements WebMvcConfigurer {
 
   @Component
-  RepositoryManager repositoryManager(JdbcOperations op, DataSource dataSource) {
+  RepositoryManager repositoryManager(DataSource dataSource) {
     return new RepositoryManager(dataSource);
   }
 
   @Singleton
-  public CaffeineCacheManager caffeineCacheManager(RepositoryManager s) {
+  public CaffeineCacheManager caffeineCacheManager() {
     final CaffeineCacheManager cacheManager = new CaffeineCacheManager();
     cacheManager.setCaffeine(
             Caffeine.newBuilder()
@@ -121,20 +73,6 @@ public class AppConfig implements WebMvcConfiguration {
     );
     return cacheManager;
   }
-
-//  @Singleton
-//  @Profile("prod")
-//  public ResourceHandlerRegistry prodResourceMappingRegistry(ApplicationContext context) {
-//
-//    final ResourceHandlerRegistry registry = new ResourceHandlerRegistry(context);
-//
-//    registry.addResourceHandler(AdminInterceptor.class)//
-//            .setPathPatterns("/assets/admin/**")//
-//            .setOrder(Ordered.HIGHEST_PRECEDENCE)//
-//            .addLocations("/assets/admin/");
-//
-//    return registry;
-//  }
 
   @Override
   public void configureViewController(ViewControllerHandlerMapping registry) {
@@ -166,11 +104,15 @@ public class AppConfig implements WebMvcConfiguration {
   // 日志
   @Singleton
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  LoggingInterceptor loggingInterceptor(
-          ThreadPoolExecutor executor,
-          LoggingService loggerService,
-          UserSessionResolver sessionResolver) {
+  LoggingInterceptor loggingInterceptor(Executor executor,
+          LoggingService loggerService, UserSessionResolver sessionResolver) {
     return new LoggingInterceptor(executor, loggerService, sessionResolver);
+  }
+
+  @Singleton
+  DefaultPointcutAdvisor pointcutAdvisor(LoggingInterceptor loggingInterceptor) {
+    AnnotationMatchingPointcut pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logger.class);
+    return new DefaultPointcutAdvisor(pointcut, loggingInterceptor);
   }
 
 //  @Singleton

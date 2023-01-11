@@ -20,12 +20,10 @@
 
 package cn.taketoday.blog.config;
 
-import cn.taketoday.blog.ConfigBinding;
 import cn.taketoday.blog.BlogConstant;
+import cn.taketoday.blog.ConfigBinding;
 import cn.taketoday.context.properties.ConfigurationProperties;
 import cn.taketoday.stereotype.Component;
-import cn.taketoday.stereotype.Prototype;
-import cn.taketoday.stereotype.Singleton;
 import lombok.Getter;
 import lombok.Setter;
 

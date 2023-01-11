@@ -21,7 +21,6 @@ package cn.taketoday.blog.service;
 
 import java.util.List;
 
-import cn.taketoday.beans.factory.annotation.Autowired;
 import cn.taketoday.blog.model.PageView;
 import cn.taketoday.blog.repository.PageViewRepository;
 import cn.taketoday.stereotype.Service;

@@ -59,7 +59,7 @@ import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.PathVariable;
 import cn.taketoday.web.annotation.RequestParam;
 import cn.taketoday.web.annotation.SessionAttribute;
-import cn.taketoday.web.config.WebMvcConfiguration;
+import cn.taketoday.web.config.WebMvcConfigurer;
 import cn.taketoday.web.view.RedirectModel;
 
 /**
@@ -68,7 +68,7 @@ import cn.taketoday.web.view.RedirectModel;
  */
 @Controller
 @Profile("dev")
-public class PageableController implements WebMvcConfiguration, BlogConstant {
+public class PageableController implements WebMvcConfigurer, BlogConstant {
 
   @Serial
   private static final long serialVersionUID = 1L;

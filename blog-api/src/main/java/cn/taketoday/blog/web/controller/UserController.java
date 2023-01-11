@@ -40,10 +40,8 @@ import cn.taketoday.blog.utils.StringUtils;
 import cn.taketoday.blog.web.interceptor.NoRequestLimit;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.http.HttpStatus;
-import cn.taketoday.web.AccessForbiddenException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
-import cn.taketoday.web.annotation.Multipart;
 import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.PUT;
 import cn.taketoday.web.annotation.PathVariable;
@@ -188,7 +186,7 @@ public class UserController {
    */
   @POST("/settings/background")
   @Logger(value = "用户修改背景", content = "文件名: [${background.getFileName()}] 邮箱:[${loginUser.email}]")
-  public Json background(User loginUser, @Multipart MultipartFile background) {
+  public Json background(User loginUser, MultipartFile background) {
 
     Attachment attachment = //
             attachmentService.upload(background, StringUtils.getRandomImageName(background.getOriginalFilename()));

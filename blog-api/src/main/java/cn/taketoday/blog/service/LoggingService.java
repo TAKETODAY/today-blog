@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import cn.taketoday.beans.factory.BeanFactory;
-import cn.taketoday.beans.factory.annotation.Autowired;
 import cn.taketoday.blog.MethodOperation;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.aspect.Logger;

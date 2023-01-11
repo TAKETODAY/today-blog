@@ -4,13 +4,16 @@ use `today-blog`;
 
 create table attachment
 (
-    `id`        bigint                    not null primary key,
-    `name`      varchar(255) charset utf8 null,
-    `url`       varchar(255) charset utf8 null,
-    `location`  text charset utf8         null,
-    `sync`      bit    default b'0'       null,
-    `size`      bigint default 0          null,
-    `file_type` varchar(255) charset utf8 null
+    `id`        bigint auto_increment primary key,
+    `name`      varchar(255) default null comment '附件名称',
+    `uri`       mediumtext   default null comment 'URI地址',
+    `location`  mediumtext   default null comment '附件本地地址',
+    `size`      bigint       default 0 comment '文件大小',
+    `sync`      bit          default b'0' comment '',
+    `file_type` varchar(255) default null comment '附件类型',
+
+    `create_at` datetime     default CURRENT_TIMESTAMP comment '创建时间',
+    `update_at` datetime on update CURRENT_TIMESTAMP comment '更新时间'
 );
 
 create table blogger

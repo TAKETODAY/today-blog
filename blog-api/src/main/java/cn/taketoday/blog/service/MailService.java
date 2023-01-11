@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executor;
 
 import cn.taketoday.beans.factory.BeanFactory;
 import cn.taketoday.blog.model.Operation;
@@ -45,15 +45,15 @@ import lombok.CustomLog;
 @CustomLog
 public class MailService {
 
+  private final Executor executor;
   private final BeanFactory beanFactory;
-  private final ThreadPoolExecutor executor;
   private final LoggingService loggerService;
 
   final Configuration configuration;
 
   public MailService(
+          Executor executor,
           BeanFactory beanFactory,
-          ThreadPoolExecutor executor,
           LoggingService loggerService,
           @Nullable Configuration configuration) {
     this.executor = executor;

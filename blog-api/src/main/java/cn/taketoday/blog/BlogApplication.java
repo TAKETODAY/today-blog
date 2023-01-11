@@ -28,10 +28,7 @@ import cn.taketoday.framework.context.event.ApplicationFailedEvent;
 import cn.taketoday.framework.context.event.ApplicationStartedEvent;
 import cn.taketoday.framework.web.WebApplication;
 import cn.taketoday.orm.mybatis.annotation.MapperScan;
-import cn.taketoday.scheduling.annotation.EnableScheduling;
 import cn.taketoday.session.config.EnableWebSession;
-import cn.taketoday.transaction.annotation.EnableTransactionManagement;
-import cn.taketoday.web.config.EnableWebMvc;
 import lombok.CustomLog;
 
 /**
@@ -40,9 +37,6 @@ import lombok.CustomLog;
  */
 @CustomLog
 @EnableWebSession
-@EnableTransactionManagement
-@EnableWebMvc
-@EnableScheduling
 @InfraApplication
 @MapperScan("cn.taketoday.blog.repository")
 public class BlogApplication {
@@ -66,6 +60,5 @@ public class BlogApplication {
   public void appFailed(ApplicationFailedEvent event) {
     log.info("----------------Application Started Failed ------------------", event.getException());
   }
-
 
 }
