@@ -123,19 +123,17 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
    * 接口的访问频次限制
    */
   private boolean hasTooManyRequests(RequestContext request, HandlerMethod handler, RequestLimit requestLimit) {
-    synchronized(requestLimitCache) {
-      Instant now = clock.instant();
-      expiredChecker.checkIfNecessary(now);
+    Instant now = clock.instant();
+    expiredChecker.checkIfNecessary(now);
 
-      Method method = handler.getMethod();
-      String ip = BlogUtils.remoteAddress(request);
-      RequestKey key = new RequestKey(ip, method);
+    Method method = handler.getMethod();
+    String ip = BlogUtils.remoteAddress(request);
+    RequestKey key = new RequestKey(ip, method);
 
-      RequestLimitEntry entry = requestLimitCache.computeIfAbsent(
-              key, requestKey -> new RequestLimitEntry(requestLimit));
+    RequestLimitEntry entry = requestLimitCache.computeIfAbsent(
+            key, requestKey -> new RequestLimitEntry(requestLimit));
 
-      return entry.isExceeded(now);
-    }
+    return entry.isExceeded(now);
   }
 
   /**

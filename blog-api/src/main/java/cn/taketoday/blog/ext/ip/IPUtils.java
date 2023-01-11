@@ -23,6 +23,7 @@ package cn.taketoday.blog.ext.ip;
 import java.io.UnsupportedEncodingException;
 import java.util.StringTokenizer;
 
+@Deprecated(forRemoval = true)
 public abstract class IPUtils {
   /**
    * 从ip的字符串形式得到字节数组形式
@@ -57,22 +58,6 @@ public abstract class IPUtils {
     }
     catch (UnsupportedEncodingException e) {
       return s;
-    }
-  }
-
-  /**
-   * 根据某种编码方式将字节数组转换成字符串
-   *
-   * @param b 字节数组
-   * @param encoding 编码方式
-   * @return 如果encoding不支持，返回一个缺省编码的字符串
-   */
-  public static String getString(byte[] b, String encoding) {
-    try {
-      return new String(b, encoding);
-    }
-    catch (UnsupportedEncodingException e) {
-      return new String(b);
     }
   }
 

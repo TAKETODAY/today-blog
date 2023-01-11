@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BloggerService {
 
-  private Blogger blogger;
+  private volatile Blogger blogger;
   private final BloggerRepository bloggerRepository;
 
   public Blogger fetchBlogger() {
@@ -47,13 +47,20 @@ public class BloggerService {
     setBlogger(blogger);
   }
 
-  public synchronized void setBlogger(Blogger blogger) {
+  public void setBlogger(Blogger blogger) {
     this.blogger = blogger;
   }
 
   public Blogger getBlogger() {
+    Blogger blogger = this.blogger;
     if (blogger == null) {
-      setBlogger(bloggerRepository.getBlogger());
+      synchronized(this) {
+        blogger = this.blogger;
+        if (blogger == null) {
+          blogger = bloggerRepository.getBlogger();
+          setBlogger(blogger);
+        }
+      }
     }
     return blogger;
   }

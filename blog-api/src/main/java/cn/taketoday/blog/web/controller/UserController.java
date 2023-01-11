@@ -164,12 +164,9 @@ public class UserController {
   @Logger(value = "用户保存头像", content = "上传:[${avatar.getFileName()}] email:[${loginUser.email}]")
   public Json avatar(User loginUser, MultipartFile avatar) {
 
-    Attachment attachment = //
-            attachmentService.upload(avatar, StringUtils.getRandomImageName(avatar.getOriginalFilename()));
+    Attachment attachment = attachmentService.upload(
+            avatar, StringUtils.getRandomImageName(avatar.getOriginalFilename()));
 
-    if (attachment == null) {
-      return Json.failed("上传失败");
-    }
     String path = attachment.getUri();
 
     if (!path.equals(loginUser.getAvatar())) { // not equals
@@ -187,15 +184,10 @@ public class UserController {
   @POST("/settings/background")
   @Logger(value = "用户修改背景", content = "文件名: [${background.getFileName()}] 邮箱:[${loginUser.email}]")
   public Json background(User loginUser, MultipartFile background) {
+    Attachment attachment = attachmentService.upload(
+            background, StringUtils.getRandomImageName(background.getOriginalFilename()));
 
-    Attachment attachment = //
-            attachmentService.upload(background, StringUtils.getRandomImageName(background.getOriginalFilename()));
-
-    if (attachment == null) {
-      return Json.failed("修改失败");
-    }
     String path = attachment.getUri();
-
     if (!path.equals(loginUser.getBackground())) { // not equals
       userService.update(new User(loginUser.getId()).setBackground(path));
       loginUser.setBackground(path);

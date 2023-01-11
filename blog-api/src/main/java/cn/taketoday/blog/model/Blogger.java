@@ -86,4 +86,9 @@ public class Blogger implements Serializable {
     return false;
   }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, age, sex, name, email, passwd, introduce, image, address);
+  }
+
 }
