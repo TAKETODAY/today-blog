@@ -1,7 +1,7 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
-const CodeMirror = require('codemirror');
+const CodeMirror = import('codemirror');
 
 CodeMirror.commands.tabAndIndentMarkdownList = function (cm) {
   const ranges = cm.listSelections();

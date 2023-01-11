@@ -1,11 +1,17 @@
 // https://umijs.org/config/
 import { defineConfig } from 'umi';
-import { join } from 'path';
 import defaultSettings from './defaultSettings';
 import proxy from './proxy';
 import routes from './routes';
 
+const CompressionPlugin = require('compression-webpack-plugin')
+
 const { REACT_APP_ENV } = process.env;
+const production = process.env.NODE_ENV === 'production'
+
+export function isNotNull(object: any) {
+  return !(object === null || object === undefined)
+}
 
 export default defineConfig({
   hash: true,
@@ -34,9 +40,6 @@ export default defineConfig({
     // default true, when it is true, will use `navigator.language` overwrite default
     baseNavigator: true,
   },
-  dynamicImport: {
-    loading: '@ant-design/pro-layout/es/PageLoading',
-  },
   targets: {
     ie: 11,
   },
@@ -54,11 +57,65 @@ export default defineConfig({
   manifest: {
     basePath: '/',
   },
-  openAPI: {
-    requestLibPath: "import { request } from 'umi'",
-    // 或者使用在线的版本
-    // schemaPath: "https://gw.alipayobjects.com/os/antfincdn/M%24jrzTTYJN/oneapi.json"
-    schemaPath: join(__dirname, 'oneapi.json'),
-    mock: false,
+  // Fast Refresh 热更新
+  fastRefresh: {},
+  nodeModulesTransform: { type: 'none' },
+  mfsu: {},
+  webpack5: {},
+  // exportStatic: {},
+  // chunks: ['vendors', 'umi'],
+  dynamicImport: {
+    loading: '@ant-design/pro-layout/es/PageLoading',
   },
+  chainWebpack: function (config, { webpack }) {
+    if (isNotNull(this.dynamicImport)) {
+      console.log("dynamicImport")
+      config.merge({
+        optimization: {
+          splitChunks: {
+            chunks: 'all',
+            minSize: 30000,
+            minChunks: 2,
+            automaticNameDelimiter: '.',
+            cacheGroups: {
+              vendor: {
+                name: 'vendors',
+                // @ts-ignore
+                test({ resource }) {
+                  return /[\\/]node_modules[\\/]/.test(resource);
+                },
+                priority: 10,
+              },
+            },
+          },
+        }
+      })
+
+      if (production) {
+        config.plugin('LimitChunkCountPlugin').use(require("webpack").optimize.LimitChunkCountPlugin, [
+          {
+            maxChunks: 1,
+          },
+        ])
+      }
+    }
+
+    if (production) {
+
+      //gzip压缩
+      config.plugin('compression-webpack-plugin').use(CompressionPlugin, [
+        {
+          test: /\.js$|\.html$|\.css$/, //匹配文件名
+          threshold: 10240, //对超过10k的数据压缩
+          deleteOriginalAssets: false, //不删除源文件
+        },
+      ]);
+
+      //过滤掉momnet的那些不使用的国际化文件
+      config.plugin("replace").use(require("webpack").ContextReplacementPlugin).tap(() => {
+        return [/moment[/\\]locale$/, /zh-cn/];
+      })
+    }
+
+  }
 });

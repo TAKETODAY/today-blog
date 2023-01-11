@@ -9,12 +9,18 @@ const draggerProps = {
   multiple: true,
   action: '/api/attachments',
   onChange(info) {
-    const { status } = info.file;
+    console.log(info)
+    const { status, response } = info.file;
     if (status === 'done') {
-      message.success(`'${ info.file.name }' 上传成功.`);
+      message.success(`'${info.file.name}' 上传成功.`);
     }
     else if (status === 'error') {
-      message.error(`'${ info.file.name }' 上传失败.`);
+      if (response) {
+        message.error(`'${info.file.name}' 上传失败: ${response.message}`)
+      }
+      else {
+        message.error(`'${info.file.name}' 上传失败.`)
+      }
     }
   },
 };
@@ -25,19 +31,19 @@ const UploadForm = props => {
   return (
       <Modal
           title="上传附件"
-          width={ 800 }
+          width={800}
           destroyOnClose
-          onOk={ () => {
+          onOk={() => {
             hideUpdateModal()
             onRefresh && onRefresh()
-          } }
-          onCancel={ () => {
+          }}
+          onCancel={() => {
             hideUpdateModal()
-          } }
-          visible={ updateModalVisible }
-          bodyStyle={ { padding: '32px 40px 48px' } }
+          }}
+          visible={updateModalVisible}
+          bodyStyle={{ padding: '32px 40px 48px' }}
       >
-        <Dragger { ...draggerProps }>
+        <Dragger {...draggerProps}>
           <p className="ant-upload-drag-icon">
             <InboxOutlined/>
           </p>

@@ -78,7 +78,7 @@ const DEFAULT_CACHED_TIMEOUT = 10 * 1000  // 10s
 export async function getCacheable(url) {
   startNProgress()
 
-  let cached = await sessionStorage.getItem(url)
+  let cached = sessionStorage.getItem(url)
   if (cached) {
     cached = JSON.parse(cached);
     if (currentTimeMillis() - cached.expired < DEFAULT_CACHED_TIMEOUT) {
