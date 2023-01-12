@@ -3,8 +3,8 @@ import { http, getCacheable } from '../utils';
 export default class OptionService {
 
   options = {
-    'site.icp': '蜀ICP备17031147号',
-    'site.copyright': 'Copyright © TODAY & 2017 - 2021 All Rights Reserved.',
+    'site.icp': '',
+    'site.copyright': 'Copyright © TODAY & 2017 - 2023 All Rights Reserved.',
     'site.otherFooter': ''
   }
 

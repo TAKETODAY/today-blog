@@ -1,7 +1,7 @@
 const defaultOptions = {
   'site.name': 'TODAY BLOG',
-  'site.icp': '蜀ICP备17031147号',
-  'site.copyright': 'Copyright © TODAY & 2017 - 2020 All Rights Reserved.',
+  'site.icp': '',
+  'site.copyright': 'Copyright © TODAY & 2017 - 2023 All Rights Reserved.',
   'site.otherFooter': '代码是我心中的一首诗',
   'site.image.server': ''
 };

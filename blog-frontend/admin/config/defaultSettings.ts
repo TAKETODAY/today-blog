@@ -8,7 +8,7 @@ const Settings: LayoutSettings & {
   // 拂晓蓝
   primaryColor: '#337ab7',
   // layout: 'mix',
-  layout: 'sidemenu',
+  layout: 'side',
   contentWidth: 'Fluid',
   // fixedHeader: false,
   fixedHeader: true,

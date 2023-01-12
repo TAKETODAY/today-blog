@@ -1,11 +1,8 @@
-import React from 'react';
-import { useModel } from "@@/plugin-model/useModel";
 import { DefaultFooter } from '@ant-design/pro-layout';
+import { useOptions } from "@/components/hooks";
 
 export default () => {
-  const { initialState } = useModel('@@initialState');
-  // @ts-ignore
-  const { options } = initialState
+  const [options] = useOptions()
   return (
       <DefaultFooter
           copyright={options['site.copyright']}
@@ -19,4 +16,16 @@ export default () => {
           ]}
       />
   )
+  // (
+  //     <footer className="ant-layout-footer" style={{ padding: 0 }}>
+  //       <div className="ant-pro-global-footer">
+  //         <div className="ant-pro-global-footer-links">
+  //           <a title="Harry Yang" target="_blank" href="https://taketoday.cn" rel="noreferrer">由 Harry Yang 提供技术支持</a>
+  //         </div>
+  //         <div className="ant-pro-global-footer-copyright">
+  //           {options['site.copyright']}
+  //         </div>
+  //       </div>
+  //     </footer>
+  //   )
 }

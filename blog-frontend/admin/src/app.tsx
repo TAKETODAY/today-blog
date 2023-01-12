@@ -1,4 +1,3 @@
-import React from 'react';
 import type { Settings as LayoutSettings } from '@ant-design/pro-layout';
 import { PageLoading } from '@ant-design/pro-layout';
 import { Modal, notification } from 'antd';
@@ -37,8 +36,8 @@ export async function getInitialState(): Promise<{
 
   // @ts-ignore
   const options = await getCacheable("/api/options").then(res => res.data).catch(() => ({
-    'site.icp': '蜀ICP备17031147号',
-    'site.copyright': 'Copyright © TODAY & 2017 - 2021 All Rights Reserved.',
+    'site.icp': '',
+    'site.copyright': 'TODAY & 2017 - 2023 All Rights Reserved.',
     'site.otherFooter': ''
   }))
   // 如果是登录页面，不执行

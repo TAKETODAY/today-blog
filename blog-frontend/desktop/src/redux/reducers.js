@@ -47,8 +47,8 @@ export const userReducer = (state = {}, action) => {
 }
 
 const options = {
-  'site.icp': '蜀ICP备17031147号',
-  'site.copyright': 'Copyright © TODAY & 2017 - 2020 All Rights Reserved.',
+  'site.icp': '',
+  'site.copyright': 'Copyright © TODAY & 2017 - 2023 All Rights Reserved.',
   'site.otherFooter': '',
   'site.image.server': ''
 };
