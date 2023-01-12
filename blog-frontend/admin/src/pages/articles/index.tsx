@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Divider, message, Popconfirm, Popover } from 'antd';
 import { FooterToolbar, PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
@@ -10,6 +10,8 @@ import { deleteArticle, getCategories, queryArticles, toggleArticleStatus } from
 import { PlusOutlined } from "@ant-design/icons/lib";
 import moment from "moment";
 import { Link } from "react-router-dom";
+import { ArticleLink } from "@/components/Article";
+import PopoverPicture from "@/components/PopoverPicture";
 
 
 /**
@@ -121,54 +123,62 @@ export default () => {
 
   const columns: ProColumns<ArticleItem>[] = [
     {
+      width: 140,
       title: '标题',
+      fixed: 'left',
       dataIndex: 'title',
       render: (_, article) => (
           <Popover title="文章标题" content={<span dangerouslySetInnerHTML={{ __html: article.title }}/>}>
-            <a href={`/articles/${article.id}`} target='_blank'>{article.title.substr(0, 15)}...</a>
+            <ArticleLink article={article}>
+              {article.title?.length > 10 ? `${article.title.substring(0, 15)}...` : article.title}
+            </ArticleLink>
           </Popover>
       )
     },
     {
       title: '封面',
+      width: 120,
       dataIndex: 'image',
       hideInSearch: true,
       render: (_, article) => (
-          article.image && <Popover placement="rightTop" title={article.title}
-                                    content={<img src={article.image} alt={article.title}/>}>
-            <img src={article.image} height={68} alt={article.title}/>
-          </Popover>
+          <PopoverPicture title={article.title} src={article.image} width={120} multiple={8}/>
       ),
     },
     {
       title: '分类',
+      width: 70,
       dataIndex: 'category',
       valueEnum: categoriesEnum,
     },
     {
       title: '内容',
+      width: 250,
       dataIndex: 'content',
       render: (_, article) => (
           <Popover title={article.title} trigger="hover"
-                   content={<span dangerouslySetInnerHTML={{ __html: article.content }}/>}>
-            <span>{article.summary?.substr(0, 8)}...</span>
+                   content={<div style={{ maxWidth: 1000, height: 550, overflowY: "auto" }}
+                                 dangerouslySetInnerHTML={{ __html: article.content }}/>}>
+            <span>{article.summary?.substring(0, 70)}...</span>
           </Popover>
       )
     },
     {
       title: '浏览量',
+      width: 80,
       dataIndex: 'pv',
       sorter: true,
       hideInSearch: true
     },
     {
       title: '密码',
+      width: 100,
       dataIndex: 'password',
       hideInSearch: true
     },
     {
       title: '发表日期',
       dataIndex: 'id',
+      width: 170,
       sorter: true,
       valueType: 'dateTimeRange',
       render: (_, record) => (
@@ -178,6 +188,7 @@ export default () => {
       ),
     },
     {
+      width: 170,
       title: '最后更改',
       sorter: true,
       dataIndex: 'lastModify',
@@ -189,7 +200,9 @@ export default () => {
       ),
     },
     {
+      width: 180,
       title: '操作',
+      fixed: 'right',
       valueType: 'option',
       render: (_, record) => (
           <>
@@ -216,9 +229,10 @@ export default () => {
             actionRef={actionRef}
             request={queryArticles}
             columns={columns}
+            scroll={{ x: 1200 }}
             toolBarRender={() => [
               <Link to='/articles/write' target='_blank'>
-                <PlusOutlined/> 新建
+                <PlusOutlined/> 新建文章
               </Link>
             ]}
             rowSelection={{

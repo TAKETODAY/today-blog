@@ -23,21 +23,27 @@ package cn.taketoday.blog.web.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.hibernate.validator.constraints.Length;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.ApplicationException;
 import cn.taketoday.blog.BlogConstant;
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.aspect.Logger;
 import cn.taketoday.blog.config.BlogConfig;
+import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.model.oauth.Oauth;
+import cn.taketoday.blog.service.AttachmentOperations;
 import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.service.UserService;
 import cn.taketoday.blog.utils.HashUtils;
@@ -50,6 +56,7 @@ import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.context.properties.bind.Binder;
 import cn.taketoday.core.MultiValueMap;
 import cn.taketoday.core.env.Environment;
+import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.web.InternalServerException;
@@ -57,17 +64,21 @@ import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.Interceptor;
 import cn.taketoday.web.annotation.POST;
+import cn.taketoday.web.annotation.PatchMapping;
 import cn.taketoday.web.annotation.PathVariable;
 import cn.taketoday.web.annotation.RequestBody;
 import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RequestParam;
 import cn.taketoday.web.annotation.ResponseBody;
+import cn.taketoday.web.annotation.ResponseStatus;
 import cn.taketoday.web.annotation.RestController;
 import cn.taketoday.web.annotation.SessionAttribute;
+import cn.taketoday.web.multipart.MultipartFile;
 import cn.taketoday.web.util.UriComponentsBuilder;
 import cn.taketoday.web.util.UriUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.CustomLog;
 import lombok.Getter;
@@ -87,16 +98,18 @@ public class AuthorizeController {
   private final BlogConfig blogConfig;
   private final UserService userService;
   private final BloggerService bloggerService;
+  private final AttachmentOperations attachmentOperations;
 
   private Map<String, OauthMetadata> oauthMetadata;
 
-  public AuthorizeController(Environment environment,
-          BlogConfig blogConfig, UserService userService, BloggerService bloggerService) {
+  public AuthorizeController(Environment environment, BlogConfig blogConfig, UserService userService,
+          BloggerService bloggerService, AttachmentOperations attachmentOperations) {
     this.blogConfig = blogConfig;
     this.userService = userService;
     this.bloggerService = bloggerService;
     this.giteeOauth = Binder.get(environment).bind("gitee", Oauth.class).get();
     this.gitHubOauth = Binder.get(environment).bind("github", Oauth.class).get();
+    this.attachmentOperations = attachmentOperations;
   }
 
   @GET
@@ -319,16 +332,15 @@ public class AuthorizeController {
 
     UserStatus status = user.getStatus();
     switch (status) {
-      case NORMAL: {
+      case NORMAL -> {
         session.removeAttribute(BlogConstant.BLOGGER_INFO);
         session.setAttribute(BlogConstant.USER_INFO, user);
         return redirectLogin(forward);
       }
-      case LOCKED:
-      case RECYCLE:
-      case INACTIVE:
+      case LOCKED, RECYCLE, INACTIVE -> {
         return redirectLoginError(forward, status.getDescription());
-      default: {
+      }
+      default -> {
         return redirectLoginError(forward, "登录出错，请稍后重试");
       }
     }
@@ -420,4 +432,161 @@ public class AuthorizeController {
     String bio;
     String avatar_url;
   }
+
+  //---------------------------------------------------------------------
+  // 修改当前用户的信息
+  //---------------------------------------------------------------------
+
+  public static class InfoForm {
+    @NotBlank(message = "用户名不能为空")
+    public String name;
+
+    @Length(max = 1000, message = "介绍最多1000个字符")
+    public String introduce;
+  }
+
+  /**
+   * 当前登录用户信息
+   *
+   * @param loginUser 登录用户
+   * @param form 表单
+   */
+  @PatchMapping
+  @RequestLimit(count = 2, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次用户信息")
+  public User userInfo(@RequiresUser User loginUser, @RequestBody @Valid InfoForm form) {
+    // 要判断不一致才更新
+    if (Objects.equals(form.name, loginUser.getName())
+            && Objects.equals(form.introduce, loginUser.getIntroduce())) {
+      throw ErrorMessageException.failed("未更改任何信息");
+    }
+
+    Long id = loginUser.getId();
+    // TODO 验证用户有效性
+    // 设置新值
+    User user = new User();
+    user.setId(id);
+    user.setName(form.name);
+    user.setIntroduce(form.introduce);
+
+    userService.update(user);
+
+    // update to session
+    loginUser.setName(form.name);
+    loginUser.setIntroduce(form.introduce);
+    return loginUser;
+  }
+
+  public static class ChangePasswordForm {
+
+    @NotBlank(message = "旧密码不能为空")
+    public String oldPassword;
+
+    @Length(min = 6, max = 48, message = "新密码至少输入6个字符，最多48个字符")
+    public String newPassword;
+
+    public String confirmNewPassword;
+  }
+
+  /**
+   * 修改用户密码
+   *
+   * @param loginUser 登录用户
+   * @param form 表单
+   */
+  @PatchMapping(params = "password")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @RequestLimit(count = 1, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次密码")
+  public void changePassword(@RequiresUser User loginUser,
+          @RequestBody @Valid ChangePasswordForm form) {
+
+    // 校验密码是否有效
+    if (!Objects.equals(form.confirmNewPassword, form.newPassword)) {
+      throw ErrorMessageException.failed("两次输入的新密码不一致");
+    }
+
+    // 校验数据是否存在该用户
+    User byId = userService.getById(loginUser.getId());
+    ErrorMessageException.notNull(byId, "要修改密码的用户不存在");
+
+    // 校验旧密码
+    String oldPassword = HashUtils.getEncodedPassword(form.oldPassword);
+    if (!Objects.equals(oldPassword, byId.getPassword())) {
+      throw ErrorMessageException.failed("原密码错误");
+    }
+
+    // 重新生成
+    String newPassword = HashUtils.getEncodedPassword(form.newPassword);
+
+    // 更新数据库
+    User user = new User();
+    user.setId(loginUser.getId());
+    user.setPassword(newPassword);
+    userService.update(user);
+  }
+
+  public static class UserEmailForm {
+
+    @NotEmpty(message = "请输入新邮箱")
+    public String email;
+
+    @NotEmpty(message = "请输入密码")
+    public String password;
+
+//    @NotEmpty(message = "请输入手机号")
+//    public String mobilePhone;
+  }
+
+  /**
+   * Change User's Email
+   */
+  @PatchMapping(params = "email-mobile-phone")
+  @RequestLimit(count = 1, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次邮箱或手机")
+  public User changeEmailAndMobilePhone(
+          @RequiresUser User loginUser, @Valid @RequestBody UserEmailForm form) {
+    if (Objects.equals(loginUser.getEmail(), form.email)) {
+      throw ErrorMessageException.failed("未更改任何信息");
+    }
+
+    // Check User's Password
+    String encodedPassword = HashUtils.getEncodedPassword(form.password);
+    if (encodedPassword.equals(loginUser.getPassword())) {
+      // 更新数据库
+      User user = new User();
+      user.setEmail(form.email);
+      user.setId(loginUser.getId());
+//      user.setMobilePhone(form.mobilePhone);
+
+      userService.update(user);
+
+      loginUser.setEmail(form.email);
+//      loginUser.setMobilePhone(form.mobilePhone);
+    }
+    else {
+      throw ErrorMessageException.failed("密码不正确");
+    }
+    return loginUser;
+  }
+
+  /**
+   * change image
+   */
+  @PatchMapping(params = "avatar")
+  @RequestLimit(count = 1, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改1次头像")
+  public User changeAvatar(@RequiresUser User loginUser, MultipartFile avatar) {
+    String originalFilename = avatar.getOriginalFilename();
+    String randomHashString = HashUtils.getRandomHashString(16);
+
+    Attachment attachment = attachmentOperations.upload(avatar, randomHashString + originalFilename);
+    String uri = attachment.getUri();
+
+    User user = new User();
+    user.setId(loginUser.getId());
+    user.setAvatar(uri);
+
+    userService.update(user);
+    loginUser.setAvatar(uri);
+
+    return loginUser;
+  }
+
 }

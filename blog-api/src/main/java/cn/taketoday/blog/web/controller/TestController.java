@@ -1,7 +1,9 @@
 package cn.taketoday.blog.web.controller;
 
+import cn.taketoday.context.annotation.Profile;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.web.annotation.CookieValue;
+import cn.taketoday.web.annotation.DeleteMapping;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.GetMapping;
 import cn.taketoday.web.annotation.RequestHeader;
@@ -10,6 +12,7 @@ import cn.taketoday.web.annotation.RestController;
 import cn.taketoday.web.annotation.SessionAttribute;
 import lombok.Data;
 
+@Profile("dev")
 @RestController
 @RequestMapping("/testing")
 public class TestController {

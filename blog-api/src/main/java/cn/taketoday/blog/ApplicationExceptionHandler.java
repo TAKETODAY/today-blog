@@ -30,6 +30,7 @@ import cn.taketoday.blog.utils.BlogUtils;
 import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.StringUtils;
 import cn.taketoday.blog.web.controller.ArticlePasswordException;
+import cn.taketoday.dao.DataAccessResourceFailureException;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
@@ -37,6 +38,7 @@ import cn.taketoday.stereotype.Component;
 import cn.taketoday.util.ObjectUtils;
 import cn.taketoday.web.AccessForbiddenException;
 import cn.taketoday.web.BadRequestException;
+import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.ResponseStatusException;
@@ -62,6 +64,13 @@ public class ApplicationExceptionHandler {
 
   private static final ErrorMessage illegalArgument = ErrorMessage.failed("参数错误");
   private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
+
+  @ExceptionHandler(ErrorMessageException.class)
+  public ResponseEntity<ErrorMessage> errorMessage(ErrorMessageException errorMessage) {
+    HttpStatus httpStatus = errorMessage.getStatus();
+    return ResponseEntity.status(httpStatus)
+            .body(ErrorMessage.failed(errorMessage.getMessage()));
+  }
 
   @ExceptionHandler(UnauthorizedException.class)
   public void unauthorized(RequestContext request) throws IOException {
@@ -100,6 +109,13 @@ public class ApplicationExceptionHandler {
   @ExceptionHandler(AccessForbiddenException.class)
   public ErrorMessage accessForbidden(AccessForbiddenException e) {
     return ErrorMessage.failed(e.getMessage());
+  }
+
+  @ExceptionHandler(InternalServerException.class)
+  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+  public ErrorMessage internal(InternalServerException internal) {
+    log.error("服务器内部错误", internal);
+    return ErrorMessage.failed(internal.getMessage());
   }
 
   @ExceptionHandler(ResponseStatusException.class)
@@ -183,6 +199,13 @@ public class ApplicationExceptionHandler {
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ErrorMessage ossException(Exception e) {
     return ErrorMessage.failed(e.getMessage());
+  }
+
+  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+  @ExceptionHandler(DataAccessResourceFailureException.class)
+  public ErrorMessage dataAccessException(DataAccessResourceFailureException accessException) {
+    log.error("数据库连接出错", accessException);
+    return ErrorMessage.failed("数据库连接出错");
   }
 
 }

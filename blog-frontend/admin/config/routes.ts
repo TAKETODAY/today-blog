@@ -105,6 +105,11 @@
     access: 'canAdmin',
     routes: [
       {
+        name: 'account',
+        path: '/system/account',
+        component: './system/account',
+      },
+      {
         name: 'logging',
         icon: 'log',
         path: '/system/logging',

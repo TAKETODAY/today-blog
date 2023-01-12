@@ -23,7 +23,7 @@ package cn.taketoday.blog.web.controller;
 import java.util.Objects;
 
 import cn.taketoday.beans.support.BeanProperties;
-import cn.taketoday.blog.ApplicationException;
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.aspect.Logger;
 import cn.taketoday.blog.model.Attachment;
@@ -82,7 +82,7 @@ public class UserController {
   protected void assertFound(Pageable pageable, int rowCount) {
 
     if (BlogUtils.notFound(pageable.getCurrent(), BlogUtils.pageCount(rowCount, pageable.getSize()))) {
-      throw ApplicationException.failed("分页不存在");
+      throw ErrorMessageException.failed("分页不存在");
     }
   }
 
@@ -262,20 +262,20 @@ public class UserController {
 
     if (!Objects.equals(form.newPassword, form.rePassword)) {
       // repasswd != passwd
-      throw ApplicationException.failed("两次密码不一致");
+      throw ErrorMessageException.failed("两次密码不一致");
     }
 
     MD5 md5 = new MD5();
     String prePassword = md5.getMD5Str(md5.getMD5Str(form.password));
     if (!Objects.equals(prePassword, userInfo.getPassword())) {
       // Previous Password Incorrect.
-      throw ApplicationException.failed("先前的密码不正确");
+      throw ErrorMessageException.failed("先前的密码不正确");
     }
 
     // Previous Password Correct. Continue To Change Password.
     String newPassword = md5.getMD5Str(md5.getMD5Str(form.newPassword));
     if (Objects.equals(newPassword, userInfo.getPassword())) {
-      throw ApplicationException.failed("密码未更改");
+      throw ErrorMessageException.failed("密码未更改");
     }
 
     userService.update(new User(userInfo.getId()).setPassword(newPassword));
