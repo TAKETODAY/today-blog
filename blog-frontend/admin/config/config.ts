@@ -14,7 +14,7 @@ export function isNotNull(object: any) {
 }
 
 export default defineConfig({
-  hash: true,
+  hash: true, // 配置是否让生成的文件包含 hash 后缀，通常用于增量发布和避免浏览器加载缓存。
   antd: {},
 
   dva: {
@@ -25,7 +25,8 @@ export default defineConfig({
     type: 'hash'
   },
   // base: '/blog-admin/',
-  publicPath: '/blog-admin/',
+  // publicPath: '/blog-admin/',
+  publicPath: '/',
   layout: {
     // https://umijs.org/zh-CN/plugins/plugin-layout
     locale: true,
@@ -60,7 +61,7 @@ export default defineConfig({
   // Fast Refresh 热更新
   fastRefresh: {},
   nodeModulesTransform: { type: 'none' },
-  mfsu: {},
+  // mfsu: {},
   webpack5: {},
   // exportStatic: {},
   // chunks: ['vendors', 'umi'],
@@ -69,7 +70,8 @@ export default defineConfig({
   },
   chainWebpack: function (config, { webpack }) {
     if (isNotNull(this.dynamicImport)) {
-      console.log("dynamicImport")
+      console.log("dynamicImport", this.dynamicImport)
+      console.log("ENV", REACT_APP_ENV)
       config.merge({
         optimization: {
           splitChunks: {
