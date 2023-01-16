@@ -20,6 +20,8 @@
 
 package cn.taketoday.blog.config;
 
+import java.util.Optional;
+
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
@@ -32,6 +34,12 @@ import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.RequestContextHolder;
 
 /**
+ * 关于 获取用户会话 的处理器
+ * <p>
+ * 可以获取当前登录用户，和登录的博主
+ * </p>
+ * 该类一般在控制层使用
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/8/12 21:47
  */
@@ -42,11 +50,17 @@ public class UserSessionResolver extends SessionManagerSupport {
     super(sessionManager);
   }
 
+  /**
+   * 获取当前登录的用户
+   */
   @Nullable
   public User getLoginUser() {
     return getLoginUser(RequestContextHolder.getRequired());
   }
 
+  /**
+   * 获取当前登录的用户
+   */
   @Nullable
   public User getLoginUser(RequestContext request) {
     WebSession session = getSession(request, false);
@@ -59,11 +73,17 @@ public class UserSessionResolver extends SessionManagerSupport {
     return null;
   }
 
+  /**
+   * 获取当前登录的博主
+   */
   @Nullable
   public Blogger getLoggedInBlogger() {
     return getLoggedInBlogger(RequestContextHolder.getRequired());
   }
 
+  /**
+   * 获取当前登录的博主
+   */
   @Nullable
   public Blogger getLoggedInBlogger(RequestContext request) {
     WebSession session = getSession(request, false);
@@ -74,6 +94,34 @@ public class UserSessionResolver extends SessionManagerSupport {
       }
     }
     return null;
+  }
+
+  /**
+   * 获取当前登录的用户
+   */
+  public Optional<User> loginUser() {
+    return Optional.ofNullable(getLoginUser());
+  }
+
+  /**
+   * 获取当前登录的用户
+   */
+  public Optional<User> loginUser(RequestContext request) {
+    return Optional.ofNullable(getLoginUser(request));
+  }
+
+  /**
+   * 获取当前登录的博主
+   */
+  public Optional<Blogger> loggedInBlogger() {
+    return Optional.ofNullable(getLoggedInBlogger());
+  }
+
+  /**
+   * 获取当前登录的博主
+   */
+  public Optional<Blogger> loggedInBlogger(RequestContext request) {
+    return Optional.ofNullable(getLoggedInBlogger(request));
   }
 
 }

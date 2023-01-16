@@ -33,7 +33,6 @@
   <artifactId>today-blog-api</artifactId>
 
   <properties>
-    <today.version>4.0.0-Draft.2</today.version>
     <revision>3.1</revision>
   </properties>
 
@@ -116,14 +115,15 @@
     <dependency>
       <groupId>com.aliyun.oss</groupId>
       <artifactId>aliyun-sdk-oss</artifactId>
-      <version>3.13.2</version>
-      <exclusions>
+      <version>3.16.0</version>
 
+      <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-api</artifactId>
         </exclusion>
       </exclusions>
+
     </dependency>
 
     <dependency>
@@ -189,19 +189,19 @@
       <artifactId>snakeyaml</artifactId>
     </dependency>
 
-<!--
-    <dependency>
-      <groupId>org.lionsoul</groupId>
-      <artifactId>ip2region</artifactId>
-      <version>2.6.5</version>
-    </dependency>
+    <!--
+        <dependency>
+          <groupId>org.lionsoul</groupId>
+          <artifactId>ip2region</artifactId>
+          <version>2.6.5</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.lionsoul</groupId>
-      <artifactId>ip2region-maker</artifactId>
-      <version>1.0.0</version>
-    </dependency>
--->
+        <dependency>
+          <groupId>org.lionsoul</groupId>
+          <artifactId>ip2region-maker</artifactId>
+          <version>1.0.0</version>
+        </dependency>
+    -->
 
     <!--
     <dependency>
@@ -228,14 +228,6 @@
 
   <dependencyManagement>
     <dependencies>
-
-      <dependency>
-        <groupId>cn.taketoday</groupId>
-        <artifactId>today-infrastructure-bom</artifactId>
-        <version>${today.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
 
       <dependency>
         <groupId>cn.taketoday</groupId>

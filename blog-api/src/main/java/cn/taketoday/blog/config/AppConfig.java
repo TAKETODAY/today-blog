@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -17,7 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
-package cn.taketoday.blog.web.config;
+
+package cn.taketoday.blog.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -35,7 +36,6 @@ import cn.taketoday.aop.support.annotation.AnnotationMatchingPointcut;
 import cn.taketoday.beans.factory.annotation.DisableAllDependencyInjection;
 import cn.taketoday.blog.aspect.Logger;
 import cn.taketoday.blog.aspect.LoggingInterceptor;
-import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.utils.ObjectUtils;
 import cn.taketoday.cache.annotation.EnableCaching;
@@ -45,7 +45,6 @@ import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.stereotype.Component;
-import cn.taketoday.stereotype.Singleton;
 import cn.taketoday.web.config.WebMvcConfigurer;
 import cn.taketoday.web.handler.ViewControllerHandlerMapping;
 
@@ -63,15 +62,11 @@ public class AppConfig implements WebMvcConfigurer {
     return new RepositoryManager(dataSource);
   }
 
-  @Singleton
+  @Component
   public CaffeineCacheManager caffeineCacheManager() {
-    final CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-    cacheManager.setCaffeine(
-            Caffeine.newBuilder()
-                    .expireAfterWrite(10, TimeUnit.SECONDS)
-                    .maximumSize(100)
-    );
-    return cacheManager;
+    return new CaffeineCacheManager(Caffeine.newBuilder()
+            .expireAfterWrite(10, TimeUnit.SECONDS)
+            .maximumSize(100));
   }
 
   @Override
@@ -89,7 +84,7 @@ public class AppConfig implements WebMvcConfigurer {
 
   // 异常
 
-  @Singleton
+  @Component
   public ObjectMapper objectMapper() {
     final ObjectMapper sharedMapper = ObjectUtils.getSharedMapper();
     sharedMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
@@ -102,14 +97,14 @@ public class AppConfig implements WebMvcConfigurer {
   }
 
   // 日志
-  @Singleton
+  @Component
   @Order(Ordered.HIGHEST_PRECEDENCE)
   LoggingInterceptor loggingInterceptor(Executor executor,
           LoggingService loggerService, UserSessionResolver sessionResolver) {
     return new LoggingInterceptor(executor, loggerService, sessionResolver);
   }
 
-  @Singleton
+  @Component
   DefaultPointcutAdvisor pointcutAdvisor(LoggingInterceptor loggingInterceptor) {
     AnnotationMatchingPointcut pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logger.class);
     return new DefaultPointcutAdvisor(pointcut, loggingInterceptor);
