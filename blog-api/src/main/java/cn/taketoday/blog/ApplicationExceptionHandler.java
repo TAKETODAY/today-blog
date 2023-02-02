@@ -29,7 +29,7 @@ import java.sql.SQLException;
 import cn.taketoday.blog.utils.BlogUtils;
 import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.StringUtils;
-import cn.taketoday.blog.web.controller.ArticlePasswordException;
+import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.dao.DataAccessResourceFailureException;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.MediaType;

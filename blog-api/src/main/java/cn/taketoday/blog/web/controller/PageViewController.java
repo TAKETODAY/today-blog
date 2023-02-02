@@ -28,6 +28,7 @@ import cn.taketoday.blog.service.PageViewService;
 import cn.taketoday.blog.utils.BlogUtils;
 import cn.taketoday.blog.utils.StringUtils;
 import cn.taketoday.blog.web.LoginInfo;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpHeaders;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.GET;

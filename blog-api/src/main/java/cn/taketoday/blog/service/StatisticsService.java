@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StatisticsService {
 
-//  private final Cache cache = Caffeine.newBuilder()
+  //  private final Cache cache = Caffeine.newBuilder()
 //          .maximumSize(3)
 //          .expireAfterWrite(10, TimeUnit.SECONDS) // 10s
 //          .build();
@@ -98,7 +98,7 @@ public class StatisticsService {
   public static boolean hasPeriod(LocalDate from, LocalDate to) {
     if (from != null && to != null) {
       //检查时间是否合法
-      if (to.compareTo(from) < 0) {
+      if (to.isBefore(from)) {
         throw ApplicationException.failed("起始日期应该小于终止日期");
       }
       else {

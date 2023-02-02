@@ -44,6 +44,7 @@ import cn.taketoday.blog.utils.BlogUtils;
 import cn.taketoday.blog.utils.MD5;
 import cn.taketoday.blog.utils.Pagination;
 import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.context.annotation.Profile;
 import cn.taketoday.http.HttpCookie;
 import cn.taketoday.http.ResponseCookie;

@@ -25,6 +25,7 @@ import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.form.AttachmentForm;
 import cn.taketoday.blog.service.AttachmentService;
 import cn.taketoday.blog.utils.Pagination;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;

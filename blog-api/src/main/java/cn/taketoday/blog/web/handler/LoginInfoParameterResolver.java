@@ -25,10 +25,10 @@ import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.LoginInfo;
-import cn.taketoday.blog.web.controller.RequiresUser;
+import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.session.SessionManager;
-import cn.taketoday.session.SessionManagerSupport;
+import cn.taketoday.session.SessionManagerOperations;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.stereotype.Singleton;
 import cn.taketoday.web.RequestContext;
@@ -41,7 +41,8 @@ import cn.taketoday.web.handler.method.ResolvableMethodParameter;
  * @since 2019-07-25 00:56
  */
 @Singleton
-public class LoginInfoParameterResolver extends SessionManagerSupport implements ParameterResolvingStrategy {
+public class LoginInfoParameterResolver
+        extends SessionManagerOperations implements ParameterResolvingStrategy {
 
   public LoginInfoParameterResolver(SessionManager sessionManager) {
     super(sessionManager);

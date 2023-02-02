@@ -24,6 +24,7 @@ import java.util.Map;
 
 import cn.taketoday.blog.aspect.Logger;
 import cn.taketoday.blog.service.OptionService;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.web.annotation.GET;

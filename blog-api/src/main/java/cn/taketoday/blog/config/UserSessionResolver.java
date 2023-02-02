@@ -27,7 +27,7 @@ import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.session.SessionManager;
-import cn.taketoday.session.SessionManagerSupport;
+import cn.taketoday.session.SessionManagerOperations;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.stereotype.Singleton;
 import cn.taketoday.web.RequestContext;
@@ -44,7 +44,7 @@ import cn.taketoday.web.RequestContextHolder;
  * @since 4.0 2022/8/12 21:47
  */
 @Singleton
-public class UserSessionResolver extends SessionManagerSupport {
+public class UserSessionResolver extends SessionManagerOperations {
 
   public UserSessionResolver(SessionManager sessionManager) {
     super(sessionManager);

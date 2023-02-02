@@ -34,6 +34,8 @@ import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.Pagination;
 import cn.taketoday.blog.utils.Result;
 import cn.taketoday.blog.web.LoginInfo;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
+import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.stereotype.Controller;
 import cn.taketoday.web.annotation.DELETE;

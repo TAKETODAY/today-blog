@@ -51,6 +51,7 @@ import cn.taketoday.blog.utils.HttpUtils;
 import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.ObjectUtils;
 import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.blog.web.interceptor.LoginLimitInterceptor;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.context.properties.bind.Binder;

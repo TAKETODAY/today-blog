@@ -28,6 +28,7 @@ import cn.taketoday.blog.model.Category;
 import cn.taketoday.blog.service.CategoryService;
 import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
 import cn.taketoday.stereotype.Controller;
 import cn.taketoday.web.NotFoundException;

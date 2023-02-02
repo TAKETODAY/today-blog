@@ -42,6 +42,7 @@ import cn.taketoday.blog.utils.Pagination;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
+import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.scheduling.annotation.Async;
@@ -298,7 +299,7 @@ public class ArticleService {
             LIMIT :pageNow, :pageSize
             """;
 
-    try (Query query = repositoryManager.createQuery(sql)) {
+    try (NamedQuery query = repositoryManager.createNamedQuery(sql)) {
       query.addParameter("pageNow", getPageNow(current, pageSize))
               .addParameter("status", PostStatus.PUBLISHED)
               .addParameter("pageSize", pageSize);

@@ -31,6 +31,7 @@ import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.web.BadRequestException;
 import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
