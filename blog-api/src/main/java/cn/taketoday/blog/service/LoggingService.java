@@ -103,13 +103,7 @@ public class LoggingService {
     else {
       operation.setUser(user.getEmail());
     }
-    String content;
-    try {
-      content = expressionEvaluator.content(logger.getString("content"), operationDetail);
-    }
-    catch (ExpressionException e) {
-      throw new ExpressionException("不能执行EL表达式: [" + logger + "]", e);
-    }
+    String content = getContent(operationDetail, logger);
     String ip = operationDetail.getIp();
 
     operation.setTitle(logger.getString("title"))
@@ -119,8 +113,8 @@ public class LoggingService {
 
     Object result = operationDetail.getResult();
 
-    if (result instanceof Throwable) {
-      resolveError((Throwable) result, operation);
+    if (result instanceof Throwable e) {
+      resolveError(e, operation);
     }
     else {
       operation.setType(LoggerType.SUCCESS.getType());
@@ -131,15 +125,23 @@ public class LoggingService {
       operation.setResult(json.getMessage());
       operation.setType(json.isSuccess() ? LoggerType.SUCCESS.getType() : LoggerType.ERROR.getType());
     }
-    else if (result instanceof String) {
-
-      String decodeUrl = URLDecoder.decode((String) result, StandardCharsets.UTF_8);
+    else if (result instanceof String str) {
+      String decodeUrl = URLDecoder.decode(str, StandardCharsets.UTF_8);
       operation.setResult(decodeUrl);
     }
     else if (result != null) {
       operation.setResult(result.toString());
     }
     return operation;
+  }
+
+  private String getContent(MethodOperation operationDetail, MergedAnnotation<Logger> logger) {
+    try {
+      return expressionEvaluator.content(logger.getString("content"), operationDetail);
+    }
+    catch (ExpressionException e) {
+      throw new ExpressionException("不能执行EL表达式: [" + logger + "]", e);
+    }
   }
 
   void resolveError(Throwable throwable, Operation operation) {

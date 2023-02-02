@@ -18,7 +18,6 @@ import cn.taketoday.context.expression.CachedExpressionEvaluator;
 import cn.taketoday.context.expression.MethodBasedEvaluationContext;
 import cn.taketoday.expression.Expression;
 import cn.taketoday.expression.spel.support.StandardTypeLocator;
-import cn.taketoday.lang.Nullable;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -28,12 +27,10 @@ public class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
 
   private final Map<ExpressionKey, Expression> conditionCache = new ConcurrentHashMap<>(64);
   private final StandardTypeLocator typeLocator = new StandardTypeLocator();
+  private final BeanFactoryResolver beanResolver;
 
-  @Nullable
-  private final BeanFactory beanFactory;
-
-  public LoggingExpressionEvaluator(@Nullable BeanFactory beanFactory) {
-    this.beanFactory = beanFactory;
+  public LoggingExpressionEvaluator(BeanFactory beanFactory) {
+    this.beanResolver = new BeanFactoryResolver(beanFactory);
     typeLocator.importClass(Arrays.class);
     typeLocator.importClass(UserStatus.class);
     typeLocator.importClass(PostStatus.class);
@@ -47,18 +44,16 @@ public class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
   public String content(String expression, MethodOperation methodOperation) {
     MethodInvocation invocation = methodOperation.getInvocation();
 
-    LoggingRootObject root = new LoggingRootObject(
+    var root = new LoggingRootObject(
             invocation.getMethod(), invocation.getArguments(), invocation.getThis(), invocation.getThis().getClass());
 
-    MethodBasedEvaluationContext evaluationContext = new MethodBasedEvaluationContext(
+    var evaluationContext = new MethodBasedEvaluationContext(
             root, invocation.getMethod(), invocation.getArguments(), getParameterNameDiscoverer());
 
-    if (beanFactory != null) {
-      evaluationContext.setBeanResolver(new BeanFactoryResolver(beanFactory));
-    }
-
+    evaluationContext.setBeanResolver(beanResolver);
     evaluationContext.setTypeLocator(typeLocator);
-    AnnotatedElementKey elementKey = new AnnotatedElementKey(root.method, root.targetClass);
+
+    var elementKey = new AnnotatedElementKey(root.method, root.targetClass);
     return getExpression(conditionCache, elementKey, expression)
             .getValue(evaluationContext, String.class);
   }
