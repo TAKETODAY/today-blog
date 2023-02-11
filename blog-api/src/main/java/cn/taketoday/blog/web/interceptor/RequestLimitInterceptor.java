@@ -195,9 +195,6 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
       return currentTime.minus(timeout).isAfter(lastAccessTime);
     }
 
-    public void invalidate() {
-
-    }
   }
 
   private final class ExpiredChecker {
@@ -228,7 +225,6 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
               RequestLimitEntry limitEntry = iterator.next();
               if (limitEntry.isExpired(now) && limitEntry.isNew()) {
                 iterator.remove();
-                limitEntry.invalidate();
               }
             }
           }
