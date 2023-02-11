@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { message, Popconfirm, Space, Tag } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
@@ -56,11 +56,13 @@ export default () => {
       render: (_, record) => (
           <span dangerouslySetInnerHTML={{ __html: record.content }}/>
       ),
+      width: 400,
     },
     {
       title: '用户',
       dataIndex: 'user',
-      hideInSearch: true
+      hideInSearch: true,
+      width: 100,
     },
     {
       title: '类型',
@@ -69,6 +71,7 @@ export default () => {
       render: (_, record) => (
           <Tag color={record.type}>{record.type}</Tag>
       ),
+      width: 100,
     },
     {
       title: '结果',

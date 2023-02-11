@@ -51,9 +51,8 @@ import cn.taketoday.blog.utils.HttpUtils;
 import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.ObjectUtils;
 import cn.taketoday.blog.utils.StringUtils;
-import cn.taketoday.blog.web.interceptor.RequiresUser;
-import cn.taketoday.blog.web.interceptor.LoginLimitInterceptor;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
+import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.context.properties.bind.Binder;
 import cn.taketoday.core.MultiValueMap;
 import cn.taketoday.core.env.Environment;
@@ -63,7 +62,6 @@ import cn.taketoday.session.WebSession;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
-import cn.taketoday.web.annotation.Interceptor;
 import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.PatchMapping;
 import cn.taketoday.web.annotation.PathVariable;
@@ -146,8 +144,7 @@ public class AuthorizeController {
    * } </pre>
    */
   @POST
-  @RequestLimit(count = 1, errorMessage = "一秒钟只能登陆一次,请稍后重试")
-  @Interceptor(LoginLimitInterceptor.class)
+  @RequestLimit(timeUnit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
   @Logger(title = "登录", content = "email:[${user.email}]")
   public Json login(WebSession session, @Valid @RequestBody UserFrom user) {
     User loginUser = userService.getByEmail(user.email);

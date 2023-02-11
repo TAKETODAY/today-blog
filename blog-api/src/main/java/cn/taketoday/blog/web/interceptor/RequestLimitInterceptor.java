@@ -84,8 +84,8 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
   public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
     if (getAttribute(request, BlogConstant.BLOGGER_INFO) == null) {
       // 非博主，进行限流
-      Object handler = chain.getHandler();
-      if (handler instanceof HandlerMethod handlerMethod) {
+      HandlerMethod handlerMethod = HandlerMethod.unwrap(chain.getHandler());
+      if (handlerMethod != null) {
         RequestLimit requestLimit = handlerMethod.getMethodAnnotation(RequestLimit.class);
         if (requestLimit == null) {
           requestLimit = handlerMethod.getBeanType().getAnnotation(RequestLimit.class);
@@ -151,7 +151,7 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
 
   class RequestLimitEntry {
     public final int maxCount;
-    public int requestCount;
+    public volatile int requestCount;
 
     public Instant lastAccessTime = Instant.now(clock);
 
@@ -169,7 +169,7 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
     }
 
     // test Exceeded maximum number of requests
-    public boolean isExceeded(Instant now) {
+    public synchronized boolean isExceeded(Instant now) {
       // 判断是不是已经在规定时间之外了
       if (checkExpired(now)) {
         // 在规定时间之外直接返回不限流
@@ -177,10 +177,10 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
         lastAccessTime = Instant.now(clock);
         return false;
       }
-
-      requestCount++;
+      int requestCount = this.requestCount;
+      this.requestCount++;
       // 在超时时间范围内，请求次数大于最大次数就需要限制
-      return requestCount > maxCount;
+      return requestCount >= maxCount;
     }
 
     public boolean isExpired() {

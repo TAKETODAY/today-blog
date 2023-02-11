@@ -1,5 +1,5 @@
 export default {
-  'pages.layouts.userLayout.title': 'TODAY BLOG 代码是我心中一首诗',
+  'pages.layouts.userLayout.title': '代码是我心中一首诗',
   'pages.login.accountLogin.tab': '账户密码登录',
   'pages.login.accountLogin.errorMessage': '错误的用户名和密码',
   'pages.login.username.placeholder': '输入用户名',

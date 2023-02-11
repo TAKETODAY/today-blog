@@ -1,7 +1,7 @@
-import { AlipayCircleOutlined, LockOutlined, TaobaoCircleOutlined, UserOutlined, WeiboCircleOutlined, } from '@ant-design/icons';
-import { Alert, message, Space } from 'antd';
+import { LockOutlined, UserOutlined, } from '@ant-design/icons';
+import { Alert, message, Popconfirm } from 'antd';
 import React, { useState } from 'react';
-import ProForm, { ProFormCheckbox, ProFormText } from '@ant-design/pro-form';
+import ProForm, { LoginForm, ProFormCheckbox, ProFormText } from '@ant-design/pro-form';
 import { FormattedMessage, history, Link, SelectLang, useIntl, useModel } from 'umi';
 import Footer from '@/components/Footer';
 import { login } from '@/services/ant-design-pro/login';
@@ -97,43 +97,22 @@ const Login: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.lang}>{SelectLang && <SelectLang/>}</div>
         <div className={styles.content}>
-          <div className={styles.top}>
-            <div className={styles.header}>
-              <Link to="/">
-                <img alt="logo" className={styles.logo} src={logo}/>
-                <span className={styles.title}>TODAY BLOG</span>
-              </Link>
-            </div>
-            <div className={styles.desc}>TODAY BLOG 代码是我心中一首诗</div>
-          </div>
 
-          <div className={styles.main}>
-            <ProForm
-                initialValues={getInitialValue()}
-                submitter={{
-                  searchConfig: {
-                    submitText: intl.formatMessage({
-                      id: 'pages.login.submit',
-                      defaultMessage: '登录',
-                    }),
-                  },
-                  render: (_, dom) => dom.pop(),
-                  submitButtonProps: {
-                    loading: submitting,
-                    size: 'large',
-                    style: {
-                      width: '100%',
-                    },
-                  },
-                }}
-                onFinish={async (values) => {
-                  handleSubmit(values as API.LoginParams);
-                }}
-            >
-              {!success && errorMessage && (
+          <LoginForm
+              logo={logo}
+              title="TODAY BLOG 后台管理"
+              subTitle={intl.formatMessage({ id: 'pages.layouts.userLayout.title' })}
+              initialValues={getInitialValue()}
+              onFinish={async (values) => {
+                await handleSubmit(values as API.LoginParams);
+              }}
+              message={!success && errorMessage && (
                   <LoginMessage content={errorMessage}/>
               )}
+          >
 
+            {/*输入框*/}
+            <>
               <ProFormText
                   name="email"
                   fieldProps={{
@@ -178,23 +157,21 @@ const Login: React.FC = () => {
                     },
                   ]}
               />
-
-              <div style={{ marginBottom: 24 }}>
-                <ProFormCheckbox noStyle name="remember">
-                  <FormattedMessage id="pages.login.rememberMe" defaultMessage="记住邮箱"/>
-                </ProFormCheckbox>
+            </>
+            {/*登录选项*/}
+            <div style={{ marginBottom: 24 }}>
+              <ProFormCheckbox noStyle name="remember">
+                <FormattedMessage id="pages.login.rememberMe" defaultMessage="记住邮箱"/>
+              </ProFormCheckbox>
+              <Popconfirm title="还不支持">
                 <a style={{ float: 'right' }}>
                   <FormattedMessage id="pages.login.forgotPassword" defaultMessage="忘记密码"/>
                 </a>
-              </div>
-            </ProForm>
-            <Space className={styles.other}>
-              <FormattedMessage id="pages.login.loginWith" defaultMessage="其他登录方式"/>
-              <AlipayCircleOutlined className={styles.icon}/>
-              <TaobaoCircleOutlined className={styles.icon}/>
-              <WeiboCircleOutlined className={styles.icon}/>
-            </Space>
-          </div>
+              </Popconfirm>
+            </div>
+
+          </LoginForm>
+
         </div>
         <Footer/>
       </div>
