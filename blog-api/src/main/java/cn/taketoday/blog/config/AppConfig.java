@@ -34,6 +34,7 @@ import javax.sql.DataSource;
 import cn.taketoday.aop.support.DefaultPointcutAdvisor;
 import cn.taketoday.aop.support.annotation.AnnotationMatchingPointcut;
 import cn.taketoday.beans.factory.annotation.DisableAllDependencyInjection;
+import cn.taketoday.beans.factory.config.BeanDefinition;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.aspect.LoggingInterceptor;
 import cn.taketoday.blog.service.LoggingService;
@@ -41,6 +42,7 @@ import cn.taketoday.blog.utils.ObjectUtils;
 import cn.taketoday.cache.annotation.EnableCaching;
 import cn.taketoday.cache.support.CaffeineCacheManager;
 import cn.taketoday.context.annotation.Configuration;
+import cn.taketoday.context.annotation.Role;
 import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
 import cn.taketoday.jdbc.RepositoryManager;
@@ -105,17 +107,11 @@ public class AppConfig implements WebMvcConfigurer {
   }
 
   @Component
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   DefaultPointcutAdvisor pointcutAdvisor(LoggingInterceptor loggingInterceptor) {
     var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
     return new DefaultPointcutAdvisor(pointcut, loggingInterceptor);
   }
 
-//  @Singleton
-//  NettyWebServer nettyWebServer() {
-//    final NettyWebServer nettyWebServer = new NettyWebServer();
-//    nettyWebServer.setChildThreadCount(5);
-//    nettyWebServer.setParentThreadCount(5);
-//    return nettyWebServer;
-//  }
 }
 

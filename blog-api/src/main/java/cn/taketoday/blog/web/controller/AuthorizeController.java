@@ -57,8 +57,11 @@ import cn.taketoday.core.MultiValueMap;
 import cn.taketoday.core.env.Environment;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.session.SessionManager;
+import cn.taketoday.session.SessionManagerOperations;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.web.InternalServerException;
+import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;
@@ -89,7 +92,7 @@ import lombok.Setter;
 @CustomLog
 @RestController
 @RequestMapping("/api/auth")
-public class AuthorizeController {
+public class AuthorizeController extends SessionManagerOperations {
   private final Oauth giteeOauth;
   private final Oauth gitHubOauth;
 
@@ -100,8 +103,10 @@ public class AuthorizeController {
 
   private Map<String, OauthMetadata> oauthMetadata;
 
-  public AuthorizeController(Environment environment, BlogConfig blogConfig, UserService userService,
+  public AuthorizeController(SessionManager sessionManager,
+          Environment environment, BlogConfig blogConfig, UserService userService,
           BloggerService bloggerService, AttachmentOperations attachmentOperations) {
+    super(sessionManager);
     this.blogConfig = blogConfig;
     this.userService = userService;
     this.bloggerService = bloggerService;
@@ -144,8 +149,8 @@ public class AuthorizeController {
    */
   @POST
   @RequestLimit(timeUnit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
-  @Logging(title = "登录", content = "email:[${user.email}]")
-  public Json login(WebSession session, @Valid @RequestBody UserFrom user) {
+  @Logging(title = "登录", content = "email:[${#user.email}]")
+  public Json login(@Valid @RequestBody UserFrom user, RequestContext request) {
     User loginUser = userService.getByEmail(user.email);
     if (loginUser == null) {
       return Json.failed(user.email + " 账号不存在!", user.email);
@@ -171,6 +176,7 @@ public class AuthorizeController {
       }
     }
 
+    WebSession session = getSession(request);
     // login success
     session.setAttribute(BlogConstant.USER_INFO, loginUser);
 

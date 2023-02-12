@@ -56,7 +56,7 @@ public class BloggerInterceptor extends SessionHandlerInterceptor {
                 .body(ErrorMessage.failed("Not Found"));
       }
     }
-    if (chain.getHandler() instanceof ResourceHttpRequestHandler) {
+    if (chain.unwrapHandler() instanceof ResourceHttpRequestHandler) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
               .body("Not Found");
     }

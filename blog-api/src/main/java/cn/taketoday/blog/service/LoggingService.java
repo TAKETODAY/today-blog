@@ -140,7 +140,8 @@ public class LoggingService {
       return expressionEvaluator.content(logger.getString("content"), operationDetail);
     }
     catch (ExpressionException e) {
-      throw new ExpressionException("不能执行EL表达式: [" + logger + "]", e);
+      throw new ExpressionException(
+              "不能执行EL表达式: [" + logger.getString("content") + "]", e);
     }
   }
 

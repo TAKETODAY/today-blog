@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -23,10 +23,10 @@ package cn.taketoday.blog;
 import cn.taketoday.blog.service.CategoryService;
 import cn.taketoday.context.ConfigurableApplicationContext;
 import cn.taketoday.context.event.EventListener;
+import cn.taketoday.framework.Application;
 import cn.taketoday.framework.InfraApplication;
 import cn.taketoday.framework.context.event.ApplicationFailedEvent;
 import cn.taketoday.framework.context.event.ApplicationStartedEvent;
-import cn.taketoday.framework.web.WebApplication;
 import cn.taketoday.orm.mybatis.annotation.MapperScan;
 import cn.taketoday.session.config.EnableWebSession;
 import lombok.CustomLog;
@@ -42,7 +42,8 @@ import lombok.CustomLog;
 public class BlogApplication {
 
   public static void main(String[] args) {
-    WebApplication.run(BlogApplication.class, args);
+    ConfigurableApplicationContext context = Application.run(BlogApplication.class, args);
+    System.out.println(context);
   }
 
   @EventListener
