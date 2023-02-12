@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import cn.taketoday.beans.factory.annotation.Autowired;
 import cn.taketoday.blog.ApplicationException;
 import cn.taketoday.blog.Pageable;
-import cn.taketoday.blog.aspect.Logger;
+import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.Label;
@@ -245,7 +245,7 @@ public class ArticleController {
   @POST
   @ResponseStatus(HttpStatus.CREATED)
   @Interceptor(include = BloggerInterceptor.class, exclude = ArticleFilterInterceptor.class)
-  @Logger(value = "创建文章", content = "创建新文章标题: [${from.title}]")
+  @Logging(title = "创建文章", content = "创建新文章标题: [${from.title}]")
   public void create(@RequestBody ArticleFrom from) {
     Article article = getArticle(from);
 
@@ -329,7 +329,7 @@ public class ArticleController {
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequiresBlogger
-  @Logger(value = "更新文章", content = "更新文章: [${from.title}]")
+  @Logging(title = "更新文章", content = "更新文章: [${from.title}]")
   public void update(@PathVariable("id") Long id, @RequestBody ArticleFrom from) {
     Article article = getArticle(from);
     article.setId(id);
@@ -339,7 +339,7 @@ public class ArticleController {
   @PUT("/{id}/status/{status}")
   @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logger(value = "更新文章状态", content = "更新文章：[${id}]状态为：[${status}]")
+  @Logging(title = "更新文章状态", content = "更新文章：[${id}]状态为：[${status}]")
   public void status(@PathVariable Long id, @PathVariable PostStatus status) {
     articleService.updateStatusById(status, id);
   }
@@ -347,7 +347,7 @@ public class ArticleController {
   @DELETE("/{id}")
   @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logger(value = "删除文章", content = "删除文章: [${id}]")
+  @Logging(title = "删除文章", content = "删除文章: [${id}]")
   public void delete(@PathVariable Long id) {
     articleService.deleteById(id);
   }

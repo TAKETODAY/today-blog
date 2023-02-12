@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -29,7 +29,7 @@ import java.util.List;
 import cn.taketoday.beans.factory.BeanFactory;
 import cn.taketoday.blog.MethodOperation;
 import cn.taketoday.blog.Pageable;
-import cn.taketoday.blog.aspect.Logger;
+import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.ext.ip.IPSeeker;
 import cn.taketoday.blog.model.Operation;
 import cn.taketoday.blog.model.User;
@@ -93,7 +93,7 @@ public class LoggingService {
 
     Method method = invocation.getMethod();
     MergedAnnotations annotations = MergedAnnotations.from(method);
-    MergedAnnotation<Logger> logger = annotations.get(Logger.class);
+    MergedAnnotation<Logging> logger = annotations.get(Logging.class);
 
     // get the user email
     User user = operationDetail.getUser();
@@ -135,7 +135,7 @@ public class LoggingService {
     return operation;
   }
 
-  private String getContent(MethodOperation operationDetail, MergedAnnotation<Logger> logger) {
+  private String getContent(MethodOperation operationDetail, MergedAnnotation<Logging> logger) {
     try {
       return expressionEvaluator.content(logger.getString("content"), operationDetail);
     }

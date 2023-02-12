@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -27,7 +27,7 @@ import java.time.Duration;
 import cn.taketoday.beans.factory.annotation.Autowired;
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.Pageable;
-import cn.taketoday.blog.aspect.Logger;
+import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.Category;
@@ -282,13 +282,13 @@ public class PageableController implements WebMvcConfigurer, BlogConstant {
   private BloggerService bloggerService;
 
   @POST("/login")
-  @Logger(value = "登录", //
-          content = "email:[${email}] " //
+  @Logging(title = "登录", //
+           content = "email:[${email}] " //
                   + "input code:[${randCode}] "//
                   + "in session:[${randCodeInSession}] "//
                   + "forward to:[${forward}] "//
                   + "msg:[${redirectModel.getAttribute('msg')}]"//
-          )
+           )
   public String login(WebSession session,
           @RequestParam(required = true) String email,
           @RequestParam(required = true) String passwd,

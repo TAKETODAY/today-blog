@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -23,7 +23,7 @@ package cn.taketoday.blog.web.controller;
 import java.util.List;
 
 import cn.taketoday.blog.ApplicationException;
-import cn.taketoday.blog.aspect.Logger;
+import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Category;
 import cn.taketoday.blog.service.CategoryService;
 import cn.taketoday.blog.utils.Json;
@@ -57,7 +57,7 @@ public class CategoriesController {
   }
 
   @POST
-  @Logger(value = "创建分类", content = "name:[${category.name}]")
+  @Logging(title = "创建分类", content = "name:[${category.name}]")
   public Json post(@RequestBody Category category) {
     validateCategory(category);
 
@@ -87,7 +87,7 @@ public class CategoriesController {
   }
 
   @PUT("/{name}")
-  @Logger(value = "更新分类", content = "update name:[${name}]")
+  @Logging(title = "更新分类", content = "update name:[${name}]")
   public void put(@RequestBody Category category, @PathVariable String name) {
     Category oldCategory = categoryService.getCategory(name);
     NotFoundException.notNull(oldCategory, "要更新的分类不存在");
@@ -99,7 +99,7 @@ public class CategoriesController {
   }
 
   @DELETE("/{name}")
-  @Logger(value = "删除分类", content = "delete name:[${name}]")
+  @Logging(title = "删除分类", content = "delete name:[${name}]")
   public void delete(@PathVariable String name) {
     NotFoundException.notNull(categoryService.getCategory(name), () -> "分类'" + name + "'不存在");
     categoryService.delete(name);

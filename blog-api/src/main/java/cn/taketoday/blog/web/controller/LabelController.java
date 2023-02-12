@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import cn.taketoday.blog.ApplicationException;
-import cn.taketoday.blog.aspect.Logger;
+import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.utils.Json;
@@ -57,7 +57,7 @@ public class LabelController {
 
   @POST("/{name}")
   @RequiresBlogger
-  @Logger(value = "保存标签", content = "name: [${name}]")
+  @Logging(title = "保存标签", content = "name: [${name}]")
   public void post(@PathVariable String name) {
     Label byName = labelService.getByName(name);
     if (byName != null) {
@@ -68,7 +68,7 @@ public class LabelController {
 
   @POST
   @RequiresBlogger
-  @Logger(value = "批量保存标签", content = "names: ${Arrays.toString(name)}")
+  @Logging(title = "批量保存标签", content = "names: ${Arrays.toString(name)}")
   public Json post(@RequestParam(required = true) String[] name) {
 
     long currentTimeMillis = System.currentTimeMillis();
@@ -90,7 +90,7 @@ public class LabelController {
 
   @PUT("/{id}")
   @RequiresBlogger
-  @Logger(value = "标签更新", content = "update:[${id}] with name:[${name}]")
+  @Logging(title = "标签更新", content = "update:[${id}] with name:[${name}]")
   public void put(@RequestParam(required = true) String name, @PathVariable int id) {
     Label label = labelService.getById(id);
     NotFoundException.notNull(label, "标签不存在");
@@ -104,7 +104,7 @@ public class LabelController {
 
   @DELETE("/{id}")
   @RequiresBlogger
-  @Logger(value = "删除标签", content = "delete id:[${id}]")
+  @Logging(title = "删除标签", content = "delete id:[${id}]")
   public void delete(@PathVariable long id) {
     Label byName = labelService.getById(id);
     NotFoundException.notNull(byName, "标签不存在");

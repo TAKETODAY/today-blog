@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
+
 package cn.taketoday.blog.web.handler;
 
 import java.util.Optional;
@@ -37,6 +38,21 @@ import cn.taketoday.web.bind.resolver.ParameterResolvingStrategy;
 import cn.taketoday.web.handler.method.ResolvableMethodParameter;
 
 /**
+ * 登录信息参数解析
+ * <p>
+ * <ul>
+ *   <li>{@code User 没有登录会抛异常}</li>
+ *   <li>{@code Blogger 没有登录会抛异常}</li>
+ *   <li>{@code LoginInfo 不会抛异常}</li>
+ *   <li>{@code Optional<User> 不会抛异常}</li>
+ *   <li>{@code Optional<Blogger> 不会抛异常}</li>
+ *   <li>{@code @Nullable User 不会抛异常}</li>
+ *   <li>{@code @Nullable Blogger 不会抛异常}</li>
+ *   <li>{@code @RequiresUser User} 没有登录会抛异常</li>
+ *   <li>{@code @RequiresUser Blogger 没有登录会抛异常}</li>
+ *   <li>{@code @RequiresUser LoginInfo 没有登录会抛异常}</li>
+ * </ul>
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-07-25 00:56
  */
@@ -67,9 +83,11 @@ public class LoginInfoParameterResolver
     if (session != null) {
 
       if (parameter.is(Optional.class)) {
-        if (parameter.is(User.class)) {
+        // Optional<User>
+        if (parameter.nested().is(User.class)) {
           return Optional.ofNullable(getAttribute(session, User.class, BlogConstant.USER_INFO));
         }
+        // Optional<Blogger>
         return Optional.ofNullable(getAttribute(session, Blogger.class, BlogConstant.BLOGGER_INFO));
       }
 
@@ -80,6 +98,7 @@ public class LoginInfoParameterResolver
         return getAttribute(parameter, session, Blogger.class, BlogConstant.BLOGGER_INFO);
       }
       else {
+        // 使用了 LoginInfo 并且有 RequiresUser ，在没有登录情况下会抛出异常 UnauthorizedException
         LoginInfo info = new LoginInfo();
         Object attribute = session.getAttribute(BlogConstant.USER_INFO);
         if (attribute instanceof User loginUser) {

@@ -34,7 +34,7 @@ import javax.sql.DataSource;
 import cn.taketoday.aop.support.DefaultPointcutAdvisor;
 import cn.taketoday.aop.support.annotation.AnnotationMatchingPointcut;
 import cn.taketoday.beans.factory.annotation.DisableAllDependencyInjection;
-import cn.taketoday.blog.aspect.Logger;
+import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.aspect.LoggingInterceptor;
 import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.utils.ObjectUtils;
@@ -106,7 +106,7 @@ public class AppConfig implements WebMvcConfigurer {
 
   @Component
   DefaultPointcutAdvisor pointcutAdvisor(LoggingInterceptor loggingInterceptor) {
-    AnnotationMatchingPointcut pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logger.class);
+    var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
     return new DefaultPointcutAdvisor(pointcut, loggingInterceptor);
   }
 

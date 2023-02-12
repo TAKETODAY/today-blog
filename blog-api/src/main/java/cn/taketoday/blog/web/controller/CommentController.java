@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -23,7 +23,7 @@ package cn.taketoday.blog.web.controller;
 import cn.taketoday.blog.ApplicationException;
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.Pageable;
-import cn.taketoday.blog.aspect.Logger;
+import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.User;
@@ -84,7 +84,7 @@ public class CommentController {
    * @param from comment detail
    */
   @POST
-  @Logger(title = "用户评论", content = "用户：[${userInfo.name}] 评论了文章:[${from.articleId}] 回复了:[${from.commentId}] 结果: [${result}]")
+  @Logging(title = "用户评论", content = "用户：[${userInfo.name}] 评论了文章:[${from.articleId}] 回复了:[${from.commentId}] 结果: [${result}]")
   @RequestLimit(count = 1)
   public Json post(@RequiresUser LoginInfo loginInfo, @RequestBody CommentFrom from) {
     Comment comment = new Comment();
@@ -142,7 +142,7 @@ public class CommentController {
 
   @PUT("/{id}/status")
   @RequiresBlogger
-  @Logger(value = "更新评论状态", content = "更新评论：[${id}]状态为：[${CommentStatus.valueOf(code)}]")
+  @Logging(title = "更新评论状态", content = "更新评论：[${id}]状态为：[${CommentStatus.valueOf(code)}]")
   public Json status(@PathVariable Long id, @RequestParam(required = true) int code) {
 
     commentService.updateStatusById(CommentStatus.valueOf(code), id);
@@ -150,7 +150,7 @@ public class CommentController {
   }
 
   @DELETE("/{id}")
-  @Logger(value = "删除评论", content = "删除评论：[${id}]")
+  @Logging(title = "删除评论", content = "删除评论：[${id}]")
   public Json delete(@RequiresUser LoginInfo loginInfo, @PathVariable Long id) {
     Comment byId = commentService.obtainById(id);
 
@@ -189,7 +189,7 @@ public class CommentController {
   //
 
   @PUT("/{id}")
-  @Logger(value = "更新评论", content = "更新评论：[${id}]")
+  @Logging(title = "更新评论", content = "更新评论：[${id}]")
   public Json put(@RequiresUser LoginInfo loginInfo, @PathVariable Long id, @RequestBody Comment comment) {
     Comment byId = commentService.obtainById(id);
 

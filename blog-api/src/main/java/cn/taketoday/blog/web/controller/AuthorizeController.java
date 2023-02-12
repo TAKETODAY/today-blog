@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 import cn.taketoday.blog.ApplicationException;
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessageException;
-import cn.taketoday.blog.aspect.Logger;
+import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.Blogger;
@@ -145,7 +145,7 @@ public class AuthorizeController {
    */
   @POST
   @RequestLimit(timeUnit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
-  @Logger(title = "登录", content = "email:[${user.email}]")
+  @Logging(title = "登录", content = "email:[${user.email}]")
   public Json login(WebSession session, @Valid @RequestBody UserFrom user) {
     User loginUser = userService.getByEmail(user.email);
     if (loginUser == null) {
@@ -280,7 +280,7 @@ public class AuthorizeController {
 
   @ResponseBody(false)
   @GET("/{app}/callback")
-  @Logger(value = "第三方登录回调", content = "app:[${app}]")
+  @Logging(title = "第三方登录回调", content = "app:[${app}]")
   public String loginCallback(WebSession session,
           @PathVariable String app, @Nullable String forward,
           @RequestParam String code, @RequestParam String state,

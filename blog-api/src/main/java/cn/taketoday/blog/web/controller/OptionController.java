@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -22,7 +22,7 @@ package cn.taketoday.blog.web.controller;
 
 import java.util.Map;
 
-import cn.taketoday.blog.aspect.Logger;
+import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.service.OptionService;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
@@ -57,7 +57,7 @@ public class OptionController {
   }
 
   @PUT
-  @Logger("更新系统变量")
+  @Logging(title = "更新系统变量")
   @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void put(@RequestBody Map<String, String> options) {
