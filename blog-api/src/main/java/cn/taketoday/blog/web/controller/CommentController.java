@@ -20,8 +20,8 @@
 
 package cn.taketoday.blog.web.controller;
 
-import cn.taketoday.blog.ApplicationException;
 import cn.taketoday.blog.BlogConstant;
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.config.CommentConfig;
@@ -34,10 +34,11 @@ import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.Pagination;
 import cn.taketoday.blog.utils.Result;
 import cn.taketoday.blog.web.LoginInfo;
+import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.stereotype.Controller;
+import cn.taketoday.web.AccessForbiddenException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;
@@ -130,7 +131,7 @@ public class CommentController {
     int pageCount = BlogUtils.pageCount(totalRecord, commentPageSize);
 
     if (BlogUtils.notFound(page, pageCount)) {
-      throw ApplicationException.failed("页数不存在");
+      throw ErrorMessageException.failed("页数不存在");
     }
 
     return Pagination.ok(commentService.getByArticleId(id, page, commentPageSize))
@@ -156,7 +157,7 @@ public class CommentController {
 
     // not blogger
     if (loginInfo.getBlogger() == null && (loginInfo.getLoginUserId() != byId.getUserId())) {
-      throw ApplicationException.failed("权限不足");
+      throw ErrorMessageException.failed("权限不足");
     }
 
     commentService.delete(id);
@@ -174,7 +175,7 @@ public class CommentController {
 
   protected void assertFound(Pageable pageable, int rowCount) {
     if (BlogUtils.notFound(pageable.getCurrent(), BlogUtils.pageCount(rowCount, pageable.getSize()))) {
-      throw ApplicationException.failed("分页不存在");
+      throw ErrorMessageException.failed("分页不存在");
     }
   }
 
@@ -195,7 +196,7 @@ public class CommentController {
 
     // not blogger
     if (!loginInfo.isBloggerLoggedIn() && (loginInfo.getLoginUserId() != byId.getUserId())) {
-      throw ApplicationException.failed("权限不足");
+      throw new AccessForbiddenException("权限不足");
     }
 
     comment.setId(id);

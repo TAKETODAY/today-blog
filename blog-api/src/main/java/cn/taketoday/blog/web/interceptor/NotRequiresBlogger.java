@@ -28,12 +28,14 @@ import java.lang.annotation.Target;
 import cn.taketoday.web.annotation.Interceptor;
 
 /**
+ * 排除 BloggerInterceptor
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 1.0 2022/8/11 08:52
+ * @since 3.1 2023/2/12 12:49
  */
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE, ElementType.METHOD })
-@Interceptor(BloggerInterceptor.class)
-public @interface RequiresBlogger {
+@Interceptor(exclude = BloggerInterceptor.class)
+public @interface NotRequiresBlogger {
 
 }

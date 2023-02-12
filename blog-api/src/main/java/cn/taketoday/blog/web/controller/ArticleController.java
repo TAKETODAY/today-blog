@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import cn.taketoday.beans.factory.annotation.Autowired;
-import cn.taketoday.blog.ApplicationException;
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Article;
@@ -40,9 +40,8 @@ import cn.taketoday.blog.utils.BlogUtils;
 import cn.taketoday.blog.utils.Pagination;
 import cn.taketoday.blog.utils.StringUtils;
 import cn.taketoday.blog.web.ArticlePasswordException;
-import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
-import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.cache.CacheManager;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
@@ -146,7 +145,7 @@ public class ArticleController {
 
   protected void assertFound(Pageable pageable, int rowCount) {
     if (BlogUtils.notFound(pageable.getCurrent(), BlogUtils.pageCount(rowCount, pageable.getSize()))) {
-      throw ApplicationException.failed("分页不存在");
+      throw ErrorMessageException.failed("分页不存在");
     }
   }
 
@@ -243,8 +242,8 @@ public class ArticleController {
    * Save article
    */
   @POST
+  @RequiresBlogger
   @ResponseStatus(HttpStatus.CREATED)
-  @Interceptor(include = BloggerInterceptor.class, exclude = ArticleFilterInterceptor.class)
   @Logging(title = "创建文章", content = "创建新文章标题: [${from.title}]")
   public void create(@RequestBody ArticleFrom from) {
     Article article = getArticle(from);
@@ -256,7 +255,7 @@ public class ArticleController {
     else {
       Article byId = articleService.getById(articleId);
       if (byId != null) {
-        throw ApplicationException.failed("已经存在相同文章");
+        throw ErrorMessageException.failed("已经存在相同文章");
       }
     }
     article.setId(articleId);

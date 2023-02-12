@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -23,8 +23,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-import cn.taketoday.blog.ApplicationException;
 import cn.taketoday.blog.BlogConstant;
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.UserSessionResolver;
@@ -96,7 +96,7 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
           current = 1;
         }
         else if ((current = parseInt(parameter)) <= 0) {
-          throw ApplicationException.failed("分页页数必须大于0");
+          throw ErrorMessageException.failed("分页页数必须大于0");
         }
       }
       return current;
@@ -113,14 +113,14 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
         else {
           size = parseInt(parameter);
           if (size <= 0) {
-            throw ApplicationException.failed("每页大小必须大于0");
+            throw ErrorMessageException.failed("每页大小必须大于0");
           }
 
           if (size > blogConfig.getMaxPageSize()) {
             // 针对非博主的进行限制
             Blogger loggedInBlogger = sessionResolver.getLoggedInBlogger(request);
             if (loggedInBlogger == null) {
-              throw ApplicationException.failed("分页大小超出限制");
+              throw ErrorMessageException.failed("分页大小超出限制");
             }
           }
         }
@@ -134,7 +134,7 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
         return Integer.valueOf(parameter);
       }
       catch (NumberFormatException e) {
-        throw ApplicationException.failed("分页参数错误");
+        throw ErrorMessageException.failed("分页参数错误");
       }
     }
 

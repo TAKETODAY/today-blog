@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import cn.taketoday.blog.ApplicationException;
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.service.LabelService;
@@ -61,7 +61,7 @@ public class LabelController {
   public void post(@PathVariable String name) {
     Label byName = labelService.getByName(name);
     if (byName != null) {
-      throw ApplicationException.failed("标签重复");
+      throw ErrorMessageException.failed("标签重复");
     }
     labelService.save(new Label(System.currentTimeMillis()).setName(name));
   }
@@ -96,7 +96,7 @@ public class LabelController {
     NotFoundException.notNull(label, "标签不存在");
 
     if (Objects.equals(label.getName(), name)) {
-      throw ApplicationException.failed("标签名未更改");
+      throw ErrorMessageException.failed("标签名未更改");
     }
 
     labelService.update(label.setName(name));

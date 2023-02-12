@@ -22,19 +22,18 @@ package cn.taketoday.blog.web.controller;
 
 import java.util.List;
 
-import cn.taketoday.blog.ApplicationException;
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Category;
 import cn.taketoday.blog.service.CategoryService;
 import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.web.interceptor.NotRequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
 import cn.taketoday.stereotype.Controller;
 import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
-import cn.taketoday.web.annotation.Interceptor;
 import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.PUT;
 import cn.taketoday.web.annotation.PathVariable;
@@ -76,7 +75,7 @@ public class CategoriesController {
    */
   static void validateCategory(Category category) {
     if (StringUtils.isEmpty(category.getName())) {
-      throw new ApplicationException("分类名不能为空");
+      throw new ErrorMessageException("分类名不能为空");
     }
     if (category.getOrder() <= 0) {
       category.setOrder(Category.DEFAULT_ORDER);
@@ -93,7 +92,7 @@ public class CategoriesController {
     NotFoundException.notNull(oldCategory, "要更新的分类不存在");
 
     if (oldCategory.equals(category)) {
-      throw ApplicationException.failed("分类未更改");
+      throw ErrorMessageException.failed("分类未更改");
     }
     categoryService.update(category, name);
   }
@@ -106,13 +105,13 @@ public class CategoriesController {
   }
 
   @GET
-  @Interceptor(exclude = BloggerInterceptor.class)
+  @NotRequiresBlogger
   public List<Category> all() {
     return categoryService.getAllCategories();
   }
 
   @GET("/{name}")
-  @Interceptor(exclude = BloggerInterceptor.class)
+  @NotRequiresBlogger
   public Category name(@PathVariable String name) {
     return categoryService.getCategory(name);
   }

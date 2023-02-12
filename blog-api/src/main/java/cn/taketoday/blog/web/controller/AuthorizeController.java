@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import cn.taketoday.blog.ApplicationException;
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.aspect.Logging;
@@ -252,7 +251,7 @@ public class AuthorizeController {
 
     OauthMetadata metadata = this.oauthMetadata.get(app);
     if (metadata == null) {
-      throw ApplicationException.failed("不支持的登录方式");
+      throw ErrorMessageException.failed("不支持的登录方式");
     }
     return metadata;
   }

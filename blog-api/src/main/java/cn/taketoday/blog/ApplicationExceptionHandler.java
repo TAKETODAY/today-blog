@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -28,7 +28,6 @@ import java.sql.SQLException;
 
 import cn.taketoday.blog.utils.BlogUtils;
 import cn.taketoday.blog.utils.Json;
-import cn.taketoday.blog.utils.StringUtils;
 import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.dao.DataAccessResourceFailureException;
 import cn.taketoday.http.HttpStatus;
@@ -129,19 +128,6 @@ public class ApplicationExceptionHandler {
 //  public ValidationError validation(ValidationException validation) {
 //    return ValidationError.failed(validation.getAllErrors());
 //  }
-
-  @ExceptionHandler({ ApplicationException.class })
-  public ResponseEntity<?> articleException(ApplicationException e) {
-    String message = e.getMessage();
-    if (StringUtils.isNotEmpty(message)) {
-      log.error(message, e);
-      return ResponseEntity.status(e.getStatusCode())
-              .body(ErrorMessage.failed(message));
-    }
-
-    return ResponseEntity.status(e.getStatusCode())
-            .body(ErrorMessage.failed("未知错误"));
-  }
 
   @ResponseStatus(HttpStatus.FORBIDDEN)
   @ExceptionHandler(ArticlePasswordException.class)

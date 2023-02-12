@@ -25,10 +25,8 @@ import java.util.Map;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.service.OptionService;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import cn.taketoday.blog.web.interceptor.BloggerInterceptor;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.web.annotation.GET;
-import cn.taketoday.web.annotation.Interceptor;
 import cn.taketoday.web.annotation.PUT;
 import cn.taketoday.web.annotation.RequestBody;
 import cn.taketoday.web.annotation.RequestMapping;
@@ -41,7 +39,6 @@ import cn.taketoday.web.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/options")
-@RequiresBlogger
 public class OptionController {
 
   private final OptionService optionsService;
@@ -51,7 +48,6 @@ public class OptionController {
   }
 
   @GET
-  @Interceptor(exclude = BloggerInterceptor.class)
   public Map<String, String> get() {
     return optionsService.getOptionsMap();
   }
