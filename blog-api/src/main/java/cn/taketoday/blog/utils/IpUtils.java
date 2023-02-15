@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -18,27 +18,24 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.ext.ip;
+package cn.taketoday.blog.utils;
 
-import cn.taketoday.blog.BlogConstant;
+import cn.taketoday.ip2region.IpLocation;
+import cn.taketoday.ip2region.IpSearcher;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2019-03-24 20:53
+ * @since 3.1 2023/2/15 23:15
  */
-public final class IPEntry {
+public abstract class IpUtils {
+  private static final IpSearcher ipSearcher = IpSearcher.forDefaultResourceLocation();
 
-  public String beginIp;
-  public String endIp;
-  public String country;
-  public String area;
-
-  public IPEntry() {
-    beginIp = endIp = country = area = BlogConstant.BLANK;
+  public static String search(String ip) {
+    return ipSearcher.search(ip);
   }
 
-  @Override
-  public String toString() {
-    return this.area + " " + this.country + " IP:" + this.beginIp + "-" + this.endIp;
+  public static IpLocation find(String ip) {
+    return ipSearcher.find(ip);
   }
+
 }

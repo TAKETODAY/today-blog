@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -21,11 +21,11 @@ package cn.taketoday.blog.web.controller;
 
 import java.util.List;
 
-import cn.taketoday.blog.ext.ip.IPSeeker;
 import cn.taketoday.blog.model.PageView;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.service.PageViewService;
 import cn.taketoday.blog.utils.BlogUtils;
+import cn.taketoday.blog.utils.IpUtils;
 import cn.taketoday.blog.utils.StringUtils;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
@@ -69,7 +69,7 @@ public class PageViewController {
       UserAgent userAgent = UserAgent.parseUserAgentString(ua);
 
       String ip = BlogUtils.remoteAddress(request);
-      pageView.setIp(ip + ":" + new IPSeeker().getAddress(ip))
+      pageView.setIp(ip + ":" + IpUtils.search(ip))
               .setUrl(url)
               .setOs(userAgent.getOperatingSystem().getName())
               .setDevice(userAgent.getOperatingSystem().getDeviceType().getName())

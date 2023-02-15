@@ -30,11 +30,11 @@ import cn.taketoday.beans.factory.BeanFactory;
 import cn.taketoday.blog.MethodOperation;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.aspect.Logging;
-import cn.taketoday.blog.ext.ip.IPSeeker;
 import cn.taketoday.blog.model.Operation;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.LoggerType;
 import cn.taketoday.blog.repository.LoggerRepository;
+import cn.taketoday.blog.utils.IpUtils;
 import cn.taketoday.blog.utils.Json;
 import cn.taketoday.blog.utils.Pagination;
 import cn.taketoday.core.annotation.MergedAnnotation;
@@ -109,7 +109,7 @@ public class LoggingService {
     operation.setTitle(logger.getString("title"))
             .setContent(content)
             .setId(operationDetail.getId())
-            .setIp(ip + ':' + new IPSeeker().getAddress(ip));
+            .setIp(ip + ':' + IpUtils.search(ip));
 
     Object result = operationDetail.getResult();
 
