@@ -42,8 +42,7 @@ import lombok.CustomLog;
 public class BlogApplication {
 
   public static void main(String[] args) {
-    ConfigurableApplicationContext context = Application.run(BlogApplication.class, args);
-    System.out.println(context);
+    Application.run(BlogApplication.class, args);
   }
 
   @EventListener

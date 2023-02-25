@@ -33,6 +33,7 @@ import javax.sql.DataSource;
 
 import cn.taketoday.aop.support.DefaultPointcutAdvisor;
 import cn.taketoday.aop.support.annotation.AnnotationMatchingPointcut;
+import cn.taketoday.beans.factory.ObjectProvider;
 import cn.taketoday.beans.factory.annotation.DisableAllDependencyInjection;
 import cn.taketoday.beans.factory.config.BeanDefinition;
 import cn.taketoday.blog.aspect.Logging;
@@ -101,8 +102,9 @@ public class AppConfig implements WebMvcConfigurer {
   // 日志
   @Component
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  LoggingInterceptor loggingInterceptor(Executor executor,
-          LoggingService loggerService, UserSessionResolver sessionResolver) {
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+  LoggingInterceptor loggingInterceptor(ObjectProvider<Executor> executor,
+          ObjectProvider<LoggingService> loggerService, ObjectProvider<UserSessionResolver> sessionResolver) {
     return new LoggingInterceptor(executor, loggerService, sessionResolver);
   }
 

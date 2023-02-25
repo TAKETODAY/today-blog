@@ -65,7 +65,7 @@ public class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
   @NonNull
   @Override
   protected Expression parseExpression(@NonNull String expression) {
-    return getParser().parseExpression(expression, parserContext);
+    return parser.parseExpression(expression, parserContext);
   }
 
   /**
@@ -80,7 +80,7 @@ public class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
             invocation.getThis(), invocation.getThis().getClass());
 
     var evaluationContext = new MethodBasedEvaluationContext(
-            root, invocation.getMethod(), invocation.getArguments(), getParameterNameDiscoverer());
+            root, invocation.getMethod(), invocation.getArguments(), parameterNameDiscoverer);
 
     evaluationContext.setBeanResolver(beanResolver);
     evaluationContext.setTypeLocator(typeLocator);

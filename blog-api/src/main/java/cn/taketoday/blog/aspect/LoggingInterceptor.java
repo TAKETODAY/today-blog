@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -24,11 +24,14 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
+import cn.taketoday.beans.factory.ObjectProvider;
 import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.util.function.SingletonSupplier;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.RequestContextHolder;
 
@@ -40,15 +43,15 @@ import static cn.taketoday.blog.utils.BlogUtils.remoteAddress;
  */
 public class LoggingInterceptor implements MethodInterceptor {
 
-  private final Executor executor;
-  private final LoggingService loggingService;
-  private final UserSessionResolver sessionResolver;
+  private final SingletonSupplier<Executor> executor;
+  private final SingletonSupplier<LoggingService> loggingService;
+  private final SingletonSupplier<UserSessionResolver> sessionResolver;
 
-  public LoggingInterceptor(Executor executor,
-          LoggingService loggingService, UserSessionResolver sessionResolver) {
-    this.executor = executor;
-    this.loggingService = loggingService;
-    this.sessionResolver = sessionResolver;
+  public LoggingInterceptor(Supplier<Executor> executor,
+          Supplier<LoggingService> loggingService, ObjectProvider<UserSessionResolver> sessionResolver) {
+    this.executor = SingletonSupplier.from(executor);
+    this.loggingService = SingletonSupplier.from(loggingService);
+    this.sessionResolver = SingletonSupplier.from(sessionResolver);
   }
 
   @Override
@@ -71,13 +74,13 @@ public class LoggingInterceptor implements MethodInterceptor {
                       loginUser(request)
               );
 
-      executor.execute(() -> loggingService.save(operation));
+      executor.obtain().execute(() -> loggingService.obtain().persist(operation));
     }
   }
 
   @Nullable
   private User loginUser(RequestContext request) {
-    return sessionResolver.getLoginUser(request);
+    return sessionResolver.obtain().getLoginUser(request);
   }
 
 }

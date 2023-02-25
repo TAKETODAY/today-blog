@@ -17,7 +17,6 @@
   <mappers>
     <mapper resource="mapper/UserMapper.xml" />
     <mapper resource="mapper/LabelMapper.xml" />
-    <mapper resource="mapper/LoggerMapper.xml" />
     <mapper resource="mapper/OptionMapper.xml" />
     <mapper resource="mapper/CommentMapper.xml" />
     <mapper resource="mapper/ArticleMapper.xml" />
