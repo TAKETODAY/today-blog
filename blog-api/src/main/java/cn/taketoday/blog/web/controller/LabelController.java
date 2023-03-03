@@ -68,7 +68,7 @@ public class LabelController {
 
   @POST
   @RequiresBlogger
-  @Logging(title = "批量保存标签", content = "names: ${Arrays.toString(name)}")
+  @Logging(title = "批量保存标签", content = "names: ${Arrays.toString(#name)}")
   public Json post(@RequestParam(required = true) String[] name) {
 
     long currentTimeMillis = System.currentTimeMillis();
@@ -90,7 +90,7 @@ public class LabelController {
 
   @PUT("/{id}")
   @RequiresBlogger
-  @Logging(title = "标签更新", content = "update:[${id}] with name:[${name}]")
+  @Logging(title = "标签更新", content = "update:[${#id}] with name:[${#name}]")
   public void put(@RequestParam(required = true) String name, @PathVariable int id) {
     Label label = labelService.getById(id);
     NotFoundException.notNull(label, "标签不存在");
@@ -104,7 +104,7 @@ public class LabelController {
 
   @DELETE("/{id}")
   @RequiresBlogger
-  @Logging(title = "删除标签", content = "delete id:[${id}]")
+  @Logging(title = "删除标签", content = "delete id:[${#id}]")
   public void delete(@PathVariable long id) {
     Label byName = labelService.getById(id);
     NotFoundException.notNull(byName, "标签不存在");

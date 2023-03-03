@@ -25,7 +25,9 @@ import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.beans.support.BeanProperties;
 import cn.taketoday.blog.ErrorMessageException;
+import cn.taketoday.blog.Json;
 import cn.taketoday.blog.Pageable;
+import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.User;
@@ -34,9 +36,7 @@ import cn.taketoday.blog.service.AttachmentService;
 import cn.taketoday.blog.service.UserService;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.HashUtils;
-import cn.taketoday.blog.Json;
 import cn.taketoday.blog.util.MD5;
-import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.NoRequestLimit;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
@@ -91,7 +91,6 @@ public class UserController {
   @PUT("/{id}")
   @NoRequestLimit
   @RequiresBlogger
-  @Logging(title = "更新用户信息", content = "邮箱: [${loginUser.email}]")
   public Json update(@PathVariable long id, @Valid @RequestBody UserSettingsForm form) {
 
     User oldUser = userService.getById(id);
@@ -128,7 +127,7 @@ public class UserController {
   @POST
   @NoRequestLimit
   @RequiresBlogger
-  @Logging(title = "创建用户", content = "user: [${user.name}]")
+  @Logging(title = "创建用户", content = "user: [${#user.name}]")
   public Json create(@RequestBody User user) {
 
     userService.register(user);
@@ -139,7 +138,7 @@ public class UserController {
   @PUT("/{id}/status/{status}")
   @NoRequestLimit
   @RequiresBlogger
-  @Logging(title = "更新用户状态", content = "更新用户：[${id}] 状态为：[${status.msg}]")
+  @Logging(title = "更新用户状态", content = "更新用户：[${#id}] 状态为：[${#status.description}]")
   public Json status(@PathVariable long id, @PathVariable UserStatus status) {
     userService.updateStatusById(status, id);
 
@@ -149,7 +148,7 @@ public class UserController {
   @DELETE("/{id}")
   @NoRequestLimit
   @RequiresBlogger
-  @Logging(title = "删除用户", content = "删除用户 : [${id}]")
+  @Logging(title = "删除用户", content = "删除用户 : [${#id}]")
   public Json delete(@PathVariable long id) {
 
     userService.deleteById(id);
@@ -162,7 +161,8 @@ public class UserController {
    * change image
    */
   @POST("/settings/avatar")
-  @Logging(title = "用户保存头像", content = "上传:[${avatar.getFileName()}] email:[${loginUser.email}]")
+  @Logging(title = "用户保存头像", content =
+          "上传:[${#avatar.getOriginalFilename()}] email:[${#loginUser.email}]")
   public Json avatar(User loginUser, MultipartFile avatar) {
 
     Attachment attachment = attachmentService.upload(
@@ -183,7 +183,8 @@ public class UserController {
    * @param loginUser login user
    */
   @POST("/settings/background")
-  @Logging(title = "用户修改背景", content = "文件名: [${background.getFileName()}] 邮箱:[${loginUser.email}]")
+  @Logging(title = "用户修改背景", content =
+          "文件名: [${#background.getOriginalFilename()}] 邮箱:[${#loginUser.email}]")
   public Json background(User loginUser, MultipartFile background) {
     Attachment attachment = attachmentService.upload(
             background, StringUtils.getRandomImageName(background.getOriginalFilename()));
@@ -206,7 +207,7 @@ public class UserController {
   }
 
   @PUT("/settings")
-  @Logging(title = "用户更新资料", content = "邮箱: [${loginUser.email}]")
+  @Logging(title = "用户更新资料", content = "邮箱: [${#loginUser.email}]")
   public Json settings(User loginUser, @Valid @RequestBody UserSettingsForm form) {
     User user = new User();
     boolean change = false;
@@ -253,7 +254,7 @@ public class UserController {
    */
 
   @PUT("/settings/password")
-  @Logging(title = "用户修改密码", content = "邮箱 :[${userInfo.email}]")
+  @Logging(title = "用户修改密码", content = "邮箱 :[${#userInfo.email}]")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void changePasswd(User userInfo, @Valid @RequestBody UserPasswordForm form) {
 
@@ -292,7 +293,7 @@ public class UserController {
    * Change User's Email
    */
   @PUT("/settings/email")
-  @Logging(title = "用户修改邮箱", content = "邮箱 :[${userInfo.email}] 新邮箱 :[${email}]")
+  @Logging(title = "用户修改邮箱", content = "邮箱 :[${#userInfo.email}] 新邮箱 :[${#form.email}]")
   public Json changeEmail(User userInfo, @Valid @RequestBody UserEmailForm form) {
 
     String email = form.email;
