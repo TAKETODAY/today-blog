@@ -24,7 +24,7 @@ import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.form.AttachmentForm;
 import cn.taketoday.blog.service.AttachmentService;
-import cn.taketoday.blog.utils.Pagination;
+import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.web.NotFoundException;
@@ -65,7 +65,7 @@ public class AttachmentController {
    */
   @POST
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "上传附件", content = "文件名: [${file.getFileName()}]")
+  @Logging(title = "上传附件", content = "文件名: [${#file.getFileName()}]")
   public Attachment upload(MultipartFile file) {
     return attachmentService.upload(file, null);
   }
@@ -79,14 +79,14 @@ public class AttachmentController {
 
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新附件", content = "更新附件:[${attachment.name}] 地址:[${root.args[0].url}]")
+  @Logging(title = "更新附件", content = "更新附件:[${#attachment.name}] 地址:[${#attachment.uri}]")
   public void put(@RequestBody Attachment attachment, @PathVariable long id) {
     attachmentService.update(attachment.setId(id));
   }
 
   @DELETE("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "删除附件", content = "删除id为:[${root.args[0]}]的附件")
+  @Logging(title = "删除附件", content = "删除ID为: [${#id}]的附件")
   public void delete(@PathVariable long id) {
     Attachment attachment = attachmentService.removeById(id);
     if (attachment != null && log.isInfoEnabled()) {
@@ -99,7 +99,7 @@ public class AttachmentController {
    */
   @PutMapping("/{id}/sync-aliyun")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "同步附件到阿里云", content = "ID为: [${id}]")
+  @Logging(title = "同步附件到阿里云", content = "ID为: [${#id}]")
   public void syncToAliyun(long id) {
     final Attachment byId = obtainById(id);
     attachmentService.uploadAliyun(byId);
@@ -107,7 +107,7 @@ public class AttachmentController {
 
   @PutMapping("/{id}/delete-aliyun")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "删除阿里云附件", content = "ID为: [${id}]")
+  @Logging(title = "删除阿里云附件", content = "ID为: [${#id}]")
   public void deleteAliyun(long id) {
     final Attachment byId = obtainById(id);
     attachmentService.deleteAliyun(byId);

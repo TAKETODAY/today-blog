@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -29,7 +29,7 @@ import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.model.Option;
 import cn.taketoday.blog.repository.OptionRepository;
-import cn.taketoday.blog.utils.BlogUtils;
+import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.core.env.ConfigurableEnvironment;
 import cn.taketoday.core.env.MapPropertySource;
 import cn.taketoday.core.env.PropertySources;

@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -27,7 +27,6 @@ import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.model.form.SearchForm;
@@ -38,7 +37,7 @@ import cn.taketoday.stereotype.Repository;
  * @since 2018-10-10 19:40
  */
 @Repository
-public interface ArticleRepository extends DefaultRepository<Article, Long>, BlogConstant {
+public interface ArticleRepository extends DefaultRepository<Article, Long> {
 
   /**
    * find the index page's articles

@@ -29,7 +29,7 @@ import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.model.Blogger;
-import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Singleton;

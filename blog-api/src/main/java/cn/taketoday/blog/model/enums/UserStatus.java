@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -23,6 +23,8 @@ package cn.taketoday.blog.model.enums;
 import cn.taketoday.lang.Enumerable;
 
 /**
+ * 用户状态
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-03-18 15:56
  */
@@ -36,19 +38,8 @@ public enum UserStatus implements Enumerable<Integer> {
   private final int value;
   private final String desc;
 
-  //@off
-  public static UserStatus valueOf(int code) {
-    return switch (code) {
-      case 0 -> NORMAL;
-      case 1 -> INACTIVE;
-      case 2 -> LOCKED;
-      default -> RECYCLE;
-    };
-  }
-  //@on
-
-  UserStatus(int code, String desc) {
-    this.value = code;
+  UserStatus(int value, String desc) {
+    this.value = value;
     this.desc = desc;
   }
 
@@ -60,6 +51,15 @@ public enum UserStatus implements Enumerable<Integer> {
   @Override
   public String getDescription() {
     return desc;
+  }
+
+  public static UserStatus valueOf(int code) {
+    return switch (code) {
+      case 0 -> NORMAL;
+      case 1 -> INACTIVE;
+      case 2 -> LOCKED;
+      default -> RECYCLE;
+    };
   }
 
 }

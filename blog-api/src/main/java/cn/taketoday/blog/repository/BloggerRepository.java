@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -20,12 +20,11 @@
 
 package cn.taketoday.blog.repository;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.stereotype.Repository;
 
 @Repository
-public interface BloggerRepository extends DefaultRepository<Blogger, Integer>, BlogConstant {
+public interface BloggerRepository extends DefaultRepository<Blogger, Integer> {
 
   Blogger getBlogger();
 }

@@ -38,7 +38,7 @@ import cn.taketoday.blog.model.feed.Item;
 import cn.taketoday.blog.model.feed.Rss;
 import cn.taketoday.blog.model.form.SearchForm;
 import cn.taketoday.blog.repository.ArticleRepository;
-import cn.taketoday.blog.utils.Pagination;
+import cn.taketoday.blog.Pagination;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
@@ -290,6 +290,7 @@ public class ArticleService {
   public List<Article> getHomeArticles(Pageable pageable) {
     int pageSize = pageable.getSize();
     int current = pageable.getCurrent();
+    // language=MySQL
     String sql = """
             SELECT `id`, `title`, `image`, `summary`, `pv`, `status`, `password`
             FROM article

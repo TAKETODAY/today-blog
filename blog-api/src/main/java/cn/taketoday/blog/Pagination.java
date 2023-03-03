@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -18,14 +18,12 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.utils;
+package cn.taketoday.blog;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
-import cn.taketoday.blog.Pageable;
 import lombok.NoArgsConstructor;
 
 /**
@@ -35,7 +33,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Pagination<T> implements ListableResult<T> {
 
+  @Serial
   private static final long serialVersionUID = 1L;
+
+  @SuppressWarnings("rawtypes")
   private static final Pagination empty = new Pagination<>();
 
   /** amount of page */
@@ -109,42 +110,22 @@ public class Pagination<T> implements ListableResult<T> {
     return this;
   }
 
-  // --------------------------------------------
-
-  @JsonIgnore
-  public boolean isSuccess() {
-    return true;
-  }
-
-  @JsonIgnore
-  public String getMessage() {
-    return null;
-  }
-
   @Override
   public List<T> getData() {
     return data;
   }
 
-  //-------------------------
-
-  public static <T> Pagination<T> create(List<T> data) {
-    return new Pagination<T>().data(data);
-  }
-
-  public static <T> Pagination<T> ok() {
-    return empty;
-  }
+  // Static Factory Methods
 
   public static <T> Pagination<T> empty() {
     return empty;
   }
 
   public static <T> Pagination<T> ok(List<T> data) {
-    return create(data);
+    return new Pagination<T>().data(data);
   }
 
   public static <T> Pagination<T> ok(List<T> data, int all, Pageable pageable) {
-    return create(data).pageable(all, pageable);
+    return ok(data).pageable(all, pageable);
   }
 }

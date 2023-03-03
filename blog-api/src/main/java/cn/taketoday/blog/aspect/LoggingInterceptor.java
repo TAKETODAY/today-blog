@@ -35,7 +35,7 @@ import cn.taketoday.util.function.SingletonSupplier;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.RequestContextHolder;
 
-import static cn.taketoday.blog.utils.BlogUtils.remoteAddress;
+import static cn.taketoday.blog.util.BlogUtils.remoteAddress;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

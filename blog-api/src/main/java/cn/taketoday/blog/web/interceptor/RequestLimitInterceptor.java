@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -33,7 +33,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessage;
-import cn.taketoday.blog.utils.BlogUtils;
+import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;

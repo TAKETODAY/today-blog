@@ -26,8 +26,8 @@ import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Category;
 import cn.taketoday.blog.service.CategoryService;
-import cn.taketoday.blog.utils.Json;
-import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.Json;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.NotRequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.stereotype.Controller;
@@ -56,7 +56,7 @@ public class CategoriesController {
   }
 
   @POST
-  @Logging(title = "创建分类", content = "name:[${category.name}]")
+  @Logging(title = "创建分类", content = "name:[${#category.name}]")
   public Json post(@RequestBody Category category) {
     validateCategory(category);
 
@@ -86,7 +86,7 @@ public class CategoriesController {
   }
 
   @PUT("/{name}")
-  @Logging(title = "更新分类", content = "update name:[${name}]")
+  @Logging(title = "更新分类", content = "update name:[${#name}]")
   public void put(@RequestBody Category category, @PathVariable String name) {
     Category oldCategory = categoryService.getCategory(name);
     NotFoundException.notNull(oldCategory, "要更新的分类不存在");
@@ -98,7 +98,7 @@ public class CategoriesController {
   }
 
   @DELETE("/{name}")
-  @Logging(title = "删除分类", content = "delete name:[${name}]")
+  @Logging(title = "删除分类", content = "delete name:[${#name}]")
   public void delete(@PathVariable String name) {
     NotFoundException.notNull(categoryService.getCategory(name), () -> "分类'" + name + "'不存在");
     categoryService.delete(name);

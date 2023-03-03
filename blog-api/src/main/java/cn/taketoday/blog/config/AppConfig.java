@@ -39,10 +39,11 @@ import cn.taketoday.beans.factory.config.BeanDefinition;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.aspect.LoggingInterceptor;
 import cn.taketoday.blog.service.LoggingService;
-import cn.taketoday.blog.utils.ObjectUtils;
+import cn.taketoday.blog.util.ObjectUtils;
 import cn.taketoday.cache.annotation.EnableCaching;
 import cn.taketoday.cache.support.CaffeineCacheManager;
 import cn.taketoday.context.annotation.Configuration;
+import cn.taketoday.context.annotation.EnableAspectJAutoProxy;
 import cn.taketoday.context.annotation.Role;
 import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
@@ -56,7 +57,9 @@ import cn.taketoday.web.handler.ViewControllerHandlerMapping;
  * @since 2019-05-26 17:28
  */
 @EnableCaching
+@EnableAspectJAutoProxy
 @DisableAllDependencyInjection
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @Configuration(proxyBeanMethods = false)
 public class AppConfig implements WebMvcConfigurer {
 

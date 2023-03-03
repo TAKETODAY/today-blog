@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -157,7 +157,6 @@ public interface BlogConstant extends cn.taketoday.lang.Constant {
   String SAVE_FALIED = "保存失败";
   String LOGIN_TIME_OUT = "登录超时";
   String OVER = "超出限制";
-  String OVER_CONTENT = "字数超出限制";
   String COMMENT_SUCCESS = "评论成功";
   String REPLY_SUCCESS = "回复成功";
   String REPLY_FALIED = "回复失败";

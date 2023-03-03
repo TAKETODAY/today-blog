@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -30,11 +30,11 @@ import java.util.Optional;
 
 import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.model.Attachment;
-import cn.taketoday.blog.model.enums.FileType;
+import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.repository.AttachmentRepository;
-import cn.taketoday.blog.utils.FileUtils;
-import cn.taketoday.blog.utils.RemoteFileOperations;
-import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.util.FileUtils;
+import cn.taketoday.blog.util.RemoteFileOperations;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Singleton;
 import cn.taketoday.transaction.annotation.Transactional;
@@ -202,7 +202,7 @@ public class AttachmentOperations {
     attachment.setName(fileName);
     attachment.setLocation(uploadUri);
     attachment.setSize(dest.length());
-    attachment.setFileType(FileType.from(fileName));
+    attachment.setFileType(AttachmentType.from(fileName));
     return attachment;
   }
 

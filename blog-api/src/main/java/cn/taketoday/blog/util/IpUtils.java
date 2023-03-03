@@ -18,28 +18,24 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.utils;
+package cn.taketoday.blog.util;
 
-import org.junit.jupiter.api.Test;
+import cn.taketoday.ip2region.IpLocation;
+import cn.taketoday.ip2region.IpSearcher;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2020-07-12 10:22
+ * @since 3.1 2023/2/15 23:15
  */
-public class MD5Test {
+public abstract class IpUtils {
+  private static final IpSearcher ipSearcher = IpSearcher.forDefaultResourceLocation();
 
-  @Test
-  public void testMD5() {
+  public static String search(String ip) {
+    return ipSearcher.search(ip);
+  }
 
-    MD5 md5 = new MD5();
-    MD5 md52 = new MD5();
-
-    final String md5Str2 = md5.getMD5Str("666");
-    final String md5Str = md5.getMD5Str(md5Str2);
-    final String md5Strs = md52.getMD5Str(md5Str2);
-
-    System.err.println(md5Str);
-    System.err.println(md5Strs);
+  public static IpLocation find(String ip) {
+    return ipSearcher.find(ip);
   }
 
 }

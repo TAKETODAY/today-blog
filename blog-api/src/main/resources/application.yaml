@@ -55,8 +55,8 @@ mybatis:
   config-location: classpath:mybatis-config.xml
 
 server:
-  displayName: TODAY BLOG API
-  useAprConnector: true
+  session:
+    persistent: true
 
 site:
   app:

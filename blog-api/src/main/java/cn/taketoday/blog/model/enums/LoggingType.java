@@ -17,25 +17,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
-
-package cn.taketoday.blog.utils;
-
-import cn.taketoday.ip2region.IpLocation;
-import cn.taketoday.ip2region.IpSearcher;
+package cn.taketoday.blog.model.enums;
 
 /**
+ * 日志类型
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 3.1 2023/2/15 23:15
+ * @since 2019-03-22 20:29
  */
-public abstract class IpUtils {
-  private static final IpSearcher ipSearcher = IpSearcher.forDefaultResourceLocation();
+public enum LoggingType {
 
-  public static String search(String ip) {
-    return ipSearcher.search(ip);
+  //["default","primary","success","info", "warning","danger"]
+
+  INFO("default"),
+  WARN("warning"),
+  ERROR("error"),
+  SUCCESS("success");
+
+  LoggingType(String icon) {
+    this.type = icon;
   }
 
-  public static IpLocation find(String ip) {
-    return ipSearcher.find(ip);
+  private final String type;
+
+  public String getValue() {
+    return type;
   }
 
 }

@@ -18,49 +18,30 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog;
+package cn.taketoday.blog.util;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.blog.BlogConstant;
 
 /**
- * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2020-04-16 14:23
+ * @author TODAY 2020/12/22 17:36
  */
-public class ErrorMessage implements Result {
+public abstract class StreamUtils extends cn.taketoday.util.StreamUtils {
 
-  private String message;
-
-  public ErrorMessage() { }
-
-  public ErrorMessage(String message) {
-    this.setMessage(message);
+  public static void transferTo(final InputStream source, final OutputStream out) throws IOException {
+    transferTo(source, out, BlogConstant.BUFFER_SIZE);
   }
 
-  public static ErrorMessage failed(String message) {
-    return new ErrorMessage(message);
-  }
-
-  @Override
-  @JsonIgnore
-  public Object getData() {
-    return message;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-  @Override
-  public String toString() {
-    return ToStringBuilder.from(this)
-            .append("message", message)
-            .toString();
+  public static void transferTo(final InputStream source, final OutputStream out, int bufferSize) throws IOException {
+    int bytesRead;
+    final byte[] buffer = new byte[bufferSize];
+    while ((bytesRead = source.read(buffer)) != -1) {
+      out.write(buffer, 0, bytesRead);
+    }
+    out.flush();
   }
 
 }

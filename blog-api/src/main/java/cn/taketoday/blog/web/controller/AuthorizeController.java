@@ -45,11 +45,11 @@ import cn.taketoday.blog.model.oauth.Oauth;
 import cn.taketoday.blog.service.AttachmentOperations;
 import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.service.UserService;
-import cn.taketoday.blog.utils.HashUtils;
-import cn.taketoday.blog.utils.HttpUtils;
-import cn.taketoday.blog.utils.Json;
-import cn.taketoday.blog.utils.ObjectUtils;
-import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.util.HashUtils;
+import cn.taketoday.blog.util.HttpUtils;
+import cn.taketoday.blog.Json;
+import cn.taketoday.blog.util.ObjectUtils;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.context.properties.bind.Binder;
@@ -285,7 +285,7 @@ public class AuthorizeController extends SessionManagerOperations {
 
   @ResponseBody(false)
   @GET("/{app}/callback")
-  @Logging(title = "第三方登录回调", content = "app:[${app}]")
+  @Logging(title = "第三方登录回调", content = "app:[${#app}]")
   public String loginCallback(WebSession session,
           @PathVariable String app, @Nullable String forward,
           @RequestParam String code, @RequestParam String state,

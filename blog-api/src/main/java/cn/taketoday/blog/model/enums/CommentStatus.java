@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -19,37 +19,43 @@
  */
 package cn.taketoday.blog.model.enums;
 
+import cn.taketoday.lang.Enumerable;
+
 /**
+ * 评论状态
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-03-18 17:13
  */
-public enum CommentStatus {
+public enum CommentStatus implements Enumerable<Integer> {
 
   CHECKED(0, "已审核"),
   CHECKING(1, "未审核"),
   RECYCLE(2, "回收站");
 
-  private final int code;
-  private final String msg;
+  private final int value;
+  private final String desc;
 
-  public static CommentStatus valueOf(int code) {
-    return switch (code) {
+  CommentStatus(int value, String desc) {
+    this.value = value;
+    this.desc = desc;
+  }
+
+  @Override
+  public Integer getValue() {
+    return value;
+  }
+
+  @Override
+  public String getDescription() {
+    return desc;
+  }
+
+  public static CommentStatus valueOf(int value) {
+    return switch (value) {
       case 0 -> CHECKED;
       case 1 -> CHECKING;
       default -> RECYCLE;
     };
-  }
-
-  CommentStatus(int code, String msg) {
-    this.code = code;
-    this.msg = msg;
-  }
-
-  public int getCode() {
-    return code;
-  }
-
-  public String getMsg() {
-    return msg;
   }
 }

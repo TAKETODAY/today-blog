@@ -18,49 +18,19 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog;
+package cn.taketoday.blog.util;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+public class SendMailException extends Exception {
 
-import cn.taketoday.core.style.ToStringBuilder;
+  private static final long serialVersionUID = -3587825188366930579L;
 
-/**
- * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2020-04-16 14:23
- */
-public class ErrorMessage implements Result {
+  public SendMailException() { }
 
-  private String message;
-
-  public ErrorMessage() { }
-
-  public ErrorMessage(String message) {
-    this.setMessage(message);
+  public SendMailException(String message) {
+    super(message);
   }
 
-  public static ErrorMessage failed(String message) {
-    return new ErrorMessage(message);
+  public SendMailException(Throwable cause) {
+    super(cause);
   }
-
-  @Override
-  @JsonIgnore
-  public Object getData() {
-    return message;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-  @Override
-  public String toString() {
-    return ToStringBuilder.from(this)
-            .append("message", message)
-            .toString();
-  }
-
 }

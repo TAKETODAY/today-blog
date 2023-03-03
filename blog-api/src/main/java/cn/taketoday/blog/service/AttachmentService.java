@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -30,13 +30,13 @@ import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.OssConfig;
 import cn.taketoday.blog.model.Attachment;
-import cn.taketoday.blog.model.enums.FileType;
+import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
 import cn.taketoday.blog.repository.AttachmentRepository;
-import cn.taketoday.blog.utils.FileUtils;
-import cn.taketoday.blog.utils.Pagination;
-import cn.taketoday.blog.utils.RemoteFileOperations;
-import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.util.FileUtils;
+import cn.taketoday.blog.Pagination;
+import cn.taketoday.blog.util.RemoteFileOperations;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.web.InternalServerException;
@@ -277,7 +277,7 @@ public class AttachmentService {
             .setName(fileName)
             .setLocation(uploadUrl)
             .setSize(dest.length())
-            .setFileType(FileType.from(fileName));
+            .setFileType(AttachmentType.from(fileName));
   }
 
   public List<Attachment> getLatest() {

@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -19,6 +19,7 @@
  */
 package cn.taketoday.blog.model.enums;
 
+import cn.taketoday.jdbc.type.EnumerationValue;
 import lombok.Getter;
 
 /**
@@ -28,14 +29,16 @@ import lombok.Getter;
 @Getter
 public enum NotificationType {
 
-  SYSTEM(0, "系统通知"), ADMIN(3, "管理员通知");
+  SYSTEM(0, "系统通知"),
+  ADMIN(3, "管理员通知");
 
-  private final int code;
+  @EnumerationValue
+  private final int value;
   private final String msg;
 
-  NotificationType(int code, String msg) {
+  NotificationType(int value, String msg) {
     this.msg = msg;
-    this.code = code;
+    this.value = value;
   }
 
 }

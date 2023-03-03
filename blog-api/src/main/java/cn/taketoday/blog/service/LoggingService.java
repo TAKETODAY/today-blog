@@ -27,15 +27,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import cn.taketoday.beans.factory.BeanFactory;
+import cn.taketoday.blog.Json;
 import cn.taketoday.blog.MethodOperation;
 import cn.taketoday.blog.Pageable;
+import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.model.Operation;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.model.enums.LoggerType;
-import cn.taketoday.blog.utils.IpUtils;
-import cn.taketoday.blog.utils.Json;
-import cn.taketoday.blog.utils.Pagination;
+import cn.taketoday.blog.model.enums.LoggingType;
+import cn.taketoday.blog.util.IpUtils;
 import cn.taketoday.core.annotation.MergedAnnotation;
 import cn.taketoday.core.annotation.MergedAnnotations;
 import cn.taketoday.expression.ExpressionException;
@@ -123,13 +123,13 @@ public class LoggingService {
       resolveError(e, operation);
     }
     else {
-      operation.setType(LoggerType.SUCCESS.getType());
+      operation.setType(LoggingType.SUCCESS.getValue());
     }
 
     // no exception occurred
     if (result instanceof Json json) {
       operation.setResult(json.getMessage());
-      operation.setType(json.isSuccess() ? LoggerType.SUCCESS.getType() : LoggerType.ERROR.getType());
+      operation.setType(json.isSuccess() ? LoggingType.SUCCESS.getValue() : LoggingType.ERROR.getValue());
     }
     else if (result instanceof String str) {
       String decodeUrl = URLDecoder.decode(str, StandardCharsets.UTF_8);
@@ -141,18 +141,18 @@ public class LoggingService {
     return operation;
   }
 
-  private String getContent(MethodOperation operationDetail, MergedAnnotation<Logging> logger) {
+  private String getContent(MethodOperation operation, MergedAnnotation<Logging> logger) {
+    String contentTemplate = logger.getString("content");
     try {
-      return expressionEvaluator.content(logger.getString("content"), operationDetail);
+      return expressionEvaluator.content(contentTemplate, operation);
     }
     catch (ExpressionException e) {
-      throw new ExpressionException(
-              "不能执行EL表达式: [" + logger.getString("content") + "]", e);
+      return "不能执行EL表达式: [" + contentTemplate + "]";
     }
   }
 
   void resolveError(Throwable throwable, Operation operation) {
-    operation.setType(LoggerType.ERROR.getType());
+    operation.setType(LoggingType.ERROR.getValue());
     String content = operation.getContent();
     if (content == null) {
       operation.setContent("msg: <em>操作失败: </em>" + throwable);
@@ -166,7 +166,7 @@ public class LoggingService {
 
     persist(errorOperation.setIp("127.0.0.1:local")//
             .setId(System.currentTimeMillis())//
-            .setType(LoggerType.ERROR.getType())//
+            .setType(LoggingType.ERROR.getValue())//
             .setContent("错误信息：" + e.getMessage()));
   }
 

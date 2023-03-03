@@ -49,10 +49,11 @@
   -->
   <logger name="org.apache" level="WARN" />
   <logger name="today.infra.SQL" level="DEBUG" />
+  <logger name="cn.taketoday.session" level="DEBUG" />
 
   <!--  <root level="ERROR">-->
   <!--    <root level="TRACE">-->
-<!--    <root level="DEBUG">-->
+  <!--    <root level="DEBUG">-->
   <root level="INFO">
     <appender-ref ref="STDOUT" />
     <!--    <appender-ref ref="FILE" />-->

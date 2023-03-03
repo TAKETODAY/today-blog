@@ -22,17 +22,17 @@ package cn.taketoday.blog.web.controller;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessageException;
+import cn.taketoday.blog.Json;
 import cn.taketoday.blog.Pageable;
+import cn.taketoday.blog.Pagination;
+import cn.taketoday.blog.Result;
 import cn.taketoday.blog.aspect.Logging;
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.service.CommentService;
-import cn.taketoday.blog.utils.BlogUtils;
-import cn.taketoday.blog.utils.Json;
-import cn.taketoday.blog.utils.Pagination;
-import cn.taketoday.blog.utils.Result;
+import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
@@ -41,13 +41,13 @@ import cn.taketoday.stereotype.Controller;
 import cn.taketoday.web.AccessForbiddenException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
+import cn.taketoday.web.annotation.PATCH;
 import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.PUT;
 import cn.taketoday.web.annotation.PathVariable;
 import cn.taketoday.web.annotation.RequestBody;
 import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RequestParam;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Setter;
 
@@ -69,24 +69,24 @@ public class CommentController {
 
   @Setter
   private static class CommentFrom {
-    @NotEmpty
-            //        @NotBlank
-            (message = "请输入评论内容")
+    @NotEmpty(message = "请输入评论内容")
     private String content;
 
-    @Min(10000)
-    private long articleId;
+    private Long articleId;
 
-    private long commentId;
+    private Long commentId;
   }
 
   /**
-   * @param loginInfo logged in user info
-   * @param from comment detail
+   * 评论文章
+   *
+   * @param loginInfo 登录用户信息
+   * @param from 评论表单
    */
   @POST
-  @Logging(title = "用户评论", content = "用户：[${userInfo.name}] 评论了文章:[${from.articleId}] 回复了:[${from.commentId}] 结果: [${result}]")
   @RequestLimit(count = 1)
+  @Logging(title = "用户评论", content = "用户：[${#loginInfo.loginUser.name}] " +
+          "评论了文章:[${#from.articleId}] 回复了:[${#from.commentId}] 结果: [${#result}]")
   public Json post(@RequiresUser LoginInfo loginInfo, @RequestBody CommentFrom from) {
     Comment comment = new Comment();
     comment.setUser(loginInfo.getLoginUser());
@@ -101,7 +101,7 @@ public class CommentController {
     else {
       // check comment length
       if (comment.getContent().length() >= commentConfig.getContentLength()) {
-        return Json.badRequest(BlogConstant.OVER_CONTENT);
+        return Json.failed("字数超出限制");
       }
       if (commentConfig.isCheck()) {
         comment.setStatus(CommentStatus.CHECKING);
@@ -124,7 +124,7 @@ public class CommentController {
 
     int totalRecord = commentService.countByArticleId(id);
     if (totalRecord <= 0) {
-      return Pagination.ok();
+      return Pagination.empty();
     }
 
     int commentPageSize = commentConfig.getListSize();
@@ -141,17 +141,15 @@ public class CommentController {
             .applyNum();
   }
 
-  @PUT("/{id}/status")
   @RequiresBlogger
-  @Logging(title = "更新评论状态", content = "更新评论：[${id}]状态为：[${CommentStatus.valueOf(code)}]")
-  public Json status(@PathVariable Long id, @RequestParam(required = true) int code) {
-
-    commentService.updateStatusById(CommentStatus.valueOf(code), id);
-    return Json.ok();
+  @PATCH("/{id}/status")
+  @Logging(title = "更新评论状态", content = "更新评论：[${#id}]状态为：[${CommentStatus.valueOf(code)}]")
+  public void status(@PathVariable Long id, @RequestParam(required = true) CommentStatus status) {
+    commentService.updateStatusById(status, id);
   }
 
   @DELETE("/{id}")
-  @Logging(title = "删除评论", content = "删除评论：[${id}]")
+  @Logging(title = "删除评论", content = "删除评论：[${#id}]")
   public Json delete(@RequiresUser LoginInfo loginInfo, @PathVariable Long id) {
     Comment byId = commentService.obtainById(id);
 
@@ -187,10 +185,11 @@ public class CommentController {
     return commentService.pagination(pageable);
   }
 
-  //
-
+  /**
+   * 更新评论
+   */
   @PUT("/{id}")
-  @Logging(title = "更新评论", content = "更新评论：[${id}]")
+  @Logging(title = "更新评论", content = "更新评论：[${#id}]")
   public Json put(@RequiresUser LoginInfo loginInfo, @PathVariable Long id, @RequestBody Comment comment) {
     Comment byId = commentService.obtainById(id);
 

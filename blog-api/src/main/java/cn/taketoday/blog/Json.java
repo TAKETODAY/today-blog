@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -18,21 +18,17 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.utils;
+package cn.taketoday.blog;
 
 import java.util.function.Function;
 
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.web.AccessForbiddenException;
-import cn.taketoday.web.NotFoundException;
-import cn.taketoday.web.UnauthorizedException;
+import cn.taketoday.core.style.ToStringBuilder;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-17 17:46
  */
-@SuppressWarnings("serial")
-public class Json implements Result {
+public final class Json implements Result {
 
   private Object data;
   private String message;
@@ -69,12 +65,10 @@ public class Json implements Result {
   /**
    * Apply the common {@link Json} result
    *
-   * @param <T>
    * @param func the {@link Function}
    * @param param parameter
-   * @return
    */
-  public static final <T> Json apply(Function<T, Boolean> func, T param) {
+  public static <T> Json apply(Function<T, Boolean> func, T param) {
     if (func.apply(param)) {
       return Json.ok();
     }
@@ -94,7 +88,7 @@ public class Json implements Result {
   }
 
   public static Json ok() {
-    return create(true, OPERATION_OK, null);
+    return create(true, BlogConstant.OPERATION_OK, null);
   }
 
   public static Json ok(String message, Object data) {
@@ -102,7 +96,7 @@ public class Json implements Result {
   }
 
   public static Json ok(Object data) {
-    return create(true, OPERATION_OK, data);
+    return create(true, BlogConstant.OPERATION_OK, data);
   }
 
   public static Json ok(String message) {
@@ -113,11 +107,11 @@ public class Json implements Result {
    * default failed json
    */
   public static Json failed() {
-    return create(false, OPERATION_FAILED, null);
+    return create(false, BlogConstant.OPERATION_FAILED, null);
   }
 
   public static Json failed(Object data) {
-    return create(false, OPERATION_FAILED, data);
+    return create(false, BlogConstant.OPERATION_FAILED, data);
   }
 
   public static Json failed(String message) {
@@ -128,49 +122,13 @@ public class Json implements Result {
     return create(false, message, data);
   }
 
-  public static Json badRequest() {
-    return badRequest(HttpStatus.BAD_REQUEST.getReasonPhrase());
-  }
-
-  /**
-   * @param msg
-   * @return
-   */
-  public static Json badRequest(String msg) {
-    return create(false, msg, null);
-  }
-
-  public static Json notFound() {
-    return notFound(NotFoundException.NOT_FOUND);
-  }
-
-  public static Json notFound(String msg) {
-    return create(false, msg, null);
-  }
-
-  public static Json unauthorized() {
-    return unauthorized(UnauthorizedException.UNAUTHORIZED);
-  }
-
-  public static Json unauthorized(String msg) {
-    return failed(msg, 401);
-  }
-
-  public static Json accessForbidden() {
-    return accessForbidden(AccessForbiddenException.ACCESS_FORBIDDEN);
-  }
-
-  public static Json accessForbidden(String msg) {
-    return failed(msg, 403);
-  }
-
   @Override
   public String toString() {
-    return new StringBuilder()//
-            .append("{\"message\":\"").append(message)//
-            .append("\",\"data\":\"").append(data)//
-            .append("\",\"success\":\"").append(success)//
-            .append("\"}")//
+    return ToStringBuilder.from(this)
+            .append("data", data)
+            .append("message", message)
+            .append("success", success)
             .toString();
   }
+
 }

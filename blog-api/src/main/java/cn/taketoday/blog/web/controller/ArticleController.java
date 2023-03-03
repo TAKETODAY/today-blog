@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import cn.taketoday.beans.factory.annotation.Autowired;
 import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.aspect.Logging;
@@ -36,13 +35,12 @@ import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.model.form.SearchForm;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.LabelService;
-import cn.taketoday.blog.utils.BlogUtils;
-import cn.taketoday.blog.utils.Pagination;
-import cn.taketoday.blog.utils.StringUtils;
+import cn.taketoday.blog.util.BlogUtils;
+import cn.taketoday.blog.Pagination;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import cn.taketoday.cache.CacheManager;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.util.CollectionUtils;
@@ -78,8 +76,6 @@ public class ArticleController {
   private final LabelService labelService;
   private final ArticleService articleService;
 
-  @Autowired
-  CacheManager cacheManager;
 //  @OPTIONS(value = "/**", combine = false)
 //  public void options(RequestContext context) {
 //
@@ -244,7 +240,7 @@ public class ArticleController {
   @POST
   @RequiresBlogger
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "创建文章", content = "创建新文章标题: [${from.title}]")
+  @Logging(title = "创建文章", content = "创建新文章标题: [${#from.title}]")
   public void create(@RequestBody ArticleFrom from) {
     Article article = getArticle(from);
 
@@ -328,7 +324,7 @@ public class ArticleController {
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequiresBlogger
-  @Logging(title = "更新文章", content = "更新文章: [${from.title}]")
+  @Logging(title = "更新文章", content = "更新文章: [${#from.title}]")
   public void update(@PathVariable("id") Long id, @RequestBody ArticleFrom from) {
     Article article = getArticle(from);
     article.setId(id);
@@ -338,7 +334,7 @@ public class ArticleController {
   @PUT("/{id}/status/{status}")
   @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新文章状态", content = "更新文章：[${id}]状态为：[${status}]")
+  @Logging(title = "更新文章状态", content = "更新文章：[${#id}]状态为：[${#status}]")
   public void status(@PathVariable Long id, @PathVariable PostStatus status) {
     articleService.updateStatusById(status, id);
   }
@@ -346,7 +342,7 @@ public class ArticleController {
   @DELETE("/{id}")
   @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "删除文章", content = "删除文章: [${id}]")
+  @Logging(title = "删除文章", content = "删除文章: [${#id}]")
   public void delete(@PathVariable Long id) {
     articleService.deleteById(id);
   }

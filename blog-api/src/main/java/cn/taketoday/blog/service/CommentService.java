@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.config.BlogConfig;
@@ -33,8 +34,9 @@ import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.repository.CommentRepository;
-import cn.taketoday.blog.utils.Pagination;
+import cn.taketoday.blog.Pagination;
 import cn.taketoday.cache.annotation.CacheConfig;
+import cn.taketoday.lang.Assert;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
@@ -57,13 +59,12 @@ public class CommentService {
   private final BloggerService bloggerService;
   private final CommentRepository commentRepository;
 
-//  @Cacheable(key = "'countById_'+#id")
+  //  @Cacheable(key = "'countById_'+#id")
   public int countByArticleId(long id) {
     return commentRepository.getRecordByArticleId(id);
   }
 
-
-//  @Cacheable(key = "'ByArticleId_'+#id")
+  //  @Cacheable(key = "'ByArticleId_'+#id")
   public List<Comment> getAllByArticleId(long id) {
     List<Comment> commentsToUse = commentRepository.getArticleComment(id);
     if (!CollectionUtils.isEmpty(commentsToUse)) {
@@ -74,8 +75,7 @@ public class CommentService {
     return commentsToUse;
   }
 
-
-//  @Cacheable(key = "'i'+#id+'p'+#pageNow+'s'+#pageSize")
+  //  @Cacheable(key = "'i'+#id+'p'+#pageNow+'s'+#pageSize")
   public List<Comment> getByArticleId(long id, int pageNow, int pageSize) {
     List<Comment> commentsToUse = getAllByArticleId(id);
 
@@ -163,7 +163,7 @@ public class CommentService {
       return;
     }
     Comment parentComment = obtainById(commentId);
-    if (parentComment.getUserId() == comment.getUserId()) {
+    if (Objects.equals(parentComment.getUserId(), comment.getUserId())) {
       return;
     }
 
@@ -199,8 +199,7 @@ public class CommentService {
     commentRepository.deleteById(id);
   }
 
-
-//  @Cacheable(cacheNames = "LatestComments", unless = "#result.isEmpty()")
+  //  @Cacheable(cacheNames = "LatestComments", unless = "#result.isEmpty()")
   public List<Comment> getLatest() {
     return commentRepository.findLatest();
   }
@@ -265,6 +264,7 @@ public class CommentService {
       return;
     }
     User user = comment.getUser();
+    Assert.state(user != null, "用户找不到");
     if (user.getNotification()) {
 
       Map<String, Object> dataModel = new HashMap<>();
@@ -280,14 +280,12 @@ public class CommentService {
     }
   }
 
-
-//  @Cacheable(key = "'u_'+#userInfo.id+'p'+#pageNow+'s'+#pageSize")
+  //  @Cacheable(key = "'u_'+#userInfo.id+'p'+#pageNow+'s'+#pageSize")
   public List<Comment> getByUser(User userInfo, int pageNow, int pageSize) {
     return commentRepository.findByUser(userInfo, (pageNow - 1) * pageSize, pageSize);
   }
 
-
-//  @Cacheable(key = "'ByUser_'+#userInfo.id")
+  //  @Cacheable(key = "'ByUser_'+#userInfo.id")
   public int countByUser(User userInfo) {
     return commentRepository.getRecordByUser(userInfo);
   }

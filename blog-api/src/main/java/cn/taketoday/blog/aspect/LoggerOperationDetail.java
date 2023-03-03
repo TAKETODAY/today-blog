@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -21,7 +21,6 @@ package cn.taketoday.blog.aspect;
 
 import org.aopalliance.intercept.MethodInvocation;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.MethodOperation;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.lang.Nullable;
@@ -32,7 +31,7 @@ import lombok.Getter;
  * @since 2019-03-31 09:18
  */
 @Getter
-public final class LoggerOperationDetail implements MethodOperation, BlogConstant {
+public final class LoggerOperationDetail implements MethodOperation {
 
   private final long id;
 

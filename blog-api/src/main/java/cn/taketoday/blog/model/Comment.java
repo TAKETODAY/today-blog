@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -29,6 +29,10 @@ import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.jdbc.persistence.Id;
+import cn.taketoday.jdbc.persistence.Table;
+import cn.taketoday.jdbc.persistence.Transient;
+import cn.taketoday.lang.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,34 +41,41 @@ import lombok.Setter;
  */
 @Setter
 @Getter
+@Table("comment")
 public class Comment implements Serializable {
+
   @Serial
   private static final long serialVersionUID = 1L;
 
-  /** The Comment reply time */
-  private long id = 0;
+  @Id
+  private Long id;
+
   private String content;
-  //    @JSONField(serialize = false)
-  private long articleId;
+
+  private Long articleId;
+
   /** parent comment id */
   @JsonIgnore
-  private long commentId;
+  private Long commentId;
 
-  //    @JSONField(serialize = false)
   private CommentStatus status;
 
   @JsonIgnore
-  private long userId;
-
-  private User user;
+  private Long userId;
 
   @JsonIgnore
-  private long lastModify;
-
-  private List<Comment> replies;
+  private Long lastModify;
 
   /** for checked mail */
   private Boolean sendMail;
+
+  @Nullable
+  @Transient
+  private User user;
+
+  @Nullable
+  @Transient
+  private List<Comment> replies;
 
   public boolean getSendMail() {
     return sendMail != null && sendMail;
@@ -76,11 +87,11 @@ public class Comment implements Serializable {
       return true;
     }
 
-    if (obj instanceof final Comment comment) {
-      return comment.id == id
-              && comment.userId == userId
-              && comment.articleId == articleId
-              && comment.commentId == commentId
+    if (obj instanceof Comment comment) {
+      return Objects.equals(comment.id, id)
+              && Objects.equals(comment.userId, userId)
+              && Objects.equals(comment.articleId, articleId)
+              && Objects.equals(comment.commentId, commentId)
               && Objects.equals(comment.content, content);
     }
     return false;
@@ -88,7 +99,8 @@ public class Comment implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, content, articleId, commentId, status, userId, user, lastModify, replies, sendMail);
+    return Objects.hash(id, content, articleId, commentId,
+            status, userId, user, lastModify, replies, sendMail);
   }
 
   @Override
