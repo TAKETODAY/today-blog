@@ -1,12 +1,33 @@
-import React, { useEffect, useState } from 'react';
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
+import { useEffect, useState } from 'react';
 import { Button, Card, Input, List, Select } from 'antd';
 import moment from "moment";
 import styles from './style.less';
 import { Attachment } from "./data";
-import { IMAGE } from "@/utils";
 import { UploadOutlined } from '@ant-design/icons';
 import UploadForm from "./UploadForm";
 import { getAttachment } from "@/components/Attachment/service";
+import Image from "@/components/Image";
+import { IMAGE } from "@/utils";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -58,7 +79,7 @@ export default ({ itemClicked }: AttachmentProps) => {
   const renderItem = (item: Attachment) => {
     return <>
       <Card className={styles.card} hoverable
-            cover={<img alt={item.name} src={item.fileType === IMAGE ? item.url : images[item.fileType]}/>}>
+            cover={<Image src={item.fileType === IMAGE ? item.uri : images[item.fileType]} alt={item.name}/>}>
         <div className={styles.cardItemContent}>
           <span>{item.name} </span>
           <b>{moment(item.id).fromNow()}</b>

@@ -1,3 +1,23 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 import React from 'react'
 import { Button, Form, Input, message, Modal, Popconfirm } from 'antd'
 import { getSizeString, isNotEmpty } from "@/utils"
@@ -47,7 +67,7 @@ const AttachmentForm = props => {
             <Input placeholder="请输入"/>
           </FormItem>
           <FormItem label="CDN">
-            <Input disabled value={ `${ options['site.cdn'] }${ attachment.url }` }/>
+            <Input disabled value={ `${ options['site.cdn'] }${ attachment.uri }` }/>
           </FormItem>
           <FormItem name="url" label="附件路径">
             <Input placeholder="请输入"/>
@@ -68,7 +88,7 @@ const AttachmentForm = props => {
   const buildUrl = () => {
     const cdn = options['site.cdn']
     const origin = isNotEmpty(cdn) ? cdn : location.origin
-    return `${ origin }${ values.url }`
+    return `${ origin }${ values.uri }`
   }
   const setClipboard = () => {
     navigator.clipboard.writeText(buildUrl()).then(function () {
