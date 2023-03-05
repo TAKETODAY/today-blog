@@ -86,7 +86,7 @@ public interface ArticleRepository extends DefaultRepository<Article, Long> {
 
   List<Article> findLatest();
 
-  @Update("UPDATE article set status = #{status.code} WHERE id = #{id}")
+  @Update("UPDATE article set status = #{status} WHERE id = #{id}")
   void updateStatus(@Param("status") PostStatus status, @Param("id") long id);
 
   List<Article> findByStatus(@Param("status") PostStatus status,

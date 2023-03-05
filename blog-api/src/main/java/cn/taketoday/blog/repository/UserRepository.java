@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -45,6 +45,6 @@ public interface UserRepository extends DefaultRepository<User, Long> {
 
   int getRecord(@Param("status") UserStatus status);
 
-  @Update("UPDATE user set status = #{status.code} WHERE id = #{id}")
+  @Update("UPDATE user set status = #{status} WHERE id = #{id}")
   void updateStatus(@Param("status") UserStatus status, @Param("id") long id);
 }

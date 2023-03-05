@@ -32,9 +32,7 @@ import cn.taketoday.dao.DataAccessResourceFailureException;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
-import cn.taketoday.stereotype.Component;
 import cn.taketoday.util.ObjectUtils;
-import cn.taketoday.web.AccessForbiddenException;
 import cn.taketoday.web.BadRequestException;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.NotFoundException;
@@ -52,13 +50,14 @@ import cn.taketoday.web.multipart.MaxUploadSizeExceededException;
 import lombok.CustomLog;
 
 /**
+ * 异常处理
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-20 16:22
  */
 @CustomLog
-@Component
 @RestControllerAdvice
-public class ApplicationExceptionHandler {
+public class ExceptionHandling {
 
   private static final ErrorMessage illegalArgument = ErrorMessage.failed("参数错误");
   private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
@@ -97,23 +96,16 @@ public class ApplicationExceptionHandler {
 
   @ExceptionHandler(BadRequestException.class)
   public ErrorMessage badRequest(BadRequestException e) {
-
     return e.getCause() instanceof NumberFormatException
            ? ErrorMessage.failed("数字格式错误")
-           : ErrorMessage.failed(e.getMessage());
-  }
-
-  @ResponseStatus(HttpStatus.FORBIDDEN)
-  @ExceptionHandler(AccessForbiddenException.class)
-  public ErrorMessage accessForbidden(AccessForbiddenException e) {
-    return ErrorMessage.failed(e.getMessage());
+           : ErrorMessage.failed(e.getReason());
   }
 
   @ExceptionHandler(InternalServerException.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ErrorMessage internal(InternalServerException internal) {
     log.error("服务器内部错误", internal);
-    return ErrorMessage.failed(internal.getMessage());
+    return ErrorMessage.failed(internal.getReason());
   }
 
   @ExceptionHandler(ResponseStatusException.class)
@@ -122,11 +114,6 @@ public class ApplicationExceptionHandler {
             .headers(e.getHeaders())
             .body(ErrorMessage.failed(e.getReason()));
   }
-
-//  @ExceptionHandler(ValidationException.class)
-//  public ValidationError validation(ValidationException validation) {
-//    return ValidationError.failed(validation.getAllErrors());
-//  }
 
   @ResponseStatus(HttpStatus.FORBIDDEN)
   @ExceptionHandler(ArticlePasswordException.class)
@@ -153,13 +140,8 @@ public class ApplicationExceptionHandler {
     return Json.failed("空指针", "暂无堆栈信息");
   }
 
-  //    @ExceptionHandler
-  //    public Json throwable() {
-  //        return Json.failed("未知错误");
-  //    }
-
   @ExceptionHandler(ParameterConversionException.class)
-  public ErrorMessage conversion(ParameterConversionException conversion) {
+  public ErrorMessage conversion() {
     return ErrorMessage.failed("参数转换失败");
   }
 

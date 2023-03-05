@@ -67,7 +67,7 @@ public class Operation implements Serializable {
       return true;
     if (!(o instanceof Operation operation))
       return false;
-    return id == operation.id
+    return Objects.equals(id, operation.id)
             && Objects.equals(ip, operation.ip)
             && Objects.equals(title, operation.title)
             && Objects.equals(user, operation.user)

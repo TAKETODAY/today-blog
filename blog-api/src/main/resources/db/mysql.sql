@@ -1,3 +1,23 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 create schema `today-blog`;
 
 use `today-blog`;
@@ -74,13 +94,13 @@ create table article_label
 
 create table logger
 (
-    `id`      bigint        not null comment '时间戳' primary key,
-    `title`   varchar(255)  not null comment '日志标题',
-    `content` varchar(1024) not null comment '日志内容',
-    `ip`      varchar(64)   not null comment '操作者ip归属地',
-    `user`    varchar(32)   null comment '操作者email',
-    `type`    varchar(16)   null comment '类型',
-    `result`  varchar(255)  null comment '成功，失败，警告'
+    `id`      bigint       not null comment '时间戳' primary key,
+    `title`   varchar(255) not null comment '日志标题',
+    `content` text         not null comment '日志内容',
+    `ip`      varchar(64)  not null comment '操作者ip归属地',
+    `user`    varchar(32)  null comment '操作者email',
+    `type`    varchar(16)  null comment '类型',
+    `result`  text         null comment '成功，失败，警告'
 );
 
 create table `option`
@@ -111,7 +131,28 @@ INSERT INTO `option` (name, value) VALUES ('site.otherFooter', '');
 INSERT INTO `option` (name, value) VALUES ('site.subTitle', '代码是我心中的一首诗');
 INSERT INTO `option` (name, value) VALUES ('site.upload', '/data/docs');
 INSERT INTO `option` (name, value) VALUES ('site.version', 'TODAY BLOG v3.1');
-# @formatter:on
+
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
+-- @formatter:on
 
 create table page_view
 (

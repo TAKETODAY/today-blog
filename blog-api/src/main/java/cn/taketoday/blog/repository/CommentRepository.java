@@ -55,7 +55,7 @@ public interface CommentRepository extends DefaultRepository<Comment, Long> {
 
   int getRecord(@Param("status") CommentStatus status);
 
-  @Update("UPDATE comment set status = #{status.code} WHERE id = #{id}")
+  @Update("UPDATE comment set status = #{status} WHERE id = #{id}")
   void updateStatus(@Param("status") CommentStatus status, @Param("id") long id);
 
   List<Comment> findByUser(@Param("user") User user, //

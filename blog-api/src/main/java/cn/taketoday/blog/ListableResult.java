@@ -21,8 +21,6 @@ package cn.taketoday.blog;
 
 import java.util.List;
 
-import cn.taketoday.blog.Result;
-
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-08-05 12:34

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 
 import cn.taketoday.blog.Pageable;
+import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.OssConfig;
 import cn.taketoday.blog.model.Attachment;
@@ -34,7 +35,6 @@ import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
 import cn.taketoday.blog.repository.AttachmentRepository;
 import cn.taketoday.blog.util.FileUtils;
-import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.util.RemoteFileOperations;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.stereotype.Service;
@@ -218,7 +218,7 @@ public class AttachmentService {
       return attachment;
     }
     catch (IOException e) {
-      throw new InternalServerException("本地附件保存失败", e);
+      throw InternalServerException.failed("本地附件保存失败", e);
     }
   }
 

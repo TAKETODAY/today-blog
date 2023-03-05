@@ -77,16 +77,16 @@ public class LoggingService {
       }
       catch (Throwable e) {
         log.error("保存日志的时候出现异常", e);
-        afterThrowing(e, createErrorOperation(e));
+        afterThrowing(e, createErrorOperation());
       }
     }
     catch (Throwable e) {
       log.error("处理日志的时候出现异常", e);
-      afterThrowing(e, createErrorOperation(e));
+      afterThrowing(e, createErrorOperation());
     }
   }
 
-  protected Operation createErrorOperation(Throwable e) {
+  protected Operation createErrorOperation() {
     return new Operation()
             .setResult("暂无")
             .setUser("日志系统同步")
@@ -176,21 +176,18 @@ public class LoggingService {
    * @return List
    */
   public List<Operation> getLatest() {
-    // language=MySQL
     try (Query query = repositoryManager.createQuery("SELECT * FROM logger ORDER BY id DESC LIMIT 0, 5")) {
       return query.fetch(Operation.class);
     }
   }
 
   public int count() {
-    // language=MySQL
     try (Query query = repositoryManager.createQuery("SELECT COUNT(*) FROM logger")) {
       return query.fetchScalar(int.class);
     }
   }
 
   public List<Operation> getAll(int page, int size) {
-    // language=MySQL
     try (NamedQuery query = repositoryManager.createNamedQuery(
             "SELECT * FROM logger ORDER BY id DESC LIMIT :pageNow, :pageSize")) {
       // language=
@@ -201,7 +198,6 @@ public class LoggingService {
   }
 
   public void deleteAll() {
-    // language=MySQL
     try (Query query = repositoryManager.createQuery("truncate table logger")) {
       query.executeUpdate(false);
     }
@@ -212,13 +208,10 @@ public class LoggingService {
   }
 
   public void deleteByIds(long[] id) {
-    // language=MySQL
-    try (NamedQuery query = repositoryManager.createNamedQuery("delete from logger where id IN (:id)")) {
-      // language=
+    try (var query = repositoryManager.createNamedQuery("delete from logger where id IN (:id)")) {
       query.addParameter("id", id);
       query.executeUpdate(false);
     }
-
   }
 
   public List<Operation> getAll() {
@@ -228,7 +221,6 @@ public class LoggingService {
 
   public Pagination<Operation> pagination(Pageable pageable) {
     try (JdbcConnection connection = repositoryManager.open()) {
-      // language=MySQL
       try (Query countQuery = connection.createQuery("SELECT COUNT(*) FROM logger")) {
         int count = countQuery.fetchScalar(int.class);
         try (NamedQuery dataQuery = connection.createNamedQuery(

@@ -33,6 +33,7 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -45,52 +46,53 @@ import cn.taketoday.blog.ConfigBinding;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.format.support.ApplicationConversionService;
 import cn.taketoday.http.HttpHeaders;
+import cn.taketoday.ip2region.IpLocation;
+import cn.taketoday.lang.Nullable;
 import cn.taketoday.ui.Model;
 import cn.taketoday.util.DataSize;
+import cn.taketoday.util.StringUtils;
 import cn.taketoday.util.ReflectionUtils;
 import cn.taketoday.web.RequestContext;
 
 import static java.util.regex.Pattern.compile;
 
 public abstract class BlogUtils {
+  private static final List<String> IP_HEADERS = List.of(
+          "X-Real-IP",           // X-Real-IP：nginx服务代理
+          "Proxy-Client-IP",     // Proxy-Client-IP：apache 服务代理
+          "WL-Proxy-Client-IP",  // WL-Proxy-Client-IP：weblogic 服务代理
+          "HTTP_CLIENT_IP",      // HTTP_CLIENT_IP：有些代理服务器
+          "X-Forwarded-For"      // X-Forwarded-For：Squid 服务代理
+  );
 
   public static String remoteAddress(RequestContext request) {
-    String ip = null;
-    HttpHeaders requestHeaders = request.requestHeaders();
-
-    //X-Forwarded-For：Squid 服务代理
-    String ipAddresses = requestHeaders.getFirst("X-Forwarded-For");
-    String unknown = "unknown";
-    if (StringUtils.isEmpty(ipAddresses) || unknown.equalsIgnoreCase(ipAddresses)) {
-      //Proxy-Client-IP：apache 服务代理
-      ipAddresses = requestHeaders.getFirst("Proxy-Client-IP");
-    }
-
-    if (StringUtils.isEmpty(ipAddresses) || unknown.equalsIgnoreCase(ipAddresses)) {
-      //WL-Proxy-Client-IP：weblogic 服务代理
-      ipAddresses = requestHeaders.getFirst("WL-Proxy-Client-IP");
-    }
-
-    if (StringUtils.isEmpty(ipAddresses) || unknown.equalsIgnoreCase(ipAddresses)) {
-      //HTTP_CLIENT_IP：有些代理服务器
-      ipAddresses = requestHeaders.getFirst("HTTP_CLIENT_IP");
-    }
-
-    if (StringUtils.isEmpty(ipAddresses) || unknown.equalsIgnoreCase(ipAddresses)) {
-      //X-Real-IP：nginx服务代理
-      ipAddresses = requestHeaders.getFirst("X-Real-IP");
-    }
+    String ipAddresses = getIpAddresses(request.requestHeaders());
 
     //有些网络通过多层代理，那么获取到的ip就会有多个，一般都是通过逗号（,）分割开来，并且第一个ip为客户端的真实IP
     if (StringUtils.isNotEmpty(ipAddresses)) {
-      ip = ipAddresses.split(",")[0];
+      String ip = ipAddresses.split(",")[0];
+      if (isIP(ip)) {
+        return ip;
+      }
     }
 
-    //还是不能获取到，最后再通过request.getRemoteAddr();获取
-    if (StringUtils.isEmpty(ip) || unknown.equalsIgnoreCase(ipAddresses)) {
-      ip = request.getRemoteAddress();
+    //还是不能获取到，最后再通过 request.getRemoteAddress();获取
+    return request.getRemoteAddress();
+  }
+
+  @Nullable
+  private static String getIpAddresses(HttpHeaders requestHeaders) {
+    for (String ipHeader : IP_HEADERS) {
+      String ipAddresses = requestHeaders.getFirst(ipHeader);
+      if (isIP(ipAddresses)) {
+        return ipAddresses;
+      }
     }
-    return ip;
+    return null;
+  }
+
+  private static boolean isIP(String ipAddresses) {
+    return StringUtils.hasText(ipAddresses) && !IpLocation.UNKNOWN.equalsIgnoreCase(ipAddresses);
   }
 
   // -------------------------------

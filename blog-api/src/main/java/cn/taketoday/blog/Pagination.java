@@ -20,7 +20,6 @@
 
 package cn.taketoday.blog;
 
-import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,9 +31,6 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor
 public class Pagination<T> implements ListableResult<T> {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
 
   @SuppressWarnings("rawtypes")
   private static final Pagination empty = new Pagination<>();
