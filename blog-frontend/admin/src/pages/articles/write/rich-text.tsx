@@ -18,9 +18,9 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BackTop, Button, Image, Input, message, Popconfirm } from "antd";
-import ImageChooserModal  from "@/components/ImageChooserModal";
+import ImageChooserModal from "@/components/ImageChooserModal";
 import { fallbackImage, getStorage, handleHttpError, isNotEmpty, removeStorage, saveStorage } from '@/utils'
 import articleService from '@/services/ArticleService'
 
@@ -89,69 +89,69 @@ export default (props: { match: { params: { id: string } } }) => {
   }
 
   return (<>
-          <div className="container" style={{ marginTop: 22 }}>
-            <div className="row clearfix">
-              <div className="col-md-12" style={{ zIndex: 10, padding: 0 }}>
-                <div className="data_list">
-                  <div className="data_list_title" style={{ borderLeft: 'none' }}>发表博客</div>
-                  <div className="data" style={{ marginTop: 10 }}>
-                    <div className="WriteCover-wrapper">
-                      <div className="WriteCover-previewWrapper WriteCover-previewWrapper--empty">
-                        {isNotEmpty(post.image)
-                            ? <Image fallback={fallbackImage} src={post.image}/>
-                            : <label className="UploadPicture-wrapper" onClick={showModal}>
-                              <i className="fa fa-camera fa-3x WriteCover-uploadIcon"/>
-                            </label>
-                        }
-                      </div>
-                      <div className="linkInput" style={{ margin: '-32px 65px' }}>
-                        <Popconfirm icon='' title={<Input value={cover} onInput={setInputImage} placeholder='填入链接地址'/>}
-                                    onConfirm={(e) => {
-                                      setImage(cover)
-                                    }}>
-                          <Button type="dashed">链接</Button>
-                        </Popconfirm>
-                      </div>
-                      <div className="deleteImage" style={{ margin: '-32px 0px' }}>
-                        <Button type="primary" danger onClick={() => {
-                          setImage(undefined)
-                        }}>删除</Button>
-                      </div>
+        <div className="container" style={{ marginTop: 22 }}>
+          <div className="row clearfix">
+            <div className="col-md-12" style={{ zIndex: 10, padding: 0 }}>
+              <div className="data_list">
+                <div className="data_list_title" style={{ borderLeft: 'none' }}>发表博客</div>
+                <div className="data" style={{ marginTop: 10 }}>
+                  <div className="WriteCover-wrapper">
+                    <div className="WriteCover-previewWrapper WriteCover-previewWrapper--empty">
+                      {isNotEmpty(post.image)
+                          ? <Image fallback={fallbackImage} src={post.image}/>
+                          : <label className="UploadPicture-wrapper" onClick={showModal}>
+                            <i className="fa fa-camera fa-3x WriteCover-uploadIcon"/>
+                          </label>
+                      }
                     </div>
-                    <div className="row">
-                      <div className="col-md-12">
-                        <input value={post.title} autoComplete="off" maxLength={80} autoFocus={true}
-                               className="article-title" placeholder="请输入标题"
-                               onChange={(e) => {
-                                 setTitle(e.target.value)
-                               }}/>
+                    <div className="linkInput" style={{ margin: '-32px 65px' }}>
+                      <Popconfirm icon='' title={<Input value={cover} onInput={setInputImage} placeholder='填入链接地址'/>}
+                                  onConfirm={(e) => {
+                                    setImage(cover)
+                                  }}>
+                        <Button type="dashed">链接</Button>
+                      </Popconfirm>
+                    </div>
+                    <div className="deleteImage" style={{ margin: '-32px 0px' }}>
+                      <Button type="primary" danger onClick={() => {
+                        setImage(undefined)
+                      }}>删除</Button>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-12">
+                      <input value={post.title} autoComplete="off" maxLength={80} autoFocus={true}
+                             className="article-title" placeholder="请输入标题"
+                             onChange={(e) => {
+                               setTitle(e.target.value)
+                             }}/>
 
-                        <div className="box box-primary">
-                          <div className="box-body pad">
-                            <div id="editor">
-                              <RichTextEditor post={post} saveContent={saveContent}/>
-                            </div>
+                      <div className="box box-primary">
+                        <div className="box-body pad">
+                          <div id="editor">
+                            <RichTextEditor post={post} saveContent={saveContent}/>
+                          </div>
 
-                            <div style={{ textAlign: 'center', padding: 10 }}>
-                              <Button type="primary" onClick={showDrawer}>
-                                <PlusOutlined/> 保存文章
-                              </Button>
-                            </div>
+                          <div style={{ textAlign: 'center', padding: 10 }}>
+                            <Button type="primary" onClick={showDrawer}>
+                              <PlusOutlined/> 保存文章
+                            </Button>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                {/*  <!--/RIGHT END-->*/}
               </div>
+              {/*  <!--/RIGHT END-->*/}
             </div>
           </div>
+        </div>
 
-          <ImageChooserModal visible={modalVisible} hideModal={hideModal} onSelect={onSelectImage}/>
-          <BackTop/>
-          <ArticleDrawer onValuesChange={onValuesChange} article={post}
-                         visible={drawerVisible} onSubmit={updateArticle} onClose={hideDrawer}/>
+        <ImageChooserModal visible={modalVisible} hideModal={hideModal} onSelect={onSelectImage}/>
+        <BackTop/>
+        <ArticleDrawer onValuesChange={onValuesChange} article={post}
+                       visible={drawerVisible} onSubmit={updateArticle} onClose={hideDrawer}/>
       </>
   )
 }

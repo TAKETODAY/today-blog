@@ -18,7 +18,7 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BackTop, Button, Image, Input, message, Popconfirm } from "antd";
 import MarkdownEditor from "@/components/Editor";
 import ImageChooserModal from "@/components/ImageChooserModal";

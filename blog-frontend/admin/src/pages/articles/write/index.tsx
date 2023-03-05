@@ -18,7 +18,7 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BackTop, Button, Image, Input, message, Popconfirm } from "antd";
 import MarkdownEditor from "@/components/Editor";
 import ImageChooserModal from "@/components/ImageChooserModal";
@@ -92,7 +92,7 @@ export default () => {
       Object.assign(startPoint, cm.getCursor('start'));
       Object.assign(endPoint, cm.getCursor('end'));
 
-      cm.replaceSelection('<img src="/assets/images/loading.gif" data-original="' + attachment.url + '">')
+      cm.replaceSelection('<img src="/assets/images/loading.gif" data-original="' + attachment.uri + '">')
       cm.setSelection(startPoint, endPoint);
       cm.focus();
     }
