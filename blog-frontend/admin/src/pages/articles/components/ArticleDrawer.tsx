@@ -1,6 +1,26 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 import { computeSummary, handleHttpError, isEmpty, isNotEmpty } from "@/utils";
 import { Button, Col, DatePicker, Drawer, Form, Input, Row, Select } from "antd";
-import React, { useState } from "react";
+import { useState } from "react";
 import articleService from "@/services/ArticleService";
 import { AxiosResponse } from "axios";
 import { PostCategory, PostLabel } from "@/pages/articles/components/article";
@@ -89,7 +109,8 @@ export default (props: any) => {
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item initialValue={article.category} name="category" label="文章分类" rules={[{ required: true, message: "请选择一个文章分类" }]}>
+              <Form.Item initialValue={article.category} name="category" label="文章分类"
+                         rules={[{ required: true, message: "请选择一个文章分类" }]}>
                 <Select placeholder="请选择一个文章分类" loading={categoriesLoading}
                         onDropdownVisibleChange={loadCategories}>
                   {categories.map((category: PostCategory) =>
@@ -143,7 +164,7 @@ export default (props: any) => {
                 const summary = computeSummary(article.content);
                 form.setFieldsValue({ summary })
               }}>
-                <ReloadOutlined /> 刷新摘要
+                <ReloadOutlined/> 刷新摘要
               </Button>
             </Col>
           </Row>

@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -49,7 +49,7 @@ public class Article extends Post {
             .append("copyRight", copyRight)
             .append("labels", labels)
             .append("id", id)
-            .append("image", image)
+            .append("cover", cover)
             .append("title", title)
             .append("pv", pv)
             .append("status", status)

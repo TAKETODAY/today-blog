@@ -295,7 +295,7 @@ public class ArticleController {
     article.setCopyRight(from.getCopyRight());
     article.setPassword(StringUtils.isEmpty(from.getPassword()) ? null : from.getPassword());
 
-    article.setImage(StringUtils.isEmpty(from.getImage())
+    article.setCover(StringUtils.isEmpty(from.getImage())
                      ? BlogUtils.getFirstImagePath(from.getContent())
                      : from.getImage()
     );

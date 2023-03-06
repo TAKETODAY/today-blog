@@ -23,7 +23,7 @@
   <resultMap id="BaseResultMap" type="cn.taketoday.blog.model.Article">
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="title" jdbcType="VARCHAR" property="title" />
-    <result column="image" jdbcType="VARCHAR" property="image" />
+    <result column="cover" jdbcType="VARCHAR" property="cover" />
     <result column="status" jdbcType="VARCHAR" property="status" typeHandler="cn.taketoday.blog.repository.PostStatusHandler" />
 
     <result column="pv" jdbcType="INTEGER" property="pv" />
@@ -40,7 +40,7 @@
   </resultMap>
 
   <sql id="selectAllCol">
-    `id`,`title`,`image`,`status`,`pv`,`summary`,`category`,`copyRight`,`lastModify`,`password`,`content`,`markdown`
+    `id`,`title`,`cover`,`status`,`pv`,`summary`,`category`,`copyRight`,`lastModify`,`password`,`content`,`markdown`
   </sql>
 
   <delete id="deleteById" parameterType="long">
@@ -58,8 +58,8 @@
       <if test="copyRight != null">
         copyRight = #{copyRight},
       </if>
-      <if test="image != null">
-        image = #{image},
+      <if test="cover != null">
+        cover = #{cover},
       </if>
       <if test="summary != null">
         summary = #{summary},
@@ -82,30 +82,26 @@
       <if test="lastModify != null">
         lastModify = #{lastModify},
       </if>
-        `password` = #{password}
+      `password` = #{password}
     </set>
     where id = #{id}
   </update>
 
   <select id="findArticlesByLabel" resultMap="BaseResultMap">
-    SELECT id, title, image, summary, pv, status, password
+    SELECT id, title, cover, summary, pv, status, password
     FROM article
            LEFT JOIN article_label ON article.id = article_label.articleId
     WHERE article.status >= 0x00
-      AND article_label.labelId IN (
-      SELECT labelId
-      FROM article_label
-      WHERE labelId = (
-        SELECT id
-        FROM label
-        WHERE name = #{name}
-      )
-    )
+      AND article_label.labelId IN (SELECT labelId
+                                    FROM article_label
+                                    WHERE labelId = (SELECT id
+                                                     FROM label
+                                                     WHERE name = #{name}))
     LIMIT #{pageNow}, #{pageSize}
   </select>
 
   <select id="findArticlesByCategory" resultMap="BaseResultMap">
-    SELECT id, title, image, summary, pv, status, password
+    SELECT id, title, cover, summary, pv, status, password
     FROM article
     WHERE status = 0x00
       AND category = #{category}
@@ -128,8 +124,8 @@
   </select>
 
   <insert id="save" parameterType="cn.taketoday.blog.model.Article">
-    insert into article (id, title, copyRight, image, summary, category, content, markdown, lastModify, password)
-    values (#{id}, #{title}, #{copyRight}, #{image}, #{summary}, #{category}, #{content}, #{markdown}, #{lastModify}, #{password})
+    insert into article (id, title, copyRight, cover, summary, category, content, markdown, lastModify, password)
+    values (#{id}, #{title}, #{copyRight}, #{cover}, #{summary}, #{category}, #{content}, #{markdown}, #{lastModify}, #{password})
   </insert>
 
   <select id="getTotalRecord" resultType="int">
@@ -148,15 +144,11 @@
     FROM article
            LEFT JOIN article_label ON article.id = article_label.articleId
     WHERE status = 0
-      and article_label.labelId IN (
-      SELECT labelId
-      FROM article_label
-      WHERE labelId = (
-        SELECT id
-        FROM label
-        WHERE name = #{name}
-      )
-    )
+      and article_label.labelId IN (SELECT labelId
+                                    FROM article_label
+                                    WHERE labelId = (SELECT id
+                                                     FROM label
+                                                     WHERE name = #{name}))
   </select>
 
   <select id="getRecordByCategory" resultType="int">
@@ -167,7 +159,7 @@
   </select>
 
   <select id="findLatest" resultMap="BaseResultMap">
-    SELECT id, title, status, summary, image, lastModify
+    SELECT id, title, status, summary, cover, lastModify
     FROM article
     ORDER BY id DESC
     LIMIT 0, 6
@@ -175,7 +167,7 @@
 
   <!-- 首页文章 -->
   <select id="findIndexArticles" resultMap="BaseResultMap">
-    SELECT id, title, image, summary, pv, status, password
+    SELECT id, title, cover, summary, pv, status, password
     FROM article
     WHERE status = 0x00
     order by id DESC

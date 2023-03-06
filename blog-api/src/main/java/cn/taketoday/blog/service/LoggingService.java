@@ -147,6 +147,7 @@ public class LoggingService {
       return expressionEvaluator.content(contentTemplate, operation);
     }
     catch (ExpressionException e) {
+      log.error("不能执行EL表达式: [{}]", contentTemplate, e);
       return "不能执行EL表达式: [" + contentTemplate + "]";
     }
   }

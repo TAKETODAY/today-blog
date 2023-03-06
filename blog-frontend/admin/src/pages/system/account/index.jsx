@@ -1,10 +1,31 @@
-import { MailOutlined, MobileOutlined } from '@ant-design/icons';
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
+import { MailOutlined } from '@ant-design/icons';
 import { Button, Card, Col, Modal, Row } from 'antd';
 import React, { useState } from 'react';
 import { GridContent } from '@ant-design/pro-layout';
 import styles from './Center.less';
 import Settings from "@/pages/system/account/settings"
 import { useUserSession } from "@/components/hooks"
+import Image from "@/components/Image";
 
 const Center = () => {
   const [userSession, setUserSession] = useUserSession()
@@ -25,14 +46,6 @@ const Center = () => {
           />
           {email}
         </p>
-        <p>
-          <MobileOutlined
-            style={{
-              marginRight: 8,
-            }}
-          />
-          {mobilePhone}
-        </p>
       </div>
     )
   }
@@ -47,7 +60,7 @@ const Center = () => {
             {userSession && (
               <div>
                 <div className={styles.avatarHolder}>
-                  <img alt="" src={userSession.avatar}/>
+                  <Image alt="头像" src={userSession.avatar}/>
                   <div className={styles.name}>{userSession.name}</div>
                   <div>{userSession?.introduce}</div>
                 </div>

@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -43,7 +43,7 @@ public class Post implements Serializable {
   /** release time stamp */
   protected long id;
 
-  protected String image;
+  protected String cover;
   protected String title;
 
   protected int pv;
@@ -84,7 +84,7 @@ public class Post implements Serializable {
   public String toString() {
     return ToStringBuilder.from(this)
             .append("id", id)
-            .append("image", image)
+            .append("cover", cover)
             .append("title", title)
             .append("pv", pv)
             .append("status", status)
@@ -106,7 +106,7 @@ public class Post implements Serializable {
             && pv == post.pv
             && status == post.status
             && lastModify == post.lastModify
-            && Objects.equals(image, post.image)
+            && Objects.equals(cover, post.cover)
             && Objects.equals(title, post.title)
             && Objects.equals(summary, post.summary)
             && Objects.equals(content, post.content)
@@ -116,7 +116,7 @@ public class Post implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, image, title, pv, status, summary, content, markdown, lastModify, password);
+    return Objects.hash(id, cover, title, pv, status, summary, content, markdown, lastModify, password);
   }
 
 }

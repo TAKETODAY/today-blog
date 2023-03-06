@@ -49,7 +49,7 @@ public class ArticleFilterInterceptor extends SessionHandlerInterceptor {
         for (final Article article : articles) {
           // 过滤有密码的
           if (article.needPassword()) {
-            article.setImage(null);
+            article.setCover(null);
             article.setStatus(null);
             article.setLabels(null);
 

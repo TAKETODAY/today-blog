@@ -65,7 +65,7 @@ public class AttachmentController {
    */
   @POST
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "上传附件", content = "文件名: [${#file.getFileName()}]")
+  @Logging(title = "上传附件", content = "文件名: [${#file.originalFilename}]")
   public Attachment upload(MultipartFile file) {
     return attachmentService.upload(file, null);
   }

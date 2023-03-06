@@ -1,5 +1,25 @@
-import React, { useRef, useState } from 'react';
-import { Divider, message, Popconfirm, Popover } from 'antd';
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
+import { useRef, useState } from 'react';
+import { Divider, message, Popconfirm } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
 import { getUserStatusDesc } from "@/utils";
@@ -8,6 +28,7 @@ import UserUpdateForm from "./UserUpdateForm";
 
 import { UserItem } from "./data.d";
 import { deleteUser, queryUsers, toggleStatus, update } from "./service";
+import Image from "@/components/Image";
 
 /**
  * 更新节点
@@ -149,10 +170,7 @@ export default () => {
       hideInSearch: true,
       width: 80,
       render: (_, user) => (
-          user.image && <Popover placement="rightTop" title={user.name}
-                                 content={<img src={user.image} alt={user.name}/>}>
-            <img src={user.image} height={68} alt={user.name}/>
-          </Popover>
+          <Image title={user.name} src={user.avatar} width={68} alt={user.name} original={false}/>
       ),
     },
     {
@@ -161,7 +179,7 @@ export default () => {
       hideInSearch: true,
       width: 180,
       render: (_, user) => (
-          user.background && <img src={user.background} height={68} alt={user.name}/>
+          <Image src={user.background} height="68" alt={user.name} original={false}/>
       ),
     },
     {

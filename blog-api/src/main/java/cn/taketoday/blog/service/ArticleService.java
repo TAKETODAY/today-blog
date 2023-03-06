@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.Pageable;
+import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Label;
@@ -38,7 +39,6 @@ import cn.taketoday.blog.model.feed.Item;
 import cn.taketoday.blog.model.feed.Rss;
 import cn.taketoday.blog.model.form.SearchForm;
 import cn.taketoday.blog.repository.ArticleRepository;
-import cn.taketoday.blog.Pagination;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
@@ -196,7 +196,7 @@ public class ArticleService {
       Item item = new Item();
       item.setId(article.getId());
       item.setTitle(article.getTitle());
-      item.setImage(article.getImage());
+      item.setImage(article.getCover());
       item.setSummary(article.getSummary());
       item.setContent(article.getContent());
       item.setPubDate(article.getId());
@@ -241,7 +241,7 @@ public class ArticleService {
 
       Entry entry = new Entry();
       entry.setId(article.getId());
-      entry.setImage(article.getImage());
+      entry.setImage(article.getCover());
       entry.setTitle(article.getTitle());
       entry.setPublished(article.getId());
       entry.setSummary(article.getSummary());

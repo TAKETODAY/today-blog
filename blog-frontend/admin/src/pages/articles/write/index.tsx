@@ -39,7 +39,7 @@ interface Post {
   title: string
   content: string
   markdown: string
-  image: string | undefined
+  cover: string | undefined
 }
 
 const articleCacheKey = "article_write_md"
@@ -49,15 +49,14 @@ export default () => {
   const [post, setPost] = useState<Post>(getStorage(articleCacheKey) || {})
   const [editor, setEditor] = useState()
   // @ts-ignore
-  const [cover, setCover] = useState<string>(post.image)
+  const [cover, setCover] = useState<string>(post.cover)
   const [coverImage, setCoverImage] = useState(true)
   const [modalVisible, setModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
 
   const savePost = (post: Post) => {
     setPost(post)
-    // @ts-ignore
-    setCover(post.image)
+    setCover(post.cover)
     saveStorage(articleCacheKey, post)
   }
 
@@ -69,21 +68,20 @@ export default () => {
   const showDrawer = () => setDrawerVisible(true)
   const hideDrawer = () => setDrawerVisible(false)
 
-  const setImage = (image: string | undefined) => savePost({ ...post, image })
+  const setArticleCover = (cover: string | undefined) => savePost({ ...post, cover })
   const setTitle = (title: string) => savePost({ ...post, title })
   // const setContent = (content: string) => savePost({ ...post, content })
   const onChange = (markdown: string, content: string) => {
     savePost({ ...post, markdown, content })
   }
 
-  // @ts-ignore
   const setInputImage = (e) => {
     setCover(e.target.value)
   }
 
   const imageCallback = (attachment: Attachment) => {
     if (coverImage) {
-      setImage(attachment.uri)
+      setArticleCover(attachment.uri)
     }
     else {
       // @ts-ignore
@@ -92,7 +90,8 @@ export default () => {
       Object.assign(startPoint, cm.getCursor('start'));
       Object.assign(endPoint, cm.getCursor('end'));
 
-      cm.replaceSelection('<img src="/assets/images/loading.gif" data-original="' + attachment.uri + '">')
+      cm.replaceSelection('<img src="/assets/images/loading.gif" data-original="'
+          + attachment.uri + '" alt="' + attachment.name + '">')
       cm.setSelection(startPoint, endPoint);
       cm.focus();
     }
@@ -140,8 +139,8 @@ export default () => {
             <div className="data" style={{ marginTop: 10 }}>
               <div className="WriteCover-wrapper">
                 <div className="WriteCover-previewWrapper WriteCover-previewWrapper--empty">
-                  {isNotEmpty(post.image)
-                      ? <Image fallback={fallbackImage} src={post.image}/>
+                  {isNotEmpty(post.cover)
+                      ? <Image fallback={fallbackImage} src={post.cover}/>
                       : <label className="UploadPicture-wrapper" onClick={() => showModal(true)}>
                         <i className="fa fa-camera fa-3x WriteCover-uploadIcon"/>
                       </label>
@@ -150,14 +149,14 @@ export default () => {
                 <div className="linkInput" style={{ margin: '-32px 65px' }}>
                   <Popconfirm icon='' title={<Input value={cover} onInput={setInputImage} placeholder='填入链接地址'/>}
                               onConfirm={(e) => {
-                                setImage(cover)
+                                setArticleCover(cover)
                               }}>
                     <Button type="dashed">链接</Button>
                   </Popconfirm>
                 </div>
                 <div className="deleteImage" style={{ margin: '-32px 0px' }}>
                   <Button type="primary" danger onClick={() => {
-                    setImage(undefined)
+                    setArticleCover(undefined)
                   }}>删除</Button>
                 </div>
               </div>
