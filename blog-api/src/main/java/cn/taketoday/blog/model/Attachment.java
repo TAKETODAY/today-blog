@@ -27,11 +27,13 @@ import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.jdbc.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 @Setter
 @Getter
+@Table("attachment")
 public class Attachment implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;

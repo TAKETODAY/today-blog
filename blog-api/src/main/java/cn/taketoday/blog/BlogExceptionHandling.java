@@ -57,7 +57,7 @@ import lombok.CustomLog;
  */
 @CustomLog
 @RestControllerAdvice
-public class ExceptionHandling {
+public class BlogExceptionHandling {
 
   private static final ErrorMessage illegalArgument = ErrorMessage.failed("参数错误");
   private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");

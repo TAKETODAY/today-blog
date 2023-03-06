@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -43,7 +43,10 @@ public class BlogConfig {
   private String host;
   private String name;
   private String index;
+
+  @Deprecated
   private String upload;
+
   private String keywords;
   private String copyright;
   private String subTitle;

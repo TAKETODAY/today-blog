@@ -19,15 +19,17 @@
  */
 package cn.taketoday.blog.service;
 
-import net.coobird.thumbnailator.Thumbnails;
+import com.aliyun.oss.ClientException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
+import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.OssConfig;
 import cn.taketoday.blog.model.Attachment;
@@ -49,14 +51,16 @@ import cn.taketoday.web.multipart.MultipartFile;
 @Service
 public class AttachmentService {
   private final BlogConfig blogConfig;
-  private final RemoteFileOperations fileOperations;
+  private final AttachmentConfig attachmentConfig;
+  private final RemoteFileOperations ossOperations;
   private final AttachmentRepository attachmentRepository;
 
-  public AttachmentService(BlogConfig blogConfig,
+  public AttachmentService(BlogConfig blogConfig, AttachmentConfig attachmentConfig,
           AttachmentRepository repository, OssConfig ossConfig) {
     this.blogConfig = blogConfig;
+    this.attachmentConfig = attachmentConfig;
     this.attachmentRepository = repository;
-    this.fileOperations = new RemoteFileOperations(ossConfig);
+    this.ossOperations = new RemoteFileOperations(ossConfig);
   }
 
   /**
@@ -66,7 +70,7 @@ public class AttachmentService {
    * @return Attachment
    */
 
-  public Attachment save(Attachment attachment) {
+  public Attachment persist(Attachment attachment) {
     attachmentRepository.save(attachment);
     return attachment;
   }
@@ -115,56 +119,33 @@ public class AttachmentService {
 
   @Transactional
   public Attachment removeById(long attachId) {
-
     Attachment attachment = getById(attachId);
     if (attachment == null) {
       return null;
     }
+
     // 先删除数据库，可以回滚
     attachmentRepository.deleteById(attachId);
 
-    // base
-    String upload = blogConfig.getUpload();
-    if (StringUtils.isNotEmpty(upload)) {
-      String location = attachment.getLocation();
-      File file = new File(upload, location);
-      try {
-        FileUtils.deleteFolder(file);
-      }
-      catch (IOException ignored) { }
-
-      // 删除缩略图
-      if (FileUtils.isImage(attachment)) {
-        File thumb = new File(upload, computeThumbLocation(location));
-        try {
-          FileUtils.deleteFolder(thumb);
-        }
-        catch (IOException ignored) { }
-      }
+    File file = attachmentConfig.getLocalFile(attachment);
+    try {
+      FileUtils.deleteFolder(file);
     }
+    catch (IOException ignored) { }
 
     // 删除远程OSS
+
     if (Objects.equals(Boolean.TRUE, attachment.getSync())) {
       try {
         String location = attachment.getLocation();
-        fileOperations.removeFile(location);
-        fileOperations.removeFile(computeThumbLocation(location));
+        ossOperations.removeFile(location);
       }
       catch (RuntimeException e) {
         throw InternalServerException.failed("OSS 删除失败", e);
       }
     }
-    return attachment;
-  }
 
-  protected String computeThumbLocation(String location) {
-    int index = location.indexOf('.');
-    if (index > -1) {
-      StringBuilder builder = new StringBuilder(location);
-      builder.insert(index, "-thumb");
-      return builder.toString();
-    }
-    return location.concat("-thumb.png");
+    return attachment;
   }
 
   @Transactional
@@ -174,7 +155,7 @@ public class AttachmentService {
     String location = attachment.getLocation();
     File dest = new File(blogConfig.getUpload(), location);
 
-    fileOperations.uploadFile(attachment.getLocation(), dest);
+    ossOperations.uploadFile(attachment.getLocation(), dest);
   }
 
   @Transactional
@@ -183,12 +164,12 @@ public class AttachmentService {
     update(attachment);
 
     String location = attachment.getLocation();
-    fileOperations.removeFile(location);
+    ossOperations.removeFile(location);
   }
 
   public Attachment upload(MultipartFile file, String suffix) {
-    if (fileOperations.isOssEnabled()) {
-      return attachAliyunUpload(file, suffix);
+    if (ossOperations.isOssEnabled()) {
+      return attachOssUpload(file, suffix);
     }
     return attachLocalUpload(file, suffix);
   }
@@ -199,56 +180,15 @@ public class AttachmentService {
    * @param file file
    * @return Map
    */
-
   public Attachment attachLocalUpload(MultipartFile file, String suffix) {
     String fileName = getName(file, suffix);
-    String uploadUrl = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
+    String uploadUri = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
 
     try {
-      File dest = saveFile(file, uploadUrl);
-      Attachment attachment = createAttachment(fileName, uploadUrl, dest);
-      // 存缩略图
-      if (FileUtils.isImage(attachment)) {
-        File thumbFile = new File(blogConfig.getUpload(), computeThumbLocation(uploadUrl));
-        // 压缩图片
-        scale(dest, thumbFile);
-      }
+      File dest = saveFile(file, uploadUri);
+      Attachment attachment = createAttachment(fileName, uploadUri, dest);
       attachment.setSync(false);
-      save(attachment);
-      return attachment;
-    }
-    catch (IOException e) {
-      throw InternalServerException.failed("本地附件保存失败", e);
-    }
-  }
-
-  private File saveFile(MultipartFile file, String uploadUrl) throws IOException {
-    File dest = new File(blogConfig.getUpload(), uploadUrl);
-    file.transferTo(dest);
-    return dest;
-  }
-
-  public Attachment attachAliyunUpload(MultipartFile file, String suffix) {
-    String fileName = getName(file, suffix);
-    String uploadUrl = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
-
-    try {
-      File destFile = saveFile(file, uploadUrl);
-      Attachment attachment = createAttachment(fileName, uploadUrl, destFile);
-      fileOperations.uploadFile(uploadUrl, destFile);
-
-      // 存缩略图
-      if (FileUtils.isImage(attachment)) {
-        String thumbUploadPath = computeThumbLocation(uploadUrl);
-        File thumbFile = new File(blogConfig.getUpload(), thumbUploadPath);
-        // 压缩图片
-        scale(destFile, thumbFile);
-
-        fileOperations.uploadFile(thumbUploadPath, thumbFile);
-      }
-      // 阿里云
-      attachment.setSync(true);
-      save(attachment);
+      persist(attachment);
       return attachment;
     }
     catch (IOException e) {
@@ -256,11 +196,45 @@ public class AttachmentService {
     }
   }
 
-  private void scale(File srcFile, File thumbFile) throws IOException {
-    Thumbnails.of(srcFile)
-            .useOriginalFormat()
-            .scale(0.5)
-            .toFile(thumbFile);
+  private File saveFile(MultipartFile file, String uploadUrl) throws IOException {
+    File dest = attachmentConfig.getLocalFile(uploadUrl);
+    // fix #3 Upload file not found exception
+    File parentFile = dest.getParentFile();
+    if (!parentFile.exists()) {
+      parentFile.mkdirs();
+    }
+    /*
+     * The uploaded file is being stored on disk
+     * in a temporary location so move it to the
+     * desired file.
+     */
+    if (dest.exists()) {
+      Files.delete(dest.toPath());
+    }
+    file.transferTo(dest);
+    return dest;
+  }
+
+  public Attachment attachOssUpload(MultipartFile file, String suffix) {
+    String fileName = getName(file, suffix);
+    String uploadUri = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
+
+    try {
+      File destFile = saveFile(file, uploadUri);
+      Attachment attachment = createAttachment(fileName, uploadUri, destFile);
+      ossOperations.uploadFile(uploadUri, destFile);
+
+      // OSS
+      attachment.setSync(true);
+      persist(attachment);
+      return attachment;
+    }
+    catch (ClientException e) {
+      throw new InternalServerException("附件保存失败", e);
+    }
+    catch (IOException e) {
+      throw new InternalServerException("本地附件保存失败", e);
+    }
   }
 
   private String getName(MultipartFile file, String suffix) {
@@ -270,14 +244,15 @@ public class AttachmentService {
     return file.getOriginalFilename();
   }
 
-  public Attachment createAttachment(String fileName, String uploadUrl, File dest) {
-    return new Attachment()
-            .setId(System.currentTimeMillis())
-            .setUri(uploadUrl)
-            .setName(fileName)
-            .setLocation(uploadUrl)
-            .setSize(dest.length())
-            .setFileType(AttachmentType.from(fileName));
+  public Attachment createAttachment(String fileName, String uploadUri, File dest) {
+    Attachment attachment = new Attachment();
+
+    attachment.setUri(uploadUri);
+    attachment.setName(fileName);
+    attachment.setLocation(uploadUri);
+    attachment.setSize(dest.length());
+    attachment.setFileType(AttachmentType.from(fileName));
+    return attachment;
   }
 
   public List<Attachment> getLatest() {
@@ -288,4 +263,20 @@ public class AttachmentService {
     return getAll(pageable.getCurrent(), pageable.getSize());
   }
 
+  @Transactional
+  public void uploadOSS(Attachment attachment) {
+    attachment.setSync(true);
+    attachmentRepository.update(attachment);
+    File dest = attachmentConfig.getLocalFile(attachment);
+    ossOperations.uploadFile(attachment.getLocation(), dest);
+  }
+
+  @Transactional
+  public void deleteOSS(Attachment attachment) {
+    attachment.setSync(false);
+    attachmentRepository.update(attachment);
+
+    String location = attachment.getLocation();
+    ossOperations.removeFile(location);
+  }
 }

@@ -47,7 +47,7 @@ aliyun:
   enable: true
 
 attachment:
-  outside-resource:
+  outside-resource: /home/today/website/data/docs
   cdn-host-prefix:
 
 ######################################## github login

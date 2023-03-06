@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -29,6 +29,8 @@ import cn.taketoday.blog.repository.CategoryRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
+import cn.taketoday.jdbc.Query;
+import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 
@@ -41,8 +43,11 @@ import cn.taketoday.transaction.annotation.Transactional;
 public class CategoryService {
   private final CategoryRepository categoryRepository;
 
-  public CategoryService(CategoryRepository categoryRepository) {
+  private final RepositoryManager repositoryManager;
+
+  public CategoryService(CategoryRepository categoryRepository, RepositoryManager repositoryManager) {
     this.categoryRepository = categoryRepository;
+    this.repositoryManager = repositoryManager;
   }
 
   @CacheEvict(allEntries = true)
@@ -68,7 +73,15 @@ public class CategoryService {
   @Transactional
   @CacheEvict(allEntries = true)
   public void updateArticleCount() {
-    getAllCategories().forEach(category -> updateArticleCount(category.getName()));
+    try (Query query = repositoryManager.createQuery("""
+            UPDATE category SET articleCount =
+                    (SELECT COUNT(id)
+                     FROM article
+                     WHERE status = 0
+                       and category = name)
+            WHERE name in ((select names from (select name names from category) as a))""")) {
+      query.executeUpdate();
+    }
   }
 
   public void delete(Category category) {
