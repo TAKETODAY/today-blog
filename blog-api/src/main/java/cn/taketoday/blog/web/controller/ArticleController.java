@@ -31,6 +31,7 @@ import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
+import cn.taketoday.blog.model.ArticleItem;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.model.enums.PostStatus;
@@ -94,34 +95,11 @@ public class ArticleController {
    * </pre>
    */
   @GET
-  public Pagination<HomeArticleReturnValue> articles(Pageable pageable) {
+  public Pagination<ArticleItem> articles(Pageable pageable) {
     int rowCount = articleService.countByStatus(PostStatus.PUBLISHED);
     assertFound(pageable, rowCount);
-    List<Article> articles = articleService.getHomeArticles(pageable);
-    return Pagination.ok(
-            articles.stream()
-                    .map(HomeArticleReturnValue::new)
-                    .toList(), rowCount, pageable);
-  }
-
-  static class HomeArticleReturnValue {
-    public final int pv;
-    public final String uri;
-    public final String title;
-    public final String cover;
-    public final String summary;
-    public final List<String> tags;
-    public final LocalDateTime createAt;
-
-    public HomeArticleReturnValue(Article article) {
-      this.pv = article.getPv();
-      this.uri = article.getUri();
-      this.title = article.getTitle();
-      this.cover = article.getCover();
-      this.summary = article.getSummary();
-      this.createAt = article.getCreateAt();
-      this.tags = article.getLabels().stream().map(Label::getName).toList();
-    }
+    List<ArticleItem> articles = articleService.getHomeArticles(pageable);
+    return Pagination.ok(articles, rowCount, pageable);
   }
 
   /**

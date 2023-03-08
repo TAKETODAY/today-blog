@@ -90,7 +90,7 @@
   </update>
 
   <select id="findArticlesByLabel" resultMap="BaseResultMap">
-    SELECT id, uri, title, cover, summary, pv, status
+    SELECT id, uri, title, cover, summary, pv, status, create_at
     FROM article
            LEFT JOIN article_label ON article.id = article_label.articleId
     WHERE article.status >= 0x00
@@ -103,7 +103,7 @@
   </select>
 
   <select id="findArticlesByCategory" resultMap="BaseResultMap">
-    SELECT id, uri, title, cover, summary, pv, status, password
+    SELECT id, uri, title, cover, summary, pv, status, create_at
     FROM article
     WHERE status = 0x00
       AND category = #{category}
@@ -160,15 +160,6 @@
     FROM article
     ORDER BY id DESC
     LIMIT 0, 6
-  </select>
-
-  <!-- 首页文章 -->
-  <select id="findIndexArticles" resultMap="BaseResultMap">
-    SELECT id, title, cover, summary, pv, status, password
-    FROM article
-    WHERE status = 0x00
-    order by id DESC
-    LIMIT #{pageNow}, #{pageSize}
   </select>
 
   <select id="findByStatus" resultMap="BaseResultMap">

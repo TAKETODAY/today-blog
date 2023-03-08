@@ -30,6 +30,7 @@ import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.model.Article;
+import cn.taketoday.blog.model.ArticleItem;
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.model.Sitemap;
 import cn.taketoday.blog.model.enums.PostStatus;
@@ -305,12 +306,12 @@ public class ArticleService {
    * find home page articles
    */
 //  @Cacheable(key = "'home-'+#pageable.getCurrent()+'-'+#pageable.getSize()")
-  public List<Article> getHomeArticles(Pageable pageable) {
+  public List<ArticleItem> getHomeArticles(Pageable pageable) {
     int pageSize = pageable.getSize();
     int current = pageable.getCurrent();
     // language=MySQL
     String sql = """
-            SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `status`, `create_at`
+            SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
             FROM article
             WHERE `status` = :status
             order by create_at DESC
@@ -322,9 +323,12 @@ public class ArticleService {
               .addParameter("status", PostStatus.PUBLISHED)
               .addParameter("pageSize", pageSize);
 
-      List<Article> indexArticles = query.fetch(Article.class);
-      applyLabels(indexArticles);
-      return indexArticles;
+      List<ArticleItem> items = query.fetch(ArticleItem.class);
+      for (ArticleItem item : items) {
+        Set<Label> labels = labelService.getByArticleId(item.getId());
+        item.setTags(labels.stream().map(Label::getName).toList());
+      }
+      return items;
     }
   }
 

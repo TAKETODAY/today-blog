@@ -40,11 +40,6 @@ import cn.taketoday.stereotype.Repository;
 public interface ArticleRepository extends DefaultRepository<Article, Long> {
 
   /**
-   * find the index page's articles
-   */
-  List<Article> findIndexArticles(@Param("pageNow") int pageNow, @Param("pageSize") int pageSize);
-
-  /**
    *
    */
   List<Article> findArticlesByLabel(@Param("pageNow") int pageNow, @Param("pageSize") int pageSize,
