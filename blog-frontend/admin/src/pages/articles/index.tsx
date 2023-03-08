@@ -211,11 +211,11 @@ export default () => {
       width: 170,
       title: '最后更改',
       sorter: true,
-      dataIndex: 'lastModify',
+      dataIndex: 'updateAt',
       valueType: 'dateTimeRange',
       render: (_, record) => (
           <>
-            {moment(record.lastModify).format('lll')}
+            {moment(record.updateAt).format('lll')}
           </>
       ),
     },

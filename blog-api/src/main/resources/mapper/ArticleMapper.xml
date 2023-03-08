@@ -24,13 +24,15 @@
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="title" jdbcType="VARCHAR" property="title" />
     <result column="cover" jdbcType="VARCHAR" property="cover" />
-    <result column="status" jdbcType="VARCHAR" property="status" typeHandler="cn.taketoday.blog.repository.PostStatusHandler" />
+    <result column="status" jdbcType="VARCHAR" property="status"
+        typeHandler="cn.taketoday.blog.repository.PostStatusHandler" />
 
     <result column="pv" jdbcType="INTEGER" property="pv" />
     <result column="summary" jdbcType="VARCHAR" property="summary" />
     <result column="category" jdbcType="VARCHAR" property="category" />
-    <result column="copyRight" jdbcType="VARCHAR" property="copyRight" />
-    <result column="lastModify" jdbcType="BIGINT" property="lastModify" />
+    <result column="copyright" jdbcType="VARCHAR" property="copyright" />
+    <result column="update_at" jdbcType="TIMESTAMP" property="updateAt" />
+    <result column="create_at" jdbcType="TIMESTAMP" property="createAt" />
     <result column="password" jdbcType="VARCHAR" property="password" />
   </resultMap>
 
@@ -40,7 +42,7 @@
   </resultMap>
 
   <sql id="selectAllCol">
-    `id`,`title`,`cover`,`status`,`pv`,`summary`,`category`,`copyRight`,`lastModify`,`password`,`content`,`markdown`
+    `id`,`title`,`cover`,`status`,`pv`,`summary`,`category`, `copyright`,`update_at`,`create_at`,`password`,`content`,`markdown`
   </sql>
 
   <delete id="deleteById" parameterType="long">
@@ -55,8 +57,8 @@
       <if test="title != null">
         title = #{title},
       </if>
-      <if test="copyRight != null">
-        copyRight = #{copyRight},
+      <if test="copyright != null">
+        copyright = #{copyright},
       </if>
       <if test="cover != null">
         cover = #{cover},
@@ -79,8 +81,8 @@
       <if test="markdown != null">
         markdown = #{markdown},
       </if>
-      <if test="lastModify != null">
-        lastModify = #{lastModify},
+      <if test="update_at != null">
+        updateAt = #{updateAt},
       </if>
       `password` = #{password}
     </set>
@@ -88,7 +90,7 @@
   </update>
 
   <select id="findArticlesByLabel" resultMap="BaseResultMap">
-    SELECT id, title, cover, summary, pv, status, password
+    SELECT id, uri, title, cover, summary, pv, status
     FROM article
            LEFT JOIN article_label ON article.id = article_label.articleId
     WHERE article.status >= 0x00
@@ -101,7 +103,7 @@
   </select>
 
   <select id="findArticlesByCategory" resultMap="BaseResultMap">
-    SELECT id, title, cover, summary, pv, status, password
+    SELECT id, uri, title, cover, summary, pv, status, password
     FROM article
     WHERE status = 0x00
       AND category = #{category}
@@ -122,11 +124,6 @@
     from article
     where id = #{id}
   </select>
-
-  <insert id="save" parameterType="cn.taketoday.blog.model.Article">
-    insert into article (id, title, copyRight, cover, summary, category, content, markdown, lastModify, password)
-    values (#{id}, #{title}, #{copyRight}, #{cover}, #{summary}, #{category}, #{content}, #{markdown}, #{lastModify}, #{password})
-  </insert>
 
   <select id="getTotalRecord" resultType="int">
     SELECT COUNT(id)
@@ -159,7 +156,7 @@
   </select>
 
   <select id="findLatest" resultMap="BaseResultMap">
-    SELECT id, title, status, summary, cover, lastModify
+    SELECT id, title, status, summary, cover, update_at
     FROM article
     ORDER BY id DESC
     LIMIT 0, 6

@@ -1,3 +1,23 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 import { Pagination } from 'antd';
 import React from 'react';
 import ArticleList from '../components/ArticleList';
@@ -28,16 +48,16 @@ class Home extends React.Component {
 
     super.setState({ articles: articles })
     articleService.fetchHomeArticles(page, size)
-        .then(res => {
-          super.setState({ articles: res.data });
-        })
-        .catch(error => {
-          const err = {
-            status: error.response ? error.response.status : 500,
-            subTitle: error.message
-          };
-          super.setState({ error: err })
-        })
+      .then(res => {
+        super.setState({ articles: res.data });
+      })
+      .catch(error => {
+        const err = {
+          status: error.response ? error.response.status : 500,
+          subTitle: error.message
+        };
+        super.setState({ error: err })
+      })
   }
 
   componentDidMount() {
@@ -61,16 +81,16 @@ class Home extends React.Component {
     return (<>
       <div className="data_list" id="test1">
         <div className="data_list_title">最新文章</div>
-        <ArticleList articles={ articles.data } error={ error } title="最新文章"/>
-        <div align='center' style={ { padding: '20px' } }>
+        <ArticleList articles={articles.data} error={error} title="最新文章"/>
+        <div align='center' style={{ padding: '20px' }}>
           <Pagination
-              showQuickJumper
-              showSizeChanger
-              total={ articles.all }
-              onChange={ this.updateArticles.bind(this) }
-              onShowSizeChange={ this.updateArticles.bind(this) }
-              current={ articles.current }
-              showTotal={ n => <><b className='red'>{ n }</b>篇文章</> }
+            showQuickJumper
+            showSizeChanger
+            total={articles.all}
+            onChange={this.updateArticles.bind(this)}
+            onShowSizeChange={this.updateArticles.bind(this)}
+            current={articles.current}
+            showTotal={n => <><b className='red'>{n}</b>篇文章</>}
           />
         </div>
       </div>
@@ -79,5 +99,5 @@ class Home extends React.Component {
 }
 
 export default connect(
-    navigationsMapStateToProps, { updateNavigations }
+  navigationsMapStateToProps, { updateNavigations }
 )(Home)

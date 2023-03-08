@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessageException;
-import cn.taketoday.blog.aspect.Logging;
+import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.Blogger;

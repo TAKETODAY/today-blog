@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -22,9 +22,11 @@ package cn.taketoday.blog.model;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.Objects;
 
+import cn.taketoday.lang.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,15 +49,16 @@ public class Sitemap implements Serializable {
   }
 
   public static URL newURL(Article article) {
-    return newURL(0.9f, "/articles/" + article.getId(), article.getLastModify(), "always");
+    return newURL(0.9f, "/articles/" + article.getId(),
+            article.getUpdateAt(), "always");
   }
 
-  public static URL newURL(float priority, String location, long lastModify, String changeFreq) {
+  public static URL newURL(float priority, String location, LocalDateTime lastModify, String changeFreq) {
     return new URL()
             .setLoc(location)
             .setPriority(priority)
             .setChangeFreq(changeFreq)
-            .setLastModify(lastModify == 0 ? System.currentTimeMillis() : lastModify);
+            .setLastModify(lastModify);
   }
 
   @Setter
@@ -63,7 +66,8 @@ public class Sitemap implements Serializable {
   public static final class URL implements Serializable {
     private String loc; // location
     private float priority; // 优先级
-    private long lastModify;// 最后更改
+    @Nullable
+    private LocalDateTime lastModify;// 最后更改
     private String changeFreq;// 更新频率
   }
 

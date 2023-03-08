@@ -21,33 +21,70 @@
 package cn.taketoday.blog.model;
 
 import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
 
+import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.jdbc.persistence.Id;
+import cn.taketoday.jdbc.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
+ * 文章实体
+ *
  * @since 2017 10 11--18:07
  */
 @Setter
 @Getter
-public class Article extends Post {
+@Table("article")
+public class Article implements Serializable {
+
   @Serial
   private static final long serialVersionUID = 1L;
 
+  @Id
+  private Long id;
+
+  private String cover;
+
+  private String title;
+
+  private int pv;
+
+  private PostStatus status;
+
+  private String summary;
+
+  /** html content **/
+  private String content;
+
+  /** markdown content */
+  private String markdown;
+
+  /** 需要输入密码才能访问该页面 */
+  private String password;
+
+  private String uri;
+
   /** category name */
   private String category;
-  private String copyRight;
+  private String copyright;
   private Set<Label> labels;
+
+  private LocalDateTime createAt;
+  private LocalDateTime updateAt;
+
+  public boolean needPassword() {
+    return password != null;
+  }
 
   @Override
   public String toString() {
     return ToStringBuilder.from(this)
-            .append("category", category)
-            .append("copyRight", copyRight)
-            .append("labels", labels)
             .append("id", id)
             .append("cover", cover)
             .append("title", title)
@@ -56,7 +93,13 @@ public class Article extends Post {
             .append("summary", summary)
             .append("content", content)
             .append("markdown", markdown)
-            .append("lastModify", lastModify)
+            .append("password", password)
+            .append("createAt", createAt)
+            .append("updateAt", updateAt)
+            .append("uri", uri)
+            .append("category", category)
+            .append("copyright", copyright)
+            .append("labels", labels)
             .toString();
   }
 
@@ -66,17 +109,26 @@ public class Article extends Post {
       return true;
     if (!(o instanceof Article article))
       return false;
-    if (!super.equals(o)) {
-      return false;
-    }
-    return Objects.equals(category, article.category)
-            && Objects.equals(copyRight, article.copyRight)
+    return pv == article.pv
+            && status == article.status
+            && Objects.equals(id, article.id)
+            && Objects.equals(uri, article.uri)
+            && Objects.equals(cover, article.cover)
+            && Objects.equals(title, article.title)
+            && Objects.equals(summary, article.summary)
+            && Objects.equals(content, article.content)
+            && Objects.equals(markdown, article.markdown)
+            && Objects.equals(password, article.password)
+            && Objects.equals(createAt, article.createAt)
+            && Objects.equals(updateAt, article.updateAt)
+            && Objects.equals(category, article.category)
+            && Objects.equals(copyright, article.copyright)
             && Objects.equals(labels, article.labels);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), category, copyRight, labels);
+    return Objects.hash(id, cover, title, pv, status, summary, content, markdown,
+            password, createAt, updateAt, uri, category, copyright, labels);
   }
-
 }

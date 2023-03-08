@@ -1,6 +1,8 @@
 /*
- * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2018, b3log.org & hacpai.com
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,11 +15,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 package cn.taketoday.blog.model.feed;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -37,9 +40,11 @@ public final class Entry implements Serializable {
 
   private long id;
   private String title;
-  private long updated;
+
+  private LocalDateTime updated;
   private String image;
-  private long published;
+
+  private LocalDateTime published;
   private String summary;
   private String content;
 
@@ -57,13 +62,16 @@ public final class Entry implements Serializable {
   public boolean equals(Object o) {
     if (this == o)
       return true;
-    if (!(o instanceof Entry))
+    if (!(o instanceof final Entry entry))
       return false;
-    final Entry entry = (Entry) o;
-    return id == entry.id && updated == entry.updated && published == entry.published && Objects
-            .equals(title, entry.title) && Objects.equals(image, entry.image) && Objects
-            .equals(summary, entry.summary) && Objects.equals(content, entry.content) && Objects
-            .equals(categories, entry.categories);
+    return id == entry.id
+            && updated == entry.updated
+            && published == entry.published
+            && Objects.equals(title, entry.title)
+            && Objects.equals(image, entry.image)
+            && Objects.equals(summary, entry.summary)
+            && Objects.equals(content, entry.content)
+            && Objects.equals(categories, entry.categories);
   }
 
   @Override

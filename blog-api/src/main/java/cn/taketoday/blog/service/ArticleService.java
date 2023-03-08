@@ -43,7 +43,10 @@ import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
 import cn.taketoday.jdbc.NamedQuery;
+import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
+import cn.taketoday.lang.Assert;
+import cn.taketoday.lang.Nullable;
 import cn.taketoday.scheduling.annotation.Async;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
@@ -80,7 +83,6 @@ public class ArticleService {
   public void update(Article article) {
     Article oldArticle = obtainById(article.getId());
 
-    article.setLastModify(System.currentTimeMillis()); // last modify
     articleRepository.update(article);
 
     // update category
@@ -142,6 +144,22 @@ public class ArticleService {
   public Article getById(long id) {
     Article findById = articleRepository.findById(id);
     return findById == null ? null : findById.setLabels(labelService.getByArticleId(id));
+  }
+
+  @Nullable
+  @Cacheable(key = "'getByURI_'+#uri")
+  public Article getByURI(String uri) {
+    Assert.notNull(uri, "文章地址不能为空");
+    // language=MySQL
+    try (Query query = repositoryManager.createQuery("SELECT * FROM article WHERE uri=? LIMIT 1")) {
+      query.addParameter(uri);
+
+      Article article = query.fetchFirst(Article.class);
+      if (article != null) {
+        article.setLabels(labelService.getByArticleId(article.getId()));
+      }
+      return article;
+    }
   }
 
   /**
@@ -243,15 +261,15 @@ public class ArticleService {
       entry.setId(article.getId());
       entry.setImage(article.getCover());
       entry.setTitle(article.getTitle());
-      entry.setPublished(article.getId());
+      entry.setPublished(article.getCreateAt());
       entry.setSummary(article.getSummary());
       entry.setContent(article.getContent());
-      entry.setUpdated(article.getLastModify());
+      entry.setUpdated(article.getUpdateAt());
 
-      entry.addCategories(article.getLabels()//
-              .stream()//
-              .map(Label::getName)//
-              .collect(Collectors.toSet())//
+      entry.addCategories(article.getLabels()
+              .stream()
+              .map(Label::getName)
+              .collect(Collectors.toSet())
       );
 
       atom.addEntry(entry);
@@ -292,10 +310,10 @@ public class ArticleService {
     int current = pageable.getCurrent();
     // language=MySQL
     String sql = """
-            SELECT `id`, `title`, `image`, `summary`, `pv`, `status`, `password`
+            SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `status`, `create_at`
             FROM article
             WHERE `status` = :status
-            order by id DESC
+            order by create_at DESC
             LIMIT :pageNow, :pageSize
             """;
 
@@ -325,10 +343,10 @@ public class ArticleService {
   @Transactional
   public void saveArticle(Article article) {
     // save
-    articleRepository.save(article);
+    repositoryManager.persist(article);
     // save labels
     Set<Label> labels = article.getLabels();
-    if (!CollectionUtils.isEmpty(labels)) {
+    if (CollectionUtils.isNotEmpty(labels)) {
       labelService.saveArticleLabels(labels, article.getId());
     }
 
@@ -408,7 +426,7 @@ public class ArticleService {
   }
 
   private List<Article> applyLabels(List<Article> ret) {
-    if (!CollectionUtils.isEmpty(ret)) {
+    if (CollectionUtils.isNotEmpty(ret)) {
       for (Article article : ret) {
         article.setLabels(labelService.getByArticleId(article.getId()));
       }

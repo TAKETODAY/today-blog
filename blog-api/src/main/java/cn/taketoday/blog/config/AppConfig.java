@@ -36,17 +36,17 @@ import cn.taketoday.aop.support.annotation.AnnotationMatchingPointcut;
 import cn.taketoday.beans.factory.ObjectProvider;
 import cn.taketoday.beans.factory.annotation.DisableAllDependencyInjection;
 import cn.taketoday.beans.factory.config.BeanDefinition;
-import cn.taketoday.blog.aspect.Logging;
-import cn.taketoday.blog.aspect.LoggingInterceptor;
+import cn.taketoday.blog.log.Logging;
+import cn.taketoday.blog.log.LoggingInterceptor;
 import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.util.ObjectUtils;
 import cn.taketoday.cache.annotation.EnableCaching;
 import cn.taketoday.cache.support.CaffeineCacheManager;
 import cn.taketoday.context.annotation.Configuration;
-import cn.taketoday.context.annotation.EnableAspectJAutoProxy;
 import cn.taketoday.context.annotation.Role;
 import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
+import cn.taketoday.http.converter.json.Jackson2ObjectMapperBuilder;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.stereotype.Component;
 import cn.taketoday.web.config.WebMvcConfigurer;
@@ -57,7 +57,6 @@ import cn.taketoday.web.handler.ViewControllerHandlerMapping;
  * @since 2019-05-26 17:28
  */
 @EnableCaching
-@EnableAspectJAutoProxy
 @DisableAllDependencyInjection
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @Configuration(proxyBeanMethods = false)
@@ -91,15 +90,8 @@ public class AppConfig implements WebMvcConfigurer {
   // 异常
 
   @Component
-  public ObjectMapper objectMapper() {
-    final ObjectMapper sharedMapper = ObjectUtils.getSharedMapper();
-    sharedMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
-    sharedMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    // objectMapper.disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);
-    sharedMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    sharedMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
-
-    return sharedMapper;
+  public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
+    return builder.build();
   }
 
   // 日志

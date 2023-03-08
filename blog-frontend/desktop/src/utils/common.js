@@ -1,3 +1,23 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 import { store } from "../redux/store";
 import { isEmpty, isNotEmpty, isZero } from "./object";
 
@@ -47,7 +67,7 @@ export function getSizeUnit(value) {
 const share = {
   site: "https://taketoday.cn",
   desc: "TODAY BLOG 代码是我心中的一首诗",
-  image: "https://cdn.taketoday.cn/logo.png",
+  cover: "https://cdn.taketoday.cn/logo.png",
   summary: "TODAY BLOG 是记录我学习的博客。主要分享自己的心得体会,学习经验、建站经验、资源分享、知识分享、杂谈生活.",
 }
 
@@ -59,7 +79,7 @@ export function shareQQ(options) {
       "&desc=" + options.desc +
       "&summary=" + options.summary +
       "&site=" + options.site +
-      "&pics=" + options.image
+      "&pics=" + options.cover
   )
 }
 
@@ -68,7 +88,7 @@ export function shareWeiBo(options) {
   window.open(
       "http://service.weibo.com/share/share.php?url=" + options.url +
       "&title=" + options.desc +
-      "&pic=" + options.image +
+      "&pic=" + options.cover +
       "&searchPic=true"
   )
 }
@@ -81,7 +101,7 @@ export function shareQQZone(options) {
       "&desc=" + options.desc +
       "&summary=" + options.summary +
       "&site=" + options.site +
-      "&pics=" + options.image
+      "&pics=" + options.cover
   )
 }
 

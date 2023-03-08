@@ -18,7 +18,7 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.aspect;
+package cn.taketoday.blog.log;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

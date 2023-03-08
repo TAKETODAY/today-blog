@@ -28,13 +28,14 @@ export interface ArticleItem {
   content: string;
   markdown: string;
   status: string;
+  uri: string;
   labels: LabelItem[];
 
   category: string;
   pv: number; //浏览量
 
-  lastModify: Date;
-  createTime: Date;
+  updateAt: Date;
+  createAt: Date;
 }
 
 export interface CategoryItem {
@@ -44,8 +45,8 @@ export interface CategoryItem {
   articleCount: number
   description: string;
 
-  lastModify: Date;
-  createTime: Date;
+  updateAt: Date;
+  createAt: Date;
 }
 
 export interface CommentItem {
@@ -55,8 +56,8 @@ export interface CommentItem {
   status: string;
   user: string;
 
-  lastModify: Date;
-  createTime: Date;
+  updateAt: Date;
+  createAt: Date;
 }
 
 export interface LabelItem {

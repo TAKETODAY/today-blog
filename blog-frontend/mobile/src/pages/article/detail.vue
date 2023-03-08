@@ -1,3 +1,23 @@
+<!--
+  - Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+  - Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+  -
+  - DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see [http://www.gnu.org/licenses/]
+  -->
+
 <template>
   <div>
     <div v-if="needPassword" class="password-input">
@@ -41,7 +61,7 @@
       <div class="article-info">
         <div class="info-title">文章正文</div>
         <div class="details markdown" v-html="article.content"/>
-        <div class="copyright">{{ article.copyRight }}</div>
+        <div class="copyright">{{ article.copyright }}</div>
         <div class="footer">
           <span>{{ article.pv }}次浏览</span>
         </div>
@@ -100,12 +120,12 @@ const defaultArticle = {
   "pv": 0,
   "labels": [],
   "content": "",
-  "lastModify": 0,
+  "updateAt": 0,
   "image": loading,
   "title": "正在加载...",
   "summary": "正在加载...",
   "category": "正在加载...",
-  "copyRight": "版权声明：本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。"
+  "copyright": "版权声明：本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。"
 }
 
 function getId(id) {

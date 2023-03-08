@@ -149,7 +149,7 @@ export default (props: any) => {
           </Row>
           <Row gutter={16}>
             <Col span={24}>
-              <Form.Item name="copyRight" label="版权信息" rules={[{ required: true, message: "请输入版权信息" }]}
+              <Form.Item name="copyright" label="版权信息" rules={[{ required: true, message: "请输入版权信息" }]}
                          initialValue="本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。">
                 <Input placeholder="请输入版权信息"/>
               </Form.Item>

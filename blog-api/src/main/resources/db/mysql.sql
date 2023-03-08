@@ -63,7 +63,7 @@ create table article
     `id`         bigint                        not null comment '创建时间为主键' primary key,
     `title`      varchar(255)                  null comment '题目',
     `content`    longtext                      null comment '文章内容',
-    `copyRight`  varchar(255) default '版权声明：本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。' comment '版权',
+    `copyright`  varchar(255) default '版权声明：本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。' comment '版权',
     `cover`      text                          null comment '文章封面',
     `lastModify` bigint                        null comment '最后更改',
     `summary`    text                          null comment '预览',

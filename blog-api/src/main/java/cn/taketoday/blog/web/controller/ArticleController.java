@@ -20,6 +20,7 @@
 
 package cn.taketoday.blog.web.controller;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +28,8 @@ import java.util.stream.Collectors;
 
 import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
-import cn.taketoday.blog.aspect.Logging;
+import cn.taketoday.blog.Pagination;
+import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.Label;
@@ -36,14 +38,14 @@ import cn.taketoday.blog.model.form.SearchForm;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.util.BlogUtils;
-import cn.taketoday.blog.Pagination;
-import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ArticlePasswordException;
+import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.util.CollectionUtils;
+import cn.taketoday.util.StringUtils;
 import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
@@ -76,22 +78,6 @@ public class ArticleController {
   private final LabelService labelService;
   private final ArticleService articleService;
 
-//  @OPTIONS(value = "/**", combine = false)
-//  public void options(RequestContext context) {
-//
-//    HttpHeaders requestHeaders = context.requestHeaders();
-//
-//    HttpHeaders responseHeaders = context.responseHeaders();
-//    responseHeaders.setAccessControlMaxAge(3600);
-//    responseHeaders.setAccessControlAllowCredentials(true);
-//    responseHeaders.setAccessControlAllowOrigin(requestHeaders.getOrigin());
-//
-//    responseHeaders.set(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS,
-//            "GET,POST,PUT,DELETE,PATCH,TRACE,HEAD,OPTIONS");
-//    responseHeaders.set(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
-//            "Authorization,Accept,X-Requested-With,Content-Type");
-//  }
-
   /**
    * 获取主页文章列表
    *
@@ -108,20 +94,34 @@ public class ArticleController {
    * </pre>
    */
   @GET
-  public Pagination<Article> articles(Pageable pageable) {
+  public Pagination<HomeArticleReturnValue> articles(Pageable pageable) {
     int rowCount = articleService.countByStatus(PostStatus.PUBLISHED);
     assertFound(pageable, rowCount);
     List<Article> articles = articleService.getHomeArticles(pageable);
-    return Pagination.ok(articles, rowCount, pageable);
+    return Pagination.ok(
+            articles.stream()
+                    .map(HomeArticleReturnValue::new)
+                    .toList(), rowCount, pageable);
   }
 
   static class HomeArticleReturnValue {
-    public long id;
-    public long pv;
-    public String title;
-    public String cover;
-    public String summary;
-    public List<String> tags;
+    public final int pv;
+    public final String uri;
+    public final String title;
+    public final String cover;
+    public final String summary;
+    public final List<String> tags;
+    public final LocalDateTime createAt;
+
+    public HomeArticleReturnValue(Article article) {
+      this.pv = article.getPv();
+      this.uri = article.getUri();
+      this.title = article.getTitle();
+      this.cover = article.getCover();
+      this.summary = article.getSummary();
+      this.createAt = article.getCreateAt();
+      this.tags = article.getLabels().stream().map(Label::getName).toList();
+    }
   }
 
   /**
@@ -155,7 +155,8 @@ public class ArticleController {
   }
 
   @POST("/{id}/pv") // POST/blog-web/api/articles/1560163530909/pv Referer
-  public void pv(@PathVariable("id") Long id, @RequestHeader String Referer, Blogger author) {
+  public void pv(@PathVariable("id") Long id,
+          @RequestHeader String Referer, @Nullable Blogger author) {
     if (author == null) {
       articleService.updatePageView(id);
     }
@@ -174,44 +175,47 @@ public class ArticleController {
   /**
    * Get popular articles
    */
-  @GET("/popular")
-  public List<Article> popular() {
+  @GET(params = "most-popular")
+  public List<Article> mostPopular() {
     return articleService.getMostPopularArticles();
   }
 
   /**
-   * <pre>
+   * <pre>{@code
    * {
    *   "pv": 25,
    *   "labels": [],
    *   "content": "",
-   *   "image": null,
+   *   "cover": null,
    *   "summary": "",
    *   "lastModify": 0,
    *   "markdown": null,
    *   "category": "未分类",
    *   "id": 1577549633740,
    *   "keepNavigation": false,
-   *   "copyRight": "版权声明：本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。",
+   *   "copyright": "版权声明：本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。",
    *   "title": "中国学霸本科生提出AI新算法：速度比肩Adam，性能媲美SGD，ICLR领域主席赞不绝口",
-   *   "url": "1577549633740"
+   *   "uri": "1577549633740"
    * }
-   * </pre>
+   * }</pre>
    *
    * @param key This article password if the article has
-   * @param id article id
-   * @param blogger if a {@link Blogger} login
+   * @param uri 文章定位
    * @return {@link Article}
    */
-  @GET("/{id}")
-  public Article detail(@Nullable String key, @PathVariable("id") Long id, @Nullable Blogger blogger) {
-    Article article = obtainById(id);
-    if (blogger != null) {
+  @GET("/{uri}")
+  public Article detail(@Nullable String key, @PathVariable("uri") String uri, LoginInfo loginInfo) {
+    Article article = articleService.getByURI(uri);
+    if (article == null) {
+      throw new NotFoundException("地址为 '" + uri + "' 的文章不存在");
+    }
+
+    if (loginInfo.isBloggerLoggedIn()) {
       return article;
     }
 
     if (article.getStatus() != PostStatus.PUBLISHED) { // 放在控制器层控制
-      throw new NotFoundException("文章不存在");
+      throw new NotFoundException("文章不能访问");
     }
     if (article.needPassword()) {
       if (key == null) {
@@ -222,15 +226,7 @@ public class ArticleController {
       }
     }
     // 重置
-    article.resetPassword();
-    return article;
-  }
-
-  private Article obtainById(Long id) {
-    Article article = articleService.getById(id);
-    if (article == null) {
-      throw new NotFoundException(id + " 文章不存在");
-    }
+    article.setPassword(null);
     return article;
   }
 
@@ -255,8 +251,9 @@ public class ArticleController {
       }
     }
     article.setId(articleId);
-    article.setLastModify(articleId);
-
+    if (StringUtils.hasText(article.getUri())) {
+      article.setUri(String.valueOf(articleId));
+    }
     if (log.isDebugEnabled()) {
       log.debug("Create a new article: [{}]", from.getTitle());
     }
@@ -265,7 +262,7 @@ public class ArticleController {
   }
 
   private Set<Label> getLabels(ArticleFrom from) {
-    if (!CollectionUtils.isEmpty(from.getLabels())) {
+    if (CollectionUtils.isNotEmpty(from.getLabels())) {
       Set<Label> labels = new HashSet<>();
       for (String label : from.getLabels()) {
         Label byName = labelService.getByName(label);
@@ -292,7 +289,7 @@ public class ArticleController {
     article.setSummary(from.getSummary());
     article.setCategory(from.getCategory());
     article.setMarkdown(from.getMarkdown());
-    article.setCopyRight(from.getCopyRight());
+    article.setCopyright(from.getCopyright());
     article.setPassword(StringUtils.isEmpty(from.getPassword()) ? null : from.getPassword());
 
     article.setCover(StringUtils.isEmpty(from.getImage())
@@ -309,7 +306,7 @@ public class ArticleController {
 
     private Long createTime;
     private String category;
-    private String copyRight;
+    private String copyright;
     private Set<String> labels;
 
     private String image;

@@ -1,18 +1,12 @@
 # Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
-# Copyright @ Harry Yang & 2017 - 2022 All Rights Reserved.
+# Copyright @ Harry Yang & 2017 - 2023 All Rights Reserved.
 #
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
 ########################################################
 
 datasource:
-  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true
-  type: com.zaxxer.hikari.HikariDataSource
   username: root
   password: 88888888
-  driver-class-name: com.mysql.cj.jdbc.Driver
-  hikari:
-    maxLifetime: 1800000
-    maxPoolSize: 20
 
   #jdbc.pool.isReadOnly    = false
   #jdbc.pool.idleTimeout   = 600000
@@ -69,4 +63,4 @@ web:
 
 app:
   main:
-    lazy-initialization: true
+    lazy-initialization: false

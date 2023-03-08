@@ -50,14 +50,12 @@ import cn.taketoday.web.multipart.MultipartFile;
  */
 @Service
 public class AttachmentService {
-  private final BlogConfig blogConfig;
   private final AttachmentConfig attachmentConfig;
   private final RemoteFileOperations ossOperations;
   private final AttachmentRepository attachmentRepository;
 
-  public AttachmentService(BlogConfig blogConfig, AttachmentConfig attachmentConfig,
+  public AttachmentService(AttachmentConfig attachmentConfig,
           AttachmentRepository repository, OssConfig ossConfig) {
-    this.blogConfig = blogConfig;
     this.attachmentConfig = attachmentConfig;
     this.attachmentRepository = repository;
     this.ossOperations = new RemoteFileOperations(ossConfig);
@@ -69,7 +67,6 @@ public class AttachmentService {
    * @param attachment attachment
    * @return Attachment
    */
-
   public Attachment persist(Attachment attachment) {
     attachmentRepository.save(attachment);
     return attachment;
@@ -146,25 +143,6 @@ public class AttachmentService {
     }
 
     return attachment;
-  }
-
-  @Transactional
-  public void uploadAliyun(Attachment attachment) {
-    attachment.setSync(true);
-    update(attachment);
-    String location = attachment.getLocation();
-    File dest = new File(blogConfig.getUpload(), location);
-
-    ossOperations.uploadFile(attachment.getLocation(), dest);
-  }
-
-  @Transactional
-  public void deleteAliyun(Attachment attachment) {
-    attachment.setSync(false);
-    update(attachment);
-
-    String location = attachment.getLocation();
-    ossOperations.removeFile(location);
   }
 
   public Attachment upload(MultipartFile file, String suffix) {
@@ -279,4 +257,5 @@ public class AttachmentService {
     String location = attachment.getLocation();
     ossOperations.removeFile(location);
   }
+
 }

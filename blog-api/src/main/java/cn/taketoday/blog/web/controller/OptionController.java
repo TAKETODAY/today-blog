@@ -22,7 +22,7 @@ package cn.taketoday.blog.web.controller;
 
 import java.util.Map;
 
-import cn.taketoday.blog.aspect.Logging;
+import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.service.OptionService;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpStatus;

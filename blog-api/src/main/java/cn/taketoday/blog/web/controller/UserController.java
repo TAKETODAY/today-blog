@@ -28,7 +28,7 @@ import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Json;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
-import cn.taketoday.blog.aspect.Logging;
+import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;

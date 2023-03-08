@@ -1,3 +1,23 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 import { LockOutlined } from '@ant-design/icons';
 import { Form, Input, message, Skeleton } from 'antd';
 import React from 'react';
@@ -37,7 +57,7 @@ function buildOptions(state) {
   return {
     url: `${ host }/articles/${ article.id }`,
     desc: article.title,
-    image: article.image,
+    cover: article.cover,
     summary: article.summary,
   }
 }
@@ -66,10 +86,10 @@ class Article extends React.Component {
       title: null,
       category: null,
       content: null,
-      copyRight: null,
-      image: null,
+      copyright: null,
+      cover: null,
       labels: [],
-      lastModify: 0,
+      updateAt: 0,
       markdown: null,
       pv: 0,
       summary: null
@@ -212,7 +232,7 @@ class Article extends React.Component {
           }) }
         </div>
         }
-        <div id="article_copyRight">{ article.copyRight }
+        <div id="article_copyright">{ article.copyright }
           <div style={ { textAlign: "right" } }>
             分享： <img onClick={ this.shareQQ } className="share" title="分享到QQ好友" src={ qq } width="18" alt="分享到QQ好友"/>
             <img onClick={ this.shareQQZone } className="share" title="分享到QQ空间" src={ zone } width="20" alt="分享到QQ空间"/>

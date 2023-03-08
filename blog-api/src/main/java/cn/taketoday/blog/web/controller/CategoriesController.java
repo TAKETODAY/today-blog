@@ -23,7 +23,7 @@ package cn.taketoday.blog.web.controller;
 import java.util.List;
 
 import cn.taketoday.blog.ErrorMessageException;
-import cn.taketoday.blog.aspect.Logging;
+import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Category;
 import cn.taketoday.blog.service.CategoryService;
 import cn.taketoday.blog.Json;

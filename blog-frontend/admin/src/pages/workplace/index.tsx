@@ -209,8 +209,8 @@ const Workplace = (props: WorkplaceProps) => {
                       />
                       <div className={styles.projectItemContent}>
                         <a target='_blank' href={`/articles/${article.id}`}>浏览</a>
-                        <span className={styles.datetime} title={moment(article.lastModify).format("lll")}>
-                            {moment(article.lastModify).fromNow()}
+                        <span className={styles.datetime} title={moment(article.updateAt).format("lll")}>
+                            {moment(article.updateAt).fromNow()}
                           </span>
                       </div>
                     </Card>

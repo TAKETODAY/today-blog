@@ -26,7 +26,7 @@ import cn.taketoday.blog.Json;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.Result;
-import cn.taketoday.blog.aspect.Logging;
+import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.User;

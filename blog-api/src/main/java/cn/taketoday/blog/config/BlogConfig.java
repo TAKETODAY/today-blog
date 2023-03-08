@@ -44,13 +44,9 @@ public class BlogConfig {
   private String name;
   private String index;
 
-  @Deprecated
-  private String upload;
-
   private String keywords;
   private String copyright;
   private String subTitle;
-  private String serverPath;
   private String description;
   private String otherFooter;
 

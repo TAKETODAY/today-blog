@@ -52,12 +52,12 @@ public class ArticleFilterInterceptor extends SessionHandlerInterceptor {
             article.setCover(null);
             article.setStatus(null);
             article.setLabels(null);
+            article.setPassword(null);
 
             article.setSummary("需要密码查看");
             article.setContent("需要密码查看");
             article.setMarkdown("需要密码查看");
             article.setCategory("需要密码查看");
-            article.resetPassword();
           }
         }
       }
