@@ -45,7 +45,7 @@ public class ArticleFilterInterceptor extends SessionHandlerInterceptor {
     if (result instanceof Pagination && getAttribute(context, BlogConstant.BLOGGER_INFO) == null) {
       // 过滤
       final List<Article> articles = (List<Article>) ((Pagination<?>) result).getData();
-      if (!CollectionUtils.isEmpty(articles)) {
+      if (CollectionUtils.isNotEmpty(articles)) {
         for (final Article article : articles) {
           // 过滤有密码的
           if (article.needPassword()) {

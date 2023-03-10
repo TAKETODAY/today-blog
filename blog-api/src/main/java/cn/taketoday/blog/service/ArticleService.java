@@ -118,10 +118,10 @@ public class ArticleService {
     Set<Label> oldLabels = articleInDb.getLabels();
     Set<Label> newLabels = newArticle.getLabels();
     if (labelsChanged(newLabels, oldLabels)) {
-      if (!CollectionUtils.isEmpty(oldLabels)) {
+      if (CollectionUtils.isNotEmpty(oldLabels)) {
         labelService.removeArticleLabels(newArticle.getId());
       }
-      if (!CollectionUtils.isEmpty(newLabels)) {
+      if (CollectionUtils.isNotEmpty(newLabels)) {
         labelService.saveArticleLabels(newLabels, newArticle.getId());
       }
     }
@@ -132,7 +132,7 @@ public class ArticleService {
    */
   protected boolean labelsChanged(Set<Label> newLabels, Set<Label> oldLabels) {
     if (CollectionUtils.isEmpty(newLabels)) {
-      return !CollectionUtils.isEmpty(oldLabels);
+      return CollectionUtils.isNotEmpty(oldLabels);
     }
     return !Objects.equals(newLabels, oldLabels);
   }

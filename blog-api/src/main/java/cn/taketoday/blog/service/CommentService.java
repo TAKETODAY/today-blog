@@ -51,6 +51,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "comments"/*, expire = 30, timeUnit = TimeUnit.SECONDS*/)
 public class CommentService {
+
   private final BlogConfig blogConfig;
   private final UserService userService;
   private final MailService mailService;
@@ -67,7 +68,7 @@ public class CommentService {
   //  @Cacheable(key = "'ByArticleId_'+#id")
   public List<Comment> getAllByArticleId(long id) {
     List<Comment> commentsToUse = commentRepository.getArticleComment(id);
-    if (!CollectionUtils.isEmpty(commentsToUse)) {
+    if (CollectionUtils.isNotEmpty(commentsToUse)) {
       for (Comment comment : commentsToUse) {
         comment.setUser(userService.getById(comment.getUserId()));
       }
@@ -205,9 +206,9 @@ public class CommentService {
   }
 
   public List<Comment> getByStatus(CommentStatus status, int pageNow, int pageSize) {
-
-    List<Comment> commentsToUse = commentRepository.findByStatus(status, (pageNow - 1) * pageSize, pageSize);
-    if (!CollectionUtils.isEmpty(commentsToUse)) {
+    List<Comment> commentsToUse = commentRepository.findByStatus(
+            status, (pageNow - 1) * pageSize, pageSize);
+    if (CollectionUtils.isNotEmpty(commentsToUse)) {
       for (Comment comment : commentsToUse) {
         comment.setUser(userService.getById(comment.getUserId()));
       }

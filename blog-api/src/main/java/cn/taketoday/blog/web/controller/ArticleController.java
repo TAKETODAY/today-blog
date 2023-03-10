@@ -20,7 +20,6 @@
 
 package cn.taketoday.blog.web.controller;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -239,6 +238,7 @@ public class ArticleController {
     articleService.saveArticle(article);
   }
 
+  @Nullable
   private Set<Label> getLabels(ArticleFrom from) {
     if (CollectionUtils.isNotEmpty(from.getLabels())) {
       Set<Label> labels = new HashSet<>();
