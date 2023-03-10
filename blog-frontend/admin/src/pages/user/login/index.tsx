@@ -1,8 +1,28 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 import { LockOutlined, UserOutlined, } from '@ant-design/icons';
 import { Alert, message, Popconfirm } from 'antd';
 import React, { useState } from 'react';
-import ProForm, { LoginForm, ProFormCheckbox, ProFormText } from '@ant-design/pro-form';
-import { FormattedMessage, history, Link, SelectLang, useIntl, useModel } from 'umi';
+import { LoginForm, ProFormCheckbox, ProFormText } from '@ant-design/pro-form';
+import { FormattedMessage, history, SelectLang, useIntl, useModel } from 'umi';
 import Footer from '@/components/Footer';
 import { login } from '@/services/ant-design-pro/login';
 
@@ -37,7 +57,7 @@ const goto = () => {
 };
 
 const Login: React.FC = () => {
-  const [submitting, setSubmitting] = useState(false);
+  const [_, setSubmitting] = useState(false);
   const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
   const { initialState, setInitialState } = useModel('@@initialState');
 

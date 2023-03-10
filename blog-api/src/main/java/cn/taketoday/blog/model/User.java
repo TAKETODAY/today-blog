@@ -87,7 +87,6 @@ public class User implements Serializable {
     return notification == null || notification;
   }
 
-  @JsonIgnore
   public boolean isDefaultPassword() {
     return DEFAULT_PASSWORD.equals(getPassword());
   }
