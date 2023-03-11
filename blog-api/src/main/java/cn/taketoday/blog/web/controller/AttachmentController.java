@@ -20,11 +20,12 @@
 package cn.taketoday.blog.web.controller;
 
 import cn.taketoday.blog.Pageable;
+import cn.taketoday.blog.Pagination;
+import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.form.AttachmentForm;
 import cn.taketoday.blog.service.AttachmentService;
-import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.web.NotFoundException;
@@ -52,7 +53,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/attachments")
 @RequiresBlogger
 public class AttachmentController {
-
+  private final AttachmentConfig attachmentConfig;
   private final AttachmentService attachmentService;
 
   @GET
@@ -61,13 +62,19 @@ public class AttachmentController {
   }
 
   /**
-   * Upload file
+   * 上传文件
    */
   @POST
   @ResponseStatus(HttpStatus.CREATED)
   @Logging(title = "上传附件", content = "文件名: [${#file.originalFilename}]")
-  public Attachment upload(MultipartFile file) {
-    return attachmentService.upload(file, null);
+  public UploadReturnValue upload(MultipartFile file) {
+    Attachment attachment = attachmentService.upload(file, null);
+    String uri = attachment.getUri();
+    return new UploadReturnValue(uri, attachmentConfig.getRemoteURL(uri));
+  }
+
+  public record UploadReturnValue(String uri, String cdnURL) {
+
   }
 
   @GET("/{id}")

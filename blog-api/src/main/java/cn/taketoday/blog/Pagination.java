@@ -57,6 +57,14 @@ public class Pagination<T> implements ListableResult<T> {
     return num;
   }
 
+  public int getPages() {
+    return (int) num;
+  }
+
+  public int getTotal() {
+    return (int) all;
+  }
+
   public long getAll() {
     return all;
   }
