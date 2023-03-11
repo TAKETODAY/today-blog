@@ -24,7 +24,6 @@ import { isTrue } from "../utils";
 import loading from 'src/assets/images/loading.gif'
 import fallback from 'src/assets/images/fallback.png'
 import { connect } from "react-redux";
-import { updateUserSession } from "../redux/actions";
 
 // const imageServer = 'http://localhost:8080'
 
@@ -77,7 +76,5 @@ export default connect(
       options: state.options,
     }
   },
-  {
-    updateUserSession
-  }
+  {}
 )(ImageComponent)
