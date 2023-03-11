@@ -18,21 +18,23 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import { useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { Button, Card, Input, List, Select } from 'antd';
 import moment from "moment";
 import styles from './style.less';
-import { Attachment } from "./data";
+import { Attachment, FileType } from "./data";
+import { IMAGE } from "@/utils";
 import { UploadOutlined } from '@ant-design/icons';
 import UploadForm from "./UploadForm";
 import { getAttachment } from "@/components/Attachment/service";
-import Image from "@/components/Image";
-import { IMAGE } from "@/utils";
+import { Image } from '@/components'
 
 const { Option } = Select;
 const { Search } = Input;
 
 interface AttachmentProps {
+  children?: ReactNode | string;
+  fileType?: FileType,
   itemClicked: { itemClicked(item: Attachment): void }["itemClicked"]
 }
 
@@ -40,23 +42,24 @@ const defaultParams = { current: 1, size: 10, fileType: '', name: '' }
 const grid = { gutter: 16, xs: 1, sm: 2, md: 4, lg: 6, xl: 6, xxl: 6, }
 
 const images = {
-  AUDIO: require('@/assets/images/file/mp3.png'),
-  VIDEO: require('@/assets/images/file/avi.png'),
-  OTHER: require('@/assets/images/file/more.png'),
-  TEXT: require('@/assets/images/file/documents.png')
+  AUDIO: import('@/assets/images/file/mp3.png'),
+  VIDEO: import('@/assets/images/file/avi.png'),
+  OTHER: import('@/assets/images/file/more.png'),
+  TEXT: import('@/assets/images/file/documents.png')
 }
+
 const defaultAttachment = {
-  all: 0,
+  pages: 0,
   current: 1,
   data: [],
-  num: 0,
+  total: 0,
   size: 10,
 }
 
-export default ({ itemClicked }: AttachmentProps) => {
+export default ({ itemClicked, fileType, children }: AttachmentProps) => {
 
+  const [params, setParams] = useState({ ...defaultParams, fileType })
   const [loading, setLoading] = useState(true)
-  const [params, setParams] = useState(defaultParams)
   const [attachment, setAttachment] = useState(defaultAttachment)
   const [uploadModalVisible, setUploadModalVisible] = useState<boolean>(false)
 
@@ -76,19 +79,14 @@ export default ({ itemClicked }: AttachmentProps) => {
     }).finally(() => setLoading(false))
   }
 
-  const renderItem = (item: Attachment) => {
-    return <>
-      <Card className={styles.card} hoverable
-            cover={<Image src={item.fileType === IMAGE ? item.uri : images[item.fileType]} alt={item.name}/>}>
-        <div className={styles.cardItemContent}>
-          <span>{item.name} </span>
-          <b>{moment(item.id).fromNow()}</b>
-        </div>
-      </Card>
-    </>;
+  const renderImage = (item: Attachment) => {
+    if (item.fileType === IMAGE) {
+      return <Image alt={item.name} src={item.uri}/>
+    }
+    return <img alt={item.name || ''} src={images[item.fileType]}/>
   }
 
-  const handleChange = (fileType: string) => {
+  const handleFileTypeChange = (fileType: FileType) => {
     setParams({ ...params, fileType })
   }
 
@@ -101,7 +99,9 @@ export default ({ itemClicked }: AttachmentProps) => {
 
   return (
       <>
-        <Select style={{ width: 120, marginBottom: 10 }} placeholder='附件分类' onChange={handleChange}>
+        <Select defaultValue={fileType || ''}
+                style={{ width: 120, marginBottom: 10 }}
+                placeholder="附件分类" onChange={handleFileTypeChange}>
           <Option value="">全部</Option>
           <Option value="IMAGE">图片</Option>
           <Option value="VIDEO">视频</Option>
@@ -124,21 +124,37 @@ export default ({ itemClicked }: AttachmentProps) => {
             pagination={{
               onChange: fetchAttachment,
               onShowSizeChange: fetchAttachment,
-              total: attachment.all,
+              total: attachment.total,
               pageSize: attachment.size,
               current: attachment.current,
             }}
             dataSource={attachment?.data}
-            renderItem={item => (
+            renderItem={(item: Attachment) => (
                 <List.Item onClick={() => itemClicked(item)}>
-                  {
-                    renderItem(item)
-                  }
+                  <Card className={styles.card} hoverable cover={renderImage(item)}>
+                    <div className={styles.cardItemContent}>
+                      <span>{item.name || ''} </span>
+                      <b>{moment(item.createAt).fromNow()}</b>
+                    </div>
+                  </Card>
                 </List.Item>
             )}
         />
-        <UploadForm updateModalVisible={uploadModalVisible}
-                    onRefresh={onRefresh} onCancel={() => setUploadModalVisible(false)}/>
+
+        {
+          React.Children.map(children, child => {
+            if (!React.isValidElement(child)) {
+              return null
+            }
+            return React.cloneElement(child, {
+              ...child.props, onRefresh
+            })
+          })
+        }
+
+        <UploadForm open={uploadModalVisible}
+                    onRefresh={onRefresh}
+                    onCancel={() => setUploadModalVisible(false)}/>
       </>
   )
 }

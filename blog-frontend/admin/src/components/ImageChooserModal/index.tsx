@@ -18,17 +18,28 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import { Modal } from 'antd';
-import AttachmentList from "@/components/Attachment";
+import { Drawer, Modal } from 'antd';
+import { AttachmentList } from "@/components";
 
 export default (props: any) => {
-  const { hideModal, visible, onSelect } = props
+  const { onCancel, visible, onSelect, type, modal, width, ...rest } = props
 
-  return (<>
-    <Modal title="选择图片文件" width={1300} open={visible} onCancel={hideModal}>
-      <AttachmentList itemClicked={onSelect}/>
-    </Modal>
-  </>)
+  if (modal) {
+    return (<>
+      <Modal title="选择图片文件" width={width || 1300} open={visible} onCancel={onCancel} {...rest}>
+        <AttachmentList itemClicked={onSelect} fileType="IMAGE"/>
+      </Modal>
+    </>)
+  }
+
+  return (
+      <>
+        <Drawer title="选择图片文件" width={width || 1300} open={visible} onClose={onCancel} {...rest}>
+          <AttachmentList itemClicked={onSelect} fileType="IMAGE"/>
+        </Drawer>
+      </>
+  )
 }
+
 
 

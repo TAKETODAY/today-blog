@@ -128,7 +128,7 @@ const AttachmentForm = props => {
           width={ 800 }
           destroyOnClose
           footer={ renderFooter() }
-          visible={ visible }
+          open={ visible }
           onCancel={ () => hideUpdateModal() }
           bodyStyle={ { padding: '32px 40px 48px' } }
       >

@@ -19,10 +19,10 @@
  */
 
 import { useEffect, useState } from 'react';
-import { BackTop, Button, Image, Input, message, Popconfirm } from "antd";
+import { BackTop, Button, Input, message, Popconfirm } from "antd";
 import MarkdownEditor from "@/components/Editor";
 import ImageChooserModal from "@/components/ImageChooserModal";
-import { fallbackImage, getStorage, handleHttpError, isEmpty, isNotEmpty, removeStorage, saveStorage } from '@/utils'
+import { getStorage, handleHttpError, isEmpty, isNotEmpty, removeStorage, saveStorage } from '@/utils'
 import articleService from '@/services/ArticleService'
 
 import '@/assets/css/index.css'
@@ -34,6 +34,7 @@ import { Post } from "@/pages/articles/components/article";
 import { ArticleItem } from "@/pages/articles/data";
 import { PageLoading } from "@ant-design/pro-layout";
 import { Attachment } from "@/components/Attachment/data";
+import Image from "@/components/Image";
 
 export default (props: { match: { params: { id: string } } }) => {
   const { id } = props.match.params
@@ -73,7 +74,7 @@ export default (props: { match: { params: { id: string } } }) => {
   const hideModal = () => setModalVisible(false)
   const showDrawer = () => setDrawerVisible(true)
   const hideDrawer = () => setDrawerVisible(false)
-  const setImage = (image: string | undefined) => savePost({ ...post, image })
+  const setImage = (cover: string | undefined) => savePost({ ...post, cover })
   const setTitle = (title: string) => savePost({ ...post, title })
   // const setContent = (content: string) => savePost({ ...post, content })
   const onChange = (markdown: string, content: string) => {
@@ -151,8 +152,8 @@ export default (props: { match: { params: { id: string } } }) => {
             <div className="data" style={{ marginTop: 10 }}>
               <div className="WriteCover-wrapper">
                 <div className="WriteCover-previewWrapper WriteCover-previewWrapper--empty">
-                  {isNotEmpty(post.image)
-                      ? <Image fallback={fallbackImage} src={post.image}/>
+                  {isNotEmpty(post.cover)
+                      ? <Image src={post.cover}/>
                       : <label className="UploadPicture-wrapper" onClick={() => showModal(true)}>
                         <i className="fa fa-camera fa-3x WriteCover-uploadIcon"/>
                       </label>

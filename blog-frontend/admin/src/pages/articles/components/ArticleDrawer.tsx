@@ -86,7 +86,7 @@ export default (props: any) => {
 
   // @ts-ignore
   return (
-      <Drawer title="配置文章属性" width={720} onClose={onClose} visible={visible} bodyStyle={{ paddingBottom: 80 }}
+      <Drawer title="配置文章属性" width={720} onClose={onClose} open={visible} bodyStyle={{ paddingBottom: 80 }}
               footer={
                 <div style={{ textAlign: "right" }}>
                   <Button onClick={onClose} style={{ marginRight: 8 }}>取消</Button>
@@ -94,7 +94,7 @@ export default (props: any) => {
                 </div>
               }
       >
-        <Form layout="vertical" hideRequiredMark form={form} onValuesChange={onUpdateValues}>
+        <Form layout="vertical" requiredMark form={form} onValuesChange={onUpdateValues}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="password" label="访问密码" initialValue={article.password}>
@@ -143,6 +143,7 @@ export default (props: any) => {
             </Col>
             <Col span={12}>
               <Form.Item name="createTime" label="发布日期">
+                {/*@ts-ignore*/}
                 <DatePicker showTime style={{ width: "100%" }}/>
               </Form.Item>
             </Col>

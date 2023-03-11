@@ -18,17 +18,15 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-export interface Attachment {
-  id: number,
-  name: string
-  size: number
-  uri: string
-  location: string
-  fileType: string
-  sync: boolean
-  createAt: Date
-}
+import Image from './Image';
+import ImageChooser from './ImageChooser';
+import AttachmentList from './Attachment';
+import ImageChooserModal from './ImageChooserModal';
 
-declare const AttachmentFileTypes: ["", "VIDEO", "IMAGE", "AUDIO", "TEXT", "OTHER"];
-export declare type FileType = typeof AttachmentFileTypes[number];
+export {
+  Image,
+  ImageChooser,
+  AttachmentList,
+  ImageChooserModal
+};
 
