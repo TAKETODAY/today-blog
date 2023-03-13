@@ -96,7 +96,7 @@ export default () => {
     const article = { ...post, ...values }
     savePostToLocal(article)
 
-    articleService.create(article).then((res: AxiosResponse) => {
+    articleService.create(article).then((_: AxiosResponse) => {
       setDrawerVisible(false)
       removeStorage(articleCacheKey)
       return message.success("文章发布成功")
@@ -121,16 +121,11 @@ export default () => {
                 <div className="data" style={{ marginTop: 10 }}>
                   <div className="row">
                     <div className="col-md-12">
-                      <input
-                          value={post.title}
-                          maxLength={80}
-                          autoFocus={true}
-                          autoComplete="off"
-                          placeholder="请输入标题"
-                          className="article-title"
-                          onChange={(e) => {
-                            setTitle(e.target.value)
-                          }}
+                      <input value={post.title} maxLength={80} autoFocus={true}
+                             autoComplete="off" placeholder="请输入标题" className="article-title"
+                             onChange={(e) => {
+                               setTitle(e.target.value)
+                             }}
                       />
 
                       <div className="box box-primary">

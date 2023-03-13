@@ -251,9 +251,11 @@ export default () => {
             columns={columns}
             scroll={{ x: 1200 }}
             toolBarRender={() => [
-              <Link to='/articles/write' target='_blank'>
-                <PlusOutlined/> 新建文章
-              </Link>
+              <Button type="primary">
+                <Link to="/articles/write" target="_blank">
+                  <PlusOutlined/> 新建文章
+                </Link>
+              </Button>
             ]}
             rowSelection={{
               onChange: (_, sd) => setSelectedBooks(sd),

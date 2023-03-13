@@ -1,4 +1,24 @@
-import React, { useRef, useState } from 'react';
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
+import { useRef, useState } from 'react';
 import { Button, Divider, message, Popconfirm } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
@@ -9,7 +29,6 @@ import CategoryUpdateForm from "./CategoryUpdateForm";
 import { CategoryItem } from "../data.d";
 import { create, deleteCategory, queryCategories, update } from "./service";
 import CreateForm from "@/pages/articles/components/CreateForm";
-
 
 /**
  * 更新节点
@@ -72,7 +91,7 @@ export default () => {
 
   const remove = async (record: CategoryItem) => {
     await handleRemove(record)
-    actionRef.current?.reload()
+    await actionRef.current?.reload()
   }
 
   const columns: ProColumns<CategoryItem>[] = [
@@ -80,24 +99,12 @@ export default () => {
       title: '名称',
       dataIndex: 'name',
       hideInSearch: true,
-      rules: [
-        {
-          required: true,
-          message: '名称为必填项',
-        },
-      ],
     },
     {
       title: '排序',
       dataIndex: 'order',
       valueType: 'digit',
       hideInSearch: true,
-      rules: [
-        {
-          required: true,
-          message: '排序为必填项',
-        },
-      ],
     },
     {
       title: '文章数',
@@ -142,15 +149,14 @@ export default () => {
                 <PlusOutlined/> 新建
               </Button>]
             }
-            rowSelection={{
-            }}
+            rowSelection={{}}
         />
         <CreateForm title="新建文章分类" onCancel={() => setCreateModalVisible(false)} modalVisible={createModalVisible}>
           <ProTable<CategoryItem, CategoryItem>
               onSubmit={async (value) => {
                 if (await handleCreate(value)) {
                   setCreateModalVisible(false);
-                  actionRef.current?.reload();
+                  await actionRef.current?.reload();
                 }
               }}
               rowKey="key"
@@ -164,7 +170,7 @@ export default () => {
               if (await handleUpdate(oldName, value)) {
                 setUpdateCategory({})
                 setUpdateModalVisible(false)
-                actionRef.current?.reload()
+                await actionRef.current?.reload()
               }
             }}
             onCancel={() => {

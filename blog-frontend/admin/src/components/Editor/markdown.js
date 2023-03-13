@@ -1,17 +1,51 @@
-require('codemirror/addon/edit/continuelist.js');
-require('./tablist');
-require('codemirror/addon/display/fullscreen.js');
-require('codemirror/mode/markdown/markdown.js');
-require('codemirror/addon/mode/overlay.js');
-require('codemirror/addon/display/placeholder.js');
-require('codemirror/addon/selection/mark-selection.js');
-require('codemirror/addon/search/searchcursor.js');
-require('codemirror/mode/gfm/gfm.js');
-require('codemirror/mode/xml/xml.js');
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
 
-const CodeMirror = require('codemirror');
+// require('codemirror/addon/edit/continuelist.js');
+// require('./tablist');
+// require('codemirror/addon/display/fullscreen.js');
+// require('codemirror/mode/markdown/markdown.js');
+// require('codemirror/addon/mode/overlay.js');
+// require('codemirror/addon/display/placeholder.js');
+// require('codemirror/addon/selection/mark-selection.js');
+// require('codemirror/addon/search/searchcursor.js');
+// require('codemirror/mode/gfm/gfm.js');
+// require('codemirror/mode/xml/xml.js');
+
+
+import('codemirror/addon/edit/continuelist.js');
+import('./tablist');
+import('codemirror/addon/display/fullscreen.js');
+import('codemirror/mode/markdown/markdown.js');
+import('codemirror/addon/mode/overlay.js');
+import('codemirror/addon/display/placeholder.js');
+import('codemirror/addon/selection/mark-selection.js');
+import('codemirror/addon/search/searchcursor.js');
+import('codemirror/mode/gfm/gfm.js');
+import('codemirror/mode/xml/xml.js');
+
+import markdownIt from 'markdown-it'
+
+const CodeMirror = import('codemirror');
 const { getSession, saveSession, getStorage, saveStorage } = import('@/utils');
-const CodeMirrorSpellChecker = require('codemirror-spell-checker');
+const CodeMirrorSpellChecker = import('codemirror-spell-checker');
 
 // Some variables
 const isMac = /Mac/.test(navigator.platform);
@@ -247,7 +281,7 @@ function getState(cm, pos) {
   var types = stat.type.split(' ');
 
   var ret = {},
-      data, text;
+    data, text;
   for (var i = 0; i < types.length; i++) {
     data = types[i];
     if (data === 'strong') {
@@ -424,10 +458,10 @@ function toggleCodeBlock(editor) {
 
   function insertFencingAtSelection(cm, cur_start, cur_end, fenceCharsToInsert) {
     var start_line_sel = cur_start.line + 1,
-        end_line_sel = cur_end.line + 1,
-        sel_multi = cur_start.line !== cur_end.line,
-        repl_start = fenceCharsToInsert + '\n',
-        repl_end = '\n' + fenceCharsToInsert;
+      end_line_sel = cur_end.line + 1,
+      sel_multi = cur_start.line !== cur_end.line,
+      repl_start = fenceCharsToInsert + '\n',
+      repl_end = '\n' + fenceCharsToInsert;
     if (sel_multi) {
       end_line_sel++;
     }
@@ -447,20 +481,20 @@ function toggleCodeBlock(editor) {
   }
 
   var cm = editor.codemirror,
-      cur_start = cm.getCursor('start'),
-      cur_end = cm.getCursor('end'),
-      tok = cm.getTokenAt({
-        line: cur_start.line,
-        ch: cur_start.ch || 1,
-      }), // avoid ch 0 which is a cursor pos but not token
-      line = cm.getLineHandle(cur_start.line),
-      is_code = code_type(cm, cur_start.line, line, tok);
+    cur_start = cm.getCursor('start'),
+    cur_end = cm.getCursor('end'),
+    tok = cm.getTokenAt({
+      line: cur_start.line,
+      ch: cur_start.ch || 1,
+    }), // avoid ch 0 which is a cursor pos but not token
+    line = cm.getLineHandle(cur_start.line),
+    is_code = code_type(cm, cur_start.line, line, tok);
   var block_start, block_end, lineCount;
 
   if (is_code === 'single') {
     // similar to some EasyMDE _toggleBlock logic
     var start = line.text.slice(0, cur_start.ch).replace('`', ''),
-        end = line.text.slice(cur_start.ch).replace('`', '');
+      end = line.text.slice(cur_start.ch).replace('`', '');
     cm.replaceRange(start + end, {
       line: cur_start.line,
       ch: 0,
@@ -642,11 +676,11 @@ function toggleCodeBlock(editor) {
     // if we are going to un-indent based on a selected set of lines, and the next line is indented too, we need to
     // insert a blank line so that the next line(s) continue to be indented code
     var next_line = cm.getLineHandle(block_end + 1),
-        next_line_last_tok = next_line && cm.getTokenAt({
-          line: block_end + 1,
-          ch: next_line.text.length - 1,
-        }),
-        next_line_indented = next_line_last_tok && token_state(next_line_last_tok).indentedCode;
+      next_line_last_tok = next_line && cm.getTokenAt({
+        line: block_end + 1,
+        ch: next_line.text.length - 1,
+      }),
+      next_line_indented = next_line_last_tok && token_state(next_line_last_tok).indentedCode;
     if (next_line_indented) {
       cm.replaceRange('\n', {
         line: block_end + 1,
@@ -859,7 +893,7 @@ function toggleSideBySide(editor) {
   var useSideBySideListener = false;
   if (/editor-preview-active-side/.test(preview.className)) {
     preview.className = preview.className.replace(
-        /\s*editor-preview-active-side\s*/g, ''
+      /\s*editor-preview-active-side\s*/g, ''
     );
     if (toolbarButton) toolbarButton.className = toolbarButton.className.replace(/\s*active\s*/g, '');
     wrapper.className = wrapper.className.replace(/\s*CodeMirror-sided\s*/g, ' ');
@@ -882,7 +916,7 @@ function toggleSideBySide(editor) {
   var previewNormal = wrapper.lastChild;
   if (/editor-preview-active/.test(previewNormal.className)) {
     previewNormal.className = previewNormal.className.replace(
-        /\s*editor-preview-active\s*/g, ''
+      /\s*editor-preview-active\s*/g, ''
     );
     var toolbar = editor.toolbarElements.preview;
     var toolbar_div = wrapper.previousSibling;
@@ -948,7 +982,7 @@ function togglePreview(editor) {
   }
   if (/editor-preview-active/.test(preview.className)) {
     preview.className = preview.className.replace(
-        /\s*editor-preview-active\s*/g, ''
+      /\s*editor-preview-active\s*/g, ''
     );
     if (toolbar) {
       toolbar.className = toolbar.className.replace(/\s*active\s*/g, '');
@@ -983,7 +1017,7 @@ function _replaceSelection(cm, active, startEnd, url) {
   var start = startEnd[0];
   var end = startEnd[1];
   var startPoint = {},
-      endPoint = {};
+    endPoint = {};
   Object.assign(startPoint, cm.getCursor('start'));
   Object.assign(endPoint, cm.getCursor('end'));
   if (url) {
@@ -1301,9 +1335,9 @@ function _mergeProperties(target, source) {
         target[property] = source[property].concat(target[property] instanceof Array ? target[property] : []);
       }
       else if (
-          source[property] !== null &&
-          typeof source[property] === 'object' &&
-          source[property].constructor === Object
+        source[property] !== null &&
+        typeof source[property] === 'object' &&
+        source[property].constructor === Object
       ) {
         target[property] = _mergeProperties(target[property] || {}, source[property]);
       }
@@ -1632,7 +1666,7 @@ function EasyMDE(options) {
           options.toolbar.push('|');
         }
         if (toolbarBuiltInButtons[key].default === true
-            || (options.showIcons && options.showIcons.constructor === Array && options.showIcons.indexOf(key) != -1)) {
+          || (options.showIcons && options.showIcons.constructor === Array && options.showIcons.indexOf(key) != -1)) {
           options.toolbar.push(key);
         }
       }
@@ -1718,8 +1752,8 @@ function EasyMDE(options) {
 
   // markdownIt
   // -------------------------------------
-  var hljs = require('highlight.js')
-  var emoji = require('markdown-it-emoji')
+  var hljs = import('highlight.js')
+  var emoji = import('markdown-it-emoji')
   const renderingConfig = Object.assign({
     html: false,                // Enable HTML tags in source
     xhtmlOut: false,            // Use '/' to close single tags (<br />).This is only for full CommonMark compatibility.
@@ -1741,13 +1775,14 @@ function EasyMDE(options) {
       if (lang && hljs.getLanguage(lang)) {
         try {
           return hljs.highlight(lang, str).value
-        } catch (__) {
+        }
+        catch (__) {
         }
       }
       return '' // use external default escaping
     }
   }, options.renderingConfig || {})
-  this.markdownIt = require('markdown-it')(renderingConfig).use(emoji)
+  this.markdownIt = markdownIt(renderingConfig).use(emoji)
 
   if (options.uploadImage) {
     var self = this;
@@ -2010,7 +2045,8 @@ function isLocalStorageAvailable() {
     try {
       localStorage.setItem('smde_localStorage', 1);
       localStorage.removeItem('smde_localStorage');
-    } catch (e) {
+    }
+    catch (e) {
       return false;
     }
   }
@@ -2091,9 +2127,9 @@ EasyMDE.prototype.uploadImage = function (file, onSuccess, onError) {
   function fillErrorMessage(errorMessage) {
     var units = self.options.imageTexts.sizeUnits.split(',');
     return errorMessage
-        .replace('#image_name#', file.name)
-        .replace('#image_size#', humanFileSize(file.size, units))
-        .replace('#image_max_size#', humanFileSize(self.options.imageMaxSize, units));
+      .replace('#image_name#', file.name)
+      .replace('#image_size#', humanFileSize(file.size, units))
+      .replace('#image_max_size#', humanFileSize(self.options.imageMaxSize, units));
   }
 
   if (file.size > this.options.imageMaxSize) {
@@ -2120,7 +2156,8 @@ EasyMDE.prototype.uploadImage = function (file, onSuccess, onError) {
   request.onload = function () {
     try {
       var response = JSON.parse(this.responseText);
-    } catch (error) {
+    }
+    catch (error) {
       console.error('EasyMDE: The server did not return a valid json.');
       onErrorSup(fillErrorMessage(self.options.errorMessages.importError));
       return;
@@ -2137,7 +2174,7 @@ EasyMDE.prototype.uploadImage = function (file, onSuccess, onError) {
       }
       else {  //unknown error
         console.error('EasyMDE: Received an unexpected response after uploading the image.'
-            + this.status + ' (' + this.statusText + ')');
+          + this.status + ' (' + this.statusText + ')');
         onErrorSup(fillErrorMessage(self.options.errorMessages.importError));
       }
     }
@@ -2145,7 +2182,7 @@ EasyMDE.prototype.uploadImage = function (file, onSuccess, onError) {
 
   request.onerror = function (event) {
     console.error('EasyMDE: An unexpected error occurred when trying to upload the image.'
-        + event.target.status + ' (' + event.target.statusText + ')');
+      + event.target.status + ' (' + event.target.statusText + ')');
     onErrorSup(self.options.errorMessages.importError);
   };
 
@@ -2182,9 +2219,9 @@ EasyMDE.prototype.uploadImageUsingCustomFunction = function (imageUploadFunction
   function fillErrorMessage(errorMessage) {
     var units = self.options.imageTexts.sizeUnits.split(',');
     return errorMessage
-        .replace('#image_name#', file.name)
-        .replace('#image_size#', humanFileSize(file.size, units))
-        .replace('#image_max_size#', humanFileSize(self.options.imageMaxSize, units));
+      .replace('#image_name#', file.name)
+      .replace('#image_size#', humanFileSize(file.size, units))
+      .replace('#image_max_size#', humanFileSize(self.options.imageMaxSize, units));
   }
 
   imageUploadFunction(file, onSuccess, onError);
@@ -2626,4 +2663,6 @@ EasyMDE.prototype.toTextArea = function () {
   cm.toTextArea();
 };
 
-module.exports = EasyMDE;
+// module.exports = EasyMDE;
+
+export default EasyMDE;
