@@ -83,7 +83,7 @@ interface DashboardArticle {
   content: string
   copyright: string
   id: number
-  image: string
+  cover: string
   updateAt: string
   createAt: string
   markdown: string

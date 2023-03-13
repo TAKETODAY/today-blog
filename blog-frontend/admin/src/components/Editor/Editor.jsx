@@ -22,9 +22,11 @@ import * as React from "react"
 import "./markdown.css"
 import "./github.css"
 
+import Markdown from "./markdown"
+
 let _id = 0
 
-const generateId = () => `editor-${ ++_id }`
+const generateId = () => `editor-${++_id}`
 
 // type CodemirrorEvents =
 //   | "change"
@@ -106,7 +108,6 @@ export default class Editor extends React.PureComponent {
   }
 
   createEditor = () => {
-    const Markdown = import("./markdown")
     const initialOptions = {
       element: document.getElementById(this.id),
       autosave: {
@@ -164,8 +165,8 @@ export default class Editor extends React.PureComponent {
       events && Object.entries(events).forEach(([eventName, callback]) => {
         if (eventName && callback) {
           this.markdown && this.markdown.codemirror.on(
-              eventName,
-              callback
+            eventName,
+            callback
           )
         }
       })
@@ -176,7 +177,7 @@ export default class Editor extends React.PureComponent {
     // https://codemirror.net/doc/manual.html#api_selection
     if (this.props.getLineAndCursor) {
       this.props.getLineAndCursor(
-          this.markdown.codemirror.getDoc().getCursor()
+        this.markdown.codemirror.getDoc().getCursor()
       )
     }
   }
@@ -207,10 +208,10 @@ export default class Editor extends React.PureComponent {
     } = this.props
 
     return (
-        <div id={ `${ this.id }-wrapper` } ref={ this.setElementWrapperRef }>
-          { label && <label htmlFor={ this.id }> { label } </label> }
-          <textarea id={ this.id } { ...rest } />
-        </div>
+      <div id={`${this.id}-wrapper`} ref={this.setElementWrapperRef}>
+        {label && <label htmlFor={this.id}> {label} </label>}
+        <textarea id={this.id} {...rest} />
+      </div>
     )
   }
 }

@@ -201,7 +201,7 @@ const Workplace = (props: WorkplaceProps) => {
                       <Card.Meta
                           title={
                             <div className={styles.cardTitle}>
-                              <Avatar size="small" src={article.image}/>
+                              <Avatar size="small" src={article.cover}/>
                               <a target='_blank' href={`/articles/${article.id}`}>{article.title}</a>
                             </div>
                           }

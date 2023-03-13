@@ -45,8 +45,8 @@ export default defineConfig({
     type: 'hash'
   },
   // base: '/blog-admin/',
-  publicPath: '/blog-admin/',
-  // publicPath: '/',
+  // publicPath: '/blog-admin/',
+  publicPath: '/',
   layout: {
     // https://umijs.org/zh-CN/plugins/plugin-layout
     locale: true,
@@ -81,7 +81,7 @@ export default defineConfig({
   // Fast Refresh 热更新
   fastRefresh: {},
   nodeModulesTransform: { type: 'none' },
-  // mfsu: {},
+  mfsu: {},
   webpack5: {},
   // exportStatic: {},
   // chunks: ['vendors', 'umi'],
@@ -90,30 +90,29 @@ export default defineConfig({
   },
   chainWebpack: function (config, { webpack }) {
     if (isNotNull(this.dynamicImport)) {
-      console.log("dynamicImport", this.dynamicImport)
-      console.log("ENV", REACT_APP_ENV)
-      config.merge({
-        optimization: {
-          splitChunks: {
-            chunks: 'all',
-            minSize: 30000,
-            minChunks: 2,
-            automaticNameDelimiter: '.',
-            cacheGroups: {
-              vendor: {
-                name: 'vendors',
-                // @ts-ignore
-                test({ resource }) {
-                  return /[\\/]node_modules[\\/]/.test(resource);
+      if (production) {
+        console.log("dynamicImport", this.dynamicImport)
+        config.merge({
+          optimization: {
+            splitChunks: {
+              chunks: 'all',
+              minSize: 30000,
+              minChunks: 2,
+              automaticNameDelimiter: '.',
+              cacheGroups: {
+                vendor: {
+                  name: 'vendors',
+                  // @ts-ignore
+                  test({ resource }) {
+                    return /[\\/]node_modules[\\/]/.test(resource);
+                  },
+                  priority: 10,
                 },
-                priority: 10,
               },
             },
-          },
-        }
-      })
+          }
+        })
 
-      if (production) {
         config.plugin('LimitChunkCountPlugin').use(require("webpack").optimize.LimitChunkCountPlugin, [
           {
             maxChunks: 1,

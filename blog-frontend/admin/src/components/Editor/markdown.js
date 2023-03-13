@@ -18,18 +18,6 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-// require('codemirror/addon/edit/continuelist.js');
-// require('./tablist');
-// require('codemirror/addon/display/fullscreen.js');
-// require('codemirror/mode/markdown/markdown.js');
-// require('codemirror/addon/mode/overlay.js');
-// require('codemirror/addon/display/placeholder.js');
-// require('codemirror/addon/selection/mark-selection.js');
-// require('codemirror/addon/search/searchcursor.js');
-// require('codemirror/mode/gfm/gfm.js');
-// require('codemirror/mode/xml/xml.js');
-
-
 import('codemirror/addon/edit/continuelist.js');
 import('./tablist');
 import('codemirror/addon/display/fullscreen.js');
@@ -42,10 +30,12 @@ import('codemirror/mode/gfm/gfm.js');
 import('codemirror/mode/xml/xml.js');
 
 import markdownIt from 'markdown-it'
+import CodeMirrorSpellChecker from 'codemirror-spell-checker'
+import hljs from 'highlight.js'
+import emoji from 'markdown-it-emoji'
+import CodeMirror from 'codemirror';
 
-const CodeMirror = import('codemirror');
-const { getSession, saveSession, getStorage, saveStorage } = import('@/utils');
-const CodeMirrorSpellChecker = import('codemirror-spell-checker');
+import { getSession, getStorage, saveSession, saveStorage } from '@/utils'
 
 // Some variables
 const isMac = /Mac/.test(navigator.platform);
@@ -142,14 +132,14 @@ function fixShortcut(name) {
  * Create dropdown block
  */
 function createToolbarDropdown(options, enableTooltips, shortcuts, parent) {
-  var el = createToolbarButton(options, false, enableTooltips, shortcuts, 'button', parent);
+  const el = createToolbarButton(options, false, enableTooltips, shortcuts, 'button', parent);
   el.className += ' easymde-dropdown';
-  var content = document.createElement('div');
+  const content = document.createElement('div');
   content.className = 'easymde-dropdown-content';
-  for (var childrenIndex = 0; childrenIndex < options.children.length; childrenIndex++) {
+  for (let childrenIndex = 0; childrenIndex < options.children.length; childrenIndex++) {
 
-    var child = options.children[childrenIndex];
-    var childElement;
+    const child = options.children[childrenIndex];
+    let childElement;
 
     if (typeof child === 'string' && child in toolbarBuiltInButtons) {
       childElement = createToolbarButton(toolbarBuiltInButtons[child], true, enableTooltips, shortcuts, 'button', parent);
@@ -169,7 +159,7 @@ function createToolbarDropdown(options, enableTooltips, shortcuts, parent) {
  */
 function createToolbarButton(options, enableActions, enableTooltips, shortcuts, markup, parent) {
   options = options || {};
-  var el = document.createElement(markup);
+  const el = document.createElement(markup);
   el.className = options.name;
   el.setAttribute('type', markup);
   enableTooltips = (enableTooltips == undefined) ? true : enableTooltips;
@@ -197,15 +187,15 @@ function createToolbarButton(options, enableActions, enableTooltips, shortcuts, 
   }
 
   // Prevent errors if there is no class name in custom options
-  var classNameParts = [];
+  let classNameParts = [];
   if (typeof options.className !== 'undefined') {
     classNameParts = options.className.split(' ');
   }
 
   // Provide backwards compatibility with simple-markdown-editor by adding custom classes to the button.
-  var iconClasses = [];
-  for (var classNameIndex = 0; classNameIndex < classNameParts.length; classNameIndex++) {
-    var classNamePart = classNameParts[classNameIndex];
+  const iconClasses = [];
+  for (let classNameIndex = 0; classNameIndex < classNameParts.length; classNameIndex++) {
+    const classNamePart = classNameParts[classNameIndex];
     // Split icon classes from the button.
     // Regex will detect "fa", "fas", "fa-something" and "fa-some-icon-1", but not "fanfare".
     if (classNamePart.match(/^fa([srlb]|(-[\w-]*)|$)/)) {
@@ -219,9 +209,9 @@ function createToolbarButton(options, enableActions, enableTooltips, shortcuts, 
   el.tabIndex = -1;
 
   // Create icon element and append as a child to the button
-  var icon = document.createElement('i');
-  for (var iconClassIndex = 0; iconClassIndex < iconClasses.length; iconClassIndex++) {
-    var iconClass = iconClasses[iconClassIndex];
+  const icon = document.createElement('i');
+  for (let iconClassIndex = 0; iconClassIndex < iconClasses.length; iconClassIndex++) {
+    const iconClass = iconClasses[iconClassIndex];
     icon.classList.add(iconClass);
   }
   el.appendChild(icon);
@@ -250,15 +240,15 @@ function createToolbarButton(options, enableActions, enableTooltips, shortcuts, 
 }
 
 function createSep() {
-  var el = document.createElement('i');
+  const el = document.createElement('i');
   el.className = 'separator';
   el.innerHTML = '|';
   return el;
 }
 
 function createTooltip(title, action, shortcuts) {
-  var actionName;
-  var tooltip = title;
+  let actionName;
+  let tooltip = title;
 
   if (action) {
     actionName = getBindingName(action);
@@ -275,14 +265,14 @@ function createTooltip(title, action, shortcuts) {
  */
 function getState(cm, pos) {
   pos = pos || cm.getCursor('start');
-  var stat = cm.getTokenAt(pos);
+  const stat = cm.getTokenAt(pos);
   if (!stat.type) return {};
 
-  var types = stat.type.split(' ');
+  const types = stat.type.split(' ');
 
-  var ret = {},
+  let ret = {},
     data, text;
-  for (var i = 0; i < types.length; i++) {
+  for (let i = 0; i < types.length; i++) {
     data = types[i];
     if (data === 'strong') {
       ret.bold = true;
@@ -326,14 +316,14 @@ function getState(cm, pos) {
 
 
 // Saved overflow setting
-var saved_overflow = '';
+let saved_overflow = '';
 
 /**
  * Toggle full screen of the editor.
  */
 function toggleFullScreen(editor) {
   // Set fullscreen
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   cm.setOption('fullScreen', !cm.getOption('fullScreen'));
 
 
@@ -347,7 +337,7 @@ function toggleFullScreen(editor) {
   }
 
   // Update toolbar class
-  var wrap = cm.getWrapperElement();
+  const wrap = cm.getWrapperElement();
 
   if (!/fullscreen/.test(wrap.previousSibling.className)) {
     wrap.previousSibling.className += ' fullscreen';
@@ -359,7 +349,7 @@ function toggleFullScreen(editor) {
 
   // Update toolbar button
   if (editor.toolbarElements && editor.toolbarElements.fullscreen) {
-    var toolbarButton = editor.toolbarElements.fullscreen;
+    const toolbarButton = editor.toolbarElements.fullscreen;
 
     if (!/active/.test(toolbarButton.className)) {
       toolbarButton.className += ' active';
@@ -371,7 +361,7 @@ function toggleFullScreen(editor) {
 
 
   // Hide side by side if needed
-  var sidebyside = cm.getWrapperElement().nextSibling;
+  const sidebyside = cm.getWrapperElement().nextSibling;
   if (/editor-preview-active-side/.test(sidebyside.className))
     toggleSideBySide(editor);
 
@@ -408,7 +398,7 @@ function toggleStrikethrough(editor) {
  * Action for toggling code block.
  */
 function toggleCodeBlock(editor) {
-  var fenceCharsToInsert = editor.options.blockStyles.code;
+  const fenceCharsToInsert = editor.options.blockStyles.code;
 
   function fencing_line(line) {
     /* return true, if this is a ``` or ~~~ line */
@@ -439,7 +429,7 @@ function toggleCodeBlock(editor) {
       line: line_num,
       ch: line.text.length - 1,
     }));
-    var types = firstTok.type ? firstTok.type.split(' ') : [];
+    const types = firstTok.type ? firstTok.type.split(' ') : [];
     if (lastTok && token_state(lastTok).indentedCode) {
       // have to check last char, since first chars of first line aren"t marked as indented
       return 'indented';
@@ -457,7 +447,7 @@ function toggleCodeBlock(editor) {
   }
 
   function insertFencingAtSelection(cm, cur_start, cur_end, fenceCharsToInsert) {
-    var start_line_sel = cur_start.line + 1,
+    let start_line_sel = cur_start.line + 1,
       end_line_sel = cur_end.line + 1,
       sel_multi = cur_start.line !== cur_end.line,
       repl_start = fenceCharsToInsert + '\n',
@@ -480,7 +470,7 @@ function toggleCodeBlock(editor) {
     });
   }
 
-  var cm = editor.codemirror,
+  let cm = editor.codemirror,
     cur_start = cm.getCursor('start'),
     cur_end = cm.getCursor('end'),
     tok = cm.getTokenAt({
@@ -489,11 +479,11 @@ function toggleCodeBlock(editor) {
     }), // avoid ch 0 which is a cursor pos but not token
     line = cm.getLineHandle(cur_start.line),
     is_code = code_type(cm, cur_start.line, line, tok);
-  var block_start, block_end, lineCount;
+  let block_start, block_end, lineCount;
 
   if (is_code === 'single') {
     // similar to some EasyMDE _toggleBlock logic
-    var start = line.text.slice(0, cur_start.ch).replace('`', ''),
+    const start = line.text.slice(0, cur_start.ch).replace('`', ''),
       end = line.text.slice(cur_start.ch).replace('`', '');
     cm.replaceRange(start + end, {
       line: cur_start.line,
@@ -520,13 +510,13 @@ function toggleCodeBlock(editor) {
           break;
         }
       }
-      var fencedTok = cm.getTokenAt({
+      const fencedTok = cm.getTokenAt({
         line: block_start,
         ch: 1,
       });
-      var fence_chars = token_state(fencedTok).fencedChars;
-      var start_text, start_line;
-      var end_text, end_line;
+      const fence_chars = token_state(fencedTok).fencedChars;
+      let start_text, start_line;
+      let end_text, end_line;
       // check for selection going up against fenced lines, in which case we don't want to add more fencing
       if (fencing_line(cm.getLineHandle(cur_start.line))) {
         start_text = '';
@@ -587,7 +577,7 @@ function toggleCodeBlock(editor) {
     }
     else {
       // no selection, search for ends of this fenced block
-      var search_from = cur_start.line;
+      let search_from = cur_start.line;
       if (fencing_line(cm.getLineHandle(cur_start.line))) { // gets a little tricky if cursor is right on a fenced line
         if (code_type(cm, cur_start.line + 1) === 'fenced') {
           block_start = cur_start.line;
@@ -675,7 +665,7 @@ function toggleCodeBlock(editor) {
     }
     // if we are going to un-indent based on a selected set of lines, and the next line is indented too, we need to
     // insert a blank line so that the next line(s) continue to be indented code
-    var next_line = cm.getLineHandle(block_end + 1),
+    const next_line = cm.getLineHandle(block_end + 1),
       next_line_last_tok = next_line && cm.getTokenAt({
         line: block_end + 1,
         ch: next_line.text.length - 1,
@@ -688,15 +678,15 @@ function toggleCodeBlock(editor) {
       });
     }
 
-    for (var i = block_start; i <= block_end; i++) {
+    for (let i = block_start; i <= block_end; i++) {
       cm.indentLine(i, 'subtract'); // TODO: this doesn't get tracked in the history, so can't be undone :(
     }
     cm.focus();
   }
   else {
     // insert code formatting
-    var no_sel_and_starting_of_line = (cur_start.line === cur_end.line && cur_start.ch === cur_end.ch && cur_start.ch === 0);
-    var sel_multi = cur_start.line !== cur_end.line;
+    const no_sel_and_starting_of_line = (cur_start.line === cur_end.line && cur_start.ch === cur_end.ch && cur_start.ch === 0);
+    const sel_multi = cur_start.line !== cur_end.line;
     if (no_sel_and_starting_of_line || sel_multi) {
       insertFencingAtSelection(cm, cur_start, cur_end, fenceCharsToInsert);
     }
@@ -710,7 +700,7 @@ function toggleCodeBlock(editor) {
  * Action for toggling blockquote.
  */
 function toggleBlockquote(editor) {
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   _toggleLine(cm, 'quote');
 }
 
@@ -718,7 +708,7 @@ function toggleBlockquote(editor) {
  * Action for toggling heading size: normal -> h1 -> h2 -> h3 -> h4 -> h5 -> h6 -> normal
  */
 function toggleHeadingSmaller(editor) {
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   _toggleHeading(cm, 'smaller');
 }
 
@@ -726,7 +716,7 @@ function toggleHeadingSmaller(editor) {
  * Action for toggling heading size: normal -> h6 -> h5 -> h4 -> h3 -> h2 -> h1 -> normal
  */
 function toggleHeadingBigger(editor) {
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   _toggleHeading(cm, 'bigger');
 }
 
@@ -734,7 +724,7 @@ function toggleHeadingBigger(editor) {
  * Action for toggling heading size 1
  */
 function toggleHeading1(editor) {
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   _toggleHeading(cm, undefined, 1);
 }
 
@@ -742,7 +732,7 @@ function toggleHeading1(editor) {
  * Action for toggling heading size 2
  */
 function toggleHeading2(editor) {
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   _toggleHeading(cm, undefined, 2);
 }
 
@@ -750,7 +740,7 @@ function toggleHeading2(editor) {
  * Action for toggling heading size 3
  */
 function toggleHeading3(editor) {
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   _toggleHeading(cm, undefined, 3);
 }
 
@@ -759,7 +749,7 @@ function toggleHeading3(editor) {
  * Action for toggling ul.
  */
 function toggleUnorderedList(editor) {
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   _toggleLine(cm, 'unordered-list');
 }
 
@@ -768,7 +758,7 @@ function toggleUnorderedList(editor) {
  * Action for toggling ol.
  */
 function toggleOrderedList(editor) {
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   _toggleLine(cm, 'ordered-list');
 }
 
@@ -776,7 +766,7 @@ function toggleOrderedList(editor) {
  * Action for clean block (remove headline, list, blockquote code, markers)
  */
 function cleanBlock(editor) {
-  var cm = editor.codemirror;
+  const cm = editor.codemirror;
   _cleanBlock(cm);
 }
 
@@ -784,10 +774,10 @@ function cleanBlock(editor) {
  * Action for drawing a link.
  */
 function drawLink(editor) {
-  var cm = editor.codemirror;
-  var stat = getState(cm);
-  var options = editor.options;
-  var url = 'https://';
+  const cm = editor.codemirror;
+  const stat = getState(cm);
+  const options = editor.options;
+  let url = 'https://';
   if (options.promptURLs) {
     url = prompt(options.promptTexts.link, 'https://');
     if (!url) {
@@ -801,10 +791,10 @@ function drawLink(editor) {
  * Action for drawing an img.
  */
 function drawImage(editor) {
-  var cm = editor.codemirror;
-  var stat = getState(cm);
-  var options = editor.options;
-  var url = 'https://';
+  const cm = editor.codemirror;
+  const stat = getState(cm);
+  const options = editor.options;
+  let url = 'https://';
   if (options.promptURLs) {
     url = prompt(options.promptTexts.image, 'https://');
     if (!url) {
@@ -829,10 +819,10 @@ function drawUploadedImage(editor) {
  * @param url {string} The url of the uploaded image
  */
 function afterImageUploaded(editor, url) {
-  var cm = editor.codemirror;
-  var stat = getState(cm);
-  var options = editor.options;
-  var imageName = url.substr(url.lastIndexOf('/') + 1);
+  const cm = editor.codemirror;
+  const stat = getState(cm);
+  const options = editor.options;
+  const imageName = url.substr(url.lastIndexOf('/') + 1);
   _replaceSelection(cm, stat.image, options.insertTexts.uploadedImage, url);
   // show uploaded image filename for 1000ms
   editor.updateStatusBar('upload-image', editor.options.imageTexts.sbOnUploaded.replace('#image_name#', imageName));
@@ -886,11 +876,11 @@ function redo(editor) {
  * Toggle side by side preview
  */
 function toggleSideBySide(editor) {
-  var cm = editor.codemirror;
-  var wrapper = cm.getWrapperElement();
-  var preview = wrapper.nextSibling;
-  var toolbarButton = editor.toolbarElements && editor.toolbarElements['side-by-side'];
-  var useSideBySideListener = false;
+  const cm = editor.codemirror;
+  const wrapper = cm.getWrapperElement();
+  const preview = wrapper.nextSibling;
+  const toolbarButton = editor.toolbarElements && editor.toolbarElements['side-by-side'];
+  let useSideBySideListener = false;
   if (/editor-preview-active-side/.test(preview.className)) {
     preview.className = preview.className.replace(
       /\s*editor-preview-active-side\s*/g, ''
@@ -913,19 +903,19 @@ function toggleSideBySide(editor) {
   }
 
   // Hide normal preview if active
-  var previewNormal = wrapper.lastChild;
+  const previewNormal = wrapper.lastChild;
   if (/editor-preview-active/.test(previewNormal.className)) {
     previewNormal.className = previewNormal.className.replace(
       /\s*editor-preview-active\s*/g, ''
     );
-    var toolbar = editor.toolbarElements.preview;
-    var toolbar_div = wrapper.previousSibling;
+    const toolbar = editor.toolbarElements.preview;
+    const toolbar_div = wrapper.previousSibling;
     toolbar.className = toolbar.className.replace(/\s*active\s*/g, '');
     toolbar_div.className = toolbar_div.className.replace(/\s*disabled-for-preview*/g, '');
   }
 
-  var sideBySideRenderingFunction = function () {
-    var newValue = editor.options.previewRender(editor.value(), preview);
+  const sideBySideRenderingFunction = function () {
+    const newValue = editor.options.previewRender(editor.value(), preview);
     if (newValue != null) {
       preview.innerHTML = newValue;
     }
@@ -1013,10 +1003,10 @@ function _replaceSelection(cm, active, startEnd, url) {
   if (/editor-preview-active/.test(cm.getWrapperElement().lastChild.className))
     return;
 
-  var text;
-  var start = startEnd[0];
-  var end = startEnd[1];
-  var startPoint = {},
+  let text;
+  let start = startEnd[0];
+  let end = startEnd[1];
+  const startPoint = {},
     endPoint = {};
   Object.assign(startPoint, cm.getCursor('start'));
   Object.assign(endPoint, cm.getCursor('end'));
@@ -1051,12 +1041,12 @@ function _toggleHeading(cm, direction, size) {
   if (/editor-preview-active/.test(cm.getWrapperElement().lastChild.className))
     return;
 
-  var startPoint = cm.getCursor('start');
-  var endPoint = cm.getCursor('end');
-  for (var i = startPoint.line; i <= endPoint.line; i++) {
+  const startPoint = cm.getCursor('start');
+  const endPoint = cm.getCursor('end');
+  for (let i = startPoint.line; i <= endPoint.line; i++) {
     (function (i) {
-      var text = cm.getLine(i);
-      var currHeadingLevel = text.search(/[^#]/);
+      let text = cm.getLine(i);
+      const currHeadingLevel = text.search(/[^#]/);
 
       if (direction !== undefined) {
         if (currHeadingLevel <= 0) {
@@ -1135,20 +1125,20 @@ function _toggleLine(cm, name) {
   if (/editor-preview-active/.test(cm.getWrapperElement().lastChild.className))
     return;
 
-  var listRegexp = /^(\s*)(\*|-|\+|\d*\.)(\s+)/;
-  var whitespacesRegexp = /^\s*/;
+  const listRegexp = /^(\s*)(\*|-|\+|\d*\.)(\s+)/;
+  const whitespacesRegexp = /^\s*/;
 
-  var stat = getState(cm);
-  var startPoint = cm.getCursor('start');
-  var endPoint = cm.getCursor('end');
-  var repl = {
+  const stat = getState(cm);
+  const startPoint = cm.getCursor('start');
+  const endPoint = cm.getCursor('end');
+  const repl = {
     'quote': /^(\s*)>\s+/,
     'unordered-list': listRegexp,
     'ordered-list': listRegexp,
   };
 
-  var _getChar = function (name, i) {
-    var map = {
+  const _getChar = function (name, i) {
+    const map = {
       'quote': '>',
       'unordered-list': '*',
       'ordered-list': '%%i.',
@@ -1157,20 +1147,20 @@ function _toggleLine(cm, name) {
     return map[name].replace('%%i', i);
   };
 
-  var _checkChar = function (name, char) {
-    var map = {
+  const _checkChar = function (name, char) {
+    const map = {
       'quote': '>',
       'unordered-list': '*',
       'ordered-list': '\\d+.',
     };
-    var rt = new RegExp(map[name]);
+    const rt = new RegExp(map[name]);
 
     return char && rt.test(char);
   };
 
-  var _toggle = function (name, text, untoggleOnly) {
-    var arr = listRegexp.exec(text);
-    var char = _getChar(name, line);
+  const _toggle = function (name, text, untoggleOnly) {
+    const arr = listRegexp.exec(text);
+    let char = _getChar(name, line);
     if (arr !== null) {
       if (_checkChar(name, arr[2])) {
         char = '';
@@ -1186,7 +1176,7 @@ function _toggleLine(cm, name) {
   var line = 1;
   for (var i = startPoint.line; i <= endPoint.line; i++) {
     (function (i) {
-      var text = cm.getLine(i);
+      let text = cm.getLine(i);
       if (stat[name]) {
         text = text.replace(repl[name], '$1');
       }
@@ -1217,15 +1207,15 @@ function _toggleBlock(editor, type, start_chars, end_chars) {
     return;
 
   end_chars = (typeof end_chars === 'undefined') ? start_chars : end_chars;
-  var cm = editor.codemirror;
-  var stat = getState(cm);
+  const cm = editor.codemirror;
+  const stat = getState(cm);
 
-  var text;
-  var start = start_chars;
-  var end = end_chars;
+  let text;
+  let start = start_chars;
+  let end = end_chars;
 
-  var startPoint = cm.getCursor('start');
-  var endPoint = cm.getCursor('end');
+  const startPoint = cm.getCursor('start');
+  const endPoint = cm.getCursor('end');
 
   if (stat[type]) {
     text = cm.getLine(startPoint.line);
@@ -1291,11 +1281,11 @@ function _cleanBlock(cm) {
   if (/editor-preview-active/.test(cm.getWrapperElement().lastChild.className))
     return;
 
-  var startPoint = cm.getCursor('start');
-  var endPoint = cm.getCursor('end');
-  var text;
+  const startPoint = cm.getCursor('start');
+  const endPoint = cm.getCursor('end');
+  let text;
 
-  for (var line = startPoint.line; line <= endPoint.line; line++) {
+  for (let line = startPoint.line; line <= endPoint.line; line++) {
     text = cm.getLine(line);
     text = text.replace(/^[ ]*([# ]+|\*|-|[> ]+|[0-9]+(.|\)))[ ]*/, '');
 
@@ -1319,7 +1309,7 @@ function humanFileSize(bytes, units) {
   if (Math.abs(bytes) < 1024) {
     return '' + bytes + units[0];
   }
-  var u = 0;
+  let u = 0;
   do {
     bytes /= 1024;
     ++u;
@@ -1329,7 +1319,7 @@ function humanFileSize(bytes, units) {
 
 // Merge the properties of one object into another.
 function _mergeProperties(target, source) {
-  for (var property in source) {
+  for (let property in source) {
     if (Object.prototype.hasOwnProperty.call(source, property)) {
       if (source[property] instanceof Array) {
         target[property] = source[property].concat(target[property] instanceof Array ? target[property] : []);
@@ -1352,7 +1342,7 @@ function _mergeProperties(target, source) {
 
 // Merge an arbitrary number of objects into one.
 function extend(target) {
-  for (var i = 1; i < arguments.length; i++) {
+  for (let i = 1; i < arguments.length; i++) {
     target = _mergeProperties(target, arguments[i]);
   }
   return target;
@@ -1360,11 +1350,11 @@ function extend(target) {
 
 /* The right word count in respect for CJK. */
 function wordCount(data) {
-  var pattern = /[a-zA-Z0-9_\u00A0-\u02AF\u0392-\u03c9\u0410-\u04F9]+|[\u4E00-\u9FFF\u3400-\u4dbf\uf900-\ufaff\u3040-\u309f\uac00-\ud7af]+/g;
-  var m = data.match(pattern);
-  var count = 0;
+  const pattern = /[a-zA-Z0-9_\u00A0-\u02AF\u0392-\u03c9\u0410-\u04F9]+|[\u4E00-\u9FFF\u3400-\u4dbf\uf900-\ufaff\u3040-\u309f\uac00-\ud7af]+/g;
+  const m = data.match(pattern);
+  let count = 0;
   if (m === null) return count;
-  for (var i = 0; i < m.length; i++) {
+  for (let i = 0; i < m.length; i++) {
     if (m[i].charCodeAt(0) >= 0x4E00) {
       count += m[i].length;
     }
@@ -1563,7 +1553,7 @@ var toolbarBuiltInButtons = {
   },
 };
 
-var insertTexts = {
+const insertTexts = {
   link: ['[', '](#url#)'],
   image: ['![](', '#url#)'],
   uploadedImage: ['![](#url#)', ''],
@@ -1572,12 +1562,12 @@ var insertTexts = {
   horizontalRule: ['', '\n-----\n'],
 };
 
-var promptTexts = {
+const promptTexts = {
   link: '请输入超链接 (URL for the link):',
   image: '请输入图片链接 (URL of the image):',
 };
 
-var timeFormat = {
+const timeFormat = {
   locale: 'zh-CN',
   format: {
     hour: '2-digit',
@@ -1585,7 +1575,7 @@ var timeFormat = {
   },
 };
 
-var blockStyles = {
+const blockStyles = {
   'bold': '**',
   'code': '```',
   'italic': '*',
@@ -1595,7 +1585,7 @@ var blockStyles = {
  * Texts displayed to the user (mainly on the status bar) for the import image
  * feature. Can be used for customization or internationalization.
  */
-var imageTexts = {
+const imageTexts = {
   sbInit: '通过从剪贴板拖放或粘贴来附加文件 (Attach files by drag and dropping or pasting from clipboard).',
   sbOnDragEnter: '拖放图片以上传 (Drop image to upload it).',
   sbOnDrop: '正在上传 (Uploading) image #images_names#...',
@@ -1608,7 +1598,7 @@ var imageTexts = {
  * Errors displayed to the user, using the `errorCallback` option. Can be used for
  * customization or internationalization.
  */
-var errorMessages = {
+const errorMessages = {
   noFileGiven: '您必须选择一个文件 (You must select a file).',
   typeNotAllowed: '不允许此图片类型 (This image type is not allowed).',
   fileTooLarge: '图片 #image_name# 太大 (#image_size#).\n文件最大为#image_max_size#.',
@@ -1624,13 +1614,13 @@ function EasyMDE(options) {
   // Used later to refer to it"s parent
   options.parent = this;
   // Check if Font Awesome needs to be auto downloaded
-  var autoDownloadFA = true;
+  let autoDownloadFA = true;
   if (options.autoDownloadFontAwesome === false) {
     autoDownloadFA = false;
   }
   if (options.autoDownloadFontAwesome !== true) {
-    var styleSheets = document.styleSheets;
-    for (var i = 0; i < styleSheets.length; i++) {
+    const styleSheets = document.styleSheets;
+    for (let i = 0; i < styleSheets.length; i++) {
       if (!styleSheets[i].href)
         continue;
 
@@ -1641,7 +1631,7 @@ function EasyMDE(options) {
   }
 
   if (autoDownloadFA) {
-    var link = document.createElement('link');
+    const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = 'https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css';
     document.getElementsByTagName('head')[0].appendChild(link);
@@ -1660,7 +1650,7 @@ function EasyMDE(options) {
     // Initialize
     options.toolbar = [];
     // Loop over the built in buttons, to get the preferred order
-    for (var key in toolbarBuiltInButtons) {
+    for (let key in toolbarBuiltInButtons) {
       if (Object.prototype.hasOwnProperty.call(toolbarBuiltInButtons, key)) {
         if (key.indexOf('separator-') != -1) {
           options.toolbar.push('|');
@@ -1752,8 +1742,7 @@ function EasyMDE(options) {
 
   // markdownIt
   // -------------------------------------
-  var hljs = import('highlight.js')
-  var emoji = import('markdown-it-emoji')
+
   const renderingConfig = Object.assign({
     html: false,                // Enable HTML tags in source
     xhtmlOut: false,            // Use '/' to close single tags (<br />).This is only for full CommonMark compatibility.
@@ -1785,7 +1774,7 @@ function EasyMDE(options) {
   this.markdownIt = markdownIt(renderingConfig).use(emoji)
 
   if (options.uploadImage) {
-    var self = this;
+    const self = this;
     this.codemirror.on('dragenter', function (cm, event) {
       self.updateStatusBar('upload-image', self.options.imageTexts.sbOnDragEnter);
       event.stopPropagation();
@@ -1867,8 +1856,8 @@ EasyMDE.prototype.uploadImagesUsingCustomFunction = function (imageUploadFunctio
   if (files.length === 0) {
     return;
   }
-  var names = [];
-  for (var i = 0; i < files.length; i++) {
+  const names = [];
+  for (let i = 0; i < files.length; i++) {
     names.push(files[i].name);
     this.uploadImageUsingCustomFunction(imageUploadFunction, files[i]);
   }
@@ -1881,7 +1870,7 @@ EasyMDE.prototype.uploadImagesUsingCustomFunction = function (imageUploadFunctio
  * @param content {string} the new content of the item to write in the status bar.
  */
 EasyMDE.prototype.updateStatusBar = function (itemName, content) {
-  var matchingClasses = this.gui.statusbar.getElementsByClassName(itemName);
+  const matchingClasses = this.gui.statusbar.getElementsByClassName(itemName);
   if (matchingClasses.length === 1) {
     this.gui.statusbar.getElementsByClassName(itemName)[0].textContent = content;
   }
@@ -1930,17 +1919,17 @@ EasyMDE.prototype.render = function (el) {
   }
 
   this.element = el;
-  var options = this.options;
+  const options = this.options;
 
-  var self = this;
-  var keyMaps = {};
+  const self = this;
+  const keyMaps = {};
 
-  for (var key in options.shortcuts) {
+  for (let key in options.shortcuts) {
     // null stands for "do not bind this command"
     if (options.shortcuts[key] !== null && bindings[key] !== null) {
       (function (key) {
         keyMaps[fixShortcut(options.shortcuts[key])] = function () {
-          var action = bindings[key];
+          const action = bindings[key];
           if (typeof action === 'function') {
             action(self);
           }
@@ -1967,7 +1956,7 @@ EasyMDE.prototype.render = function (el) {
     }
   }, false);
 
-  var mode, backdrop;
+  let mode, backdrop;
   if (options.spellChecker !== false) {
     mode = 'spell-checker';
     backdrop = options.parsingConfig;
@@ -2013,7 +2002,7 @@ EasyMDE.prototype.render = function (el) {
   this.codemirror.getScrollerElement().style.minHeight = options.minHeight;
 
   if (options.forceSync === true) {
-    var cm = this.codemirror;
+    const cm = this.codemirror;
     cm.on('change', function () {
       cm.save();
     });
@@ -2033,7 +2022,7 @@ EasyMDE.prototype.render = function (el) {
   this._rendered = this.element;
 
   // Fixes CodeMirror bug (#344)
-  var temp_cm = this.codemirror;
+  const temp_cm = this.codemirror;
   setTimeout(function () {
     temp_cm.refresh();
   }.bind(temp_cm), 0);
@@ -2077,8 +2066,8 @@ EasyMDE.prototype.clearAutosavedValue = function () {
  * @param [onError] {function} see EasyMDE.prototype.uploadImage
  */
 EasyMDE.prototype.openBrowseFileWindow = function (onSuccess, onError) {
-  var self = this;
-  var imageInput = this.gui.toolbar.getElementsByClassName('imageInput')[0];
+  const self = this;
+  const imageInput = this.gui.toolbar.getElementsByClassName('imageInput')[0];
   imageInput.click(); //dispatchEvent(new MouseEvent('click'));  // replaced with click() for IE11 compatibility.
   function onChange(event) {
     if (self.options.imageUploadFunction) {
@@ -2103,7 +2092,7 @@ EasyMDE.prototype.openBrowseFileWindow = function (onSuccess, onError) {
  * - error (string): the detailed error to display to the user (based on messages from options.errorMessages).
  */
 EasyMDE.prototype.uploadImage = function (file, onSuccess, onError) {
-  var self = this;
+  const self = this;
   onSuccess = onSuccess || function onSuccess(imageUrl) {
     afterImageUploaded(self, imageUrl);
   };
@@ -2125,7 +2114,7 @@ EasyMDE.prototype.uploadImage = function (file, onSuccess, onError) {
   }
 
   function fillErrorMessage(errorMessage) {
-    var units = self.options.imageTexts.sizeUnits.split(',');
+    const units = self.options.imageTexts.sizeUnits.split(',');
     return errorMessage
       .replace('#image_name#', file.name)
       .replace('#image_size#', humanFileSize(file.size, units))
@@ -2137,17 +2126,17 @@ EasyMDE.prototype.uploadImage = function (file, onSuccess, onError) {
     return;
   }
 
-  var formData = new FormData();
+  const formData = new FormData();
   formData.append('image', file);
 
   // insert CSRF token if provided in config.
   if (self.options.imageCSRFToken) {
     formData.append('csrfmiddlewaretoken', self.options.imageCSRFToken);
   }
-  var request = new XMLHttpRequest();
+  const request = new XMLHttpRequest();
   request.upload.onprogress = function (event) {
     if (event.lengthComputable) {
-      var progress = '' + Math.round((event.loaded * 100) / event.total);
+      const progress = '' + Math.round((event.loaded * 100) / event.total);
       self.updateStatusBar('upload-image', self.options.imageTexts.sbProgress.replace('#file_name#', file.name).replace('#progress#', progress));
     }
   };
@@ -2197,14 +2186,14 @@ EasyMDE.prototype.uploadImage = function (file, onSuccess, onError) {
  * @param file {File} The image to upload, as a HTML5 File object (https://developer.mozilla.org/en-US/docs/Web/API/File).
  */
 EasyMDE.prototype.uploadImageUsingCustomFunction = function (imageUploadFunction, file) {
-  var self = this;
+  const self = this;
 
   function onSuccess(imageUrl) {
     afterImageUploaded(self, imageUrl);
   }
 
   function onError(errorMessage) {
-    var filledErrorMessage = fillErrorMessage(errorMessage);
+    const filledErrorMessage = fillErrorMessage(errorMessage);
     // show error on status bar and reset after 10000ms
     self.updateStatusBar('upload-image', filledErrorMessage);
 
@@ -2217,7 +2206,7 @@ EasyMDE.prototype.uploadImageUsingCustomFunction = function (imageUploadFunction
   }
 
   function fillErrorMessage(errorMessage) {
-    var units = self.options.imageTexts.sizeUnits.split(',');
+    const units = self.options.imageTexts.sizeUnits.split(',');
     return errorMessage
       .replace('#image_name#', file.name)
       .replace('#image_size#', humanFileSize(file.size, units))
@@ -2228,9 +2217,9 @@ EasyMDE.prototype.uploadImageUsingCustomFunction = function (imageUploadFunction
 };
 
 EasyMDE.prototype.createSideBySide = function () {
-  var cm = this.codemirror;
-  var wrapper = cm.getWrapperElement();
-  var preview = wrapper.nextSibling;
+  const cm = this.codemirror;
+  const wrapper = cm.getWrapperElement();
+  let preview = wrapper.nextSibling;
 
   if (!preview || !/editor-preview-side/.test(preview.className)) {
     preview = document.createElement('div');
@@ -2239,7 +2228,7 @@ EasyMDE.prototype.createSideBySide = function () {
     if (this.options.previewClass) {
 
       if (Array.isArray(this.options.previewClass)) {
-        for (var i = 0; i < this.options.previewClass.length; i++) {
+        for (let i = 0; i < this.options.previewClass.length; i++) {
           preview.className += (' ' + this.options.previewClass[i]);
         }
 
@@ -2254,17 +2243,17 @@ EasyMDE.prototype.createSideBySide = function () {
 
   if (this.options.syncSideBySidePreviewScroll === false) return preview;
   // Syncs scroll  editor -> preview
-  var cScroll = false;
-  var pScroll = false;
+  let cScroll = false;
+  let pScroll = false;
   cm.on('scroll', function (v) {
     if (cScroll) {
       cScroll = false;
       return;
     }
     pScroll = true;
-    var height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
-    var ratio = parseFloat(v.getScrollInfo().top) / height;
-    var move = (preview.scrollHeight - preview.clientHeight) * ratio;
+    const height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
+    const ratio = parseFloat(v.getScrollInfo().top) / height;
+    const move = (preview.scrollHeight - preview.clientHeight) * ratio;
     preview.scrollTop = move;
   });
 
@@ -2275,9 +2264,9 @@ EasyMDE.prototype.createSideBySide = function () {
       return;
     }
     cScroll = true;
-    var height = preview.scrollHeight - preview.clientHeight;
-    var ratio = parseFloat(preview.scrollTop) / height;
-    var move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
+    const height = preview.scrollHeight - preview.clientHeight;
+    const ratio = parseFloat(preview.scrollTop) / height;
+    const move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
     cm.scrollTo(0, move);
   };
   return preview;
@@ -2289,19 +2278,19 @@ EasyMDE.prototype.createToolbar = function (items) {
   if (!items || items.length === 0) {
     return;
   }
-  var i;
+  let i;
   for (i = 0; i < items.length; i++) {
     if (toolbarBuiltInButtons[items[i]] != undefined) {
       items[i] = toolbarBuiltInButtons[items[i]];
     }
   }
 
-  var bar = document.createElement('div');
+  const bar = document.createElement('div');
   bar.className = 'editor-toolbar';
 
-  var self = this;
+  const self = this;
 
-  var toolbarData = {};
+  const toolbarData = {};
   self.toolbar = items;
 
   for (i = 0; i < items.length; i++) {
@@ -2317,9 +2306,9 @@ EasyMDE.prototype.createToolbar = function (items) {
 
     // Don't include trailing separators
     if (items[i] === '|') {
-      var nonSeparatorIconsFollow = false;
+      let nonSeparatorIconsFollow = false;
 
-      for (var x = (i + 1); x < items.length; x++) {
+      for (let x = (i + 1); x < items.length; x++) {
         if (items[x] !== '|' && (!self.options.hideIcons || self.options.hideIcons.indexOf(items[x].name) == -1)) {
           nonSeparatorIconsFollow = true;
         }
@@ -2331,7 +2320,7 @@ EasyMDE.prototype.createToolbar = function (items) {
 
     // Create the icon and append to the toolbar
     (function (item) {
-      var el;
+      let el;
       if (item === '|') {
         el = createSep();
       }
@@ -2349,7 +2338,7 @@ EasyMDE.prototype.createToolbar = function (items) {
       // Create the input element (ie. <input type='file'>), used among
       // with the 'import-image' icon to open the browse-file window.
       if (item.name === 'upload-image') {
-        var imageInput = document.createElement('input');
+        const imageInput = document.createElement('input');
         imageInput.className = 'imageInput';
         imageInput.type = 'file';
         imageInput.multiple = true;
@@ -2364,13 +2353,13 @@ EasyMDE.prototype.createToolbar = function (items) {
 
   self.toolbarElements = toolbarData;
 
-  var cm = this.codemirror;
+  const cm = this.codemirror;
   cm.on('cursorActivity', function () {
-    var stat = getState(cm);
+    const stat = getState(cm);
 
-    for (var key in toolbarData) {
+    for (let key in toolbarData) {
       (function (key) {
-        var el = toolbarData[key];
+        const el = toolbarData[key];
         if (stat[key]) {
           el.className += ' active';
         }
@@ -2381,7 +2370,7 @@ EasyMDE.prototype.createToolbar = function (items) {
     }
   });
 
-  var cmWrapper = cm.getWrapperElement();
+  const cmWrapper = cm.getWrapperElement();
   cmWrapper.parentNode.insertBefore(bar, cmWrapper);
   return bar;
 };
@@ -2389,8 +2378,8 @@ EasyMDE.prototype.createToolbar = function (items) {
 EasyMDE.prototype.createStatusbar = function (status) {
   // Initialize
   status = status || this.options.status;
-  var options = this.options;
-  var cm = this.codemirror;
+  const options = this.options;
+  const cm = this.codemirror;
 
   // Make sure the status variable is valid
   if (!status || status.length === 0) {
@@ -2398,8 +2387,8 @@ EasyMDE.prototype.createStatusbar = function (status) {
   }
 
   // Set up the built-in items
-  var items = [];
-  var i, onUpdate, defaultValue;
+  const items = [];
+  let i, onUpdate, defaultValue;
 
   for (i = 0; i < status.length; i++) {
     // Reset some values
@@ -2415,7 +2404,7 @@ EasyMDE.prototype.createStatusbar = function (status) {
       });
     }
     else {
-      var name = status[i];
+      const name = status[i];
 
       if (name === 'words') {
         defaultValue = function (el) {
@@ -2438,7 +2427,7 @@ EasyMDE.prototype.createStatusbar = function (status) {
           el.innerHTML = '0:0';
         };
         onUpdate = function (el) {
-          var pos = cm.getCursor();
+          const pos = cm.getCursor();
           el.innerHTML = pos.line + ':' + pos.ch;
         };
       }
@@ -2458,14 +2447,14 @@ EasyMDE.prototype.createStatusbar = function (status) {
 
 
   // Create element for the status bar
-  var bar = document.createElement('div');
+  const bar = document.createElement('div');
   bar.className = 'editor-statusbar';
 
 
   // Create a new span for each item
   for (i = 0; i < items.length; i++) {
     // Store in temporary variable
-    var item = items[i];
+    const item = items[i];
 
 
     // Create span element
@@ -2496,7 +2485,7 @@ EasyMDE.prototype.createStatusbar = function (status) {
 
 
   // Insert the status bar into the DOM
-  var cmWrapper = this.codemirror.getWrapperElement();
+  const cmWrapper = this.codemirror.getWrapperElement();
   cmWrapper.parentNode.insertBefore(bar, cmWrapper.nextSibling);
   return bar;
 };
@@ -2617,36 +2606,36 @@ EasyMDE.prototype.toggleFullScreen = function () {
 };
 
 EasyMDE.prototype.isPreviewActive = function () {
-  var cm = this.codemirror;
-  var wrapper = cm.getWrapperElement();
-  var preview = wrapper.lastChild;
+  const cm = this.codemirror;
+  const wrapper = cm.getWrapperElement();
+  const preview = wrapper.lastChild;
 
   return /editor-preview-active/.test(preview.className);
 };
 
 EasyMDE.prototype.isSideBySideActive = function () {
-  var cm = this.codemirror;
-  var wrapper = cm.getWrapperElement();
-  var preview = wrapper.nextSibling;
+  const cm = this.codemirror;
+  const wrapper = cm.getWrapperElement();
+  const preview = wrapper.nextSibling;
 
   return /editor-preview-active-side/.test(preview.className);
 };
 
 EasyMDE.prototype.isFullscreenActive = function () {
-  var cm = this.codemirror;
+  const cm = this.codemirror;
 
   return cm.getOption('fullScreen');
 };
 
 EasyMDE.prototype.getState = function () {
-  var cm = this.codemirror;
+  const cm = this.codemirror;
 
   return getState(cm);
 };
 
 EasyMDE.prototype.toTextArea = function () {
-  var cm = this.codemirror;
-  var wrapper = cm.getWrapperElement();
+  const cm = this.codemirror;
+  const wrapper = cm.getWrapperElement();
 
   if (wrapper.parentNode) {
     if (this.gui.toolbar) {
