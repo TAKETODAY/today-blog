@@ -119,13 +119,13 @@ export default () => {
   const [selectedBooks, setSelectedBooks] = useState<ArticleItem[]>([])
   const [categories, setCategories] = useState<CategoryItem[]>([])
 
-  const reload = () => {
-    actionRef.current?.reload()
+  const reload = async () => {
+    await actionRef.current?.reload()
   }
 
   const remove = async (record: ArticleItem) => {
     await handleRemove(record)
-    reload()
+    await reload()
   }
 
   useEffect(() => {
@@ -252,8 +252,13 @@ export default () => {
             scroll={{ x: 1200 }}
             toolBarRender={() => [
               <Button type="primary">
+                <Link to="/articles/write-rich-text" target="_blank">
+                  <PlusOutlined/> 富文本
+                </Link>
+              </Button>,
+              <Button type="primary">
                 <Link to="/articles/write" target="_blank">
-                  <PlusOutlined/> 新建文章
+                  <PlusOutlined/> Markdown 格式
                 </Link>
               </Button>
             ]}
