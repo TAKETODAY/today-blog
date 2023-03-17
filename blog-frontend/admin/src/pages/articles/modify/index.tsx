@@ -29,7 +29,7 @@ import '@/assets/css/index.css'
 import '@/assets/font-awesome/css/font-awesome.min.css'
 import { PlusOutlined } from "@ant-design/icons";
 import { AxiosResponse } from "axios";
-import ArticleDrawer from "@/pages/articles/components/ArticleDrawer";
+import ArticleDrawer from "@/pages/articles/components/ArticleSettingsDrawer";
 import { Post } from "@/pages/articles/components/article";
 import { ArticleItem } from "@/pages/articles/data";
 import { PageLoading } from "@ant-design/pro-layout";

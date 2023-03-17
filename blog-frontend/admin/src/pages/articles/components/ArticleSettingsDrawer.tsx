@@ -23,7 +23,7 @@ import { computeSummary, isEmpty, isNotEmpty, showHttpErrorMessageVoid } from "@
 import { Button, Col, DatePicker, Drawer, Form, Input, Row, Select } from "antd";
 import articleService from "@/services/ArticleService";
 import { AxiosResponse } from "axios";
-import { PostCategory } from "@/pages/articles/components/article";
+import { PostCategory, PostLabel } from "@/pages/articles/components/article";
 import { ArticleItem } from "@/pages/articles/data";
 import { ReloadOutlined } from "@ant-design/icons";
 import ImageChooser from "@/components/ImageChooser"
@@ -32,10 +32,21 @@ import moment from "moment";
 const { Option } = Select;
 const { TextArea } = Input;
 
+function getInitialLabels(article: { labels: any[]; }) {
+  if (isNotEmpty(article.labels)) {
+    const first = article.labels[0]
+    return (typeof first === 'string') ? [...article.labels]
+        : article.labels?.map((label: PostLabel) => label.name)
+  }
+  return []
+}
+
 export default (props: any) => {
   const [form] = Form.useForm()
   const [publishing, setPublishing] = useState(false);
+  const [labels, setLabels] = useState<PostLabel[]>([])
   const [categories, setCategories] = useState<PostCategory[]>([])
+  const [labelsLoading, setLabelsLoading] = useState<boolean>(false)
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false)
 
   const { visible, onClose, onSubmit, article, onValuesChange } = props
@@ -48,6 +59,15 @@ export default (props: any) => {
 
     form.setFieldsValue({ ...article, createAt, summary, status })
   }, [article])
+
+  const loadLabels = (open: boolean) => {
+    if (open && isEmpty(labels)) {
+      setLabelsLoading(true)
+      articleService.getAllLabels().then((res: AxiosResponse) => {
+        setLabels(res.data)
+      }).catch(showHttpErrorMessageVoid).finally(() => setLabelsLoading(false))
+    }
+  }
 
   const loadCategories = (open: boolean) => {
     if (open && isEmpty(categories)) {
@@ -66,6 +86,8 @@ export default (props: any) => {
       onSubmit(values, () => setPublishing(false))
     })
   }
+
+  const initialLabels = getInitialLabels(article)
 
   const onUpdateValues = (_: ArticleItem, item: ArticleItem) => {
     console.log("表单有变动=>\n变动：", _, "\n新值：", item)
@@ -87,12 +109,9 @@ export default (props: any) => {
             </div>
           }
       >
-        <Form
-            form={form}
-            layout="vertical"
-            onValuesChange={onUpdateValues}>
-          {/*文章标题*/}
+        <Form form={form} layout="vertical" onValuesChange={onUpdateValues}>
           <Row gutter={16}>
+            {/*文章标题*/}
             <Col span={24}>
               <Form.Item name="title" label="文章标题" rules={[{ required: true, message: "请填写文章标题！" }]}>
                 <Input placeholder="文章标题" className="article-title"/>
@@ -104,6 +123,9 @@ export default (props: any) => {
                 <ImageChooser placeholder="文章封面" placement="right" width="80%"/>
               </Form.Item>
             </Col>
+          </Row>
+
+          <Row gutter={16}>
             {/*文章分类*/}
             <Col span={12}>
               <Form.Item label="文章分类" name="category" rules={[{ required: true, message: "请选择一个文章分类" }]}>
@@ -119,6 +141,40 @@ export default (props: any) => {
                 </Select>
               </Form.Item>
             </Col>
+            {/*文章标签*/}
+            <Col span={12}>
+              <Form.Item name="labels" label="文章标签" initialValue={initialLabels}>
+                <Select placeholder="请选择文章标签" loading={labelsLoading} mode="tags"
+                        showArrow onDropdownVisibleChange={loadLabels}>
+                  {labels.map((label: PostLabel) =>
+                      <Option value={label.name} title={label.name}>{label.name}</Option>
+                  )}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="password" label="访问密码" initialValue={article.password}>
+                <Input placeholder="请输入访问密码"/>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="uri" label="文章地址" initialValue={article.uri}>
+                <Input placeholder="请输入文章地址"/>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            {/*发布日期*/}
+            <Col span={12}>
+              <Form.Item name="createAt" label="发布日期">
+                {/*@ts-ignore*/}
+                <DatePicker showTime style={{ width: "100%" }} format="yyyy-MM-DD HH:mm:ss"/>
+              </Form.Item>
+            </Col>
             {/*文章状态*/}
             <Col span={12}>
               <Form.Item name="status" label="文章状态" rules={[{ required: true, message: "请选择一个文章状态" }]}>
@@ -130,17 +186,9 @@ export default (props: any) => {
               </Form.Item>
             </Col>
           </Row>
-          {/*发布日期*/}
+
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="createAt" label="发布日期">
-                {/*@ts-ignore*/}
-                <DatePicker showTime style={{ width: "100%" }} format="yyyy-MM-DD HH:mm:ss"/>
-              </Form.Item>
-            </Col>
-          </Row>
-          {/*版权信息*/}
-          <Row gutter={16}>
+            {/*版权信息*/}
             <Col span={24}>
               <Form.Item name="copyright" label="版权信息" rules={[{ required: true, message: "请输入版权信息" }]}
                          initialValue="本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。">
@@ -148,6 +196,7 @@ export default (props: any) => {
               </Form.Item>
             </Col>
           </Row>
+
           {/*文章摘要*/}
           <Row gutter={16}>
             <Col span={24}>
