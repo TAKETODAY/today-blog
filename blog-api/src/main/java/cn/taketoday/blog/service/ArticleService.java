@@ -293,12 +293,15 @@ public class ArticleService {
   @Transactional
   @CacheEvict(allEntries = true)
   public void updateStatusById(PostStatus status, long id) {
-
     Article findById = obtainById(id);
+    try (Query query = repositoryManager.createQuery(
+            "UPDATE article set status = ? WHERE id = ?")) {
+      query.addParameter(status);
+      query.addParameter(id);
+      query.executeUpdate();
+    }
 
-    articleRepository.updateStatus(status, id);
     categoryService.updateArticleCount(findById.getCategory());
-
     buildFeed();
   }
 
