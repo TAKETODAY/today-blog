@@ -20,9 +20,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button, Divider, message, Popconfirm, Popover } from 'antd';
-import { FooterToolbar, PageContainer } from '@ant-design/pro-layout';
+import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
-import { isEmpty, isNotEmpty } from "@/utils";
+import { isEmpty } from "@/utils";
 
 
 import { ArticleItem, CategoryItem } from "./data.d";
@@ -116,7 +116,6 @@ const renderStatusMenu = (article: ArticleItem, reload: Function) => {
 
 export default () => {
   const actionRef = useRef<ActionType>()
-  const [selectedBooks, setSelectedBooks] = useState<ArticleItem[]>([])
   const [categories, setCategories] = useState<CategoryItem[]>([])
 
   const reload = async () => {
@@ -262,26 +261,7 @@ export default () => {
                 </Link>
               </Button>
             ]}
-            rowSelection={{
-              onChange: (_, sd) => setSelectedBooks(sd),
-            }}
-
         />
-        {isNotEmpty(selectedBooks) && (
-            <FooterToolbar
-                extra={
-                  <div>已选择 <a style={{ fontWeight: 600 }}>{selectedBooks.length}</a> 项</div>
-                }
-            >
-              <Button onClick={() => setSelectedBooks([])}>取消</Button>
-              <Popconfirm title="还不支持批量操作">
-                <Button>批量删除</Button>
-              </Popconfirm>
-              <Popconfirm title="还不支持批量操作" placement="topLeft">
-                <Button type="primary">批量锁定</Button>
-              </Popconfirm>
-            </FooterToolbar>
-        )}
 
       </PageContainer>
   )

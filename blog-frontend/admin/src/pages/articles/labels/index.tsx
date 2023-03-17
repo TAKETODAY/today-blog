@@ -1,4 +1,24 @@
-import React, { useRef, useState } from 'react';
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
+import { useRef, useState } from 'react';
 import { Button, Divider, message, Popconfirm } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
@@ -70,16 +90,15 @@ export default () => {
   const [updateModalVisible, setUpdateModalVisible] = useState<boolean>(false)
   const [createModalVisible, setCreateModalVisible] = useState<boolean>(false);
 
-  const reload = () => {
+  const reload = async () => {
     // @ts-ignore
-    actionRef.current?.reloadAndRest()
+    await actionRef.current?.reloadAndRest()
   }
 
   const remove = async (record: LabelItem) => {
     await handleRemove(record)
-    reload()
+    await reload()
   }
-
 
   const columns: ProColumns<LabelItem>[] = [
     {
@@ -125,21 +144,18 @@ export default () => {
                 <PlusOutlined/> 新建
               </Button>]
             }
-            rowSelection={{
-            }}
         />
         <CreateForm title="新建文章标签" onCancel={() => setCreateModalVisible(false)} modalVisible={createModalVisible}>
           <ProTable<LabelItem, LabelItem>
               onSubmit={async (value) => {
                 if (await handleCreate(value)) {
                   setCreateModalVisible(false);
-                  reload();
+                  await reload();
                 }
               }}
               rowKey="key"
               type="form"
               columns={columns}
-              rowSelection={{}}
           />
         </CreateForm>
         <LabelUpdateForm
@@ -147,7 +163,7 @@ export default () => {
               if (await handleUpdate(value)) {
                 setUpdateLabel({})
                 setUpdateModalVisible(false)
-                reload()
+                await reload()
               }
             }}
             onCancel={() => {

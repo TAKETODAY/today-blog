@@ -149,7 +149,6 @@ export default () => {
                 <PlusOutlined/> 新建
               </Button>]
             }
-            rowSelection={{}}
         />
         <CreateForm title="新建文章分类" onCancel={() => setCreateModalVisible(false)} modalVisible={createModalVisible}>
           <ProTable<CategoryItem, CategoryItem>
