@@ -26,8 +26,8 @@ import cn.taketoday.blog.Json;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.Result;
-import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.config.CommentConfig;
+import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
@@ -37,7 +37,6 @@ import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import cn.taketoday.stereotype.Controller;
 import cn.taketoday.web.AccessForbiddenException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
@@ -48,14 +47,14 @@ import cn.taketoday.web.annotation.PathVariable;
 import cn.taketoday.web.annotation.RequestBody;
 import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RequestParam;
+import cn.taketoday.web.annotation.RestController;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.Setter;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-22 20:38
  */
-@Controller
+@RestController
 @RequestMapping("/api/comments")
 public class CommentController {
 
@@ -67,14 +66,14 @@ public class CommentController {
     this.commentService = commentService;
   }
 
-  @Setter
-  private static class CommentFrom {
+  static class CommentFrom {
+
     @NotEmpty(message = "请输入评论内容")
-    private String content;
+    public String content;
 
-    private Long articleId;
+    public Long articleId;
 
-    private Long commentId;
+    public Long commentId;
   }
 
   /**
@@ -143,8 +142,8 @@ public class CommentController {
 
   @RequiresBlogger
   @PATCH("/{id}/status")
-  @Logging(title = "更新评论状态", content = "更新评论：[${#id}]状态为：[${CommentStatus.valueOf(code)}]")
-  public void status(@PathVariable Long id, @RequestParam(required = true) CommentStatus status) {
+  @Logging(title = "更新评论状态", content = "更新评论：[${#id}]状态为：[${#status}]")
+  public void status(@PathVariable Long id, @RequestParam CommentStatus status) {
     commentService.updateStatusById(status, id);
   }
 

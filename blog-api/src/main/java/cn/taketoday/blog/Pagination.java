@@ -53,6 +53,7 @@ public class Pagination<T> implements ListableResult<T> {
     return this;
   }
 
+  @Deprecated
   public long getNum() {
     return num;
   }
@@ -65,6 +66,7 @@ public class Pagination<T> implements ListableResult<T> {
     return (int) all;
   }
 
+  @Deprecated
   public long getAll() {
     return all;
   }
