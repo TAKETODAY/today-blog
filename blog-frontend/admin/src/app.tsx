@@ -165,15 +165,17 @@ const errorHandler = (error: ResponseError) => {
   if (response && response.status) {
     if (response.status === 401) {
       const { pathname } = location
-      if (pathname !== '/' && pathname !== '/user/login') {
-        showLoginDialog().then(() => {
-          if (location.pathname !== '/user/login') {
-            history.push('/user/login?redirect=' + encodeURI(location.pathname))
-          }
-        }).catch(() => {
+      setTimeout(() => {
+        if (pathname !== '/' && pathname !== '/user/login') {
+          showLoginDialog().then(() => {
+            if (location.pathname !== '/user/login') {
+              history.push('/user/login?redirect=' + encodeURI(location.pathname))
+            }
+          }).catch(() => {
 
-        })
-      }
+          })
+        }
+      }, 300)
       return
     }
     else {

@@ -19,7 +19,7 @@
  */
 
 import { message, Modal, notification } from "antd";
-import { goToLogin, isNotLoginPage, isNull } from "@/utils";
+import { goToLogin, isNotHomePage, isNotLoginPage, isNull } from "@/utils";
 import React from "react"
 import { Iterable } from "immutable"
 
@@ -36,7 +36,7 @@ const handleBadRequest = (err) => {
 }
 
 export function showLoginDialog(loginCallback, onCancel) {
-  if (isNotLoginPage()) {
+  if (isNotLoginPage() && isNotHomePage()) {
     console.log("不在登录页面,可以展示提示框")
     Modal.confirm({
       title: "该操作需要登录",
