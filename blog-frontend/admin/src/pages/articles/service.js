@@ -18,20 +18,17 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import { http } from '@/utils'
+import { extractData, http } from '@/utils'
 
 export async function queryArticles(params, sort) {
   const { pageSize, current, ...rest } = params
   params = { ...rest, ...sort, size: pageSize, page: current }
-  return http.get('/api/articles/admin', {
-    method: 'GET',
-    params
-  }).then(res => {
+  return http.get('/api/articles/admin', { params }).then(extractData).then(data => {
     return {
-      ...res,
-      total: res.all,
-      pageSize: res.size,
-      current: res.current
+      ...data,
+      success: true,
+      pageSize: data.size,
+      current: data.current
     }
   })
 }
