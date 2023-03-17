@@ -23,20 +23,17 @@ package cn.taketoday.blog;
 import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSSException;
 
-import java.io.IOException;
 import java.sql.SQLException;
 
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.dao.DataAccessResourceFailureException;
 import cn.taketoday.http.HttpStatus;
-import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
 import cn.taketoday.util.ObjectUtils;
 import cn.taketoday.web.BadRequestException;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.NotFoundException;
-import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.ResponseStatusException;
 import cn.taketoday.web.UnauthorizedException;
 import cn.taketoday.web.annotation.ExceptionHandler;
@@ -70,10 +67,8 @@ public class ExceptionHandling {
   }
 
   @ExceptionHandler(UnauthorizedException.class)
-  public void unauthorized(RequestContext request) throws IOException {
-    request.setContentType(MediaType.APPLICATION_JSON_VALUE);
-    request.getWriter().write(BlogConstant.NONE_LOGIN_MSG);
-    // request.responseHeader(Constant.WWW_AUTHENTICATE, "Basic realm=taketoday.cn");
+  public ErrorMessage unauthorized() {
+    return ErrorMessage.failed("登录超时");
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
