@@ -18,47 +18,11 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-export interface VisitDataType {
-  x: string;
-  y: number;
-}
-
-export interface SearchDataType {
-  index: number;
-  keyword: string;
-  count: number;
-  range: number;
-  status: number;
-}
-
-export interface GeographicType {
-  province: {
-    label: string;
-    key: string;
-  };
-  city: {
-    label: string;
-    key: string;
-  };
-}
-
-export interface NoticeType {
-  id: string;
-  title: string;
-  logo: string;
-  description: string;
-  updatedAt: string;
-  member: string;
-  href: string;
-  memberLink: string;
-}
-
 export interface Member {
   avatar: string;
   name: string;
   id: string;
 }
-
 
 interface DashboardComment {
   articleId: number
