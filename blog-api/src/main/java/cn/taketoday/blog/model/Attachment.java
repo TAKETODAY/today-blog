@@ -27,7 +27,9 @@ import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.jdbc.persistence.Id;
 import cn.taketoday.jdbc.persistence.Table;
+import cn.taketoday.jdbc.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -38,6 +40,7 @@ public class Attachment implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
+  @Id
   private Long id;
 
   /** 附件名 */
@@ -61,6 +64,11 @@ public class Attachment implements Serializable {
   private LocalDateTime createAt;
 
   private LocalDateTime updateAt;
+
+  @Transient
+  public boolean isSynchronizedOSS() {
+    return sync != null && sync;
+  }
 
   @Override
   public boolean equals(Object o) {

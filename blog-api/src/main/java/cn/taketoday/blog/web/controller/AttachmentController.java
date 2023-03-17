@@ -88,7 +88,7 @@ public class AttachmentController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "更新附件", content = "更新附件:[${#attachment.name}] 地址:[${#attachment.uri}]")
   public void put(@RequestBody Attachment attachment, @PathVariable long id) {
-    attachmentService.update(attachment.setId(id));
+    attachmentService.updateById(attachment.setId(id));
   }
 
   @DELETE("/{id}")
@@ -108,16 +108,14 @@ public class AttachmentController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "同步附件到阿里云", content = "ID为: [${#id}]")
   public void syncToAliyun(long id) {
-    final Attachment byId = obtainById(id);
-    attachmentService.uploadOSS(byId);
+    attachmentService.uploadOSS(id);
   }
 
   @PutMapping("/{id}/delete-aliyun")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "删除阿里云附件", content = "ID为: [${#id}]")
   public void deleteAliyun(long id) {
-    final Attachment byId = obtainById(id);
-    attachmentService.deleteOSS(byId);
+    attachmentService.deleteOSS(id);
   }
 
 }

@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
+
 package cn.taketoday.blog.service;
 
 import com.aliyun.oss.ClientException;
@@ -26,39 +27,51 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.AttachmentConfig;
-import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.OssConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
 import cn.taketoday.blog.repository.AttachmentRepository;
 import cn.taketoday.blog.util.FileUtils;
-import cn.taketoday.blog.util.RemoteFileOperations;
+import cn.taketoday.blog.util.OssOperations;
 import cn.taketoday.blog.util.StringUtils;
+import cn.taketoday.jdbc.RepositoryManager;
+import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.multipart.MultipartFile;
 
+import static cn.taketoday.jdbc.persistence.PropertyUpdateStrategy.updateNoneNull;
+
 /**
+ * 附件服务
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-03-16 14:46
  */
 @Service
 public class AttachmentService {
+  private final EntityManager entityManager;
+  private final OssOperations ossOperations;
+  private final AttachmentRepository repository;
   private final AttachmentConfig attachmentConfig;
-  private final RemoteFileOperations ossOperations;
-  private final AttachmentRepository attachmentRepository;
+  private final RepositoryManager repositoryManager;
 
   public AttachmentService(AttachmentConfig attachmentConfig,
-          AttachmentRepository repository, OssConfig ossConfig) {
+          AttachmentRepository repository, OssConfig ossConfig, RepositoryManager repositoryManager) {
+    this.repository = repository;
     this.attachmentConfig = attachmentConfig;
-    this.attachmentRepository = repository;
-    this.ossOperations = new RemoteFileOperations(ossConfig);
+    this.repositoryManager = repositoryManager;
+    this.ossOperations = new OssOperations(ossConfig);
+    this.entityManager = repositoryManager.getEntityManager();
   }
 
   /**
@@ -68,21 +81,33 @@ public class AttachmentService {
    * @return Attachment
    */
   public Attachment persist(Attachment attachment) {
-    attachmentRepository.save(attachment);
+    repositoryManager.persist(attachment);
     return attachment;
   }
 
+  @Nullable
+  public Attachment getById(long id) {
+    return entityManager.findById(Attachment.class, id);
+  }
+
+  public Optional<Attachment> fetch(long id) {
+    return Optional.ofNullable(getById(id));
+  }
+
+  /**
+   * 获取全部附件数量
+   */
   public int count() {
-    return attachmentRepository.getTotalRecord();
+    return repository.getTotalRecord();
   }
 
   public Pagination<Attachment> filter(AttachmentForm form, Pageable pageable) {
-    int count = attachmentRepository.getRecordFilter(form);
+    int count = repository.getRecordFilter(form);
     if (count < 1) {
       return Pagination.empty();
     }
 
-    List<Attachment> rets = attachmentRepository.filter(
+    List<Attachment> rets = repository.filter(
             form,
             getPageNow(pageable.getCurrent(), pageable.getSize()),
             pageable.getSize()
@@ -95,16 +120,12 @@ public class AttachmentService {
     return (pageNow - 1) * pageSize;
   }
 
-  public List<Attachment> getAll(int pageNow, int pageSize) {
-    return attachmentRepository.find((pageNow - 1) * pageSize, pageSize);
+  public List<Attachment> pageable(int pageNow, int pageSize) {
+    return repository.find((pageNow - 1) * pageSize, pageSize);
   }
 
-  public Attachment getById(long id) {
-    return attachmentRepository.findById(id);
-  }
-
-  public void update(Attachment model) {
-    attachmentRepository.update(model);
+  public void updateById(Attachment model) {
+    entityManager.updateById(model);
   }
 
   /**
@@ -113,7 +134,7 @@ public class AttachmentService {
    * @param attachId attachId
    * @return 旧附件
    */
-
+  @Nullable
   @Transactional
   public Attachment removeById(long attachId) {
     Attachment attachment = getById(attachId);
@@ -122,7 +143,7 @@ public class AttachmentService {
     }
 
     // 先删除数据库，可以回滚
-    attachmentRepository.deleteById(attachId);
+    entityManager.delete(Attachment.class, attachId);
 
     File file = attachmentConfig.getLocalFile(attachment);
     try {
@@ -199,16 +220,16 @@ public class AttachmentService {
 
     try {
       File destFile = saveFile(file, uploadUri);
-      Attachment attachment = createAttachment(fileName, uploadUri, destFile);
-      ossOperations.uploadFile(uploadUri, destFile);
-
-      // OSS
-      attachment.setSync(true);
-      persist(attachment);
-      return attachment;
+      return repositoryManager.runInTransaction(status -> {
+        Attachment attachment = createAttachment(fileName, uploadUri, destFile);
+        ossOperations.uploadFile(uploadUri, destFile);
+        attachment.setSync(true);
+        persist(attachment);
+        return attachment;
+      });
     }
     catch (ClientException e) {
-      throw new InternalServerException("附件保存失败", e);
+      throw new InternalServerException("附件OSS保存失败", e);
     }
     catch (IOException e) {
       throw new InternalServerException("本地附件保存失败", e);
@@ -234,28 +255,54 @@ public class AttachmentService {
   }
 
   public List<Attachment> getLatest() {
-    return attachmentRepository.findLatest();
+    return repository.findLatest();
   }
 
-  public List<Attachment> getAll(Pageable pageable) {
-    return getAll(pageable.getCurrent(), pageable.getSize());
-  }
-
-  @Transactional
-  public void uploadOSS(Attachment attachment) {
-    attachment.setSync(true);
-    attachmentRepository.update(attachment);
-    File dest = attachmentConfig.getLocalFile(attachment);
-    ossOperations.uploadFile(attachment.getLocation(), dest);
+  public List<Attachment> pageable(Pageable pageable) {
+    return pageable(pageable.getCurrent(), pageable.getSize());
   }
 
   @Transactional
-  public void deleteOSS(Attachment attachment) {
-    attachment.setSync(false);
-    attachmentRepository.update(attachment);
+  public void uploadOSS(long id) {
+    Attachment attachment = obtainById(id);
 
-    String location = attachment.getLocation();
-    ossOperations.removeFile(location);
+    if (!attachment.isSynchronizedOSS()) {
+      Attachment update = new Attachment();
+      update.setId(id);
+      update.setSync(true);
+      // 数据库删除之后文件没有删除可以回滚
+      entityManager.updateById(update, updateNoneNull());
+
+      File dest = attachmentConfig.getLocalFile(attachment);
+      ossOperations.uploadFile(attachment.getLocation(), dest);
+    }
+    else {
+      throw ErrorMessageException.failed("已经同步过啦");
+    }
+  }
+
+  @Transactional
+  public void deleteOSS(long id) {
+    Attachment attachment = obtainById(id);
+
+    if (attachment.isSynchronizedOSS()) {
+      Attachment update = new Attachment();
+      update.setId(id);
+      update.setSync(false);
+      // 数据库删除之后文件没有删除可以回滚
+      entityManager.updateById(update, updateNoneNull());
+
+      String location = attachment.getLocation();
+      ossOperations.removeFile(location);
+    }
+  }
+
+  private Attachment obtainById(long id) {
+    Attachment attachment = getById(id);
+    if (attachment == null) {
+      throw ErrorMessageException.failed("附件不存在");
+    }
+    return attachment;
   }
 
 }

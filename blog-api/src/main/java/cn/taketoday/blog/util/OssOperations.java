@@ -32,12 +32,12 @@ import cn.taketoday.stereotype.Singleton;
  * @since 3.0
  */
 @Singleton
-public class RemoteFileOperations {
+public class OssOperations {
 
   private final OssConfig config;
   private volatile OSSClient ossClient;
 
-  public RemoteFileOperations(OssConfig config) {
+  public OssOperations(OssConfig config) {
     this.config = config;
   }
 

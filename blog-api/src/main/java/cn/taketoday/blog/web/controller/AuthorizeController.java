@@ -35,19 +35,19 @@ import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessageException;
-import cn.taketoday.blog.log.Logging;
+import cn.taketoday.blog.Json;
 import cn.taketoday.blog.config.BlogConfig;
+import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.model.oauth.Oauth;
-import cn.taketoday.blog.service.AttachmentOperations;
+import cn.taketoday.blog.service.AttachmentService;
 import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.service.UserService;
 import cn.taketoday.blog.util.HashUtils;
 import cn.taketoday.blog.util.HttpUtils;
-import cn.taketoday.blog.Json;
 import cn.taketoday.blog.util.ObjectUtils;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
@@ -99,20 +99,20 @@ public class AuthorizeController extends SessionManagerOperations {
   private final BlogConfig blogConfig;
   private final UserService userService;
   private final BloggerService bloggerService;
-  private final AttachmentOperations attachmentOperations;
+  private final AttachmentService attachmentService;
 
   private Map<String, OauthMetadata> oauthMetadata;
 
   public AuthorizeController(SessionManager sessionManager,
           Environment environment, BlogConfig blogConfig, UserService userService,
-          BloggerService bloggerService, AttachmentOperations attachmentOperations) {
+          BloggerService bloggerService, AttachmentService attachmentService) {
     super(sessionManager);
     this.blogConfig = blogConfig;
     this.userService = userService;
     this.bloggerService = bloggerService;
     this.giteeOauth = Binder.get(environment).bind("gitee", Oauth.class).get();
     this.gitHubOauth = Binder.get(environment).bind("github", Oauth.class).get();
-    this.attachmentOperations = attachmentOperations;
+    this.attachmentService = attachmentService;
   }
 
   @GET
@@ -579,7 +579,7 @@ public class AuthorizeController extends SessionManagerOperations {
     String originalFilename = avatar.getOriginalFilename();
     String randomHashString = HashUtils.getRandomHashString(16);
 
-    Attachment attachment = attachmentOperations.upload(avatar, randomHashString + originalFilename);
+    Attachment attachment = attachmentService.upload(avatar, randomHashString + originalFilename);
     String uri = attachment.getUri();
 
     User user = new User();
