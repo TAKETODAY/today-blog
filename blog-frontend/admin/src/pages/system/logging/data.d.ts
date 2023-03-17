@@ -31,30 +31,3 @@ export interface LoggingItem {
   lastModify: Date;
   createTime: Date;
 }
-
-export interface CategoryItem {
-
-  name: string;
-  order: number;
-  articleCount: number
-  description: string;
-
-  updateAt: Date;
-  createAt: Date;
-}
-
-export interface LabelItem {
-  id: number;
-  name: string;
-}
-
-export interface TableListPagination {
-  total: number;
-  pageSize: number;
-  current: number;
-}
-
-export interface TableListData {
-  list: LoggingItem[];
-  pagination: Partial<TableListPagination>;
-}
