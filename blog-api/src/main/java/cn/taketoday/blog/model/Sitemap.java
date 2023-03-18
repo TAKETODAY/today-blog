@@ -49,7 +49,7 @@ public class Sitemap implements Serializable {
   }
 
   public static URL newURL(Article article) {
-    return newURL(0.9f, "/articles/" + article.getId(),
+    return newURL(0.9f, "/articles/" + article.getUri(),
             article.getUpdateAt(), "always");
   }
 

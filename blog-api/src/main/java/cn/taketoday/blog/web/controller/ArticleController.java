@@ -50,6 +50,7 @@ import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.Interceptor;
+import cn.taketoday.web.annotation.PATCH;
 import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.PUT;
 import cn.taketoday.web.annotation.PathVariable;
@@ -83,12 +84,12 @@ public class ArticleController {
    *
    * <pre>
    * {
-   *   "all": 4759,
+   *   "total": 4759,
    *   "current":1,
    *   "data": [{
    *
    *   }],
-   *   "num":476,
+   *   "pages":476,
    *   "size":10,
    * }
    * </pre>
@@ -102,10 +103,12 @@ public class ArticleController {
   }
 
   /**
-   * @param q query string
+   * 搜索接口
+   *
+   * @param q 查询
    */
-  @GET("/search")
-  public Pagination<Article> search(@RequestParam String q, Pageable pageable) {
+  @GET(params = "q")
+  public Pagination<ArticleItem> search(@RequestParam String q, Pageable pageable) {
     return articleService.search(BlogUtils.stripAllXss(q), pageable);
   }
 
@@ -122,17 +125,25 @@ public class ArticleController {
     }
   }
 
-  @GET("/tags/{label}")
-  public Pagination<Article> tagJson(@PathVariable String label, Pageable pageable) {
-
-    int rowCount = articleService.countByLabel(label);
-    assertFound(pageable, rowCount);
-
-    return Pagination.ok(articleService.getByLabel(label, pageable), rowCount, pageable);
+  /**
+   * 根据标签获取对应文章
+   *
+   * @param tag 文章标签
+   * @param pageable 分页
+   */
+  @GET(params = "tag")
+  public Pagination<ArticleItem> byTag(@RequestParam String tag, Pageable pageable) {
+    return articleService.getArticlesByTag(tag, pageable);
   }
 
-  @POST("/{id}/pv") // POST/blog-web/api/articles/1560163530909/pv Referer
-  public void pv(@PathVariable("id") Long id,
+  /**
+   * 更新 PV
+   *
+   * @param id 文章ID
+   * @param author 博主
+   */
+  @PATCH("/{id}/pv") // PATCH /api/articles/1560163530909/pv Referer
+  public void updatePageView(@PathVariable("id") Long id,
           @RequestHeader String Referer, @Nullable Blogger author) {
     if (author == null) {
       articleService.updatePageView(id);
@@ -150,14 +161,15 @@ public class ArticleController {
   }
 
   /**
-   * Get popular articles
+   * 获取受欢迎的文章 API
    */
   @GET(params = "most-popular")
-  public List<Article> mostPopular() {
+  public List<ArticleItem> mostPopular() {
     return articleService.getMostPopularArticles();
   }
 
   /**
+   * 获取文章详情
    * <pre>{@code
    * {
    *   "pv": 25,
@@ -208,7 +220,7 @@ public class ArticleController {
   }
 
   /**
-   * Save article
+   * 创建文章 API
    */
   @POST
   @RequiresBlogger
@@ -228,7 +240,7 @@ public class ArticleController {
       }
     }
     article.setId(articleId);
-    if (StringUtils.hasText(article.getUri())) {
+    if (!StringUtils.hasText(article.getUri())) {
       article.setUri(String.valueOf(articleId));
     }
     if (log.isDebugEnabled()) {

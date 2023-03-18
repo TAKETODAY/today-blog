@@ -29,6 +29,7 @@ import cn.taketoday.blog.repository.CategoryRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
+import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.stereotype.Service;
@@ -65,14 +66,31 @@ public class CategoryService {
     return categoryRepository.findById(name);
   }
 
+  /**
+   * 更新对应文章分类的数量
+   *
+   * @param categoryName 分类名称
+   */
   @CacheEvict(allEntries = true)
   public void updateArticleCount(String categoryName) {
-    categoryRepository.updateArticleCount(categoryName); // need transaction
+    // language=MySQL
+    try (NamedQuery query = repositoryManager.createNamedQuery("""
+            UPDATE category SET articleCount = (
+                SELECT COUNT(id) FROM article WHERE status = 0 and category =:name
+            ) WHERE name = :name""")) {
+      // language=
+      query.addParameter("name", categoryName);
+      query.executeUpdate();
+    }
   }
 
+  /**
+   * 更新所有的分类对应文章数量
+   */
   @Transactional
   @CacheEvict(allEntries = true)
   public void updateArticleCount() {
+    // language=MySQL
     try (Query query = repositoryManager.createQuery("""
             UPDATE category SET articleCount =
                     (SELECT COUNT(id)

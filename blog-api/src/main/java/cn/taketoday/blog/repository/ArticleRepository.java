@@ -51,20 +51,20 @@ public interface ArticleRepository extends DefaultRepository<Article, Long> {
   List<Article> findArticlesByCategory(@Param("pageNow") int pageNow, @Param("pageSize") int pageSize,
           @Param("category") String category);
 
-  /**
-   *
-   */
+  @Deprecated
   List<Article> findByClickHit(@Param("pageSize") int defaultListSize);
 
   /**
    * click hit update
    */
+  @Deprecated
   @Update("update article set `pv`=pv+1 where `id` = #{id}")
   void updatePageView(@Param("id") long id);
 
   /**
    *
    */
+  @Deprecated
   @ResultMap("BaseResultMap")
   @Select("SELECT * FROM article WHERE status=0 order by id DESC LIMIT 0, #{size}")
   List<Article> getFeedArticles(@Param("size") int size);
@@ -81,16 +81,12 @@ public interface ArticleRepository extends DefaultRepository<Article, Long> {
 
   List<Article> findLatest();
 
+  @Deprecated
   @Update("UPDATE article set status = #{status} WHERE id = #{id}")
   void updateStatus(@Param("status") PostStatus status, @Param("id") long id);
 
   List<Article> findByStatus(@Param("status") PostStatus status,
           @Param("pageNow") int pageNow, @Param("pageSize") int pageSize);
-
-  List<Article> search(@Param("query") String q,
-          @Param("pageNow") int pageNow, @Param("pageSize") int pageSize);
-
-  int getSearchRecord(@Param("query") String q);
 
   List<Article> find(@Param("args") SearchForm args,
           @Param("pageNow") int pageNow, @Param("pageSize") int pageSize);
