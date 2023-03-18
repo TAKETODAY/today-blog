@@ -22,7 +22,7 @@ import { extractData, http } from '@/utils'
 
 export async function queryArticles(params, sort) {
   const { pageSize, current, ...rest } = params
-  params = { ...rest, ...sort, size: pageSize, page: current }
+  params = { ...rest, sort, size: pageSize, page: current }
   return http.get('/api/articles/admin', { params }).then(extractData).then(data => {
     return {
       ...data,

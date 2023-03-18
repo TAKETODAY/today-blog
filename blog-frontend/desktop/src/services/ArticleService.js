@@ -23,7 +23,7 @@ import { getCacheable, http } from '../utils';
 export default class ArticleService {
 
   getById(articleId, key) {
-    return http.get(`/api/articles/${ articleId }${ key ? '?key=' + key : '' }`)
+    return http.get(`/api/articles/${articleId}${key ? '?key=' + key : ''}`)
   }
 
   popularArticles() {
@@ -31,23 +31,23 @@ export default class ArticleService {
   }
 
   search(query) {
-    return http.get(`/api/articles/search?q=${ query }`)
+    return http.get(`/api/articles?q=${query}`)
   }
 
   searchPageable(query, page = 1, size = 10) {
-    return http.get(`/api/articles/search?q=${ query }&page=${ page }&size=${ size }`)
+    return http.get(`/api/articles?q=${query}&page=${page}&size=${size}`)
   }
 
   updatePageView(articleId) {
-    return http.post(`/api/articles/${ articleId }/pv`)
+    return http.patch(`/api/articles/${articleId}/pv`)
   }
 
-  fetchHomeArticles(page, size) {
-    return http.get(`/api/articles?page=${ page }&size=${ size }`)
+  fetchHomeArticles(page = 1, size = 10) {
+    return http.get(`/api/articles?page=${page}&size=${size}`)
   }
 
-  getTag(tagsId, page, size) {
-    return http.get(`/api/articles/tags/${ tagsId }?page=${ page }&size=${ size }`)
+  getArticlesByTag(tag, page = 1, size = 10) {
+    return http.get(`/api/articles?tag=${tag}&page=${page}&size=${size}`)
   }
 
 }

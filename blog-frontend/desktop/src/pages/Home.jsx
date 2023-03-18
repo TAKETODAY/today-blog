@@ -21,7 +21,7 @@
 import { Pagination } from 'antd';
 import React from 'react';
 import ArticleList from '../components/ArticleList';
-import { applySEO, scrollTop, setTitle } from '../utils';
+import { applySEO, extractData, scrollTop, setTitle } from '../utils';
 import { connect } from "react-redux";
 import { navigationsMapStateToProps } from "../redux/action-types";
 import { updateNavigations } from "../redux/actions";
@@ -43,13 +43,14 @@ class Home extends React.Component {
   updateArticles(page = 1, size = 10) {
     scrollTop()
 
-    const articles = this.state.articles
+    const { articles } = this.state
     articles['data'] = undefined
 
-    super.setState({ articles: articles })
+    super.setState({ articles })
     articleService.fetchHomeArticles(page, size)
-      .then(res => {
-        super.setState({ articles: res.data });
+      .then(extractData)
+      .then(articles => {
+        super.setState({ articles });
       })
       .catch(error => {
         const err = {
