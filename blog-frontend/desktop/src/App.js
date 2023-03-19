@@ -26,9 +26,9 @@ import { Layout } from 'antd';
 import { ArticleLayout, SearchLayout } from './layouts';
 import './App.css';
 import {
-  Article, CategoriesDetail, Error, Home,
+  ArticleDetail, CategoriesDetail, ErrorPage, Home,
   LabelsDetail, Login, Search, UserInfo, UserSettings
-} from './pages';
+} from 'src/pages';
 
 const { Content } = Layout;
 
@@ -41,20 +41,20 @@ export default class App extends React.Component {
         <Content>
           <Switch>
             <Route path="/login" exact component={Login}/>
-            <Route path='/BadRequest' exact>
-              <Error status='400'/>
+            <Route path={['/BadRequest', "/bad-request"]} exact>
+              <ErrorPage status='400'/>
             </Route>
             <Route path={['/NotFound', "/not-found"]} exact>
-              <Error status='404'/>
+              <ErrorPage status='404'/>
             </Route>
             <Route path={['/AccessForbidden', "/access-forbidden"]} exact>
-              <Error status='403'/>
+              <ErrorPage status='403'/>
             </Route>
             <Route path={["/MethodNotAllowed", "/method-not-allowed"]} exact>
-              <Error status='405'/>
+              <ErrorPage status='405'/>
             </Route>
             <Route path={['/InternalServerError', "/internal-server-error"]} exact>
-              <Error status='500'/>
+              <ErrorPage status='500'/>
             </Route>
             <Route exact path="/search">
               <SearchLayout>
@@ -68,7 +68,7 @@ export default class App extends React.Component {
                 <Switch>
                   <Route exact path='/' component={Home}/>
                   <Route exact path="/tags/:tagsId" component={LabelsDetail}/>
-                  <Route exact path="/articles/:articleId" component={Article}/>
+                  <Route exact path="/articles/:articleId" component={ArticleDetail}/>
                   <Route exact path="/categories/:categoryId" component={CategoriesDetail}/>
                   <Redirect to="/not-found"/>
                 </Switch>

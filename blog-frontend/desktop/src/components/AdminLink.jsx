@@ -19,25 +19,35 @@
  */
 
 import React from 'react';
-import { Login } from '../components';
-import { connect } from "react-redux";
-import { userSessionMapStateToProps } from "../redux/action-types";
-import { updateUserSession } from "../redux/actions";
-import { getQuery } from "../utils";
+import { getOptions, useOptions } from "./hooks";
+import { compose } from "redux";
 
-class LoginPage extends React.Component {
+// const env = process.env.NODE_ENV
+// if (env === 'development') {
+//
+// }
+// else {
+//
+// }
 
-  render() {
-    const message = getQuery("message");
-    return (
-      <div id="loginForm" style={{ marginTop: '100px' }}>
-        <Login message={message}/>
-      </div>
-    )
-  }
+let adminBase;
+if (process.env.NODE_ENV === 'production') {
+  adminBase = '/blog-admin'
+}
+else {
+  adminBase = 'http://localhost:8000/#'
 }
 
-export default connect(
-  userSessionMapStateToProps, { updateUserSession }
-)(LoginPage)
-
+export default props => {
+  // const options = getOptions();
+  const { href, ...rest } = props
+  return (
+    <>
+      <a {...rest} href={`${adminBase}${href}`}>
+        {
+          props.children
+        }
+      </a>
+    </>
+  )
+}

@@ -25,8 +25,8 @@ import { Link, withRouter } from 'react-router-dom';
 import qq from '../assets/images/share/qq.png';
 import weibo from '../assets/images/share/weibo.png';
 import zone from '../assets/images/share/zone.png';
-import { ArticleComment } from '../components';
-import { articleService } from '../services';
+import { ArticleComment, AdminLink } from 'src/components';
+import { articleService } from 'src/services';
 import {
   applySEO,
   getArticleId,
@@ -40,11 +40,11 @@ import {
   shareQQ,
   shareQQZone,
   shareWeiBo
-} from '../utils';
+} from 'src/utils';
 import { connect } from "react-redux";
 import { navigationsUserSessionMapStateToProps } from "src/redux/action-types";
-import { updateNavigations } from "../redux/actions";
-import { store } from "../redux/store";
+import { updateNavigations } from "src/redux/actions";
+import { store } from "src/redux/store";
 import lazyload from "src/utils/lazyload";
 
 const passwordRules = [
@@ -55,7 +55,7 @@ function buildOptions(state) {
   const { article } = state
   const host = store.getState().options["site.host"];
   return {
-    url: `${ host }/articles/${ article.id }`,
+    url: `${host}/articles/${article.id}`,
     desc: article.title,
     cover: article.cover,
     summary: article.summary,
@@ -64,7 +64,7 @@ function buildOptions(state) {
 
 function setSEO(article) {
   try {
-    let content = `${ article.title },${ article.category }`
+    let content = `${article.title},${article.category}`
     if (isNotEmpty(article.labels)) {
       article.labels.forEach(label => {
         content += ',' + label.name
@@ -78,7 +78,7 @@ function setSEO(article) {
 }
 
 
-class Article extends React.Component {
+class ArticleDetail extends React.Component {
 
   /**
    {
@@ -163,8 +163,8 @@ class Article extends React.Component {
 
     const navigations = [
       { name: '全部博客', url: '/' },
-      { name: this.state.article.category, url: `/categories/${ this.state.article.category }` },
-      { name: this.state.article.title, url: `/articles/${ this.state.article.id }` }
+      { name: this.state.article.category, url: `/categories/${this.state.article.category}` },
+      { name: this.state.article.title, url: `/articles/${this.state.article.id}` }
     ]
 
     this.props.updateNavigations(navigations)
@@ -190,9 +190,9 @@ class Article extends React.Component {
   renderPassword() {
     return (<>
       <div className="data_list">
-        <Form name="requirePassword" onFinish={ this.requirePassword }>
-          <Form.Item name="key" rules={ passwordRules } validateStatus="validating">
-            <Input autoFocus size="large" placeholder="请输入访问密码" prefix={ <LockOutlined/> }/>
+        <Form name="requirePassword" onFinish={this.requirePassword}>
+          <Form.Item name="key" rules={passwordRules} validateStatus="validating">
+            <Input autoFocus size="large" placeholder="请输入访问密码" prefix={<LockOutlined/>}/>
           </Form.Item>
         </Form>
       </div>
@@ -208,45 +208,49 @@ class Article extends React.Component {
       return <Skeleton active/>
     }
     const { userSession } = this.props
+
+
     return (<>
 
       <div className="data_list">
         <article className="articleContent blog_content">
-          <h1 className="title" style={ { margin: '0px 0 50px 0' } }>{ article.title }</h1>
+          <h1 className="title" style={{ margin: '0px 0 50px 0' }}>{article.title}</h1>
           <div className="property">
-            <span>发布于: { new Date(article.id).toLocaleString() }</span> |
-            <span> 分类: <Link to={ `/categories/${ article.category }` } title={ article.category }>{ article.category }</Link></span> |
-            <span> 浏览: { article.pv } </span>
-            { userSession?.blogger && <>
-              | <span><a href={ `/blog-admin/#/articles/${ article.id }/modify` }
-                         target='_blank'>编辑此页</a> </span></>
+            <span>发布于: {new Date(article.id).toLocaleString()}</span> |
+            <span> 分类: <Link to={`/categories/${article.category}`} title={article.category}>{article.category}</Link></span> |
+            <span> 浏览: {article.pv} </span> |
+            {userSession?.blogger && <>
+              <span>
+                <AdminLink href={`/articles/${article.id}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
+                           target='_blank'>
+                  编辑此页
+                </AdminLink>
+              </span> |</>
             }
+            <span> 分享: <img onClick={this.shareQQ} className="share" title="分享到QQ好友" src={qq} width="16" alt="分享到QQ好友"/>
+            <img onClick={this.shareQQZone} className="share" title="分享到QQ空间" src={zone} width="18" alt="分享到QQ空间"/>
+            <img onClick={this.shareWeiBo} className="share" title="分享到微博" src={weibo} width="18" alt="分享到微博"/>
+          </span>
           </div>
-          <div className="markdown" id="contentTxt" dangerouslySetInnerHTML={ { __html: article.content } }/>
+          <div className="markdown" id="contentTxt" dangerouslySetInnerHTML={{ __html: article.content }}/>
         </article>
-        { isNotEmpty(article.labels) &&
-        <div className="blog_keyWord" id="tagcloud">
-          <strong>标签：</strong>
-          { article.labels.map((label, idx) => {
-            return <Link key={ idx } to={ `/tags/${ label.name }` } className={ getRandLabel() }>{ label.name }</Link>
-          }) }
-        </div>
-        }
-        <div id="article_copyright">{ article.copyright }
-          <div style={ { textAlign: "right" } }>
-            分享： <img onClick={ this.shareQQ } className="share" title="分享到QQ好友" src={ qq } width="18" alt="分享到QQ好友"/>
-            <img onClick={ this.shareQQZone } className="share" title="分享到QQ空间" src={ zone } width="20" alt="分享到QQ空间"/>
-            <img onClick={ this.shareWeiBo } className="share" title="分享到微博" src={ weibo } width="20" alt="分享到微博"/>
+        {isNotEmpty(article.labels) &&
+          <div className="article-tags" id="tagcloud">
+            <strong>标签：</strong>
+            {article.labels.map((label, idx) => {
+              return <Link key={idx} to={`/tags/${label.name}`} className={getRandLabel()}>{label.name}</Link>
+            })}
           </div>
-        </div>
+        }
+        <div id="article-copyright">{article.copyright}</div>
       </div>
-      <ArticleComment articleId={ this.props.match.params.articleId }/>
+      <ArticleComment articleId={this.props.match.params.articleId}/>
     </>)
   }
 }
 
 export default connect(
-    navigationsUserSessionMapStateToProps, { updateNavigations }
-)(withRouter(Article))
+  navigationsUserSessionMapStateToProps, { updateNavigations }
+)(withRouter(ArticleDetail))
 
 

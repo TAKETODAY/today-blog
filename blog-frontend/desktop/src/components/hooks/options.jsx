@@ -18,26 +18,24 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import React from 'react';
-import { Login } from '../components';
-import { connect } from "react-redux";
-import { userSessionMapStateToProps } from "../redux/action-types";
-import { updateUserSession } from "../redux/actions";
-import { getQuery } from "../utils";
+import { store } from 'src/redux/store';
+import { updateOptions } from "src/redux/actions";
 
-class LoginPage extends React.Component {
-
-  render() {
-    const message = getQuery("message");
-    return (
-      <div id="loginForm" style={{ marginTop: '100px' }}>
-        <Login message={message}/>
-      </div>
-    )
-  }
+export function getOptions() {
+  const [options] = useOptions()
+  return options
 }
 
-export default connect(
-  userSessionMapStateToProps, { updateUserSession }
-)(LoginPage)
+export function useOptions() {
+  const state = store.getState();
+  const { options } = state
+  const setOptions = options => {
+    store.dispatch(updateOptions(options))
+  }
+  return [options, setOptions]
+}
 
+export function useCDN() {
+  const [options] = useOptions()
+  return options['site.cdn']
+}

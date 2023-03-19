@@ -18,26 +18,37 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import React from 'react';
-import { Login } from '../components';
-import { connect } from "react-redux";
-import { userSessionMapStateToProps } from "../redux/action-types";
-import { updateUserSession } from "../redux/actions";
-import { getQuery } from "../utils";
+import { useState, useCallback } from 'react'
+import { store } from 'src/redux/store';
+import { updateUserSession } from "../../redux/actions";
 
-class LoginPage extends React.Component {
+export default function useAuthModel() {
+  const [user, setUser] = useState(null)
 
-  render() {
-    const message = getQuery("message");
-    return (
-      <div id="loginForm" style={{ marginTop: '100px' }}>
-        <Login message={message}/>
-      </div>
-    )
+  const signin = useCallback((account, password) => {
+    // signin implementation
+    // setUser(user from signin API)
+  }, [])
+
+  const signout = useCallback(() => {
+    // signout implementation
+    // setUser(null)
+  }, [])
+
+  return {
+    user,
+    signin,
+    signout
   }
 }
 
-export default connect(
-  userSessionMapStateToProps, { updateUserSession }
-)(LoginPage)
+export function useUserSession() {
+  const state = store.getState();
+  const { session } = state['user'];
 
+  const setUserSession = user => {
+    store.dispatch(updateUserSession(user))
+  }
+
+  return [session, setUserSession]
+}

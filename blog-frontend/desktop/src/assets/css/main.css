@@ -270,20 +270,26 @@ body {
   width: 100%;
 }
 
-#article_copyright {
+#article-copyright {
   color: #788087;
   overflow: hidden;
   padding: 10px 10px 10px 10px;
 }
 
-div.data_list .data_list_title {
-  border-left: 5px solid #1b809e;
-  padding: 10px;
+.article-tags {
+  font-size: 16px;
+  padding-bottom: 10px;
+  padding-left: 10px
 }
 
 #tagcloud div a {
   margin-right: 5px;
   display: inline-block;
+}
+
+div.data_list .data_list_title {
+  border-left: 5px solid #1b809e;
+  padding: 10px;
 }
 
 #loginForm {
