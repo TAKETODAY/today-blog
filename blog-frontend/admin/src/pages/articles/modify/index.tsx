@@ -26,7 +26,6 @@ import { getStorage, handleHttpError, isEmpty, removeStorage, saveStorage, showH
 import articleService from '@/services/ArticleService'
 
 import '@/assets/css/index.css'
-import '@/assets/font-awesome/css/font-awesome.min.css'
 import { PlusOutlined } from "@ant-design/icons";
 import { AxiosResponse } from "axios";
 import ArticleDrawer from "@/pages/articles/components/ArticleSettingsDrawer";
@@ -109,6 +108,7 @@ export default (props: { match: { params: { id: string } } }) => {
   const editorOptions = {
     autosave: false,
     autofocus: false,
+    autoDownloadFontAwesome: true,
     renderingConfig: { html: true },
     toolbar: ["bold", "italic", "strikethrough", "heading", "|", "code", "quote", "unordered-list", "ordered-list", "|",
       "link", "image", {
