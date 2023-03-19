@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+  ~ Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+  ~
+  ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see [http://www.gnu.org/licenses/]
+  -->
+
 <xsl:stylesheet version="2.0"
 				xmlns:html="http://www.w3.org/TR/REC-html40"
 				xmlns:sitemap="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -50,7 +70,7 @@
 		</style>
 	</head>
 	<body>
-		<h1>XML Sitemap</h1>				
+		<h1>XML Sitemap</h1>
 		<div id="content">
 			<table cellpadding="5">
 				<tr style="border-bottom:1px black solid;">
@@ -91,7 +111,7 @@
 			</table>
 		</div>
 		<div id="footer">
-			<a href="https://taketoday.cn/" target="_blank">I TAKE TODAY</a>
+			<a href="https://taketoday.cn" target="_blank">I TAKE TODAY</a>
 		</div>
 	</body>
 </html>
