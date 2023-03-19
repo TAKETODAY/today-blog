@@ -50,5 +50,9 @@ export default class ArticleService {
     return http.get(`/api/articles?tag=${tag}&page=${page}&size=${size}`)
   }
 
+  getArticlesByCategory(type, page = 1, size = 10) {
+    return getCacheable(`/api/articles?category=${type}&page=${page}&size=${size}`)
+  }
+
 }
 
