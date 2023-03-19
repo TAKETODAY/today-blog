@@ -21,11 +21,14 @@
 import React from 'react';
 import { Switch } from 'react-router';
 import { Redirect, Route } from 'react-router-dom';
-import './App.css';
 import { Footer, Header } from './components';
-import { ArticleLayout, SearchLayout } from './layouts';
-import { Article, CategoriesDetail, Error, Home, LabelsDetail, Login, Search, UserInfo, UserSettings } from './pages';
 import { Layout } from 'antd';
+import { ArticleLayout, SearchLayout } from './layouts';
+import './App.css';
+import {
+  Article, CategoriesDetail, Error, Home,
+  LabelsDetail, Login, Search, UserInfo, UserSettings
+} from './pages';
 
 const { Content } = Layout;
 
@@ -41,16 +44,16 @@ export default class App extends React.Component {
             <Route path='/BadRequest' exact>
               <Error status='400'/>
             </Route>
-            <Route path='/NotFound' exact>
+            <Route path={['/NotFound', "/not-found"]} exact>
               <Error status='404'/>
             </Route>
-            <Route path='/AccessForbidden' exact>
+            <Route path={['/AccessForbidden', "/access-forbidden"]} exact>
               <Error status='403'/>
             </Route>
-            <Route path='/MethodNotAllowed' exact>
+            <Route path={["/MethodNotAllowed", "/method-not-allowed"]} exact>
               <Error status='405'/>
             </Route>
-            <Route path='/InternalServerError' exact>
+            <Route path={['/InternalServerError', "/internal-server-error"]} exact>
               <Error status='500'/>
             </Route>
             <Route exact path="/search">
@@ -67,7 +70,7 @@ export default class App extends React.Component {
                   <Route exact path="/tags/:tagsId" component={LabelsDetail}/>
                   <Route exact path="/articles/:articleId" component={Article}/>
                   <Route exact path="/categories/:categoryId" component={CategoriesDetail}/>
-                  <Redirect to="/NotFound"/>
+                  <Redirect to="/not-found"/>
                 </Switch>
               </ArticleLayout>
             </Route>
