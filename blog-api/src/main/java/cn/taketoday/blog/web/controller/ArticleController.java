@@ -95,11 +95,8 @@ public class ArticleController {
    * </pre>
    */
   @GET
-  public Pagination<ArticleItem> articles(Pageable pageable) {
-    int rowCount = articleService.countByStatus(PostStatus.PUBLISHED);
-    assertFound(pageable, rowCount);
-    List<ArticleItem> articles = articleService.getHomeArticles(pageable);
-    return Pagination.ok(articles, rowCount, pageable);
+  public Pagination<ArticleItem> homeArticles(Pageable pageable) {
+    return articleService.getHomeArticles(pageable);
   }
 
   /**
@@ -112,17 +109,15 @@ public class ArticleController {
     return articleService.search(BlogUtils.stripAllXss(q), pageable);
   }
 
-  @GET("/categories/{category}")
-  public Pagination<Article> categories(Pageable pageable, @PathVariable String category) {
-    int rowCount = articleService.countByCategory(category);
-    assertFound(pageable, rowCount);
-    return Pagination.ok(articleService.getByCategory(category, pageable), rowCount, pageable);
-  }
-
-  protected void assertFound(Pageable pageable, int rowCount) {
-    if (BlogUtils.notFound(pageable.getCurrent(), BlogUtils.pageCount(rowCount, pageable.getSize()))) {
-      throw ErrorMessageException.failed("分页不存在");
-    }
+  /**
+   * 根据分类获取文章
+   *
+   * @param category 分类
+   * @param pageable 分页
+   */
+  @GET(params = "category")
+  public Pagination<ArticleItem> categories(@RequestParam String category, Pageable pageable) {
+    return articleService.getArticlesByCategory(category, pageable);
   }
 
   /**
@@ -177,19 +172,19 @@ public class ArticleController {
    *   "content": "",
    *   "cover": null,
    *   "summary": "",
-   *   "lastModify": 0,
+   *   "updateAt": "",
+   *   "createAt": "",
    *   "markdown": null,
    *   "category": "未分类",
    *   "id": 1577549633740,
-   *   "keepNavigation": false,
-   *   "copyright": "版权声明：本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。",
-   *   "title": "中国学霸本科生提出AI新算法：速度比肩Adam，性能媲美SGD，ICLR领域主席赞不绝口",
-   *   "uri": "1577549633740"
+   *   "copyright": "本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。",
+   *   "title": "动态代理底层原理（Java）",
+   *   "uri": "the-principles-of-dynamic-proxy-java"
    * }
    * }</pre>
    *
-   * @param key This article password if the article has
-   * @param uri 文章定位
+   * @param key 文章的密码，如果有的话
+   * @param uri 文章地址
    * @return {@link Article}
    */
   @GET("/{uri}")

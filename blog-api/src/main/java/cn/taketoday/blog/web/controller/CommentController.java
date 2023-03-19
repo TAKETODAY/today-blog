@@ -135,7 +135,7 @@ public class CommentController {
 
     return Pagination.ok(commentService.getByArticleId(id, page, commentPageSize))
             .size(commentPageSize)
-            .all(totalRecord)
+            .total(totalRecord)
             .current(page)
             .applyNum();
   }
