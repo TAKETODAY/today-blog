@@ -43,7 +43,7 @@ export default (props: { match: { params: { id: string } } }) => {
   const savePostToLocal = (post: ArticleItem) => {
     setPost(post)
     saveStorage(articleCacheKey, post)
-    console.log("本地缓存", post)
+    // console.log("本地缓存", post)
   }
 
   const showDrawer = () => setDrawerVisible(true)
@@ -109,6 +109,7 @@ export default (props: { match: { params: { id: string } } }) => {
                       onChange={(e) => {
                         setTitle(e.target.value)
                       }}
+                      style={{ marginBottom: 10 }}
                   />
 
                   <div className="box box-primary">

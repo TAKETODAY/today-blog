@@ -28,6 +28,6 @@ export interface LoggingItem {
   type: string;
   result: string;
 
-  lastModify: Date;
-  createTime: Date;
+  createAt: Date;
+  invokeAt: Date;
 }

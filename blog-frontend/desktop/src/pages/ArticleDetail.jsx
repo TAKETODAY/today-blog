@@ -242,7 +242,9 @@ class ArticleDetail extends React.Component {
             })}
           </div>
         }
-        <div id="article-copyright">{article.copyright}</div>
+        <div id="article-copyright">
+          {article.copyright || '本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。'}
+        </div>
       </div>
       <ArticleComment articleId={this.props.match.params.articleId}/>
     </>)

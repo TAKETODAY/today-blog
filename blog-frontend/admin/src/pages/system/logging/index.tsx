@@ -1,3 +1,23 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 import { useRef } from 'react';
 import { message, Popconfirm, Space, Tag } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
@@ -34,16 +54,25 @@ const doRemove = async (id: (number | string)) => {
 export default () => {
   const actionRef = useRef<ActionType>()
 
-  const reload = () => {
-    actionRef.current?.reload()
+  const reload = async () => {
+    await actionRef.current?.reload()
   }
 
   const remove = async (record: LoggingItem) => {
     await handleRemove(record)
-    reload()
+    await reload()
   }
 
   const columns: ProColumns<LoggingItem>[] = [
+    {
+      title: '类型',
+      dataIndex: 'type',
+      hideInSearch: true,
+      render: (_, record) => (
+          <Tag color={record.type}>{record.type}</Tag>
+      ),
+      width: 40,
+    },
     {
       title: '标题',
       dataIndex: 'title',
@@ -65,20 +94,6 @@ export default () => {
       width: 100,
     },
     {
-      title: '类型',
-      dataIndex: 'type',
-      hideInSearch: true,
-      render: (_, record) => (
-          <Tag color={record.type}>{record.type}</Tag>
-      ),
-      width: 100,
-    },
-    {
-      title: '结果',
-      dataIndex: 'result',
-      hideInSearch: true
-    },
-    {
       title: 'IP',
       dataIndex: 'ip',
       hideInSearch: true,
@@ -86,13 +101,13 @@ export default () => {
     },
     {
       title: '产生日期',
-      dataIndex: 'id',
+      dataIndex: 'invokeAt',
       sorter: true,
       valueType: 'dateTimeRange',
       width: 180,
       render: (_, record) => (
           <>
-            {moment(record.id).format('lll')}
+            {moment(record.invokeAt).format('lll')}
           </>
       ),
     },
@@ -123,7 +138,7 @@ export default () => {
       }
       finally {
         hide()
-        reload()
+        await reload()
       }
     }
   }

@@ -61,7 +61,7 @@ export default (props: { match: { params: { id: string } } }) => {
   const savePostToLocal = (post: any) => {
     setPost(post)
     saveStorage(articleCacheKey, post)
-    console.log("本地缓存", post)
+    //console.log("本地缓存", post)
   }
 
   const showModal = () => {
@@ -136,43 +136,28 @@ export default (props: { match: { params: { id: string } } }) => {
   }
 
   return (<>
-        <div className="container" style={{ marginTop: 22 }}>
-          <div className="row clearfix">
-            <div className="col-md-12" style={{ zIndex: 10, padding: 0 }}>
-              <div className="data_list">
-                <div className="data_list_title" style={{ borderLeft: 'none' }}>编辑文章</div>
-                <div className="data" style={{ marginTop: 10 }}>
-                  <div className="row">
-                    <div className="col-md-12">
-                      <input value={post.title} maxLength={80} autoFocus={true}
-                             autoComplete="off" placeholder="请输入标题" className="article-title"
-                             onChange={(e) => {
-                               setTitle(e.target.value)
-                             }}
-                      />
+        <div className="container data_list" style={{ marginTop: 22 }}>
+          <div className="data_list_title" style={{ borderLeft: 'none' }}>编辑文章</div>
+          <div className="data" style={{ marginTop: 10 }}>
+            <input value={post.title} maxLength={80} autoFocus={true}
+                   autoComplete="off" placeholder="请输入标题" className="article-title"
+                   onChange={(e) => {
+                     setTitle(e.target.value)
+                   }}
+                   style={{ marginLeft: 10 }}
+            />
 
-                      <div className="box box-primary">
-                        <div className="box-body pad">
-
-                          <div id="markdown-editor">
-                            <MarkdownEditor setEditor={setEditor} value={post.markdown}
-                                            onChange={saveContent} options={editorOptions}/>
-                          </div>
-
-                          <div style={{ textAlign: 'center', padding: 10 }}>
-                            <Button type="primary" onClick={showDrawer}>
-                              <PlusOutlined/> 保存文章
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-              {/*  <!--/RIGHT END-->*/}
+            <div id="markdown-editor">
+              <MarkdownEditor setEditor={setEditor} value={post.markdown}
+                              onChange={saveContent} options={editorOptions}/>
             </div>
+
+            <div style={{ textAlign: 'center', padding: 10 }}>
+              <Button type="primary" onClick={showDrawer}>
+                <PlusOutlined/> 保存文章
+              </Button>
+            </div>
+
           </div>
         </div>
 

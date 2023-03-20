@@ -114,7 +114,9 @@ export default class Editor extends React.PureComponent {
         useSession: true
       },
       autofocus: true,
-      renderingConfig: {},
+      renderingConfig: {
+        linkify: true,
+      },
       initialValue: this.props.value,
       autoDownloadFontAwesome: false,
       status: ["lines", "words"],
