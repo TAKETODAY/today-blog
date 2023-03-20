@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import cn.taketoday.beans.factory.BeanFactory;
-import cn.taketoday.blog.MethodOperation;
+import cn.taketoday.blog.log.MethodOperation;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.model.enums.UserStatus;
@@ -41,6 +41,7 @@ import cn.taketoday.expression.ParserContext;
 import cn.taketoday.expression.common.TemplateParserContext;
 import cn.taketoday.expression.spel.support.StandardTypeLocator;
 import cn.taketoday.lang.NonNull;
+import cn.taketoday.lang.Nullable;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -49,6 +50,11 @@ import cn.taketoday.lang.NonNull;
 public class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
   static final ParserContext parserContext = new TemplateParserContext(
           "${", "}");
+
+  /**
+   * The name of the variable holding the result object.
+   */
+  public static final String RESULT_VARIABLE = "result";
 
   private final Map<ExpressionKey, Expression> conditionCache = new ConcurrentHashMap<>(64);
   private final StandardTypeLocator typeLocator = new StandardTypeLocator();
@@ -69,15 +75,13 @@ public class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
   }
 
   /**
-   * Determine if the condition defined by the specified expression evaluates
-   * to {@code true}.
+   * 使用 SpEL 定制日志内容
    */
-  public String content(String expression, MethodOperation methodOperation) {
-    MethodInvocation invocation = methodOperation.getInvocation();
-
+  public String content(String expression, MethodOperation operation, @Nullable Object result) {
+    MethodInvocation invocation = operation.invocation;
     var root = new LoggingRootObject(
-            invocation.getMethod(), invocation.getArguments(),
-            invocation.getThis(), invocation.getThis().getClass());
+            operation, invocation.getMethod(), invocation.getArguments(),
+            invocation.getThis(), invocation.getThis().getClass(), result);
 
     var evaluationContext = new MethodBasedEvaluationContext(
             root, invocation.getMethod(), invocation.getArguments(), parameterNameDiscoverer);
@@ -90,7 +94,9 @@ public class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
             .getValue(evaluationContext, String.class);
   }
 
-  public record LoggingRootObject(Method method, Object[] args, Object target, Class<?> targetClass) {
+  public record LoggingRootObject(
+          MethodOperation operation, Method method, Object[] args,
+          Object target, Class<?> targetClass, @Nullable Object result) {
 
     public Method getMethod() {
       return this.method;
@@ -110,6 +116,15 @@ public class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
 
     public Class<?> getTargetClass() {
       return this.targetClass;
+    }
+
+    public MethodOperation getOperation() {
+      return operation;
+    }
+
+    @Nullable
+    public Object getResult() {
+      return result;
     }
 
   }

@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -17,16 +17,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
-package cn.taketoday.blog;
 
-import org.aopalliance.intercept.MethodInvocation;
+package cn.taketoday.blog.util;
+
+import cn.taketoday.ip2region.IpLocation;
+import cn.taketoday.ip2region.IpSearcher;
+import cn.taketoday.lang.Nullable;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2019-04-04 10:26
+ * @since 3.1 2023/2/15 23:15
  */
-public interface MethodOperation extends Operation {
+public abstract class IpSearchers {
 
-  MethodInvocation getInvocation();
+  private static final IpSearcher ipSearcher = IpSearcher.forDefaultResourceLocation();
+
+  @Nullable
+  public static String search(String ip) {
+    return ipSearcher.search(ip);
+  }
+
+  @Nullable
+  public static IpLocation find(String ip) {
+    return ipSearcher.find(ip);
+  }
 
 }

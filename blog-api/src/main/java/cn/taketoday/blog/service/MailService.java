@@ -152,10 +152,9 @@ public class MailService {
       catch (SendMailException e) {
         log.error("can't send mail to: [{}]", to);
 
-        loggerService.afterThrowing(e, new Operation()//
-                .setResult("暂无")//
-                .setUser("邮件系统")//
-                .setTitle("系统邮件发送出错")//
+        loggerService.afterThrowing(e, new Operation()
+                .setUser("邮件系统")
+                .setTitle("系统邮件发送出错")
         );
       }
     }

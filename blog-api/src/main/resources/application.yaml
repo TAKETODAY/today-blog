@@ -20,6 +20,9 @@ infra:
     ansi:
       enabled: always
 
+jackson:
+  date-format: 'yyyy-MM-dd HH:mm:ss'
+
 context:
   profiles:
     active: dev

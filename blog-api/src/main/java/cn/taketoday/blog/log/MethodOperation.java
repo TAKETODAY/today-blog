@@ -17,25 +17,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
+package cn.taketoday.blog.log;
 
-package cn.taketoday.blog.util;
+import org.aopalliance.intercept.MethodInvocation;
 
-import cn.taketoday.ip2region.IpLocation;
-import cn.taketoday.ip2region.IpSearcher;
+import java.time.LocalDateTime;
+
+import cn.taketoday.blog.model.User;
+import cn.taketoday.lang.Nullable;
 
 /**
+ * 记录 方法执行的上下文
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 3.1 2023/2/15 23:15
+ * @since 2019-04-04 10:26
  */
-public abstract class IpUtils {
-  private static final IpSearcher ipSearcher = IpSearcher.forDefaultResourceLocation();
+public class MethodOperation {
 
-  public static String search(String ip) {
-    return ipSearcher.search(ip);
-  }
+  public final LocalDateTime invokeAt = LocalDateTime.now();
 
-  public static IpLocation find(String ip) {
-    return ipSearcher.find(ip);
+  @Nullable
+  public final User loginUser;
+
+  public final String ip;
+  public final Object returnValue;
+  public final Throwable throwable;
+  public final MethodInvocation invocation;
+
+  public final boolean afterThrowing;
+
+  public MethodOperation(String ip, @Nullable Object returnValue, MethodInvocation invocation,
+          @Nullable User loginUser, @Nullable Throwable throwable) {
+    this.ip = ip;
+    this.loginUser = loginUser;
+    this.returnValue = returnValue;
+    this.throwable = throwable;
+    this.invocation = invocation;
+    this.afterThrowing = throwable != null;
   }
 
 }

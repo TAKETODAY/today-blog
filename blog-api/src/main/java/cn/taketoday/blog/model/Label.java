@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -25,29 +25,29 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.jdbc.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
+ * 文章标签
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-17 15:01
  */
 @Getter
 @Setter
 public class Label implements Serializable {
+
   @Serial
   private static final long serialVersionUID = 1L;
 
-  /** Label id */
-  private long id;
-  /** Label Name */
+  @Id
+  private Integer id;
+
   private String name;
 
   public Label() { }
-
-  public Label(long id) {
-    this.id = id;
-  }
 
   @Override
   public String toString() {
@@ -60,7 +60,7 @@ public class Label implements Serializable {
   @Override
   public int hashCode() {
     if (name == null) {
-      return (int) id;
+      return id;
     }
     return name.hashCode();
   }
@@ -71,7 +71,7 @@ public class Label implements Serializable {
       return true;
     }
     if (obj instanceof Label label) {
-      return label.id == id && Objects.equals(name, label.name);
+      return Objects.equals(label.id, id) && Objects.equals(name, label.name);
     }
     return false;
   }

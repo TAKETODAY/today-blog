@@ -20,7 +20,9 @@
 
 package cn.taketoday.blog.web.controller;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -220,94 +222,43 @@ public class ArticleController {
   @POST
   @RequiresBlogger
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "创建文章", content = "创建新文章标题: [${#from.title}]")
+  @Logging(title = "创建文章", content = "标题: [${#from.title}]")
   public void create(@RequestBody ArticleFrom from) {
     Article article = getArticle(from);
 
-    Long articleId = from.getCreateTime();
-    if (articleId == null) {
-      articleId = System.currentTimeMillis();
-    }
-    else {
-      Article byId = articleService.getById(articleId);
-      if (byId != null) {
-        throw ErrorMessageException.failed("已经存在相同文章");
-      }
-    }
-    article.setId(articleId);
     if (!StringUtils.hasText(article.getUri())) {
-      article.setUri(String.valueOf(articleId));
+      article.setUri(from.title);
     }
+
     if (log.isDebugEnabled()) {
-      log.debug("Create a new article: [{}]", from.getTitle());
+      log.debug("创建新文章: [{}]", from.title);
     }
 
     articleService.saveArticle(article);
   }
 
-  @Nullable
-  private Set<Label> getLabels(ArticleFrom from) {
-    if (CollectionUtils.isNotEmpty(from.getLabels())) {
-      Set<Label> labels = new HashSet<>();
-      for (String label : from.getLabels()) {
-        Label byName = labelService.getByName(label);
-        if (byName == null) {
-          byName = new Label(System.currentTimeMillis()).setName(label);
-          labelService.save(byName);
-        }
-        labels.add(byName);
-      }
-      return labels;
-    }
-    return null;
-  }
+  static class ArticleFrom {
 
-  private Article getArticle(ArticleFrom from) {
-    Set<Label> labels = getLabels(from);
+    @Nullable
+    public LocalDateTime createAt;
+    public String category;
+    public String copyright;
+    public Set<String> labels;
 
-    Article article = new Article();
-
-    article.setLabels(labels);
-    article.setTitle(from.getTitle());
-    article.setStatus(from.getStatus());
-    article.setContent(from.getContent());
-    article.setSummary(from.getSummary());
-    article.setCategory(from.getCategory());
-    article.setMarkdown(from.getMarkdown());
-    article.setCopyright(from.getCopyright());
-    article.setPassword(StringUtils.isEmpty(from.getPassword()) ? null : from.getPassword());
-
-    article.setCover(StringUtils.isEmpty(from.getImage())
-                     ? BlogUtils.getFirstImagePath(from.getContent())
-                     : from.getImage()
-    );
-
-    return article;
-  }
-
-  @Getter
-  @Setter
-  public static class ArticleFrom {
-
-    private Long createTime;
-    private String category;
-    private String copyright;
-    private Set<String> labels;
-
-    private String image;
-    private String title;
-    private PostStatus status;
-    private String summary;
-    private String content;
-    private String markdown;
-    private String password;
+    public String cover;
+    public String title;
+    public PostStatus status;
+    public String summary;
+    public String content;
+    public String markdown;
+    public String password;
   }
 
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequiresBlogger
   @Logging(title = "更新文章", content = "更新文章: [${#from.title}]")
-  public void update(@PathVariable("id") Long id, @RequestBody ArticleFrom from) {
+  public void update(@PathVariable("id") Integer id, @RequestBody ArticleFrom from) {
     Article article = getArticle(from);
     article.setId(id);
     articleService.update(article);
@@ -335,4 +286,43 @@ public class ArticleController {
     return articleService.search(from, pageable);
   }
 
+  private Article getArticle(ArticleFrom from) {
+    Set<Label> labels = getLabels(from);
+
+    Article article = new Article();
+
+    article.setLabels(labels);
+    article.setTitle(from.title);
+    article.setStatus(from.status);
+    article.setContent(from.content);
+    article.setSummary(from.summary);
+    article.setCategory(from.category);
+    article.setMarkdown(from.markdown);
+    article.setCopyright(from.copyright);
+    article.setPassword(StringUtils.hasText(from.password) ? from.password : null);
+    article.setCover(StringUtils.hasText(from.cover)
+                     ? from.cover
+                     : BlogUtils.getFirstImagePath(from.content)
+    );
+
+    article.setCreateAt(from.createAt);
+    return article;
+  }
+
+  @Nullable
+  private Set<Label> getLabels(ArticleFrom from) {
+    if (CollectionUtils.isNotEmpty(from.labels)) {
+      var labels = new LinkedHashSet<Label>();
+      for (String label : from.labels) {
+        Label byName = labelService.getByName(label);
+        if (byName == null) {
+          byName = new Label().setName(label);
+          labelService.save(byName);
+        }
+        labels.add(byName);
+      }
+      return labels;
+    }
+    return null;
+  }
 }

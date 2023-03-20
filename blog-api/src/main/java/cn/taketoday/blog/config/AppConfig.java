@@ -89,10 +89,10 @@ public class AppConfig implements WebMvcConfigurer {
 
   // 异常
 
-  @Component
-  public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-    return builder.build();
-  }
+//  @Component
+//  public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
+//    return builder.build();
+//  }
 
   // 日志
   @Component

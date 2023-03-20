@@ -48,7 +48,7 @@ public class Article implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @Id
-  private Long id;
+  private Integer id;
 
   private String cover;
 

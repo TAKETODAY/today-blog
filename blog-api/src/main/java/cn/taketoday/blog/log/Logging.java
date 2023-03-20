@@ -27,6 +27,7 @@ import java.lang.annotation.Target;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.core.annotation.AliasFor;
+import cn.taketoday.lang.Constant;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -40,14 +41,17 @@ public @interface Logging {
    * title
    */
   @AliasFor(attribute = "title")
-  String value() default BlogConstant.BLANK;
+  String value() default Constant.BLANK;
 
   @AliasFor(attribute = "value")
-  String title() default BlogConstant.BLANK;
+  String title() default Constant.BLANK;
 
   /**
-   * el
+   * 日志内容
+   * <p>
+   * 提供了 result 可以定制 可视化的结果
+   * </p>
    */
-  String content() default BlogConstant.BLANK;
+  String content() default Constant.DEFAULT_NONE;
 
 }

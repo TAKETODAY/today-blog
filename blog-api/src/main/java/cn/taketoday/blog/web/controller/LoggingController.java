@@ -101,13 +101,13 @@ public class LoggingController {
       map.put("user", operation.getUser());
       map.put("ip", operation.getIp());
       map.put("content", operation.getContent());
-      map.put("result", operation.getResult());
       map.put("type", operation.getType());
       data.add(map);
     }
 
-    return CSVUtils.formatCsvData(data, "id,date,title,user,ip,content,result,type",
-            "id,date,title,user,ip,content,result,type");
+    // FIXME 数据字段问题
+    return CSVUtils.formatCsvData(data, "id,date,title,user,ip,content,type",
+            "id,date,title,user,ip,content,type");
   }
 
 }

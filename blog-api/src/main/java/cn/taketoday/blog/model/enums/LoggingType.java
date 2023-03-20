@@ -19,13 +19,15 @@
  */
 package cn.taketoday.blog.model.enums;
 
+import cn.taketoday.lang.Enumerable;
+
 /**
  * 日志类型
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-03-22 20:29
  */
-public enum LoggingType {
+public enum LoggingType implements Enumerable<String> {
 
   //["default","primary","success","info", "warning","danger"]
 
@@ -40,6 +42,7 @@ public enum LoggingType {
 
   private final String type;
 
+  @Override
   public String getValue() {
     return type;
   }

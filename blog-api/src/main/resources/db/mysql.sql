@@ -60,19 +60,21 @@ create table category
 
 create table article
 (
-    `id`         bigint                        not null comment '创建时间为主键' primary key,
-    `title`      varchar(255)                  null comment '题目',
-    `content`    longtext                      null comment '文章内容',
-    `copyright`  varchar(255) default '版权声明：本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。' comment '版权',
-    `cover`      text                          null comment '文章封面',
-    `lastModify` bigint                        null comment '最后更改',
-    `summary`    text                          null comment '预览',
-    `category`   varchar(255) default '未分类' null comment '分类名',
-    `pv`         int          default 0 comment '点击量',
-    `status`     int          default 0        not null comment '状态',
-    `url`        varchar(255)                  null comment '文章url',
-    `markdown`   longtext                      null comment 'markdown',
-    `password`   varchar(255)                  null,
+    `id`        int auto_increment primary key,
+    `title`     varchar(255) default null comment '标题',
+    `content`   longtext     default null comment '文章内容',
+    `summary`   text         default null comment '预览',
+    `cover`     text         default null comment '文章封面',
+    `category`  varchar(255) default '未分类' comment '分类名',
+    `uri`       varchar(255) default null comment '文章URI访问地址',
+    `pv`        int          default 0 comment '点击量',
+    `status`    tinyint      default 0 comment '状态',
+    `markdown`  longtext     default null comment 'markdown',
+    `password`  varchar(255) default null comment '密码',
+    `copyright` text         default null comment '版权',
+    `create_at` datetime     default CURRENT_TIMESTAMP comment '创建时间',
+    `update_at` datetime     default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP comment '更新时间',
+
     constraint Article_Category
         foreign key (`category`) references category (name)
             on update cascade on delete set null
@@ -80,26 +82,35 @@ create table article
 
 create table label
 (
-    `id`   bigint auto_increment comment '主键' primary key,
+    `id`   int auto_increment comment '主键' primary key,
     `name` varchar(255) not null comment '标签名'
 );
 
 create table article_label
 (
-    `labelId`   bigint not null comment '主键',
-    `articleId` bigint not null comment '文章id',
+    `labelId`   int not null comment '主键',
+    `articleId` int not null comment '文章id',
     primary key (labelId, articleId)
 );
 
-create table logger
+create table logging
 (
-    `id`      bigint       not null comment '时间戳' primary key,
-    `title`   varchar(255) not null comment '日志标题',
-    `content` text         not null comment '日志内容',
-    `ip`      varchar(64)  not null comment '操作者ip归属地',
-    `user`    varchar(32)  null comment '操作者email',
-    `type`    varchar(16)  null comment '类型',
-    `result`  text         null comment '成功，失败，警告'
+    `id`          bigint auto_increment primary key,
+    `title`       varchar(255) not null comment '日志标题',
+    `content`     text         not null comment '日志内容',
+    `ip`          varchar(64)  not null comment '操作者IP',
+
+    `ip_country`  varchar(64)  null comment '操作者IP国家',
+    `ip_province` varchar(64)  null comment '操作者IP省份',
+    `ip_city`     varchar(64)  null comment '操作者IP城市',
+    `ip_area`     varchar(64)  null comment '操作者IP区县',
+    `ip_isp`      varchar(64)  null comment '操作者ISP',
+
+    `user`        varchar(32)  null comment '操作者email',
+    `type`        varchar(16)  null comment '类型',
+    `invoke_at`   datetime     not null comment '调用时间',
+    `create_at`   datetime default CURRENT_TIMESTAMP comment '创建时间'
+
 );
 
 create table `option`
