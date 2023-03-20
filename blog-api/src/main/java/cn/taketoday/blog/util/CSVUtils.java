@@ -50,8 +50,6 @@ public class CSVUtils {
   private static final String CSV_RN = "\r\n";
 
   /**
-   * 数据初始化
-   *
    * @param datas 数据库查出来的数据
    * @param displayColNames csv表头
    * @param matchColNames data中的key ，可以说是数据库字段了,原本为”0001”类型的数据在excel中打开会被默认改变为”1”的数据。 解决方法
