@@ -189,7 +189,7 @@ class ArticleDetail extends React.Component {
 
   renderPassword() {
     return (<>
-      <div className="data_list">
+      <div className="shadow-box">
         <Form name="requirePassword" onFinish={this.requirePassword}>
           <Form.Item name="key" rules={passwordRules} validateStatus="validating">
             <Input autoFocus size="large" placeholder="请输入访问密码" prefix={<LockOutlined/>}/>
@@ -212,13 +212,14 @@ class ArticleDetail extends React.Component {
 
     return (<>
 
-      <div className="data_list">
-        <article className="articleContent blog_content">
-          <h1 className="title" style={{ margin: '0px 0 50px 0' }}>{article.title}</h1>
+      <div className="shadow-box">
+        <article className="articleContent">
+          <h1 className="title">{article.title}</h1>
           <div className="property">
-            <span>发布于: {new Date(article.id).toLocaleString()}</span> |
-            <span> 分类: <Link to={`/categories/${article.category}`} title={article.category}>{article.category}</Link></span> |
-            <span> 浏览: {article.pv} </span> |
+            <span>发布于 {new Date(article.createAt).toLocaleString()}</span> |
+            <span> 更新 {new Date(article.updateAt).toLocaleString()}</span> |
+            <span> 分类 <Link to={`/categories/${article.category}`} title={article.category}>{article.category}</Link></span> |
+            <span> 浏览 {article.pv} </span> |
             {userSession?.blogger && <>
               <span>
                 <AdminLink href={`/articles/${article.id}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
@@ -227,16 +228,17 @@ class ArticleDetail extends React.Component {
                 </AdminLink>
               </span> |</>
             }
-            <span> 分享: <img onClick={this.shareQQ} className="share" title="分享到QQ好友" src={qq} width="16" alt="分享到QQ好友"/>
+            <span style={{ cursor: "pointer" }}>
+              &nbsp;分享 <img onClick={this.shareQQ} className="share" title="分享到QQ好友" src={qq}
+                              width="16" alt="分享到QQ好友"/>
             <img onClick={this.shareQQZone} className="share" title="分享到QQ空间" src={zone} width="18" alt="分享到QQ空间"/>
             <img onClick={this.shareWeiBo} className="share" title="分享到微博" src={weibo} width="18" alt="分享到微博"/>
           </span>
           </div>
-          <div className="markdown" id="contentTxt" dangerouslySetInnerHTML={{ __html: article.content }}/>
+          <div className="markdown contentTxt" dangerouslySetInnerHTML={{ __html: article.content }}/>
         </article>
         {isNotEmpty(article.labels) &&
           <div className="article-tags" id="tagcloud">
-            <strong>标签：</strong>
             {article.labels.map((label, idx) => {
               return <Link key={idx} to={`/tags/${label.name}`} className={getRandLabel()}>{label.name}</Link>
             })}

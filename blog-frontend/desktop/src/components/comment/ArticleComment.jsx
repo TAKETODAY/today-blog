@@ -95,11 +95,11 @@ export default class ArticleComment extends React.Component {
     const articleId = getArticleId(this.props.articleId)
 
     return (<>
-      <div className="data_list markdown" id="comment_area">
+      <div className="shadow-box markdown" id="comment_area">
         <CommentEdit articleId={articleId} commentId={commentId}
                      replying={replying} cancelReply={this.cancelReply}/>
       </div>
-      <div className="data_list markdown" id="comments">
+      <div className="shadow-box markdown" id="comments">
         <div className="data_list_title" style={{ border: 'none' }}>
           <i className="fa fa-commenting-o"/> 评论
           {commentsLoaded

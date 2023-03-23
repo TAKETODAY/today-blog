@@ -80,7 +80,7 @@ class Home extends React.Component {
   render() {
     const { articles, error } = this.state
     return (<>
-      <div className="data_list" id="test1">
+      <div className="shadow-box" id="test1">
         <div className="data_list_title">最新文章</div>
         <ArticleList articles={articles.data} error={error} title="最新文章"/>
         <div align='center' style={{ padding: '20px' }}>

@@ -61,7 +61,7 @@ function InfoSettings(props) {
   }
 
   return (<>
-    <div className="data_list" id="info">
+    <div className="shadow-box" id="info">
       <div className="data_list_title">资料修改</div>
       <div className="data content">
         <Form name="infoForm" layout="vertical" initialValues={{ ...props.userSession }} onFinish={update}>
@@ -96,7 +96,7 @@ function EmailSettings(props) {
       .catch(handleError)
   }
   return (
-    <div className="data_list" id="email">
+    <div className="shadow-box" id="email">
       <div className="data_list_title">邮箱修改</div>
       <div className="data content">
         <Form name="emailForm" layout="vertical" initialValues={{ ...props.userSession }} onFinish={update}>
@@ -128,7 +128,7 @@ function PasswordSettings(props) {
       .catch(handleError)
   }
   return (
-    <div className="data_list" id="password">
+    <div className="shadow-box" id="password">
       <div className="data_list_title">密码修改</div>
       <div className="data content">
         <Form name="passwordForm" layout="vertical" onFinish={update}>
@@ -171,7 +171,7 @@ class AvatarSettings extends React.Component {
   render() {
     const { userSession } = this.props
     return (
-      <div className="data_list" id="avatar">
+      <div className="shadow-box" id="avatar">
         <div className="data_list_title">头像修改(禁止使用任何涉嫌非法或者敏感图片作为头像)</div>
         <div className="data content">
           <ImageCropper onCut={this.updateAvatar}
@@ -210,7 +210,7 @@ function BackgroundSettings(props) {
       .catch(handleError)
   }
   return (
-    <div className="data_list" id="background">
+    <div className="shadow-box" id="background">
       <div className="data_list_title">主页背景修改</div>
       <div className="data content">
         <ImageCropper onCut={updateBackground} src={userSession.background} preview='.background' aspectRatio={12 / 6}>

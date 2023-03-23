@@ -149,7 +149,7 @@ div.info_nav_btn .active {
 
 /* markdown end*/
 
-.box-shadow {
+.shadow-box {
   box-shadow: 0px 0px 7px 0px #ddd;
 }
 
@@ -287,7 +287,7 @@ body {
   display: inline-block;
 }
 
-div.data_list .data_list_title {
+div.shadow-box .data_list_title {
   border-left: 5px solid #1b809e;
   padding: 10px;
 }
@@ -336,7 +336,7 @@ div.data_list .data_list_title {
   margin: 10px 0;
 }
 
-.data_list .data_list_title {
+.shadow-box .data_list_title {
   font-size: 15px;
   font-weight: bold;
   border-bottom: 1px dashed #C8DDE4;
@@ -524,7 +524,7 @@ img#randImg {
   left: 3px
 }
 
-.data_list {
+.shadow-box {
   padding: 10px;
   background-color: white;
   margin-top: 0px;
@@ -533,20 +533,16 @@ img#randImg {
   box-shadow: 0px 0px 7px 0px #ddd;
 }
 
-.data_list .datas ul li {
+.shadow-box .datas ul li {
   margin-top: 10px;
 }
 
-.data_list .datas .data {
+.shadow-box .datas .data {
   padding: 10px;
 }
 
-.data_list .data_list_title .datas {
+.shadow-box .data_list_title .datas {
   padding: 5px;
-}
-
-.data_list .blog_content {
-  margin-top: 20px;
 }
 
 .data > ul > li {
@@ -566,6 +562,9 @@ img#randImg {
 .articleContent .title {
   text-align: center;
   color: #f60;
+  word-wrap: break-word;
+  font-size: 24px;
+  margin: 24px 0;
 }
 
 .articleContent .property {
@@ -578,7 +577,7 @@ img#randImg {
   color: #999;
 }
 
-.articleContent #contentTxt {
+.articleContent .contentTxt {
   padding: 16px 0;
 }
 
