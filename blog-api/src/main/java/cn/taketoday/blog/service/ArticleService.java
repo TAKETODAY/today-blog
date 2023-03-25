@@ -198,7 +198,8 @@ public class ArticleService implements InitializingBean {
     int listSize = blogConfig.getListSize();
     // language=MySQL
     try (var query = repository.createQuery("""
-            SELECT id, title FROM article
+            SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
+            FROM article
             WHERE status = ? order by pv DESC LIMIT ?""")) {
       query.addParameter(PostStatus.PUBLISHED);
       query.addParameter(listSize);
