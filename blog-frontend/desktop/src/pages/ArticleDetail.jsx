@@ -222,9 +222,9 @@ class ArticleDetail extends React.Component {
             <span> 浏览 {article.pv} </span> |
             {userSession?.blogger && <>
               <span>
-                <AdminLink href={`/articles/${article.id}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
+                <AdminLink href={`/articles/${article.uri}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
                            target='_blank'>
-                  编辑此页
+                  &nbsp;编辑
                 </AdminLink>
               </span> |</>
             }
