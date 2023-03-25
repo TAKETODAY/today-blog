@@ -25,6 +25,10 @@ import { Iterable } from "immutable"
 
 const errorMessage = (err, message) => {
   err.message = (err && err.response && err.response.data) ? err.response.data.message || message : message
+  notification.warn({
+    message: '提示',
+    description: err.message
+  })
 }
 
 const handleNotFound = (err) => {
@@ -65,9 +69,6 @@ export function showLoginDialog(loginCallback, onCancel) {
 const handleUnauthorized = (err) => {
   if (!showLoginDialog()) {
     errorMessage(err, '登录超时')
-    notification.error({
-      message: err.message
-    })
   }
 }
 
@@ -88,16 +89,12 @@ const errorHandlers = {
 }
 
 export const handleHttpError = err => {
-
+  console.log(err)
   if (err && err.response) {
     err.status = err.response.status
-    const errorHandler = errorHandlers[err.response.status]
+    const errorHandler = errorHandlers[err.status]
     if (isNull(errorHandler)) {
       errorMessage(err, '后台服务不可用')
-      notification.error({
-        message: '错误',
-        description: err.message
-      })
     }
     else {
       errorHandler(err)

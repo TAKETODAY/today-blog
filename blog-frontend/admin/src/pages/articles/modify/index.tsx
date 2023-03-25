@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 import { BackTop, Button, message } from "antd";
 import MarkdownEditor from "@/components/Editor";
 import ImageChooserModal from "@/components/ImageChooserModal";
-import { getStorage, handleHttpError, isEmpty, removeStorage, saveStorage, showHttpErrorMessage } from '@/utils'
+import { extractData, getStorage, isEmpty, removeStorage, saveStorage, showHttpErrorMessage } from '@/utils'
 import articleService from '@/services/ArticleService'
 
 import '@/assets/css/index.css'
@@ -48,10 +48,10 @@ export default (props: { match: { params: { id: string } } }) => {
 
   useEffect(() => {
     if (!post || isEmpty(Object.keys(post))) {
-      articleService.getById(id).then((res: AxiosResponse) => {
-        const { data } = res
-        setPost(data)
-      }).catch(handleHttpError).finally(() => setLoading(false))
+      articleService.getById(id)
+          .then(extractData)
+          .then(setPost)
+          .finally(() => setLoading(false))
     }
     else {
       setLoading(false)

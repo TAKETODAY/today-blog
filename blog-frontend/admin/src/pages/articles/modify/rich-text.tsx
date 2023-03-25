@@ -20,7 +20,7 @@
 
 import { useEffect, useState } from 'react';
 import { BackTop, Button, message } from "antd";
-import { extractData, getStorage, isEmpty, removeStorage, saveStorage, showHttpErrorMessage, showHttpErrorMessageVoid } from '@/utils'
+import { extractData, getStorage, isEmpty, removeStorage, saveStorage, showHttpErrorMessage } from '@/utils'
 import articleService from '@/services/ArticleService'
 
 import '@/assets/css/index.css'
@@ -76,7 +76,6 @@ export default (props: { match: { params: { id: string } } }) => {
       articleService.getById(id)
           .then(extractData)
           .then(savePostToLocal)
-          .catch(showHttpErrorMessageVoid)
           .finally(() => setLoading(false))
     }
     else {
