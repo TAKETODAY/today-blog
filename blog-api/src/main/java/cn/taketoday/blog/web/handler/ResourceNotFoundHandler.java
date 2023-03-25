@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -21,8 +21,9 @@
 package cn.taketoday.blog.web.handler;
 
 import cn.taketoday.blog.ErrorMessage;
+import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
-import cn.taketoday.stereotype.Singleton;
+import cn.taketoday.stereotype.Component;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.handler.NotFoundHandler;
 
@@ -30,13 +31,14 @@ import cn.taketoday.web.handler.NotFoundHandler;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2020-01-01 22:29
  */
-@Singleton
-public class BlogNotFoundHandler extends NotFoundHandler {
+@Component
+public class ResourceNotFoundHandler extends NotFoundHandler {
 
   @Nullable
   @Override
   public Object handleRequest(RequestContext request) {
-    request.setStatus(404);
+    request.setStatus(HttpStatus.NOT_FOUND);
+
     logNotFound(request);
     return ErrorMessage.failed("资源找不到");
   }

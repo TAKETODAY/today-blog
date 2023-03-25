@@ -41,7 +41,6 @@ import cn.taketoday.context.annotation.Configuration;
 import cn.taketoday.context.annotation.Role;
 import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
-import cn.taketoday.http.HttpStatus;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.stereotype.Component;
 import cn.taketoday.web.config.ViewControllerRegistry;
@@ -71,19 +70,9 @@ public class AppConfig implements WebMvcConfigurer {
 
   @Override
   public void addViewControllers(ViewControllerRegistry registry) {
-    registry.addViewController("/sitemap.xml", "/core/sitemap").setContentType("application/xml");
-    registry.addViewController("/rss.xml", "/feed/rss").setContentType("application/rss+xml;charset=utf-8");
-    registry.addViewController("/atom.xml", "/feed/atom").setContentType("application/atom+xml;charset=utf-8");
-
-    registry.addViewController("/NotFound", "/error/404")
-            .setStatusCode(HttpStatus.NOT_FOUND);
-
-    registry.addViewController("/Forbidden", "/error/403")
-            .setStatusCode(HttpStatus.FORBIDDEN);
-
-    registry.addViewController("/BadRequest", "/error/400").setStatusCode(HttpStatus.BAD_REQUEST);
-    registry.addViewController("/ServerIsBusy", "/error/500").setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-    registry.addViewController("/MethodNotAllowed", "/error/405").setStatusCode(HttpStatus.METHOD_NOT_ALLOWED);
+    registry.addViewController("/sitemap.xml", "/sitemap").setContentType("application/xml");
+    registry.addViewController("/rss.xml", "/rss").setContentType("application/rss+xml;charset=utf-8");
+    registry.addViewController("/atom.xml", "/atom").setContentType("application/atom+xml;charset=utf-8");
   }
 
   // 异常
@@ -97,8 +86,10 @@ public class AppConfig implements WebMvcConfigurer {
   @Component
   @Order(Ordered.HIGHEST_PRECEDENCE)
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  LoggingInterceptor loggingInterceptor(ObjectProvider<Executor> executor,
-          ObjectProvider<LoggingService> loggerService, ObjectProvider<UserSessionResolver> sessionResolver) {
+  LoggingInterceptor loggingInterceptor(
+          ObjectProvider<Executor> executor,
+          ObjectProvider<LoggingService> loggerService,
+          ObjectProvider<UserSessionResolver> sessionResolver) {
     return new LoggingInterceptor(executor, loggerService, sessionResolver);
   }
 
