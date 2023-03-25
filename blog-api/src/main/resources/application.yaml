@@ -19,13 +19,27 @@ infra:
   output:
     ansi:
       enabled: always
+  profiles:
+    active: dev
+
+freemarker:
+  cache: false
+  settings:
+    classic_compatible: true
+    date_format: yyyy-MM-dd
+    datetime_format: yyyy-MM-dd HH:mm:ss
+    default_encoding: UTF-8
+    locale: UTF-8
+    log_template_exceptions: false
+    number_format: 0.####
+    tag_syntax: auto_detect
+    template_exception_handler: ignore
+    template_update_delay: 0
+    time_format: HH:mm:ss
+    url_escaping_charset: UTF-8
 
 jackson:
   date-format: 'yyyy-MM-dd HH:mm:ss'
-
-context:
-  profiles:
-    active: dev
 
 aliyun:
   oss:
@@ -72,5 +86,3 @@ datasource:
   hikari:
     maxLifetime: 1800000
     maxPoolSize: 20
-
-
