@@ -105,7 +105,7 @@ class UserComment extends React.Component {
     if (loaded === false) {
       return (
           <div className="shadow-box">
-            <div className="data_list_title"><em>正在加载</em> 我的评论</div>
+            <div className="data-list-title"><em>正在加载</em> 我的评论</div>
             <Skeleton active/>
           </div>
       )
@@ -113,7 +113,7 @@ class UserComment extends React.Component {
     if (!comments) {
       return (
           <div className="shadow-box">
-            <div className="data_list_title">我的评论</div>
+            <div className="data-list-title">我的评论</div>
             <Empty/>
           </div>
       )
@@ -163,7 +163,7 @@ class UserComment extends React.Component {
 
     return (<>
       <div className="shadow-box">
-        <div className="data_list_title">我的评论</div>
+        <div className="data-list-title">我的评论</div>
         <div style={ { overflow: "auto" } }>
           <Table dataSource={ comments.data } columns={ columns } pagination={ false } rowKey="id"/>
         </div>

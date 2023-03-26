@@ -62,7 +62,7 @@ function InfoSettings(props) {
 
   return (<>
     <div className="shadow-box" id="info">
-      <div className="data_list_title">资料修改</div>
+      <div className="data-list-title">资料修改</div>
       <div className="data content">
         <Form name="infoForm" layout="vertical" initialValues={{ ...props.userSession }} onFinish={update}>
           <Form.Item name="name" label='姓名或昵称' rules={nameRules}>
@@ -97,7 +97,7 @@ function EmailSettings(props) {
   }
   return (
     <div className="shadow-box" id="email">
-      <div className="data_list_title">邮箱修改</div>
+      <div className="data-list-title">邮箱修改</div>
       <div className="data content">
         <Form name="emailForm" layout="vertical" initialValues={{ ...props.userSession }} onFinish={update}>
           <Form.Item name="password" label='密码' rules={passwordRules}>
@@ -129,7 +129,7 @@ function PasswordSettings(props) {
   }
   return (
     <div className="shadow-box" id="password">
-      <div className="data_list_title">密码修改</div>
+      <div className="data-list-title">密码修改</div>
       <div className="data content">
         <Form name="passwordForm" layout="vertical" onFinish={update}>
           <Form.Item name="password" label='原密码' rules={passwordRules}>
@@ -172,7 +172,7 @@ class AvatarSettings extends React.Component {
     const { userSession } = this.props
     return (
       <div className="shadow-box" id="avatar">
-        <div className="data_list_title">头像修改(禁止使用任何涉嫌非法或者敏感图片作为头像)</div>
+        <div className="data-list-title">头像修改(禁止使用任何涉嫌非法或者敏感图片作为头像)</div>
         <div className="data content">
           <ImageCropper onCut={this.updateAvatar}
                         src={userSession.avatar} preview='.avatar' aspectRatio={1}>
@@ -211,7 +211,7 @@ function BackgroundSettings(props) {
   }
   return (
     <div className="shadow-box" id="background">
-      <div className="data_list_title">主页背景修改</div>
+      <div className="data-list-title">主页背景修改</div>
       <div className="data content">
         <ImageCropper onCut={updateBackground} src={userSession.background} preview='.background' aspectRatio={12 / 6}>
           <div className="img-preview background preview-lg"/>

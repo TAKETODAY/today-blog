@@ -19,8 +19,8 @@
  */
 
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -245,7 +245,7 @@ body {
   display: inline-block;
 }
 
-div.shadow-box .data_list_title {
+div.shadow-box .data-list-title {
   border-left: 5px solid #1b809e;
   padding: 10px;
 }
@@ -283,7 +283,7 @@ div.shadow-box .data_list_title {
   margin: 10px 0;
 }
 
-.shadow-box .data_list_title {
+.shadow-box .data-list-title {
   font-size: 15px;
   font-weight: bold;
   border-bottom: 1px dashed #C8DDE4;
@@ -441,10 +441,10 @@ div.shadow-box .data_list_title {
 .shadow-box {
   padding: 10px;
   background-color: white;
-  margin-top: 0px;
+  margin-top: 0;
   margin-bottom: 20px;
   border-radius: 5px;
-  box-shadow: 0px 0px 7px 0px #ddd;
+  box-shadow: 0 0 7px 0 #ddd;
 }
 
 .shadow-box .datas ul li {
@@ -455,7 +455,7 @@ div.shadow-box .data_list_title {
   padding: 10px;
 }
 
-.shadow-box .data_list_title .datas {
+.shadow-box .data-list-title .datas {
   padding: 5px;
 }
 
@@ -477,7 +477,7 @@ div.shadow-box .data_list_title {
   text-align: center;
   color: #f60;
   word-wrap: break-word;
-  font-size: 24px;
+  font-size: 30px;
   margin: 24px 0;
 }
 

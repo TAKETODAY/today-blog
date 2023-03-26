@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === 'production') {
   apiBase = '/'
 }
 else {
-  apiBase = 'http://localhost:8080/'
+  apiBase = 'http://localhost:8080'
 }
 
 export default props => {

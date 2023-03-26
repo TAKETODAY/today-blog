@@ -118,7 +118,7 @@ class NavHeader extends React.Component {
           <Menu.Item key="home">
             <Link to='/' title="首页"> <i className="fa fa-home"/> 首页 </Link>
           </Menu.Item>
-          <SubMenu key="categories" icon={<i className="fa fa-folder"/>} title="&nbsp;分类">
+          <SubMenu key="categories" icon={<i className="fa fa-folder"/>} title="分类">
             <Menu.ItemGroup title="全部分类">
               {categories && categories.map((category, idx) => {
                 return (
@@ -131,7 +131,7 @@ class NavHeader extends React.Component {
               })}
             </Menu.ItemGroup>
           </SubMenu>
-          <SubMenu key="tags" icon={<i className="fa fa-tag"/>} title="&nbsp;标签">
+          <SubMenu key="tags" icon={<i className="fa fa-tag"/>} title="标签">
             <Menu.ItemGroup title="全部标签">
               {labels && labels.map((tag, idx) => {
                 return (
@@ -150,7 +150,7 @@ class NavHeader extends React.Component {
           </Menu.Item>
           <Menu.Item key="userSession">
             {userSession ?
-              <Dropdown overlay={this.renderUserMenu()} placement="bottomRight" trigger='click'>
+              <Dropdown menu={{ items: [this.renderUserMenu()] }} placement="bottomRight" trigger='click'>
                 <Image original width="30" src={userSession.avatar} className="avatar"/>
               </Dropdown>
               : <Link to='/login' title="登录"><i className="fa fa-sign-in"/> 登录</Link>

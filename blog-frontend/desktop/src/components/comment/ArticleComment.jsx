@@ -100,7 +100,7 @@ export default class ArticleComment extends React.Component {
                      replying={replying} cancelReply={this.cancelReply}/>
       </div>
       <div className="shadow-box markdown" id="comments">
-        <div className="data_list_title" style={{ border: 'none' }}>
+        <div className="data-list-title" style={{ border: 'none' }}>
           <i className="fa fa-commenting-o"/> 评论
           {commentsLoaded
             ? isEmpty(comments.data) && <Empty description="暂无评论"/>

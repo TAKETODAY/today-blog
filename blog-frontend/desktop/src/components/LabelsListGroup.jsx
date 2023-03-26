@@ -43,7 +43,7 @@ class Labels extends React.Component {
     }
     return (
         <div className="shadow-box" id="tagcloud">
-          <div className="data_list_title">标签云</div>
+          <div className="data-list-title">标签云</div>
           <div style={ { paddingTop: 10 } }>
             {
               labels.map((label, idx) => {

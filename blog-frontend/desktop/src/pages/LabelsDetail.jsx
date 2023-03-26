@@ -91,7 +91,7 @@ class LabelsDetail extends React.Component {
     const { tagsId } = this.props.match.params
     return (<>
       <div className="shadow-box" id="test1">
-        <div className="data_list_title">关于 <b className='red'>{tagsId}</b> 的文章</div>
+        <div className="data-list-title">关于 <b className='red'>{tagsId}</b> 的文章</div>
         <div className="datas">
           <ArticleList articles={articles.data}/>
         </div>

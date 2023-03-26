@@ -113,7 +113,7 @@ export default connect(
       <div style={ { marginBottom: "10px" } }>
         { renderSearch() }
       </div>
-      <div className="data_list_title">关于 <em>{ query }</em> 的搜索结果</div>
+      <div className="data-list-title">关于 <em>{ query }</em> 的搜索结果</div>
       <div className="datas">
         <ArticleList articles={ articles.data } error={ error } title={ `关于 '${ query }' 的搜索结果` }/>
       </div>
