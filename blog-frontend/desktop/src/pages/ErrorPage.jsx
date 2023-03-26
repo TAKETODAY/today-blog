@@ -20,6 +20,7 @@
 
 import React from 'react';
 import head from '../assets/images/404/head.png';
+import { Button } from "antd";
 
 const errors = {
   '400': { msg: '400 Bad Request !', desc: '错误请求 !' },
@@ -37,9 +38,15 @@ export default props => {
   document.title = error.msg
   return (<>
     <div className="container" style={{ marginTop: '100px' }} align="center">
-      <div className="img"><img src={head}/></div>
+      <div className="img">
+        <img src={head}/>
+      </div>
       <h1 style={{ fontSize: '48px' }}>{error.msg}</h1>
-      <div id="msg" style={{ fontSize: '15px' }}>{error.desc}</div>
+      <div id="msg" style={{ fontSize: '15px', marginBottom: 20 }}>{error.desc}</div>
+
+      <Button type="primary" onClick={() => props.history.push('/')}>
+        返回首页
+      </Button>
     </div>
   </>)
 }
