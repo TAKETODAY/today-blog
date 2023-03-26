@@ -19,7 +19,7 @@
  */
 
 import { message, Modal, notification } from "antd";
-import { goToLogin, isNotHomePage, isNotLoginPage, isNull } from "@/utils";
+import { getPath, goToLogin, isNotLoginPage, isNull } from "@/utils";
 import React from "react"
 import { Iterable } from "immutable"
 
@@ -31,16 +31,20 @@ const errorMessage = (err, message) => {
   })
 }
 
-const handleNotFound = (err) => {
-  errorMessage(err, '资源不存在')
-}
+let loginDialogOpened = false
 
-const handleBadRequest = (err) => {
-  errorMessage(err, '请求错误')
-}
+const hideLoginDialogPath = [
+  "/not-found",
+  "/user/login"
+]
 
 export function showLoginDialog(loginCallback, onCancel) {
-  if (isNotLoginPage() && isNotHomePage()) {
+  if (loginDialogOpened) {
+    // 已经打开
+    return false
+  }
+  const path = getPath()
+  if (hideLoginDialogPath.indexOf(path) < 0) {
     console.log("不在登录页面,可以展示提示框")
     Modal.confirm({
       title: "该操作需要登录",
@@ -50,20 +54,33 @@ export function showLoginDialog(loginCallback, onCancel) {
       cancelText: '取消',
       okText: '去登录',
       onOk: () => {
+        loginDialogOpened = false
         const isNotLogin = isNotLoginPage()
         if (isNotLogin) {
           goToLogin()
         }
         loginCallback && loginCallback(!isNotLogin)
       },
-      onCancel: onCancel,
+      onCancel: () => {
+        onCancel && onCancel()
+        loginDialogOpened = false
+      },
     })
 
+    loginDialogOpened = true
     // is show login dialog
     return true
   }
   console.log("当前就在登录页面,不展示提示框")
   return false
+}
+
+const handleNotFound = (err) => {
+  errorMessage(err, '资源不存在')
+}
+
+const handleBadRequest = (err) => {
+  errorMessage(err, '请求错误')
 }
 
 const handleUnauthorized = (err) => {
@@ -89,7 +106,6 @@ const errorHandlers = {
 }
 
 export const handleHttpError = err => {
-  console.log(err)
   if (err && err.response) {
     err.status = err.response.status
     const errorHandler = errorHandlers[err.status]

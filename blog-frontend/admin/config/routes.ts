@@ -23,13 +23,13 @@ export default [
     path: '/workplace',
     name: 'workplace',
     icon: 'smile',
-    access: 'canAdmin',
+    access: 'isLoggedIn',
     component: './workplace',
   },
   {
     path: '/articles',
     layout: false,
-    access: 'canAdmin',
+    access: 'isLoggedIn',
     routes: [
       {
         title: '写文章',
@@ -57,7 +57,7 @@ export default [
     name: 'blog',
     icon: 'profile',
     path: '/blog',
-    access: 'canAdmin',
+    access: 'isLoggedIn',
     routes: [
       {
         name: 'articles',
@@ -88,7 +88,7 @@ export default [
   {
     name: 'attachment',
     icon: 'profile',
-    access: 'canAdmin',
+    access: 'isLoggedIn',
     path: '/attachment',
     routes: [
       {
@@ -103,10 +103,11 @@ export default [
     name: 'user',
     path: '/user',
     icon: 'user',
-    access: 'canAdmin',
+    access: 'isLoggedIn',
     routes: [
       {
         layout: false,
+        access: 'none',
         path: '/user/login',
         component: './user/login',
       },
@@ -114,6 +115,7 @@ export default [
         name: 'list',
         icon: 'user',
         path: '/user/list',
+        access: 'isLoggedIn',
         component: './user/list',
       },
     ],
@@ -122,7 +124,7 @@ export default [
     name: 'system',
     path: '/system',
     icon: 'setting',
-    access: 'canAdmin',
+    access: 'isLoggedIn',
     routes: [
       {
         name: 'account',
@@ -143,25 +145,10 @@ export default [
       },
     ],
   },
-  // {
-  //   path: '/admin',
-  //   name: 'admin',
-  //   icon: 'crown',
-  //   access: 'canAdmin',
-  //   component: './Admin',
-  //   routes: [
-  //     {
-  //       path: '/admin/sub-page',
-  //       name: 'sub-page',
-  //       icon: 'smile',
-  //       component: './workplace',
-  //     },
-  //   ],
-  // },
   {
     path: '/',
     redirect: '/workplace',
-    access: 'canAdmin',
+    access: 'isLoggedIn',
   },
   {
     layout: false,

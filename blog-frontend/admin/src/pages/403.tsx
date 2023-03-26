@@ -18,14 +18,15 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-/**
- * @see https://umijs.org/zh-CN/plugins/plugin-access
- */
-export default function access(initialState: { currentUser?: API.CurrentUser | undefined }) {
-  const { currentUser } = initialState || {};
-  return {
-    none: true,
-    strictMode: true,
-    isLoggedIn: currentUser != null,
-  };
-}
+import { Result } from 'antd';
+import React from 'react';
+
+const Forbidden: React.FC = () => (
+    <Result
+        status="403"
+        title="403"
+        subTitle="对不起，你没有所访问页面的权限"
+    />
+);
+
+export default Forbidden;
