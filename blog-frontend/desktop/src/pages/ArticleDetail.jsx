@@ -142,10 +142,10 @@ class ArticleDetail extends React.Component {
         this.setState({ needPassword: true })
       }
       else if (status === 404) {
-        this.props.history.push("/NotFound");
+        this.props.history.push("/not-found");
       }
       else {
-        this.props.history.push("/InternalServerError");
+        this.props.history.push("/internal-server-error");
       }
     })
   }
