@@ -18,14 +18,15 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import { ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
-import { Dropdown, Layout, Menu, message, Modal } from 'antd';
 import React from 'react';
-import { Link, NavLink } from "react-router-dom";
-import { userService } from '../services';
-import { Image, Search } from './';
+import { Link } from "react-router-dom";
+import { Dropdown, Layout, Menu, message, Modal } from 'antd';
+import { ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
 import { connect } from "react-redux";
-import { updateUserSession } from "../redux/actions";
+
+import { userService } from 'src/services';
+import { updateUserSession } from "src/redux/actions";
+import { AdminLink, ApiLink, Image, Search } from 'src/components';
 
 const { confirm } = Modal;
 const MenuItem = Menu.Item
@@ -70,14 +71,10 @@ class NavHeader extends React.Component {
     return this.props.userSession.blogger &&
       <SubMenu title="管理员">
         <MenuItem key="write" style={{ width: '200px' }}>
-          <Link to="/blog-admin/#/articles/write" target="_blank" exact>
-            写文章<i className="pull-right glyphicon glyphicon-pencil"/>
-          </Link>
+          <AdminLink href="/articles/write" target="_blank">写文章</AdminLink>
         </MenuItem>
         <MenuItem key="admin">
-          <NavLink to="/blog-admin" target="_blank">后台管理
-            <i className="pull-right glyphicon glyphicon-send"/>
-          </NavLink>
+          <AdminLink to="/" target="_blank">后台管理</AdminLink>
         </MenuItem>
       </SubMenu>
   }
@@ -146,7 +143,7 @@ class NavHeader extends React.Component {
             </Menu.ItemGroup>
           </SubMenu>
           <Menu.Item key="atom">
-            <a target='_blank' href='/atom.xml' title="订阅"> <i className="fa fa-rss"/> 订阅 </a>
+            <ApiLink target='_blank' href='/atom.xml' title="订阅"> <i className="fa fa-rss"/> 订阅 </ApiLink>
           </Menu.Item>
           <Menu.Item key="search">
             <Search/>
