@@ -92,8 +92,8 @@ export default (props: { match: { params: { id: string } } }) => {
 
   return (<>
         <div className="container" style={{ marginTop: 22 }}>
-          <div className="data_list">
-            <div className="data_list_title" style={{ borderLeft: 'none' }}>修改文章</div>
+          <div className="shadow-box">
+            <div className="data-list-title" style={{ borderLeft: 'none' }}>修改文章</div>
             <div className="data" style={{ marginTop: 10 }}>
 
               <div className="row">

@@ -112,8 +112,8 @@ export default () => {
   }
 
   return (<>
-        <div className="container data_list" style={{ marginTop: 22 }}>
-          <div className="data_list_title" style={{ borderLeft: 'none' }}>发表文章</div>
+        <div className="container shadow-box" style={{ marginTop: 22 }}>
+          <div className="data-list-title" style={{ borderLeft: 'none' }}>发表文章</div>
           <div className="data" style={{ marginTop: 10 }}>
             <input value={post.title} maxLength={80} autoFocus={true}
                    autoComplete="off" placeholder="请输入标题" className="article-title"
