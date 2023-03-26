@@ -74,34 +74,34 @@ const share = {
 export function shareQQ(options) {
   options = Object.assign({}, share, options)
   window.open(
-      "http://connect.qq.com/widget/shareqq/index.html?url=" + options.url +
-      "&title=" + options.desc +
-      "&desc=" + options.desc +
-      "&summary=" + options.summary +
-      "&site=" + options.site +
-      "&pics=" + options.cover
+    "http://connect.qq.com/widget/shareqq/index.html?url=" + options.url +
+    "&title=" + options.desc +
+    "&desc=" + options.desc +
+    "&summary=" + options.summary +
+    "&site=" + options.site +
+    "&pics=" + options.cover
   )
 }
 
 export function shareWeiBo(options) {
   options = { ...share, ...options }
   window.open(
-      "http://service.weibo.com/share/share.php?url=" + options.url +
-      "&title=" + options.desc +
-      "&pic=" + options.cover +
-      "&searchPic=true"
+    "http://service.weibo.com/share/share.php?url=" + options.url +
+    "&title=" + options.desc +
+    "&pic=" + options.cover +
+    "&searchPic=true"
   )
 }
 
 export function shareQQZone(options) {
   options = { ...share, ...options }
   window.open(
-      "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=" + options.url +
-      "&title=" + options.desc +
-      "&desc=" + options.desc +
-      "&summary=" + options.summary +
-      "&site=" + options.site +
-      "&pics=" + options.cover
+    "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=" + options.url +
+    "&title=" + options.desc +
+    "&desc=" + options.desc +
+    "&summary=" + options.summary +
+    "&site=" + options.site +
+    "&pics=" + options.cover
   )
 }
 
@@ -197,4 +197,8 @@ export function getArticleId(id) {
     return id.substr(0, id.length - '.html'.length)
   }
   return id
+}
+
+export function extractData(res) {
+  return res.data
 }

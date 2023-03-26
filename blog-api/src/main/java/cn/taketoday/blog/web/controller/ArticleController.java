@@ -20,7 +20,9 @@
 
 package cn.taketoday.blog.web.controller;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,6 +52,7 @@ import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.Interceptor;
+import cn.taketoday.web.annotation.PATCH;
 import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.PUT;
 import cn.taketoday.web.annotation.PathVariable;
@@ -83,56 +86,61 @@ public class ArticleController {
    *
    * <pre>
    * {
-   *   "all": 4759,
+   *   "total": 4759,
    *   "current":1,
    *   "data": [{
    *
    *   }],
-   *   "num":476,
+   *   "pages":476,
    *   "size":10,
    * }
    * </pre>
    */
   @GET
-  public Pagination<ArticleItem> articles(Pageable pageable) {
-    int rowCount = articleService.countByStatus(PostStatus.PUBLISHED);
-    assertFound(pageable, rowCount);
-    List<ArticleItem> articles = articleService.getHomeArticles(pageable);
-    return Pagination.ok(articles, rowCount, pageable);
+  public Pagination<ArticleItem> homeArticles(Pageable pageable) {
+    return articleService.getHomeArticles(pageable);
   }
 
   /**
-   * @param q query string
+   * 搜索接口
+   *
+   * @param q 查询
    */
-  @GET("/search")
-  public Pagination<Article> search(@RequestParam String q, Pageable pageable) {
+  @GET(params = "q")
+  public Pagination<ArticleItem> search(@RequestParam String q, Pageable pageable) {
     return articleService.search(BlogUtils.stripAllXss(q), pageable);
   }
 
-  @GET("/categories/{category}")
-  public Pagination<Article> categories(Pageable pageable, @PathVariable String category) {
-    int rowCount = articleService.countByCategory(category);
-    assertFound(pageable, rowCount);
-    return Pagination.ok(articleService.getByCategory(category, pageable), rowCount, pageable);
+  /**
+   * 根据分类获取文章
+   *
+   * @param category 分类
+   * @param pageable 分页
+   */
+  @GET(params = "category")
+  public Pagination<ArticleItem> categories(@RequestParam String category, Pageable pageable) {
+    return articleService.getArticlesByCategory(category, pageable);
   }
 
-  protected void assertFound(Pageable pageable, int rowCount) {
-    if (BlogUtils.notFound(pageable.getCurrent(), BlogUtils.pageCount(rowCount, pageable.getSize()))) {
-      throw ErrorMessageException.failed("分页不存在");
-    }
+  /**
+   * 根据标签获取对应文章
+   *
+   * @param tag 文章标签
+   * @param pageable 分页
+   */
+  @GET(params = "tag")
+  public Pagination<ArticleItem> byTag(@RequestParam String tag, Pageable pageable) {
+    return articleService.getArticlesByTag(tag, pageable);
   }
 
-  @GET("/tags/{label}")
-  public Pagination<Article> tagJson(@PathVariable String label, Pageable pageable) {
-
-    int rowCount = articleService.countByLabel(label);
-    assertFound(pageable, rowCount);
-
-    return Pagination.ok(articleService.getByLabel(label, pageable), rowCount, pageable);
-  }
-
-  @POST("/{id}/pv") // POST/blog-web/api/articles/1560163530909/pv Referer
-  public void pv(@PathVariable("id") Long id,
+  /**
+   * 更新 PV
+   *
+   * @param id 文章ID
+   * @param author 博主
+   */
+  @PATCH("/{id}/pv") // PATCH /api/articles/1560163530909/pv Referer
+  public void updatePageView(@PathVariable("id") Long id,
           @RequestHeader String Referer, @Nullable Blogger author) {
     if (author == null) {
       articleService.updatePageView(id);
@@ -150,14 +158,15 @@ public class ArticleController {
   }
 
   /**
-   * Get popular articles
+   * 获取受欢迎的文章 API
    */
   @GET(params = "most-popular")
-  public List<Article> mostPopular() {
+  public List<ArticleItem> mostPopular() {
     return articleService.getMostPopularArticles();
   }
 
   /**
+   * 获取文章详情
    * <pre>{@code
    * {
    *   "pv": 25,
@@ -165,19 +174,19 @@ public class ArticleController {
    *   "content": "",
    *   "cover": null,
    *   "summary": "",
-   *   "lastModify": 0,
+   *   "updateAt": "",
+   *   "createAt": "",
    *   "markdown": null,
    *   "category": "未分类",
    *   "id": 1577549633740,
-   *   "keepNavigation": false,
-   *   "copyright": "版权声明：本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。",
-   *   "title": "中国学霸本科生提出AI新算法：速度比肩Adam，性能媲美SGD，ICLR领域主席赞不绝口",
-   *   "uri": "1577549633740"
+   *   "copyright": "本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。",
+   *   "title": "动态代理底层原理（Java）",
+   *   "uri": "the-principles-of-dynamic-proxy-java"
    * }
    * }</pre>
    *
-   * @param key This article password if the article has
-   * @param uri 文章定位
+   * @param key 文章的密码，如果有的话
+   * @param uri 文章地址
    * @return {@link Article}
    */
   @GET("/{uri}")
@@ -208,99 +217,48 @@ public class ArticleController {
   }
 
   /**
-   * Save article
+   * 创建文章 API
    */
   @POST
   @RequiresBlogger
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "创建文章", content = "创建新文章标题: [${#from.title}]")
+  @Logging(title = "创建文章", content = "标题: [${#from.title}]")
   public void create(@RequestBody ArticleFrom from) {
     Article article = getArticle(from);
 
-    Long articleId = from.getCreateTime();
-    if (articleId == null) {
-      articleId = System.currentTimeMillis();
+    if (!StringUtils.hasText(article.getUri())) {
+      article.setUri(from.title);
     }
-    else {
-      Article byId = articleService.getById(articleId);
-      if (byId != null) {
-        throw ErrorMessageException.failed("已经存在相同文章");
-      }
-    }
-    article.setId(articleId);
-    if (StringUtils.hasText(article.getUri())) {
-      article.setUri(String.valueOf(articleId));
-    }
+
     if (log.isDebugEnabled()) {
-      log.debug("Create a new article: [{}]", from.getTitle());
+      log.debug("创建新文章: [{}]", from.title);
     }
 
     articleService.saveArticle(article);
   }
 
-  @Nullable
-  private Set<Label> getLabels(ArticleFrom from) {
-    if (CollectionUtils.isNotEmpty(from.getLabels())) {
-      Set<Label> labels = new HashSet<>();
-      for (String label : from.getLabels()) {
-        Label byName = labelService.getByName(label);
-        if (byName == null) {
-          byName = new Label(System.currentTimeMillis()).setName(label);
-          labelService.save(byName);
-        }
-        labels.add(byName);
-      }
-      return labels;
-    }
-    return null;
-  }
+  static class ArticleFrom {
 
-  private Article getArticle(ArticleFrom from) {
-    Set<Label> labels = getLabels(from);
+    @Nullable
+    public LocalDateTime createAt;
+    public String category;
+    public String copyright;
+    public Set<String> labels;
 
-    Article article = new Article();
-
-    article.setLabels(labels);
-    article.setTitle(from.getTitle());
-    article.setStatus(from.getStatus());
-    article.setContent(from.getContent());
-    article.setSummary(from.getSummary());
-    article.setCategory(from.getCategory());
-    article.setMarkdown(from.getMarkdown());
-    article.setCopyright(from.getCopyright());
-    article.setPassword(StringUtils.isEmpty(from.getPassword()) ? null : from.getPassword());
-
-    article.setCover(StringUtils.isEmpty(from.getImage())
-                     ? BlogUtils.getFirstImagePath(from.getContent())
-                     : from.getImage()
-    );
-
-    return article;
-  }
-
-  @Getter
-  @Setter
-  public static class ArticleFrom {
-
-    private Long createTime;
-    private String category;
-    private String copyright;
-    private Set<String> labels;
-
-    private String image;
-    private String title;
-    private PostStatus status;
-    private String summary;
-    private String content;
-    private String markdown;
-    private String password;
+    public String cover;
+    public String title;
+    public PostStatus status;
+    public String summary;
+    public String content;
+    public String markdown;
+    public String password;
   }
 
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequiresBlogger
   @Logging(title = "更新文章", content = "更新文章: [${#from.title}]")
-  public void update(@PathVariable("id") Long id, @RequestBody ArticleFrom from) {
+  public void update(@PathVariable("id") Integer id, @RequestBody ArticleFrom from) {
     Article article = getArticle(from);
     article.setId(id);
     articleService.update(article);
@@ -328,4 +286,43 @@ public class ArticleController {
     return articleService.search(from, pageable);
   }
 
+  private Article getArticle(ArticleFrom from) {
+    Set<Label> labels = getLabels(from);
+
+    Article article = new Article();
+
+    article.setLabels(labels);
+    article.setTitle(from.title);
+    article.setStatus(from.status);
+    article.setContent(from.content);
+    article.setSummary(from.summary);
+    article.setCategory(from.category);
+    article.setMarkdown(from.markdown);
+    article.setCopyright(from.copyright);
+    article.setPassword(StringUtils.hasText(from.password) ? from.password : null);
+    article.setCover(StringUtils.hasText(from.cover)
+                     ? from.cover
+                     : BlogUtils.getFirstImagePath(from.content)
+    );
+
+    article.setCreateAt(from.createAt);
+    return article;
+  }
+
+  @Nullable
+  private Set<Label> getLabels(ArticleFrom from) {
+    if (CollectionUtils.isNotEmpty(from.labels)) {
+      var labels = new LinkedHashSet<Label>();
+      for (String label : from.labels) {
+        Label byName = labelService.getByName(label);
+        if (byName == null) {
+          byName = new Label().setName(label);
+          labelService.save(byName);
+        }
+        labels.add(byName);
+      }
+      return labels;
+    }
+    return null;
+  }
 }

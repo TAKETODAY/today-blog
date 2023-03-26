@@ -177,7 +177,7 @@ export function isNotHomePage(location) {
 export function goToLogin() {
   const path = getPath()
   if (path !== '/') {
-    history.push('/user/login?redirect=' + encodeURI(path))
+    history.push(`/user/login?redirect=${encodeURI(path)}`)
   }
   else {
     history.push('/user/login')

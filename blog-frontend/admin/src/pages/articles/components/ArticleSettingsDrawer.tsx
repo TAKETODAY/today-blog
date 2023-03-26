@@ -19,7 +19,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { computeSummary, isEmpty, isNotEmpty, showHttpErrorMessageVoid } from "@/utils";
+import { computeSummary, extractData, isEmpty, isNotEmpty, showHttpErrorMessageVoid } from "@/utils";
 import { Button, Col, DatePicker, Drawer, Form, Input, Row, Select } from "antd";
 import articleService from "@/services/ArticleService";
 import { AxiosResponse } from "axios";
@@ -32,7 +32,7 @@ import moment from "moment";
 const { Option } = Select;
 const { TextArea } = Input;
 
-function getInitialLabels(article: { labels: any[]; }) {
+function getInitialLabels(article: ArticleItem) {
   if (isNotEmpty(article.labels)) {
     const first = article.labels[0]
     return (typeof first === 'string') ? [...article.labels]
@@ -56,8 +56,9 @@ export default (props: any) => {
     const status = article.status ? article.status : "PUBLISHED"
     const summary = isNotEmpty(article.summary) ? article.summary : computeSummary(article.content)
     const createAt = moment(article.createAt)
+    const labels = getInitialLabels(article)
 
-    form.setFieldsValue({ ...article, createAt, summary, status })
+    form.setFieldsValue({ ...article, createAt, summary, status, labels })
   }, [article])
 
   const loadLabels = (open: boolean) => {
@@ -72,10 +73,10 @@ export default (props: any) => {
   const loadCategories = (open: boolean) => {
     if (open && isEmpty(categories)) {
       setCategoriesLoading(true)
-      // @ts-ignore
-      articleService.getAllCategories().then((res: AxiosResponse) => {
-        setCategories(res.data)
-      }).catch(showHttpErrorMessageVoid)
+      articleService.getAllCategories()
+          .then(extractData)
+          .then(setCategories)
+          .catch(showHttpErrorMessageVoid)
           .finally(() => setCategoriesLoading(false))
     }
   }
@@ -87,14 +88,11 @@ export default (props: any) => {
     })
   }
 
-  const initialLabels = getInitialLabels(article)
-
   const onUpdateValues = (_: ArticleItem, item: ArticleItem) => {
-    console.log("表单有变动=>\n变动：", _, "\n新值：", item)
+    console.debug("表单有变动=>\n变动：", _, "\n新值：", item)
     onValuesChange({ ...item })
   }
 
-  // @ts-ignore
   return (
       <Drawer
           width={800}
@@ -143,7 +141,7 @@ export default (props: any) => {
             </Col>
             {/*文章标签*/}
             <Col span={12}>
-              <Form.Item name="labels" label="文章标签" initialValue={initialLabels}>
+              <Form.Item name="labels" label="文章标签" initialValue={article.labels}>
                 <Select placeholder="请选择文章标签" loading={labelsLoading} mode="tags"
                         showArrow onDropdownVisibleChange={loadLabels}>
                   {labels.map((label: PostLabel) =>

@@ -19,18 +19,17 @@
  */
 
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Checkbox, Form, Input, message, Popconfirm } from 'antd';
+import { Alert, Button, Checkbox, Form, Input, message, Popconfirm } from 'antd';
 import React from 'react';
 import github from '../assets/images/login/github.png';
 import gitee from '../assets/images/login/gitee.png';
 import { userService } from '../services';
-import { getStorage, saveStorage, removeStorage } from '../utils';
+import { getStorage, removeStorage, saveStorage } from '../utils';
 import { Link } from "react-router-dom";
 import { Image } from './'
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
 import { connect } from "react-redux";
-import { Alert } from 'antd';
 
 const emailRules = [
   { required: true, message: '请输入您的邮箱!' },

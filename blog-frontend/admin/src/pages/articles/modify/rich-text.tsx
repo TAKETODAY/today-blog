@@ -20,7 +20,7 @@
 
 import { useEffect, useState } from 'react';
 import { BackTop, Button, message } from "antd";
-import { extractData, getStorage, isEmpty, removeStorage, saveStorage, showHttpErrorMessage, showHttpErrorMessageVoid } from '@/utils'
+import { extractData, getStorage, isEmpty, removeStorage, saveStorage, showHttpErrorMessage } from '@/utils'
 import articleService from '@/services/ArticleService'
 
 import '@/assets/css/index.css'
@@ -43,7 +43,7 @@ export default (props: { match: { params: { id: string } } }) => {
   const savePostToLocal = (post: ArticleItem) => {
     setPost(post)
     saveStorage(articleCacheKey, post)
-    console.log("本地缓存", post)
+    // console.log("本地缓存", post)
   }
 
   const showDrawer = () => setDrawerVisible(true)
@@ -76,7 +76,6 @@ export default (props: { match: { params: { id: string } } }) => {
       articleService.getById(id)
           .then(extractData)
           .then(savePostToLocal)
-          .catch(showHttpErrorMessageVoid)
           .finally(() => setLoading(false))
     }
     else {
@@ -93,8 +92,8 @@ export default (props: { match: { params: { id: string } } }) => {
 
   return (<>
         <div className="container" style={{ marginTop: 22 }}>
-          <div className="data_list">
-            <div className="data_list_title" style={{ borderLeft: 'none' }}>修改文章</div>
+          <div className="shadow-box">
+            <div className="data-list-title" style={{ borderLeft: 'none' }}>修改文章</div>
             <div className="data" style={{ marginTop: 10 }}>
 
               <div className="row">
@@ -109,6 +108,7 @@ export default (props: { match: { params: { id: string } } }) => {
                       onChange={(e) => {
                         setTitle(e.target.value)
                       }}
+                      style={{ marginBottom: 10 }}
                   />
 
                   <div className="box box-primary">

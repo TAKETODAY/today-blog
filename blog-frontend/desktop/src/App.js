@@ -21,11 +21,14 @@
 import React from 'react';
 import { Switch } from 'react-router';
 import { Redirect, Route } from 'react-router-dom';
-import './App.css';
 import { Footer, Header } from './components';
-import { ArticleLayout, SearchLayout } from './layouts';
-import { Article, CategoriesDetail, Error, Home, LabelsDetail, Login, Search, UserInfo, UserSettings } from './pages';
 import { Layout } from 'antd';
+import { ArticleLayout, SearchLayout } from './layouts';
+import './App.css';
+import {
+  ArticleDetail, CategoriesDetail, ErrorPage, Home,
+  LabelsDetail, Login, Search, UserInfo, UserSettings
+} from 'src/pages';
 
 const { Content } = Layout;
 
@@ -38,20 +41,20 @@ export default class App extends React.Component {
         <Content>
           <Switch>
             <Route path="/login" exact component={Login}/>
-            <Route path='/BadRequest' exact>
-              <Error status='400'/>
+            <Route path={['/BadRequest', "/bad-request"]} exact>
+              <ErrorPage status='400'/>
             </Route>
-            <Route path='/NotFound' exact>
-              <Error status='404'/>
+            <Route path={['/NotFound', "/not-found"]} exact>
+              <ErrorPage status='404'/>
             </Route>
-            <Route path='/AccessForbidden' exact>
-              <Error status='403'/>
+            <Route path={['/AccessForbidden', "/access-forbidden"]} exact>
+              <ErrorPage status='403'/>
             </Route>
-            <Route path='/MethodNotAllowed' exact>
-              <Error status='405'/>
+            <Route path={["/MethodNotAllowed", "/method-not-allowed"]} exact>
+              <ErrorPage status='405'/>
             </Route>
-            <Route path='/InternalServerError' exact>
-              <Error status='500'/>
+            <Route path={['/InternalServerError', "/internal-server-error"]} exact>
+              <ErrorPage status='500'/>
             </Route>
             <Route exact path="/search">
               <SearchLayout>
@@ -65,9 +68,9 @@ export default class App extends React.Component {
                 <Switch>
                   <Route exact path='/' component={Home}/>
                   <Route exact path="/tags/:tagsId" component={LabelsDetail}/>
-                  <Route exact path="/articles/:articleId" component={Article}/>
+                  <Route exact path="/articles/:articleId" component={ArticleDetail}/>
                   <Route exact path="/categories/:categoryId" component={CategoriesDetail}/>
-                  <Redirect to="/NotFound"/>
+                  <Redirect to="/not-found"/>
                 </Switch>
               </ArticleLayout>
             </Route>

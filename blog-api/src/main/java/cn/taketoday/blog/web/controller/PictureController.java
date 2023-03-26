@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -27,12 +27,14 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.model.User;
+import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.context.annotation.Profile;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.web.annotation.GET;
@@ -51,6 +53,7 @@ import static cn.taketoday.blog.BlogConstant.IMG_WIDTH;
 @Profile("dev")
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@RequestLimit(count = 5, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟最多请求5次")
 public class PictureController {
   private final AttachmentConfig attachmentConfig;
   private final Random randCodeSource = new Random();

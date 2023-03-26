@@ -244,10 +244,10 @@ export default {
         }
         else if (status === 404) {
           handleError(e)
-          this.$router.push('/NotFound')
+          this.$router.push('/not-found')
         }
         else {
-          this.$router.push('/InternalServerError')
+          this.$router.push('/internal-server-error')
           Toast("文章详情加载失败")
         }
       });

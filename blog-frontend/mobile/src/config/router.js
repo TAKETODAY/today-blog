@@ -1,3 +1,23 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 import Vue from 'vue';
 import Router from 'vue-router';
 import { http, setTitle, startNProgress, stopNProgress } from "utils";
@@ -101,35 +121,35 @@ const routes = [
     }
   },
   {
-    path: '/NotFound',
+    path: '/not-found',
     component: () => import('src/pages/error/not-found'),
     meta: {
       title: '页面不存在',
     }
   },
   {
-    path: '/BadRequest',
+    path: '/bad-request',
     component: () => import('src/pages/error/bad-request'),
     meta: {
       title: '错误请求',
     }
   },
   {
-    path: '/InternalServerError',
+    path: '/internal-server-error',
     component: () => import('src/pages/error/internal-server-error'),
     meta: {
       title: '服务器内部错误',
     }
   },
   {
-    path: '/AccessForbidden',
+    path: '/access-forbidden',
     component: () => import('src/pages/error/access-forbidden'),
     meta: {
       title: '没有权限',
     }
   },
   {
-    path: '/MethodNotAllowed',
+    path: '/method-not-allowed',
     component: () => import('src/pages/error/method-not-allowed'),
     meta: {
       title: '您请求的方式不正确',

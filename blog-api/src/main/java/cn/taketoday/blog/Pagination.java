@@ -37,10 +37,13 @@ public class Pagination<T> implements ListableResult<T> {
 
   /** amount of page */
   private long num;
+
   /** all row in database */
   private long all;
+
   /** every page size */
   private int size;
+
   /** current page */
   private int current;
 
@@ -79,8 +82,8 @@ public class Pagination<T> implements ListableResult<T> {
     return current;
   }
 
-  public Pagination<T> pageable(int all, Pageable pageable) {
-    this.all = all;
+  public Pagination<T> pageable(int total, Pageable pageable) {
+    this.all = total;
     return pageable(pageable);
   }
 
@@ -96,7 +99,7 @@ public class Pagination<T> implements ListableResult<T> {
     return this;
   }
 
-  public Pagination<T> all(long all) {
+  public Pagination<T> total(long all) {
     this.all = all;
     return this;
   }
@@ -106,7 +109,7 @@ public class Pagination<T> implements ListableResult<T> {
     return this;
   }
 
-  public Pagination<T> num(long num) {
+  public Pagination<T> pageCount(long num) {
     this.num = num;
     return this;
   }
@@ -131,7 +134,7 @@ public class Pagination<T> implements ListableResult<T> {
     return new Pagination<T>().data(data);
   }
 
-  public static <T> Pagination<T> ok(List<T> data, int all, Pageable pageable) {
-    return ok(data).pageable(all, pageable);
+  public static <T> Pagination<T> ok(List<T> data, int total, Pageable pageable) {
+    return ok(data).pageable(total, pageable);
   }
 }

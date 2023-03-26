@@ -20,10 +20,6 @@
 
 package cn.taketoday.blog.config;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import java.util.concurrent.Executor;
@@ -39,18 +35,16 @@ import cn.taketoday.beans.factory.config.BeanDefinition;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.log.LoggingInterceptor;
 import cn.taketoday.blog.service.LoggingService;
-import cn.taketoday.blog.util.ObjectUtils;
 import cn.taketoday.cache.annotation.EnableCaching;
 import cn.taketoday.cache.support.CaffeineCacheManager;
 import cn.taketoday.context.annotation.Configuration;
 import cn.taketoday.context.annotation.Role;
 import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
-import cn.taketoday.http.converter.json.Jackson2ObjectMapperBuilder;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.stereotype.Component;
+import cn.taketoday.web.config.ViewControllerRegistry;
 import cn.taketoday.web.config.WebMvcConfigurer;
-import cn.taketoday.web.handler.ViewControllerHandlerMapping;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -75,31 +69,27 @@ public class AppConfig implements WebMvcConfigurer {
   }
 
   @Override
-  public void configureViewController(ViewControllerHandlerMapping registry) {
-    registry.addViewController("/sitemap.xml", "/core/sitemap").setContentType("application/xml");
-    registry.addViewController("/rss.xml", "/feed/rss").setContentType("application/rss+xml;charset=utf-8");
-    registry.addViewController("/atom.xml", "/feed/atom").setContentType("application/atom+xml;charset=utf-8");
-
-    registry.addViewController("/NotFound", "/error/404").setStatus(404);
-    registry.addViewController("/Forbidden", "/error/403").setStatus(403);
-    registry.addViewController("/BadRequest", "/error/400").setStatus(400);
-    registry.addViewController("/ServerIsBusy", "/error/500").setStatus(500);
-    registry.addViewController("/MethodNotAllowed", "/error/405").setStatus(405);
+  public void addViewControllers(ViewControllerRegistry registry) {
+    registry.addViewController("/sitemap.xml", "/sitemap").setContentType("application/xml");
+    registry.addViewController("/rss.xml", "/rss").setContentType("application/rss+xml;charset=utf-8");
+    registry.addViewController("/atom.xml", "/atom").setContentType("application/atom+xml;charset=utf-8");
   }
 
   // 异常
 
-  @Component
-  public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-    return builder.build();
-  }
+//  @Component
+//  public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
+//    return builder.build();
+//  }
 
   // 日志
   @Component
   @Order(Ordered.HIGHEST_PRECEDENCE)
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  LoggingInterceptor loggingInterceptor(ObjectProvider<Executor> executor,
-          ObjectProvider<LoggingService> loggerService, ObjectProvider<UserSessionResolver> sessionResolver) {
+  LoggingInterceptor loggingInterceptor(
+          ObjectProvider<Executor> executor,
+          ObjectProvider<LoggingService> loggerService,
+          ObjectProvider<UserSessionResolver> sessionResolver) {
     return new LoggingInterceptor(executor, loggerService, sessionResolver);
   }
 

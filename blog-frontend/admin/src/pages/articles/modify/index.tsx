@@ -22,11 +22,10 @@ import { useEffect, useState } from 'react';
 import { BackTop, Button, message } from "antd";
 import MarkdownEditor from "@/components/Editor";
 import ImageChooserModal from "@/components/ImageChooserModal";
-import { getStorage, handleHttpError, isEmpty, removeStorage, saveStorage, showHttpErrorMessage } from '@/utils'
+import { extractData, getStorage, isEmpty, removeStorage, saveStorage, showHttpErrorMessage } from '@/utils'
 import articleService from '@/services/ArticleService'
 
 import '@/assets/css/index.css'
-import '@/assets/font-awesome/css/font-awesome.min.css'
 import { PlusOutlined } from "@ant-design/icons";
 import { AxiosResponse } from "axios";
 import ArticleDrawer from "@/pages/articles/components/ArticleSettingsDrawer";
@@ -49,10 +48,10 @@ export default (props: { match: { params: { id: string } } }) => {
 
   useEffect(() => {
     if (!post || isEmpty(Object.keys(post))) {
-      articleService.getById(id).then((res: AxiosResponse) => {
-        const { data } = res
-        setPost(data)
-      }).catch(handleHttpError).finally(() => setLoading(false))
+      articleService.getById(id)
+          .then(extractData)
+          .then(setPost)
+          .finally(() => setLoading(false))
     }
     else {
       setLoading(false)
@@ -62,7 +61,7 @@ export default (props: { match: { params: { id: string } } }) => {
   const savePostToLocal = (post: any) => {
     setPost(post)
     saveStorage(articleCacheKey, post)
-    console.log("本地缓存", post)
+    //console.log("本地缓存", post)
   }
 
   const showModal = () => {
@@ -109,6 +108,7 @@ export default (props: { match: { params: { id: string } } }) => {
   const editorOptions = {
     autosave: false,
     autofocus: false,
+    autoDownloadFontAwesome: true,
     renderingConfig: { html: true },
     toolbar: ["bold", "italic", "strikethrough", "heading", "|", "code", "quote", "unordered-list", "ordered-list", "|",
       "link", "image", {
@@ -136,43 +136,28 @@ export default (props: { match: { params: { id: string } } }) => {
   }
 
   return (<>
-        <div className="container" style={{ marginTop: 22 }}>
-          <div className="row clearfix">
-            <div className="col-md-12" style={{ zIndex: 10, padding: 0 }}>
-              <div className="data_list">
-                <div className="data_list_title" style={{ borderLeft: 'none' }}>编辑文章</div>
-                <div className="data" style={{ marginTop: 10 }}>
-                  <div className="row">
-                    <div className="col-md-12">
-                      <input value={post.title} maxLength={80} autoFocus={true}
-                             autoComplete="off" placeholder="请输入标题" className="article-title"
-                             onChange={(e) => {
-                               setTitle(e.target.value)
-                             }}
-                      />
+        <div className="container shadow-box" style={{ marginTop: 22 }}>
+          <div className="data-list-title" style={{ borderLeft: 'none' }}>编辑文章</div>
+          <div className="data" style={{ marginTop: 10 }}>
+            <input value={post.title} maxLength={80} autoFocus={true}
+                   autoComplete="off" placeholder="请输入标题" className="article-title"
+                   onChange={(e) => {
+                     setTitle(e.target.value)
+                   }}
+                   style={{ marginLeft: 10 }}
+            />
 
-                      <div className="box box-primary">
-                        <div className="box-body pad">
-
-                          <div id="markdown-editor">
-                            <MarkdownEditor setEditor={setEditor} value={post.markdown}
-                                            onChange={saveContent} options={editorOptions}/>
-                          </div>
-
-                          <div style={{ textAlign: 'center', padding: 10 }}>
-                            <Button type="primary" onClick={showDrawer}>
-                              <PlusOutlined/> 保存文章
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-              {/*  <!--/RIGHT END-->*/}
+            <div id="markdown-editor">
+              <MarkdownEditor setEditor={setEditor} value={post.markdown}
+                              onChange={saveContent} options={editorOptions}/>
             </div>
+
+            <div style={{ textAlign: 'center', padding: 10 }}>
+              <Button type="primary" onClick={showDrawer}>
+                <PlusOutlined/> 保存文章
+              </Button>
+            </div>
+
           </div>
         </div>
 

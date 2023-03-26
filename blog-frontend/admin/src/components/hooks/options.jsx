@@ -32,7 +32,7 @@ export function useOptions() {
   const setOptions = async options => {
     await setInitialState({ ...initialState, options })
   }
-  const { options } = initialState
+  const options = (initialState && initialState.options) || {}
   return [options, setOptions]
 }
 

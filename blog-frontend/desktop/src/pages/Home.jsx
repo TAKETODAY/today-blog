@@ -21,7 +21,7 @@
 import { Pagination } from 'antd';
 import React from 'react';
 import ArticleList from '../components/ArticleList';
-import { applySEO, scrollTop, setTitle } from '../utils';
+import { applySEO, extractData, scrollTop, setTitle } from '../utils';
 import { connect } from "react-redux";
 import { navigationsMapStateToProps } from "../redux/action-types";
 import { updateNavigations } from "../redux/actions";
@@ -43,13 +43,14 @@ class Home extends React.Component {
   updateArticles(page = 1, size = 10) {
     scrollTop()
 
-    const articles = this.state.articles
+    const { articles } = this.state
     articles['data'] = undefined
 
-    super.setState({ articles: articles })
+    super.setState({ articles })
     articleService.fetchHomeArticles(page, size)
-      .then(res => {
-        super.setState({ articles: res.data });
+      .then(extractData)
+      .then(articles => {
+        super.setState({ articles });
       })
       .catch(error => {
         const err = {
@@ -79,8 +80,8 @@ class Home extends React.Component {
   render() {
     const { articles, error } = this.state
     return (<>
-      <div className="data_list" id="test1">
-        <div className="data_list_title">最新文章</div>
+      <div className="shadow-box" id="test1">
+        <div className="data-list-title">最新文章</div>
         <ArticleList articles={articles.data} error={error} title="最新文章"/>
         <div align='center' style={{ padding: '20px' }}>
           <Pagination

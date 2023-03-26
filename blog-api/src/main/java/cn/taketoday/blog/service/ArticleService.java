@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import cn.taketoday.blog.BlogConstant;
+import cn.taketoday.beans.factory.InitializingBean;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.BlogConfig;
@@ -43,31 +43,33 @@ import cn.taketoday.blog.repository.ArticleRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
+import cn.taketoday.jdbc.AbstractQuery;
+import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
-import cn.taketoday.scheduling.annotation.Async;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.NotFoundException;
-import jakarta.annotation.PostConstruct;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
+
+import static cn.taketoday.jdbc.persistence.PropertyUpdateStrategy.updateNoneNull;
 
 @Service
 @CustomLog
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "Articles")
-public class ArticleService {
+public class ArticleService implements InitializingBean {
   private final BlogConfig blogConfig;
   private final LabelService labelService;
+  private final RepositoryManager repository;
   private final CategoryService categoryService;
   private final ArticleRepository articleRepository;
-  private final RepositoryManager repositoryManager;
 
   private final Rss rss = new Rss();
   private final Atom atom = new Atom();
@@ -78,13 +80,14 @@ public class ArticleService {
    *
    * @param article article instance
    */
-  @Async
   @Transactional
   @CacheEvict(key = "'ById_'+#article.id")
   public void update(Article article) {
+    Assert.notNull(article, "文章不能为空");
+    Assert.notNull(article.getId(), "文章ID不能为空");
     Article oldArticle = obtainById(article.getId());
 
-    articleRepository.update(article);
+    repository.getEntityManager().updateById(article, updateNoneNull());
 
     // update category
     if (!Objects.equals(article.getCategory(), oldArticle.getCategory())) {
@@ -98,7 +101,7 @@ public class ArticleService {
     }
 
     try {
-      // update labels
+      // 更新标签
       updateArticleLabels(article, oldArticle);
     }
     catch (Exception e) {
@@ -106,7 +109,7 @@ public class ArticleService {
     }
 
     try {
-      buildFeed();
+      refreshFeedArticles();
     }
     catch (Exception e) {
       throw InternalServerException.failed("文章订阅更新失败", e);
@@ -114,7 +117,6 @@ public class ArticleService {
   }
 
   protected void updateArticleLabels(Article newArticle, Article articleInDb) {
-
     Set<Label> oldLabels = articleInDb.getLabels();
     Set<Label> newLabels = newArticle.getLabels();
     if (labelsChanged(newLabels, oldLabels)) {
@@ -137,14 +139,27 @@ public class ArticleService {
     return !Objects.equals(newLabels, oldLabels);
   }
 
+  /**
+   * 更新PV
+   */
   public void updatePageView(long id) {
-    articleRepository.updatePageView(id);
+    // language=MySQL
+    try (var query = repository.createQuery("update article set `pv`= pv + 1 where `id` = ?")) {
+      query.addParameter(id);
+      query.executeUpdate();
+    }
   }
 
   @Cacheable(key = "'ById_'+#id")
   public Article getById(long id) {
-    Article findById = articleRepository.findById(id);
-    return findById == null ? null : findById.setLabels(labelService.getByArticleId(id));
+    // language=MySQL
+    try (Query query = repository.createQuery("SELECT * FROM article WHERE id = ? LIMIT 1")) {
+      query.addParameter(id);
+
+      Article article = query.fetchFirst(Article.class);
+      applyTags(article);
+      return article;
+    }
   }
 
   @Nullable
@@ -152,13 +167,11 @@ public class ArticleService {
   public Article getByURI(String uri) {
     Assert.notNull(uri, "文章地址不能为空");
     // language=MySQL
-    try (Query query = repositoryManager.createQuery("SELECT * FROM article WHERE uri=? LIMIT 1")) {
+    try (Query query = repository.createQuery("SELECT * FROM article WHERE uri=? LIMIT 1")) {
       query.addParameter(uri);
 
       Article article = query.fetchFirst(Article.class);
-      if (article != null) {
-        article.setLabels(labelService.getByArticleId(article.getId()));
-      }
+      applyTags(article);
       return article;
     }
   }
@@ -168,82 +181,213 @@ public class ArticleService {
    */
   protected Article obtainById(long id) {
     Article byId = getById(id);
-    if (byId == null) {
-      throw new NotFoundException("该文章不存在或已删除不能操作");
-    }
+    NotFoundException.notNull(byId, "该文章不存在或已删除不能操作");
     return byId;
   }
 
-  public List<Article> getMostPopularArticles() {
-    return articleRepository.findByClickHit(BlogConstant.DEFAULT_LIST_SIZE);
-  }
-
-  public List<Article> getFeedArticles() {
-    int listSize = blogConfig.getArticleFeedListSize();
-    return applyLabels(articleRepository.getFeedArticles(listSize));
-  }
+  // 获取文章列表
 
   /**
-   * Build feed
+   * 获取受欢迎的文章
+   * <p>
+   * 根据点击量排序
    *
-   * @see cn.taketoday.beans.factory.InitializingBean#afterPropertiesSet()
+   * @return 受欢迎的文章
    */
-  @PostConstruct
-  public void buildFeed() {
-
-    List<Article> feedArticles = getFeedArticles();
-
-    buildAtom(feedArticles);
-    buildRss(feedArticles);
-
-    buildSitemap();
+  public List<ArticleItem> getMostPopularArticles() {
+    int listSize = blogConfig.getListSize();
+    // language=MySQL
+    try (var query = repository.createQuery("""
+            SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
+            FROM article
+            WHERE status = ? order by pv DESC LIMIT ?""")) {
+      query.addParameter(PostStatus.PUBLISHED);
+      query.addParameter(listSize);
+      return applyTags(query.fetch(ArticleItem.class));
+    }
   }
 
   /**
-   * Rss
+   * 获取首页文章
    */
-  protected void buildRss(List<Article> feedArticles) {
+  // @Cacheable(key = "'home-'+#pageable.getCurrent()+'-'+#pageable.getSize()")
+  public Pagination<ArticleItem> getHomeArticles(Pageable pageable) {
+    try (JdbcConnection connection = repository.open()) {
+      // language=MySQL
+      try (Query countQuery = connection.createQuery(
+              "SELECT COUNT(id) FROM article WHERE `status` = ?")) {
+        // language=
+        countQuery.addParameter(PostStatus.PUBLISHED);
+        int count = countQuery.fetchScalar(int.class);
+        if (count < 1) {
+          return Pagination.empty();
+        }
 
-    log.debug("Build Rss");
-    rss.getItems().clear();
+        // language=MySQL
+        String sql = """
+                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
+                FROM article WHERE `status` = :status
+                order by create_at DESC LIMIT :pageNow, :pageSize
+                """;
+        try (NamedQuery query = repository.createNamedQuery(sql)) {
+          query.addParameter("pageNow", pageNow(pageable));
+          query.addParameter("status", PostStatus.PUBLISHED);
+          query.addParameter("pageSize", pageable.getSize());
 
-    for (Article article : feedArticles) {
-      if (article.needPassword()) {
-        continue;
-      }
-
-      Item item = new Item();
-      item.setId(article.getId());
-      item.setTitle(article.getTitle());
-      item.setImage(article.getCover());
-      item.setSummary(article.getSummary());
-      item.setContent(article.getContent());
-      item.setPubDate(article.getId());
-
-      item.addCategories(article.getLabels()//
-              .stream()//
-              .map(Label::getName)//
-              .collect(Collectors.toSet())//
-      );
-      rss.addItem(item);
-    }
-
-    rss.setLastBuildDate(System.currentTimeMillis());
-  }
-
-  protected void buildSitemap() {
-    log.debug("Build Sitemap");
-    sitemap.getUrls().clear();
-
-    for (Article article : getAll()) {
-      if (article.getStatus() == PostStatus.PUBLISHED) {
-        sitemap.addUrl(Sitemap.newURL(article));
+          return fetchArticleItems(pageable, count, query);
+        }
       }
     }
   }
 
-  public List<Article> getAll() {
-    return articleRepository.findAll();
+  private Pagination<ArticleItem> fetchArticleItems(Pageable pageable, int count, AbstractQuery query) {
+    List<ArticleItem> items = applyTags(query.fetch(ArticleItem.class));
+    return Pagination.ok(items, count, pageable);
+  }
+
+  /**
+   * 搜索文章
+   */
+  public Pagination<ArticleItem> search(String q, Pageable pageable) {
+    try (JdbcConnection connection = repository.open()) {
+      // language=MySQL
+      try (NamedQuery countQuery = connection.createNamedQuery(
+              "select count(*) from article WHERE `title` like :q OR `content` like :q")) {
+        // language=
+        countQuery.addParameter("q", "%" + q + "%");
+        int count = countQuery.fetchScalar(int.class);
+        if (count < 1) {
+          return Pagination.empty();
+        }
+        // language=MySQL
+        try (NamedQuery dataQuery = connection.createNamedQuery("""
+                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
+                FROM article WHERE `title` LIKE :q OR `content` LIKE :q
+                ORDER BY create_at DESC LIMIT :pageNow, :pageSize""")) {
+          // language=
+          dataQuery.addParameter("q", "%" + q + "%");
+          dataQuery.addParameter("pageNow", pageNow(pageable));
+          dataQuery.addParameter("pageSize", pageable.getSize());
+          return fetchArticleItems(pageable, count, dataQuery);
+        }
+      }
+    }
+  }
+
+  public Pagination<Article> search(SearchForm from, Pageable pageable) {
+    try (Query query = repository.createQuery(
+            "SELECT COUNT(id) FROM article")) {
+//      query.executeUpdate();
+    }
+
+    int count = articleRepository.getRecord(from);
+    if (count < 1) {
+      return Pagination.empty();
+    }
+    List<Article> articles = articleRepository.find(from,
+            getPageNow(pageable.getCurrent(), pageable.getSize()),
+            pageable.getSize());
+    return Pagination.ok(articles, count, pageable);
+  }
+
+  /**
+   * 更具标签获取对应文章
+   */
+  public Pagination<ArticleItem> getArticlesByTag(String label, Pageable pageable) {
+    try (JdbcConnection connection = repository.open()) {
+      // language=MySQL
+      try (var countQuery = connection.createNamedQuery("""
+              SELECT COUNT(*) FROM article
+              LEFT JOIN article_label ON article.id = article_label.articleId
+              WHERE status = :status
+                and article_label.labelId IN (
+                  SELECT labelId FROM article_label
+                    WHERE labelId = (SELECT id FROM label WHERE name = :name))""")) {
+
+        // language=
+        countQuery.addParameter("name", label);
+        countQuery.addParameter("status", PostStatus.PUBLISHED);
+        int count = countQuery.fetchScalar(int.class);
+        if (count < 1) {
+          return Pagination.empty();
+        }
+        // language=MySQL
+        try (var dataQuery = connection.createNamedQuery("""
+                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
+                FROM article LEFT JOIN article_label ON article.id = article_label.articleId
+                WHERE article.status = :status
+                  AND article_label.labelId IN (
+                    SELECT labelId FROM article_label
+                      WHERE labelId = (SELECT id FROM label WHERE name = :name)
+                  )
+                LIMIT :pageNow, :pageSize""")) {
+
+          // language=
+          dataQuery.addParameter("name", label);
+          dataQuery.addParameter("status", PostStatus.PUBLISHED);
+          dataQuery.addParameter("pageNow", pageNow(pageable));
+          dataQuery.addParameter("pageSize", pageable.getSize());
+          return fetchArticleItems(pageable, count, dataQuery);
+        }
+      }
+    }
+  }
+
+  /***
+   * 根据类型找文章
+   */
+  @Cacheable(key = "'cate_'+#categoryName+'_'+#pageable")
+  public Pagination<ArticleItem> getArticlesByCategory(String categoryName, Pageable pageable) {
+    try (JdbcConnection connection = repository.open()) {
+      // language=MySQL
+      try (var countQuery = connection.createNamedQuery("""
+              SELECT COUNT(id) FROM article WHERE status = :status AND category = :name""")) {
+
+        // language=
+        countQuery.addParameter("name", categoryName);
+        countQuery.addParameter("status", PostStatus.PUBLISHED);
+        int count = countQuery.fetchScalar(int.class);
+        if (count < 1) {
+          return Pagination.empty();
+        }
+        // language=MySQL
+        try (var dataQuery = connection.createNamedQuery("""
+                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
+                FROM article WHERE status = :status AND category = :name LIMIT :pageNow, :pageSize""")) {
+
+          // language=
+          dataQuery.addParameter("name", categoryName);
+          dataQuery.addParameter("status", PostStatus.PUBLISHED);
+          dataQuery.addParameter("pageNow", pageNow(pageable));
+          dataQuery.addParameter("pageSize", pageable.getSize());
+          return fetchArticleItems(pageable, count, dataQuery);
+        }
+      }
+    }
+  }
+
+  /**
+   * 刷新订阅文章
+   */
+  public void refreshFeedArticles() {
+    int listSize = blogConfig.getArticleFeedListSize();
+    // language=MySQL
+    try (Query query = repository.createQuery(
+            "SELECT * FROM article WHERE status=0 order by id DESC LIMIT ?")) {
+      query.addParameter(listSize);
+
+      List<Article> feedArticles = query.fetch(Article.class);
+      applyLabels(feedArticles);
+
+      buildAtom(feedArticles);
+      buildRss(feedArticles);
+      buildSitemap();
+    }
+  }
+
+  @Override
+  public void afterPropertiesSet() {
+    refreshFeedArticles();
   }
 
   /**
@@ -279,67 +423,74 @@ public class ArticleService {
     atom.setUpdated(System.currentTimeMillis());
   }
 
+  /**
+   * Rss
+   */
+  protected void buildRss(List<Article> feedArticles) {
+
+    log.debug("Build Rss");
+    rss.getItems().clear();
+
+    for (Article article : feedArticles) {
+      if (article.needPassword()) {
+        continue;
+      }
+
+      Item item = new Item();
+      item.setId(article.getId());
+      item.setTitle(article.getTitle());
+      item.setImage(article.getCover());
+      item.setSummary(article.getSummary());
+      item.setContent(article.getContent());
+      item.setPubDate(article.getId());
+
+      item.addCategories(article.getLabels()
+              .stream()
+              .map(Label::getName)
+              .collect(Collectors.toSet())
+      );
+      rss.addItem(item);
+    }
+
+    rss.setLastBuildDate(System.currentTimeMillis());
+  }
+
+  protected void buildSitemap() {
+    log.debug("Build Sitemap");
+    // language=MySQL
+    try (var query = repository.createQuery("SELECT * FROM article ORDER BY create_at DESC")) {
+      sitemap.getUrls().clear();
+      for (Article article : query.fetch(Article.class)) {
+        if (article.getStatus() == PostStatus.PUBLISHED) {
+          sitemap.addUrl(Sitemap.newURL(article));
+        }
+      }
+    }
+  }
+
   @Transactional
   @CacheEvict(allEntries = true)
   public void deleteById(long id) {
-
-    articleRepository.deleteById(id);
-    // update count
+    repository.getEntityManager().delete(Article.class, id);
+    // 更新文章标签数量
     categoryService.updateArticleCount();
-
-    buildFeed();
+    refreshFeedArticles();
   }
 
   @Transactional
   @CacheEvict(allEntries = true)
   public void updateStatusById(PostStatus status, long id) {
-
     Article findById = obtainById(id);
-
-    articleRepository.updateStatus(status, id);
-    categoryService.updateArticleCount(findById.getCategory());
-
-    buildFeed();
-  }
-
-  /**
-   * find home page articles
-   */
-//  @Cacheable(key = "'home-'+#pageable.getCurrent()+'-'+#pageable.getSize()")
-  public List<ArticleItem> getHomeArticles(Pageable pageable) {
-    int pageSize = pageable.getSize();
-    int current = pageable.getCurrent();
-    // language=MySQL
-    String sql = """
-            SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-            FROM article
-            WHERE `status` = :status
-            order by create_at DESC
-            LIMIT :pageNow, :pageSize
-            """;
-
-    try (NamedQuery query = repositoryManager.createNamedQuery(sql)) {
-      query.addParameter("pageNow", getPageNow(current, pageSize))
-              .addParameter("status", PostStatus.PUBLISHED)
-              .addParameter("pageSize", pageSize);
-
-      List<ArticleItem> items = query.fetch(ArticleItem.class);
-      for (ArticleItem item : items) {
-        Set<Label> labels = labelService.getByArticleId(item.getId());
-        item.setTags(labels.stream().map(Label::getName).toList());
-      }
-      return items;
+    try (Query query = repository.createQuery(
+            "UPDATE article set status = ? WHERE id = ?")) {
+      query.addParameter(status);
+      query.addParameter(id);
+      query.executeUpdate();
     }
-  }
 
-//  @Cacheable
-//  public List<Article> getHomeArticles(Pageable pageable) {
-//    return getIndexArticles(pageable.getCurrent(), pageable.getSize());
-//  }
-//
-//  public List<Article> getIndexArticles(int pageNow, int pageSize) {
-//    return applyLabels(articleRepository.findIndexArticles(getPageNow(pageNow, pageSize), pageSize));
-//  }
+    categoryService.updateArticleCount(findById.getCategory());
+    refreshFeedArticles();
+  }
 
   /**
    * 保存文章
@@ -347,7 +498,7 @@ public class ArticleService {
   @Transactional
   public void saveArticle(Article article) {
     // save
-    repositoryManager.persist(article);
+    repository.persist(article);
     // save labels
     Set<Label> labels = article.getLabels();
     if (CollectionUtils.isNotEmpty(labels)) {
@@ -358,7 +509,7 @@ public class ArticleService {
     categoryService.updateArticleCount(article.getCategory());
 
     // build feed
-    buildFeed();
+    refreshFeedArticles();
   }
 
   // ----------------------------------------------------
@@ -380,14 +531,6 @@ public class ArticleService {
   }
 
   /**
-   * 通过tag获取数目
-   */
-  @Cacheable(key = "'countByLabel_'+#tag", unless = "#result==0")
-  public int countByLabel(String tag) {
-    return articleRepository.getRecordByLabel(tag);
-  }
-
-  /**
    * 得到全部文章数目
    */
   @Cacheable(key = "'count'")
@@ -395,70 +538,26 @@ public class ArticleService {
     return articleRepository.getTotalRecord();
   }
 
-  /**
-   * 根据tag和分页获取文章
-   */
-  @Cacheable(key = "'tag_'+#tag+'_'+#pageNow+'_'+#pageSize")
-  public List<Article> getByLabel(String tag, int pageNow, int pageSize) {
-    return applyLabels(articleRepository.findArticlesByLabel(getPageNow(pageNow, pageSize), pageSize, tag));
-  }
-
-  /***
-   * 根据类型找文章
-   */
-  @Cacheable(key = "'cate_'+#name+'_'+#pageNow+'_'+#pageSize")
-  public List<Article> getByCategory(String name, int pageNow, int pageSize) {
-    return applyLabels(articleRepository.findArticlesByCategory(getPageNow(pageNow, pageSize), pageSize, name));
-  }
-
   @Cacheable(key = "'all_'+#status+'_'+#pageNow+'_'+#pageSize")
   public List<Article> getByStatus(PostStatus status, int pageNow, int pageSize) {
     return applyLabels(articleRepository.findByStatus(status, getPageNow(pageNow, pageSize), pageSize));
   }
 
+  /**
+   * 获取最新文章
+   */
   @Cacheable(key = "'latest'")
-  public List<Article> getLatest() {
-    return articleRepository.findLatest();
+  public List<Article> getLatestArticles() {
+    // language=MySQL
+    try (var query = repository.createQuery("""
+            SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`, `update_at`
+            FROM article ORDER BY id DESC LIMIT 6""")) {
+      return applyLabels(query.fetch(Article.class));
+    }
   }
 
   public List<Article> get(int pageNow, int pageSize) {
     return applyLabels(articleRepository.find(getPageNow(pageNow, pageSize), pageSize));
-  }
-
-  protected int getPageNow(int pageNow, int pageSize) {
-    return (pageNow - 1) * pageSize;
-  }
-
-  private List<Article> applyLabels(List<Article> ret) {
-    if (CollectionUtils.isNotEmpty(ret)) {
-      for (Article article : ret) {
-        article.setLabels(labelService.getByArticleId(article.getId()));
-      }
-    }
-    return ret;
-  }
-
-  //
-  public Pagination<Article> search(String q, Pageable pageable) {
-    int count = articleRepository.getSearchRecord(q);
-    if (count < 1) {
-      return Pagination.empty();
-    }
-    List<Article> articles = articleRepository.search(q,
-            getPageNow(pageable.getCurrent(), pageable.getSize()),
-            pageable.getSize());
-    return Pagination.ok(articles, count, pageable);
-  }
-
-  public Pagination<Article> search(SearchForm from, Pageable pageable) {
-    int count = articleRepository.getRecord(from);
-    if (count < 1) {
-      return Pagination.empty();
-    }
-    List<Article> articles = articleRepository.find(from,
-            getPageNow(pageable.getCurrent(), pageable.getSize()),
-            pageable.getSize());
-    return Pagination.ok(articles, count, pageable);
   }
 
   public Rss getRss() {
@@ -481,12 +580,37 @@ public class ArticleService {
     return getByStatus(status, pageable.getCurrent(), pageable.getSize());
   }
 
-  public List<Article> getByCategory(String categoryName, Pageable pageable) {
-    return getByCategory(categoryName, pageable.getCurrent(), pageable.getSize());
+  // private
+
+  private void applyTags(Article article) {
+    if (article != null) {
+      article.setLabels(labelService.getByArticleId(article.getId()));
+    }
   }
 
-  public List<Article> getByLabel(String label, Pageable pageable) {
-    return getByLabel(label, pageable.getCurrent(), pageable.getSize());
+  private List<ArticleItem> applyTags(List<ArticleItem> items) {
+    for (ArticleItem item : items) {
+      Set<Label> labels = labelService.getByArticleId(item.getId());
+      item.setTags(labels.stream().map(Label::getName).toList());
+    }
+    return items;
+  }
+
+  protected int getPageNow(int pageNow, int pageSize) {
+    return (pageNow - 1) * pageSize;
+  }
+
+  private static int pageNow(Pageable pageable) {
+    return (pageable.getCurrent() - 1) * pageable.getSize();
+  }
+
+  private List<Article> applyLabels(List<Article> ret) {
+    if (CollectionUtils.isNotEmpty(ret)) {
+      for (Article article : ret) {
+        article.setLabels(labelService.getByArticleId(article.getId()));
+      }
+    }
+    return ret;
   }
 
 }

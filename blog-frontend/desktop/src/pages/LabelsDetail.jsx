@@ -1,12 +1,31 @@
-import { Pagination } from 'antd';
-import React from 'react';
-import ArticleList from '../components/ArticleList';
-import { applySEO, isNotEmpty, scrollTop, setTitle } from '../utils';
-import { connect } from "react-redux";
-import { navigationsMapStateToProps } from "../redux/action-types";
-import { updateNavigations } from "../redux/actions";
-import { articleService } from "../services";
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
 
+import React from 'react';
+import { Pagination } from 'antd';
+import { connect } from "react-redux";
+import { articleService } from "../services";
+import ArticleList from '../components/ArticleList';
+import { updateNavigations } from "../redux/actions";
+import { navigationsMapStateToProps } from "../redux/action-types";
+import { applySEO, extractData, isNotEmpty, scrollTop, setTitle } from '../utils';
 
 class LabelsDetail extends React.Component {
 
@@ -17,9 +36,9 @@ class LabelsDetail extends React.Component {
 
   state = {
     articles: {
-      all: 0,
+      total: 0,
       current: 1,
-      num: 0,
+      pages: 0,
       size: 8,
       data: null
     }
@@ -49,48 +68,48 @@ class LabelsDetail extends React.Component {
   }
 
   updateArticles(props) {
-    const tagsId = props.match.params.tagsId;
-    this.loadArticles(tagsId)
+    const tag = props.match.params.tagsId;
+    this.loadArticles(tag)
   }
 
-  loadArticles(tagsId, page = 1, size = 10) {
+  loadArticles(tag, page = 1, size = 10) {
     super.setState({ articles: { data: null } });
     scrollTop()
-    this.updateNavigations({ name: tagsId, url: window.location })
-
-    articleService.getTag(tagsId, page, size).then(res => {
-      const articles = res.data;
-      super.setState({ articles });
-      const title = `关于标签 '${ tagsId }' 的文章`
-      setTitle(title)
-      applySEO(null, title)
-    })
+    this.updateNavigations({ name: tag, url: window.location })
+    articleService.getArticlesByTag(tag, page, size)
+      .then(extractData)
+      .then(articles => {
+        super.setState({ articles });
+        const title = `关于标签 '${tag}' 的文章`
+        setTitle(title)
+        applySEO(undefined, title)
+      })
   }
 
   render() {
     const { articles } = this.state
-    const { tagsId } = this.props.match.params;
+    const { tagsId } = this.props.match.params
     return (<>
-      <div className="data_list" id="test1">
-        <div className="data_list_title">关于 <b className='red'>{ tagsId }</b> 的文章</div>
+      <div className="shadow-box" id="test1">
+        <div className="data-list-title">关于 <b className='red'>{tagsId}</b> 的文章</div>
         <div className="datas">
-          <ArticleList articles={ articles.data }/>
+          <ArticleList articles={articles.data}/>
         </div>
-        { isNotEmpty(articles.data) &&
-            <div align='center' style={ { padding: '20px' } }>
-              <Pagination
-                  showQuickJumper
-                  showSizeChanger
-                  total={ articles.all }
-                  onChange={ (page, size) => {
-                    this.loadArticles(tagsId, page, size)
-                  } }
-                  onShowSizeChange={ (page, size) => {
-                    this.loadArticles(tagsId, page, size)
-                  } }
-                  current={ articles.current }
-              />
-            </div>
+        {isNotEmpty(articles.data) &&
+          <div align='center' style={{ padding: '20px' }}>
+            <Pagination
+              showQuickJumper
+              showSizeChanger
+              total={articles.total}
+              onChange={(page, size) => {
+                this.loadArticles(tagsId, page, size)
+              }}
+              onShowSizeChange={(page, size) => {
+                this.loadArticles(tagsId, page, size)
+              }}
+              current={articles.current}
+            />
+          </div>
         }
       </div>
     </>);
@@ -98,5 +117,5 @@ class LabelsDetail extends React.Component {
 }
 
 export default connect(
-    navigationsMapStateToProps, { updateNavigations }
+  navigationsMapStateToProps, { updateNavigations }
 )(LabelsDetail)

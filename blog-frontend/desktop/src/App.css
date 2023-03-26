@@ -261,7 +261,7 @@ body {
 }
 
 img.share {
-  margin: 5px;
+  margin: 3px;
 }
 
 .ant-layout-header {
@@ -296,16 +296,11 @@ img.share {
   box-shadow: 0 0 7px 0 #ddd !important;
 }
 
-@media (min-width: 768px) {
-  .navbar-right {
-    float: right !important;
-    margin-right: -15px;
-    font-size: 15px!important;
-  }
-
+.navbar-right {
+  /*float: right !important;*/
+  /*margin-right: -15px;*/
+  font-size: 15px !important;
 }
-
-/*container*/
 
 .container {
   /*padding-right: 15px;*/

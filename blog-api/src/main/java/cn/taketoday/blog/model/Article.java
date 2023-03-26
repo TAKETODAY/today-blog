@@ -30,6 +30,7 @@ import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.core.style.ToStringBuilder;
 import cn.taketoday.jdbc.persistence.Id;
 import cn.taketoday.jdbc.persistence.Table;
+import cn.taketoday.jdbc.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,7 +48,7 @@ public class Article implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @Id
-  private Long id;
+  private Integer id;
 
   private String cover;
 
@@ -73,6 +74,8 @@ public class Article implements Serializable {
   /** category name */
   private String category;
   private String copyright;
+
+  @Transient
   private Set<Label> labels;
 
   private LocalDateTime createAt;

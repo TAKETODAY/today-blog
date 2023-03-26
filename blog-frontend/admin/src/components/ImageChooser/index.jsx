@@ -63,7 +63,7 @@ export default props => {
     <div className="main-wrapper">
       <div className="preview-wrapper">
         {isNotEmpty(imageToShow)
-          ? <Image src={imageToShow}
+          ? <Image src={imageToShow} className="select-wrapper"
                    onError={
                      e => {
                        onDeleteImage()

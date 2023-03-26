@@ -20,44 +20,78 @@
 
 package cn.taketoday.blog.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
+import cn.taketoday.blog.model.enums.LoggingType;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.jdbc.persistence.Id;
 import cn.taketoday.jdbc.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 @Setter
 @Getter
-@Table("logger")
+@Table("logging")
 public class Operation implements Serializable {
+
   @Serial
   private static final long serialVersionUID = 1L;
 
-  private Long id;// created time
-  /** 产生日志的ip */
-  private String ip;
-  /** 标题 */
+  @Id
+  private Long id;
+
+  /**
+   * 标题
+   */
   private String title;
-  /** 内容 */
+  /**
+   * 内容
+   */
   private String content;
+
+  /**
+   * 产生日志的ip
+   */
+  private String ip;
+
+  /**
+   * IP 地址的位置
+   */
+  private String ipCountry;
+  private String ipProvince;
+  private String ipCity;
+  private String ipArea;
+  private String ipIsp;
+
   // operation user
   private String user;
-  private String type;
-  private String result;
+
+  private LoggingType type;
+
+  private LocalDateTime invokeAt;
+  private LocalDateTime createAt;
 
   @Override
   public String toString() {
     return ToStringBuilder.from(this)
             .append("id", id)
-            .append("ip", ip)
             .append("title", title)
             .append("content", content)
+            .append("ip", ip)
+            .append("ipCountry", ipCountry)
+            .append("ipProvince", ipProvince)
+            .append("ipCity", ipCity)
+            .append("ipArea", ipArea)
+            .append("ipIsp", ipIsp)
             .append("user", user)
             .append("type", type)
-            .append("result", result)
+            .append("invokeAt", invokeAt)
+            .append("createAt", createAt)
             .toString();
   }
 
@@ -68,16 +102,24 @@ public class Operation implements Serializable {
     if (!(o instanceof Operation operation))
       return false;
     return Objects.equals(id, operation.id)
-            && Objects.equals(ip, operation.ip)
+            && type == operation.type
             && Objects.equals(title, operation.title)
-            && Objects.equals(user, operation.user)
-            && Objects.equals(type, operation.type)
             && Objects.equals(content, operation.content)
-            && Objects.equals(result, operation.result);
+            && Objects.equals(ip, operation.ip)
+            && Objects.equals(ipCountry, operation.ipCountry)
+            && Objects.equals(ipProvince, operation.ipProvince)
+            && Objects.equals(ipCity, operation.ipCity)
+            && Objects.equals(ipArea, operation.ipArea)
+            && Objects.equals(ipIsp, operation.ipIsp)
+            && Objects.equals(user, operation.user)
+            && Objects.equals(createAt, operation.createAt)
+            && Objects.equals(invokeAt, operation.invokeAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, ip, title, content, user, type, result);
+    return Objects.hash(id, title, content, ip, ipCountry, ipProvince, ipCity,
+            ipArea, ipIsp, user, type, invokeAt, createAt);
   }
+
 }

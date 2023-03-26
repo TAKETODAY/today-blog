@@ -1,3 +1,23 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
 import { Input, Pagination } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { ArticleList } from '../components';
@@ -83,17 +103,17 @@ export default connect(
 
   if (!query) {
     return (<>
-      <div className="data_list" style={ { marginTop: '120px' } }>
+      <div className="shadow-box" style={ { marginTop: '120px' } }>
         { renderSearch() }
       </div>
     </>)
   }
   return (<>
-    <div className="data_list">
+    <div className="shadow-box">
       <div style={ { marginBottom: "10px" } }>
         { renderSearch() }
       </div>
-      <div className="data_list_title">关于 <em>{ query }</em> 的搜索结果</div>
+      <div className="data-list-title">关于 <em>{ query }</em> 的搜索结果</div>
       <div className="datas">
         <ArticleList articles={ articles.data } error={ error } title={ `关于 '${ query }' 的搜索结果` }/>
       </div>

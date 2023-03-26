@@ -25,11 +25,12 @@ import cn.taketoday.blog.model.PageView;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.service.PageViewService;
 import cn.taketoday.blog.util.BlogUtils;
-import cn.taketoday.blog.util.IpUtils;
+import cn.taketoday.blog.util.IpSearchers;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpHeaders;
+import cn.taketoday.ip2region.IpLocation;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;
@@ -69,12 +70,23 @@ public class PageViewController {
       UserAgent userAgent = UserAgent.parseUserAgentString(ua);
 
       String ip = BlogUtils.remoteAddress(request);
-      pageView.setIp(ip + ":" + IpUtils.search(ip))
+      pageView.setIp(ip + ":" + IpSearchers.search(ip))
               .setUrl(url)
               .setOs(userAgent.getOperatingSystem().getName())
               .setDevice(userAgent.getOperatingSystem().getDeviceType().getName())
               .setReferer(referer)
               .setUserAgent(ua);
+
+      IpLocation ipLocation = IpSearchers.find(ip);
+      if (ipLocation != null) {
+        pageView.setIpCountry(ipLocation.getCountry());
+        pageView.setIpProvince(ipLocation.getProvince());
+        pageView.setIpCity(ipLocation.getCity());
+        pageView.setIpArea(ipLocation.getArea());
+        pageView.setIpIsp(ipLocation.getIsp());
+      }
+
+      // TODO ip 字段
 
       Browser browser = userAgent.getBrowser();
       if (browser != null) {

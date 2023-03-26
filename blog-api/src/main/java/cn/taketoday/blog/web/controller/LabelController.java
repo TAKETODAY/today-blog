@@ -63,15 +63,13 @@ public class LabelController {
     if (byName != null) {
       throw ErrorMessageException.failed("标签重复");
     }
-    labelService.save(new Label(System.currentTimeMillis()).setName(name));
+    labelService.save(new Label().setName(name));
   }
 
   @POST
   @RequiresBlogger
   @Logging(title = "批量保存标签", content = "names: ${Arrays.toString(#name)}")
   public Json post(@RequestParam(required = true) String[] name) {
-
-    long currentTimeMillis = System.currentTimeMillis();
     Set<Label> labels = new HashSet<>(name.length);
     for (String label : name) {
       if (StringUtils.isEmpty(label)) {
@@ -81,7 +79,7 @@ public class LabelController {
       if (byName != null) {
         return Json.failed("标签重复");
       }
-      labels.add(new Label(currentTimeMillis++).setName(label));
+      labels.add(new Label().setName(label));
     }
 
     labelService.saveAll(labels);

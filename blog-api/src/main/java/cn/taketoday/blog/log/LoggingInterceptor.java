@@ -57,22 +57,23 @@ public class LoggingInterceptor implements MethodInterceptor {
   @Override
   public Object invoke(MethodInvocation invocation) throws Throwable {
     Object result = null;
+    Throwable throwable = null;
     try {
       return result = invocation.proceed();
     }
     catch (Throwable e) {
-      result = e;
+      throwable = e;
       throw e;
     }
     finally {
       RequestContext request = RequestContextHolder.getRequired();
-      LoggerOperationDetail operation =
-              new LoggerOperationDetail(
+      MethodOperation operation =
+              new MethodOperation(
                       remoteAddress(request),
                       result,
                       invocation,
-                      loginUser(request)
-              );
+                      loginUser(request),
+                      throwable);
 
       executor.obtain().execute(() -> loggingService.obtain().persist(operation));
     }
