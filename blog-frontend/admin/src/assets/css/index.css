@@ -35,6 +35,7 @@
   line-height: 40px !important;
   color: #000 !important;
   box-shadow: 0 0 white !important;
+  outline: none;
 }
 
 .container > * {
