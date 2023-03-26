@@ -213,7 +213,7 @@ class ArticleDetail extends React.Component {
     return (<>
 
       <div className="shadow-box">
-        <article className="articleContent">
+        <article className="article-content">
           <h1 className="title">{article.title}</h1>
           <div className="property">
             <span>发布于 {new Date(article.createAt).toLocaleString()}</span> |
@@ -244,7 +244,7 @@ class ArticleDetail extends React.Component {
             })}
           </div>
         }
-        <div id="article-copyright">
+        <div className="article-copyright">
           {article.copyright || '本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。'}
         </div>
       </div>
