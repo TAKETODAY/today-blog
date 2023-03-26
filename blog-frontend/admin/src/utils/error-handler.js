@@ -44,6 +44,10 @@ export function showLoginDialog(loginCallback, onCancel) {
     return false
   }
   const path = getPath()
+  if ("/" === path) {
+    goToLogin()
+    return true
+  }
   if (hideLoginDialogPath.indexOf(path) < 0) {
     console.log("不在登录页面,可以展示提示框")
     Modal.confirm({
