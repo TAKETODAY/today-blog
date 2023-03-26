@@ -20,20 +20,12 @@
 
 import React from 'react';
 
-// const env = process.env.NODE_ENV
-// if (env === 'development') {
-//
-// }
-// else {
-//
-// }
-
-let adminBase;
+let apiBase;
 if (process.env.NODE_ENV === 'production') {
-  adminBase = '/blog-admin'
+  apiBase = '/'
 }
 else {
-  adminBase = 'http://localhost:8000/#'
+  apiBase = 'http://localhost:8080/'
 }
 
 export default props => {
@@ -41,7 +33,7 @@ export default props => {
   const { href, ...rest } = props
   return (
     <>
-      <a {...rest} href={`${adminBase}${href}`}>
+      <a {...rest} href={`${apiBase}${href}`}>
         {
           props.children
         }

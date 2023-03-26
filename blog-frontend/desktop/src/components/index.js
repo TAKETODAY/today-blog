@@ -40,7 +40,7 @@ import Settings from './user/Settings';
 import ImageCropper from './cropper/ImageCropper';
 import HttpError from "./http/HttpError";
 import AdminLink from "./AdminLink";
-
+import ApiLink from "./ApiLink";
 
 export {
   ImageCropper,
@@ -64,6 +64,7 @@ export {
   Header,
   Breadcrumb,
   Image,
-  AdminLink
+  AdminLink,
+  ApiLink
 };
 
