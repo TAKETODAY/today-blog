@@ -62,7 +62,7 @@ import lombok.Setter;
  * @since 2019-04-09 15:56
  */
 @RestController
-@RequestLimit(count = 1, timeUnit = TimeUnit.MINUTES)
+@RequestLimit(unit = TimeUnit.MINUTES)
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
 public class UserController {

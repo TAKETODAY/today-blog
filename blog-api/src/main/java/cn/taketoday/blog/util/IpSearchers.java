@@ -26,7 +26,7 @@ import cn.taketoday.lang.Nullable;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 3.1 2023/2/15 23:15
+ * @since 4.0 2023/2/15 23:15
  */
 public abstract class IpSearchers {
 

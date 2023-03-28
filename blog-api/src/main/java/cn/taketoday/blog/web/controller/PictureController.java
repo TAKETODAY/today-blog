@@ -53,7 +53,7 @@ import static cn.taketoday.blog.BlogConstant.IMG_WIDTH;
 @Profile("dev")
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@RequestLimit(count = 5, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟最多请求5次")
+@RequestLimit(count = 5, unit = TimeUnit.MINUTES, errorMessage = "一分钟最多请求5次")
 public class PictureController {
   private final AttachmentConfig attachmentConfig;
   private final Random randCodeSource = new Random();

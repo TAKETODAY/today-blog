@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -31,8 +31,14 @@ import cn.taketoday.lang.Constant;
 import cn.taketoday.web.annotation.Interceptor;
 
 /**
+ * 默认值：一秒钟请求一次
+ * <p>
+ * 单位时间内可以请求的次数, 超出部分将 {@link #errorMessage()} 返回给客户端,
+ * 默认错误消息：{@link RequestLimitInterceptor#defaultErrorMessage}
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 1.0 2022/8/11 10:22
+ * @see RequestLimitInterceptor#setDefaultErrorMessage(String)
+ * @since 4.0 2022/8/11 10:22
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -41,16 +47,16 @@ import cn.taketoday.web.annotation.Interceptor;
 public @interface RequestLimit {
 
   /**
-   * 允许访问的次数，默认值MAX_VALUE
+   * 允许访问的次数，默认值 1 次
    */
-  int count() default Integer.MAX_VALUE;
+  int count() default 1;
 
   /**
-   * 时间段
+   * 时间段内能访问 {@link #count()} 次
    */
   long timeout() default 1;
 
-  TimeUnit timeUnit() default TimeUnit.SECONDS;
+  TimeUnit unit() default TimeUnit.SECONDS;
 
   String errorMessage() default Constant.DEFAULT_NONE;
 }

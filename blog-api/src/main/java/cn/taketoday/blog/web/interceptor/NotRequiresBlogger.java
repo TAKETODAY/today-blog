@@ -31,7 +31,7 @@ import cn.taketoday.web.annotation.Interceptor;
  * 排除 BloggerInterceptor
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 3.1 2023/2/12 12:49
+ * @since 4.0 2023/2/12 12:49
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

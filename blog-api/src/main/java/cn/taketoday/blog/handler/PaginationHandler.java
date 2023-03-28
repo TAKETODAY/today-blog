@@ -37,7 +37,7 @@ import cn.taketoday.stereotype.Component;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 3.1 2023/3/19 12:57
+ * @since 4.0 2023/3/19 12:57
  */
 @Component
 public class PaginationHandler {

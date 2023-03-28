@@ -83,7 +83,7 @@ public class CommentController {
    * @param from 评论表单
    */
   @POST
-  @RequestLimit(count = 1)
+  @RequestLimit
   @Logging(title = "用户评论", content = "用户：[${#loginInfo.loginUser.name}] " +
           "评论了文章:[${#from.articleId}] 回复了:[${#from.commentId}] 结果: [${#result}]")
   public Json post(@RequiresUser LoginInfo loginInfo, @RequestBody CommentFrom from) {

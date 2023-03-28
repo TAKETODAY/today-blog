@@ -27,7 +27,7 @@ import lombok.Data;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 3.1 2023/3/8 22:36
+ * @since 4.0 2023/3/8 22:36
  */
 @Data
 public class ArticleItem {
