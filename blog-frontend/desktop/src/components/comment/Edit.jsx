@@ -119,7 +119,7 @@ class CommentEdit extends React.Component {
         }} footer={null}>
           <Login forward={getForward()}/>
         </Modal>
-        <div className="data_list_title" style={{ border: 'none' }}>
+        <div className="data-list-title" style={{ border: 'none' }}>
           <i className="fa fa-edit"/> 发表评论
           <p className="textCenter">目前您尚未登录，请<a onClick={() => {
             this.loginVisible(true)
@@ -129,7 +129,7 @@ class CommentEdit extends React.Component {
     }
 
     return (<>
-      <div className="data_list_title" style={{ border: 'none' }}>
+      <div className="data-list-title" style={{ border: 'none' }}>
         {replying
           ? this.renderReply(replying)
           : <><i className="fa fa-edit"/> 发表评论</>
