@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import cn.taketoday.beans.factory.annotation.Autowired;
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Json;
@@ -59,7 +58,6 @@ import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.session.SessionManager;
 import cn.taketoday.session.SessionManagerOperations;
-import cn.taketoday.session.SessionRepository;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.util.MultiValueMap;
 import cn.taketoday.web.InternalServerException;
