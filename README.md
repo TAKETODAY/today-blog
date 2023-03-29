@@ -1,5 +1,7 @@
 # TODAY BLOG
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f18d51f79f1e40d7b590ba85a70ae783)](https://app.codacy.com/gh/TAKETODAY/today-blog?utm_source=github.com&utm_medium=referral&utm_content=TAKETODAY/today-blog&utm_campaign=Badge_Grade)
+
 后台使用 https://github.com/TAKETODAY/today-infrastructure 作为基础框架，该项目也是其最佳实践
 
 前端
