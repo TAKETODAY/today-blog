@@ -25,7 +25,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.core.annotation.AliasFor;
 import cn.taketoday.lang.Constant;
 

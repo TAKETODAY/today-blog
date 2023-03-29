@@ -20,8 +20,6 @@
 
 package cn.taketoday.blog.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
