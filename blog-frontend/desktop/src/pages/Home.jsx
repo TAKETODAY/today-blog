@@ -87,7 +87,7 @@ class Home extends React.Component {
           <Pagination
             showQuickJumper
             showSizeChanger
-            total={articles.all}
+            total={articles.total}
             onChange={this.updateArticles.bind(this)}
             onShowSizeChange={this.updateArticles.bind(this)}
             current={articles.current}

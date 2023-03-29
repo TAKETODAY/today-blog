@@ -36,10 +36,10 @@ public class Pagination<T> implements ListableResult<T> {
   private static final Pagination empty = new Pagination<>();
 
   /** amount of page */
-  private long num;
+  private int pages;
 
   /** all row in database */
-  private long all;
+  private int total;
 
   /** every page size */
   private int size;
@@ -52,26 +52,16 @@ public class Pagination<T> implements ListableResult<T> {
   private List<T> data = Collections.emptyList();
 
   public Pagination<T> applyNum() {
-    num = (all - 1) / size + 1;
+    pages = (total - 1) / size + 1;
     return this;
   }
 
-  @Deprecated
-  public long getNum() {
-    return num;
-  }
-
   public int getPages() {
-    return (int) num;
+    return pages;
   }
 
   public int getTotal() {
-    return (int) all;
-  }
-
-  @Deprecated
-  public long getAll() {
-    return all;
+    return total;
   }
 
   public int getSize() {
@@ -83,7 +73,7 @@ public class Pagination<T> implements ListableResult<T> {
   }
 
   public Pagination<T> pageable(int total, Pageable pageable) {
-    this.all = total;
+    this.total = total;
     return pageable(pageable);
   }
 
@@ -99,8 +89,8 @@ public class Pagination<T> implements ListableResult<T> {
     return this;
   }
 
-  public Pagination<T> total(long all) {
-    this.all = all;
+  public Pagination<T> total(int all) {
+    this.total = all;
     return this;
   }
 
@@ -109,8 +99,8 @@ public class Pagination<T> implements ListableResult<T> {
     return this;
   }
 
-  public Pagination<T> pageCount(long num) {
-    this.num = num;
+  public Pagination<T> pageCount(int num) {
+    this.pages = num;
     return this;
   }
 

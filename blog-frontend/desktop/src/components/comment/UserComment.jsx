@@ -170,7 +170,7 @@ class UserComment extends React.Component {
         { isNotEmpty(comments.data) &&
         <div align='center' style={ { padding: '20px' } }>
           <Pagination
-              total={ comments.all }
+              total={ comments.total }
               onChange={ this.loadComment.bind(this) }
               current={ comments.current }
               showTotal={ n => <>总共 <b className='red'>{ n }</b> 条评论</> }
