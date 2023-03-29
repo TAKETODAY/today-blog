@@ -38,10 +38,10 @@ else {
 
 export default props => {
   // const options = getOptions();
-  const { href, ...rest } = props
+  const { href, to, ...rest } = props
   return (
     <>
-      <a {...rest} href={`${adminBase}${href}`}>
+      <a {...rest} href={`${adminBase}${href || to}`}>
         {
           props.children
         }

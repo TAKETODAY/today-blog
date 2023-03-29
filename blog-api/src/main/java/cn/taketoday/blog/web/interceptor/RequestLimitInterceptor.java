@@ -48,7 +48,7 @@ import cn.taketoday.web.handler.method.HandlerMethod;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 1.0 2022/8/11 10:22
+ * @since 4.0 2022/8/11 10:22
  */
 final class RequestLimitInterceptor extends SessionHandlerInterceptor implements HandlerInterceptor {
 
@@ -159,7 +159,7 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
 
     RequestLimitEntry(RequestLimit requestLimit) {
       long timeout = requestLimit.timeout();
-      TimeUnit timeUnit = requestLimit.timeUnit();
+      TimeUnit timeUnit = requestLimit.unit();
       this.maxCount = requestLimit.count();
       this.timeout = Duration.of(timeout, timeUnit.toChronoUnit());
     }

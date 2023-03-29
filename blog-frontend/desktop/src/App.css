@@ -297,14 +297,11 @@ img.share {
 }
 
 .navbar-right {
-  /*float: right !important;*/
-  /*margin-right: -15px;*/
+  /*float: right;*/
   font-size: 15px !important;
 }
 
 .container {
-  /*padding-right: 15px;*/
-  /*padding-left: 15px;*/
   margin-right: auto;
   margin-left: auto;
 }

@@ -22,7 +22,7 @@ package cn.taketoday.blog.model.enums;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 3.1 2023/3/19 13:15
+ * @since 4.0 2023/3/19 13:15
  */
 public enum OrderBy {
 

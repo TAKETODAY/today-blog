@@ -42,7 +42,8 @@
   </resultMap>
 
   <sql id="selectAllCol">
-    `id`,`title`,`cover`,`status`,`pv`,`summary`,`category`, `copyright`,`update_at`,`create_at`,`password`,`content`,`markdown`
+    `id`,`title`,`cover`,`status`,`pv`,`summary`,`category`, `copyright`
+        ,`update_at`,`create_at`,`password`,`content`,`markdown`, `uri`
   </sql>
 
   <delete id="deleteById" parameterType="long">

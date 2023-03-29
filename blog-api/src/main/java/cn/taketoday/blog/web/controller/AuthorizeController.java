@@ -53,13 +53,13 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.context.properties.bind.Binder;
-import cn.taketoday.core.MultiValueMap;
 import cn.taketoday.core.env.Environment;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.session.SessionManager;
 import cn.taketoday.session.SessionManagerOperations;
 import cn.taketoday.session.WebSession;
+import cn.taketoday.util.MultiValueMap;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.DELETE;
@@ -82,7 +82,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.CustomLog;
-import lombok.Getter;
 import lombok.Setter;
 
 /**
@@ -148,7 +147,7 @@ public class AuthorizeController extends SessionManagerOperations {
    * } </pre>
    */
   @POST
-  @RequestLimit(timeUnit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
+  @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
   @Logging(title = "登录", content = "email:[${#user.email}]")
   public Json login(@Valid @RequestBody UserFrom user, RequestContext request) {
     User loginUser = userService.getByEmail(user.email);
@@ -426,14 +425,12 @@ public class AuthorizeController extends SessionManagerOperations {
     }
   }
 
-  @Getter
-  @Setter
   static class OauthUser {
-    String name;
-    String blog;
-    String email;
-    String bio;
-    String avatar_url;
+    public String name;
+    public String blog;
+    public String email;
+    public String bio;
+    public String avatar_url;
   }
 
   //---------------------------------------------------------------------
@@ -455,7 +452,7 @@ public class AuthorizeController extends SessionManagerOperations {
    * @param form 表单
    */
   @PatchMapping
-  @RequestLimit(count = 2, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次用户信息")
+  @RequestLimit(count = 2, unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次用户信息")
   public User userInfo(@RequiresUser User loginUser, @RequestBody @Valid InfoForm form) {
     // 要判断不一致才更新
     if (Objects.equals(form.name, loginUser.getName())
@@ -498,7 +495,7 @@ public class AuthorizeController extends SessionManagerOperations {
    */
   @PatchMapping(params = "password")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @RequestLimit(count = 1, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次密码")
+  @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次密码")
   public void changePassword(@RequiresUser User loginUser,
           @RequestBody @Valid ChangePasswordForm form) {
 
@@ -543,7 +540,7 @@ public class AuthorizeController extends SessionManagerOperations {
    * Change User's Email
    */
   @PatchMapping(params = "email-mobile-phone")
-  @RequestLimit(count = 1, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次邮箱或手机")
+  @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次邮箱或手机")
   public User changeEmailAndMobilePhone(
           @RequiresUser User loginUser, @Valid @RequestBody UserEmailForm form) {
     if (Objects.equals(loginUser.getEmail(), form.email)) {
@@ -574,7 +571,7 @@ public class AuthorizeController extends SessionManagerOperations {
    * change image
    */
   @PatchMapping(params = "avatar")
-  @RequestLimit(count = 1, timeUnit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改1次头像")
+  @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改1次头像")
   public User changeAvatar(@RequiresUser User loginUser, MultipartFile avatar) {
     String originalFilename = avatar.getOriginalFilename();
     String randomHashString = HashUtils.getRandomHashString(16);

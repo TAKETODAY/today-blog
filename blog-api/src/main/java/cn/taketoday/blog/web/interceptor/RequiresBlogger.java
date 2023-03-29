@@ -29,7 +29,7 @@ import cn.taketoday.web.annotation.Interceptor;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 1.0 2022/8/11 08:52
+ * @since 4.0 2022/8/11 08:52
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })

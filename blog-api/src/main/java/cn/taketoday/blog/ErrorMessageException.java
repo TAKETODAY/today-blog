@@ -31,7 +31,7 @@ import cn.taketoday.lang.Nullable;
  * No StackTrace Exception
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 1.0 2022/7/19 22:01
+ * @since 4.0 2022/7/19 22:01
  */
 public class ErrorMessageException extends NoStackTraceRuntimeException {
 
