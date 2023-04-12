@@ -17,10 +17,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
+
 package cn.taketoday.blog.web.interceptor;
 
 import cn.taketoday.blog.BlogConstant;
-import cn.taketoday.blog.Json;
+import cn.taketoday.blog.ErrorMessage;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.session.SessionHandlerInterceptor;
@@ -47,12 +48,12 @@ public class RandCodeInterceptor extends SessionHandlerInterceptor {
     final String randCode = context.getParameter(BlogConstant.RAND_CODE);
     if (StringUtils.isEmpty(randCode)) {
       prepare(context);
-      return Json.failed("请输入验证码");
+      return ErrorMessage.failed("请输入验证码");
     }
     final Object attribute = getAttribute(context, BlogConstant.RAND_CODE);
     if (attribute == null || !randCode.equalsIgnoreCase(attribute.toString())) {
       prepare(context);
-      return Json.failed("验证码错误");
+      return ErrorMessage.failed("验证码错误");
     }
     return chain.proceed(context);
   }

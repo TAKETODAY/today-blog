@@ -183,6 +183,7 @@ public class ArticleController {
    *
    * @param key 文章的密码，如果有的话
    * @param uri 文章地址
+   * @param loginInfo 自动注入登录信息
    * @return {@link Article}
    */
   @GET("/{uri}")
@@ -218,44 +219,27 @@ public class ArticleController {
   @POST
   @RequiresBlogger
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "创建文章", content = "标题: [${#from.title}]")
-  public void create(@RequestBody ArticleFrom from) {
-    Article article = getArticle(from);
+  @Logging(title = "创建文章", content = "标题: [${#form.title}]")
+  public void create(@RequestBody ArticleForm form) {
+    Article article = ArticleForm.forArticle(form, labelService);
 
-    if (!StringUtils.hasText(article.getUri())) {
-      article.setUri(from.title);
+    if (StringUtils.isBlank(article.getUri())) {
+      article.setUri(form.title);
     }
 
     if (log.isDebugEnabled()) {
-      log.debug("创建新文章: [{}]", from.title);
+      log.debug("创建新文章: [{}]", form.title);
     }
 
     articleService.saveArticle(article);
-  }
-
-  static class ArticleFrom {
-
-    @Nullable
-    public LocalDateTime createAt;
-    public String category;
-    public String copyright;
-    public Set<String> labels;
-
-    public String cover;
-    public String title;
-    public PostStatus status;
-    public String summary;
-    public String content;
-    public String markdown;
-    public String password;
   }
 
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequiresBlogger
   @Logging(title = "更新文章", content = "更新文章: [${#from.title}]")
-  public void update(@PathVariable("id") Integer id, @RequestBody ArticleFrom from) {
-    Article article = getArticle(from);
+  public void update(@PathVariable("id") Integer id, @RequestBody ArticleForm from) {
+    Article article = ArticleForm.forArticle(from, labelService);
     article.setId(id);
     articleService.update(article);
   }
@@ -282,31 +266,8 @@ public class ArticleController {
     return articleService.search(from, pageable);
   }
 
-  private Article getArticle(ArticleFrom from) {
-    Set<Label> labels = getLabels(from);
-
-    Article article = new Article();
-
-    article.setLabels(labels);
-    article.setTitle(from.title);
-    article.setStatus(from.status);
-    article.setContent(from.content);
-    article.setSummary(from.summary);
-    article.setCategory(from.category);
-    article.setMarkdown(from.markdown);
-    article.setCopyright(from.copyright);
-    article.setPassword(StringUtils.hasText(from.password) ? from.password : null);
-    article.setCover(StringUtils.hasText(from.cover)
-                     ? from.cover
-                     : BlogUtils.getFirstImagePath(from.content)
-    );
-
-    article.setCreateAt(from.createAt);
-    return article;
-  }
-
   @Nullable
-  private Set<Label> getLabels(ArticleFrom from) {
+  private static Set<Label> getLabels(ArticleForm from, LabelService labelService) {
     if (CollectionUtils.isNotEmpty(from.labels)) {
       var labels = new LinkedHashSet<Label>();
       for (String label : from.labels) {
@@ -320,5 +281,49 @@ public class ArticleController {
       return labels;
     }
     return null;
+  }
+
+  static class ArticleForm {
+
+    @Nullable
+    public LocalDateTime createAt;
+    public String category;
+    public String copyright;
+    public Set<String> labels;
+
+    public String cover;
+    public String title;
+    public PostStatus status;
+    public String summary;
+    public String content;
+    public String markdown;
+    public String password;
+
+    public String uri;
+
+    static Article forArticle(ArticleForm form, LabelService labelService) {
+      Set<Label> labels = getLabels(form, labelService);
+
+      Article article = new Article();
+
+      article.setLabels(labels);
+      article.setTitle(form.title);
+      article.setStatus(form.status);
+      article.setContent(form.content);
+      article.setSummary(form.summary);
+      article.setCategory(form.category);
+      article.setMarkdown(form.markdown);
+      article.setCopyright(form.copyright);
+      article.setPassword(StringUtils.hasText(form.password) ? form.password : null);
+      article.setCover(StringUtils.hasText(form.cover)
+                       ? form.cover
+                       : BlogUtils.getFirstImagePath(form.content)
+      );
+
+      article.setUri(form.uri);
+      article.setCreateAt(form.createAt);
+      return article;
+    }
+
   }
 }

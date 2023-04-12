@@ -48,6 +48,7 @@ import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
+import cn.taketoday.jdbc.persistence.PropertyUpdateStrategy;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
@@ -498,7 +499,8 @@ public class ArticleService implements InitializingBean {
   @Transactional
   public void saveArticle(Article article) {
     // save
-    repository.persist(article);
+    // TODO 保存策略
+    repository.getEntityManager().persist(article, PropertyUpdateStrategy.updateNoneNull());
     // save labels
     Set<Label> labels = article.getLabels();
     if (CollectionUtils.isNotEmpty(labels)) {

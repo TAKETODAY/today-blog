@@ -30,10 +30,10 @@ import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.dao.DataAccessResourceFailureException;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.ResponseEntity;
+import cn.taketoday.http.converter.HttpMessageNotReadableException;
 import cn.taketoday.util.ObjectUtils;
 import cn.taketoday.web.BadRequestException;
 import cn.taketoday.web.InternalServerException;
-import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.ResponseStatusException;
 import cn.taketoday.web.UnauthorizedException;
 import cn.taketoday.web.annotation.ExceptionHandler;
@@ -66,22 +66,19 @@ public class ExceptionHandling {
             .body(ErrorMessage.failed(errorMessage.getMessage()));
   }
 
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
   @ExceptionHandler(UnauthorizedException.class)
   public ErrorMessage unauthorized() {
     return ErrorMessage.failed("登录超时");
   }
 
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(IllegalArgumentException.class)
   public ErrorMessage illegalArgument() {
     return illegalArgument;
   }
 
-  @ResponseStatus(HttpStatus.NOT_FOUND)
-  @ExceptionHandler(NotFoundException.class)
-  public ErrorMessage notFoundException(NotFoundException exception) {
-    return ErrorMessage.failed(exception.getReason());
-  }
-
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler({ MaxUploadSizeExceededException.class })
   public ErrorMessage maxUploadSizeExceeded(MaxUploadSizeExceededException e) {
     log.error(e.getMessage(), e);
@@ -89,6 +86,7 @@ public class ExceptionHandling {
     return ErrorMessage.failed("上传文件大小超出限制: '" + formattedSize + "'");
   }
 
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(BadRequestException.class)
   public ErrorMessage badRequest(BadRequestException e) {
     return e.getCause() instanceof NumberFormatException
@@ -117,6 +115,7 @@ public class ExceptionHandling {
   }
 
   @ExceptionHandler
+  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ErrorMessage error(Throwable exception) {
     log.error("An Exception occurred", exception);
     if (exception instanceof SQLException) {
@@ -125,6 +124,7 @@ public class ExceptionHandling {
     return ErrorMessage.failed("服务器内部错误,稍后重试");
   }
 
+  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   @ExceptionHandler(NullPointerException.class)
   public Json nullPointer(NullPointerException exception) {
     log.error("Null Pointer occurred", exception);
@@ -135,18 +135,21 @@ public class ExceptionHandling {
     return Json.failed("空指针", "暂无堆栈信息");
   }
 
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(ParameterConversionException.class)
   public ErrorMessage conversion() {
     return ErrorMessage.failed("参数转换失败");
   }
 
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(MissingRequestParameterException.class)
   public ErrorMessage missingParameter(MissingRequestParameterException parameterException) {
     return ErrorMessage.failed("缺少参数'" + parameterException.getParameterName() + "'");
   }
 
-  @ExceptionHandler(ParameterReadFailedException.class)
-  public ErrorMessage parameterReadFailed(ParameterReadFailedException exception) {
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ExceptionHandler({ ParameterReadFailedException.class, HttpMessageNotReadableException.class })
+  public ErrorMessage parameterReadFailed(Exception exception) {
     log.error("参数读取错误", exception);
     return ErrorMessage.failed("参数读取错误");
   }

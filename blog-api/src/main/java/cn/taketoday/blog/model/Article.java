@@ -54,7 +54,7 @@ public class Article implements Serializable {
 
   private String title;
 
-  private int pv;
+  private Integer pv;
 
   private PostStatus status;
 

@@ -34,15 +34,14 @@ import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.util.CSVUtils;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpStatus;
-import cn.taketoday.stereotype.Controller;
 import cn.taketoday.util.ObjectUtils;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.PathVariable;
-import cn.taketoday.web.annotation.Produce;
 import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RequestParam;
 import cn.taketoday.web.annotation.ResponseStatus;
+import cn.taketoday.web.annotation.RestController;
 import lombok.CustomLog;
 
 /**
@@ -50,9 +49,9 @@ import lombok.CustomLog;
  * @since 2019-04-06 17:37
  */
 @CustomLog
-@Controller
-@RequestMapping("/api/logging")
+@RestController
 @RequiresBlogger
+@RequestMapping("/api/logging")
 public class LoggingController {
 
   private final LoggingService loggerService;
@@ -86,8 +85,7 @@ public class LoggingController {
     loggerService.deleteById(id);
   }
 
-  @GET("/export.csv")
-  @Produce("text/csv; charset=UTF-8")
+  @GET(path = "/export.csv", produces = "text/csv; charset=UTF-8")
   public StringBuilder export(/*ModelAndView modelAndView*/) {
     final List<Operation> all = loggerService.getAll();
 
