@@ -47,3 +47,9 @@ web:
 app:
   main:
     lazy-initialization: false
+
+logging:
+  level:
+    sql: debug
+    web: trace
+    root: info

@@ -32,7 +32,7 @@
     <skipTests>true</skipTests>
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <today-infra.version>4.0.0-Draft.3-SNAPSHOT</today-infra.version>
+    <today-infra.version>4.0.0-Draft.4-SNAPSHOT</today-infra.version>
 
     <revision>3.1</revision>
 
