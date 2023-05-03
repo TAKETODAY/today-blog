@@ -22,14 +22,15 @@ package cn.taketoday.blog.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
-import lombok.Data;
+import cn.taketoday.blog.util.StringUtils;
+import cn.taketoday.core.style.ToStringBuilder;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2023/3/8 22:36
  */
-@Data
 public class ArticleItem {
 
   public long id;
@@ -53,5 +54,38 @@ public class ArticleItem {
     this.summary = article.getSummary();
     this.createAt = article.getCreateAt();
     this.tags = article.getLabels().stream().map(Label::getName).toList();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (!(o instanceof ArticleItem that))
+      return false;
+    return id == that.id && pv == that.pv
+            && Objects.equals(uri, that.uri)
+            && Objects.equals(title, that.title)
+            && Objects.equals(cover, that.cover)
+            && Objects.equals(summary, that.summary)
+            && Objects.equals(createAt, that.createAt)
+            && Objects.equals(tags, that.tags);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, pv, uri, title, cover, summary, tags, createAt);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.from(this)
+            .append("id", id)
+            .append("cover", cover)
+            .append("title", title)
+            .append("pv", pv)
+            .append("summary", StringUtils.truncate(summary, 10))
+            .append("createAt", createAt)
+            .append("uri", uri)
+            .toString();
   }
 }

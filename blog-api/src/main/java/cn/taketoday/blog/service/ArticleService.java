@@ -592,8 +592,8 @@ public class ArticleService implements InitializingBean {
 
   private List<ArticleItem> applyTags(List<ArticleItem> items) {
     for (ArticleItem item : items) {
-      Set<Label> labels = labelService.getByArticleId(item.getId());
-      item.setTags(labels.stream().map(Label::getName).toList());
+      Set<Label> labels = labelService.getByArticleId(item.id);
+      item.tags = labels.stream().map(Label::getName).toList();
     }
     return items;
   }
