@@ -1,5 +1,25 @@
 #!/bin/bash
 
+#
+# Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+# Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+#
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see [http://www.gnu.org/licenses/]
+#
+
 current_path=$(pwd)
 case "$(uname)" in
 Linux)
@@ -67,9 +87,8 @@ else
   JAVA_OPTS="-server -Xms1024m -Xmx1024m"
 fi
 
-JAVA_OPTS="$JAVA_OPTS -XX:+UseG1GC -XX:MaxGCPauseMillis=250 -XX:+UseGCOverheadLimit -XX:+ExplicitGCInvokesConcurrent -XX:+PrintAdaptiveSizePolicy -XX:+PrintTenuringDistribution"
+JAVA_OPTS="$JAVA_OPTS -XX:+UseG1GC -XX:MaxGCPauseMillis=250 -XX:+UseGCOverheadLimit -XX:+ExplicitGCInvokesConcurrent"
 JAVA_OPTS=" $JAVA_OPTS -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true -Dfile.encoding=UTF-8"
-CANAL_OPTS="-DappName=today-blog"
 
 for i in $base/lib/*; do
   CLASSPATH=$i:"$CLASSPATH"
@@ -80,10 +99,10 @@ CLASSPATH="$base/conf:$CLASSPATH"
 echo "cd to $bin_abs_path for workaround relative path"
 cd $bin_abs_path
 
-echo CLASSPATH :$CLASSPATH
+#echo CLASSPATH :$CLASSPATH
 $JAVA $JAVA_OPTS $JAVA_DEBUG_OPT $CANAL_OPTS \
--classpath .:$CLASSPATH cn.taketoday.blog.BlogApplication \
---context.profiles.active=prod 1>>/dev/null 2>&1 &
+-classpath .:$CLASSPATH cn.taketoday.blog.BlogApplication 1>>/dev/null 2>&1 &
+
 echo $! >$base/bin/app.pid
 
 echo "cd to $current_path for continue"

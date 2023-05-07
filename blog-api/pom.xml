@@ -230,7 +230,6 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <classpathPrefix>lib/</classpathPrefix>
               <mainClass>cn.taketoday.blog.BlogApplication</mainClass>
             </manifest>
 
@@ -244,17 +243,11 @@
             </manifestEntries>
           </archive>
 
-
           <excludes>
             <exclude>**/*.properties</exclude>
             <exclude>**/*.xml</exclude>
             <exclude>**/*.yml</exclude>
-            <exclude>static/**</exclude>
-            <exclude>public/**</exclude>
-            <exclude>templates/**</exclude>
-            <exclude>search/**</exclude>
-            <exclude>**/*.ico</exclude>
-            <exclude>**/*.dat</exclude>
+            <exclude>**/*.yaml</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -283,6 +276,7 @@
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
