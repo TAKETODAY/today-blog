@@ -36,7 +36,7 @@
     <revision>3.1</revision>
   </properties>
 
-  <name>today-blog-api</name>
+  <name>today-blog API</name>
 
   <url>https://taketoday.cn</url>
   <packaging>jar</packaging>
@@ -55,13 +55,28 @@
     </dependency>
 
     <dependency>
-      <groupId>org.mybatis</groupId>
-      <artifactId>mybatis</artifactId>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-starter-netty</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>jakarta.annotation</groupId>
-      <artifactId>jakarta.annotation-api</artifactId>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-starter-json</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-starter-validation</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-mybatis</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-starter-jdbc</artifactId>
     </dependency>
 
     <dependency>
@@ -70,29 +85,11 @@
     </dependency>
 
     <dependency>
-      <groupId>cn.taketoday</groupId>
-      <artifactId>today-web</artifactId>
-    </dependency>
-
-
-    <!-- https://mvnrepository.com/artifact/org.kohsuke/github-api -->
-    <dependency>
       <groupId>org.kohsuke</groupId>
       <artifactId>github-api</artifactId>
       <version>1.301</version>
     </dependency>
 
-    <dependency>
-      <groupId>cn.taketoday</groupId>
-      <artifactId>today-framework</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>cn.taketoday</groupId>
-      <artifactId>today-mybatis</artifactId>
-    </dependency>
-
-    <!-- https://mvnrepository.com/artifact/eu.bitwalker/UserAgentUtils -->
     <dependency>
       <groupId>eu.bitwalker</groupId>
       <artifactId>UserAgentUtils</artifactId>
@@ -105,31 +102,9 @@
     </dependency>
 
     <dependency>
-      <groupId>com.zaxxer</groupId>
-      <artifactId>HikariCP</artifactId>
-
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
-
-    </dependency>
-
-    <!-- https://mvnrepository.com/artifact/com.aliyun.oss/aliyun-sdk-oss -->
-    <dependency>
       <groupId>com.aliyun.oss</groupId>
       <artifactId>aliyun-sdk-oss</artifactId>
       <version>3.16.0</version>
-
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
-
     </dependency>
 
     <dependency>
@@ -164,23 +139,8 @@
     </dependency>
 
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-jsr310</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.hibernate.validator</groupId>
-      <artifactId>hibernate-validator</artifactId>
     </dependency>
 
     <!--
@@ -210,57 +170,23 @@
         </dependency>
     -->
 
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-all</artifactId>
-    </dependency>
-
-
-    <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-    </dependency>
-
     <!-- test -->
+
     <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
+      <groupId>cn.taketoday</groupId>
+      <artifactId>today-test-support</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-core</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -277,6 +203,27 @@
     <defaultGoal>compile</defaultGoal>
 
     <plugins>
+
+      <plugin>
+        <groupId>cn.taketoday</groupId>
+        <artifactId>today-infra-maven-plugin</artifactId>
+        <version>${today-infra.version}</version>
+
+        <executions>
+          <execution>
+            <goals>
+              <goal>build-info</goal>
+            </goals>
+            <configuration>
+              <additionalProperties>
+                <encoding.source>UTF-8</encoding.source>
+                <encoding.reporting>UTF-8</encoding.reporting>
+              </additionalProperties>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
@@ -304,7 +251,6 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <classpathPrefix>lib/</classpathPrefix>
               <mainClass>cn.taketoday.blog.BlogApplication</mainClass>
             </manifest>
 
@@ -318,17 +264,11 @@
             </manifestEntries>
           </archive>
 
-
           <excludes>
             <exclude>**/*.properties</exclude>
             <exclude>**/*.xml</exclude>
             <exclude>**/*.yml</exclude>
-            <exclude>static/**</exclude>
-            <exclude>public/**</exclude>
-            <exclude>templates/**</exclude>
-            <exclude>search/**</exclude>
-            <exclude>**/*.ico</exclude>
-            <exclude>**/*.dat</exclude>
+            <exclude>**/*.yaml</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -357,6 +297,7 @@
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>

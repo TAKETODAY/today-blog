@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import cn.taketoday.blog.model.enums.PostStatus;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.core.style.ToStringBuilder;
 import cn.taketoday.jdbc.persistence.Id;
 import cn.taketoday.jdbc.persistence.Table;
@@ -54,7 +55,7 @@ public class Article implements Serializable {
 
   private String title;
 
-  private int pv;
+  private Integer pv;
 
   private PostStatus status;
 
@@ -93,9 +94,7 @@ public class Article implements Serializable {
             .append("title", title)
             .append("pv", pv)
             .append("status", status)
-            .append("summary", summary)
-            .append("content", content)
-            .append("markdown", markdown)
+            .append("summary", StringUtils.truncate(summary, 10))
             .append("password", password)
             .append("createAt", createAt)
             .append("updateAt", updateAt)
@@ -112,7 +111,7 @@ public class Article implements Serializable {
       return true;
     if (!(o instanceof Article article))
       return false;
-    return pv == article.pv
+    return Objects.equals(pv, article.pv)
             && status == article.status
             && Objects.equals(id, article.id)
             && Objects.equals(uri, article.uri)
