@@ -65,12 +65,12 @@ public class AttachmentService {
   private final AttachmentConfig attachmentConfig;
   private final RepositoryManager repositoryManager;
 
-  public AttachmentService(AttachmentConfig attachmentConfig,
-          AttachmentRepository repository, OssConfig ossConfig, RepositoryManager repositoryManager) {
+  public AttachmentService(OssOperations ossOperations, AttachmentRepository repository,
+          AttachmentConfig attachmentConfig, RepositoryManager repositoryManager) {
     this.repository = repository;
     this.attachmentConfig = attachmentConfig;
     this.repositoryManager = repositoryManager;
-    this.ossOperations = new OssOperations(ossConfig);
+    this.ossOperations = ossOperations;
     this.entityManager = repositoryManager.getEntityManager();
   }
 

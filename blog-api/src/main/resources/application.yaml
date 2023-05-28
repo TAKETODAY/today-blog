@@ -90,3 +90,5 @@ datasource:
 logging:
   level:
     root: info
+  pattern:
+    dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'

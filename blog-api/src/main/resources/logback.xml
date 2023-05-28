@@ -22,8 +22,11 @@
   <include resource="cn/taketoday/framework/logging/logback/base.xml" />
 
   <infra-profile name="dev">
+    <!--
+    value="%red(%d{yyyy-MM-dd HH:mm:ss.SSS}) %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} - %blue([%16.16t]) %cyan(%-40.40logger{40}) %4.4L - %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
+    -->
     <property name="CONSOLE_LOG_PATTERN"
-        value="%red(%d{yyyy-MM-dd HH:mm:ss.SSS}) %highlight(%-5level) - %blue([%16.16t]) %cyan(%-40.40logger{40}) %4.4L - %m%n" />
+        value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){red} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} - %blue([%16.16t]) %cyan(%-40.40logger{40}) %4.4L - %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
 
     <root level="INFO">
       <appender-ref ref="CONSOLE" />

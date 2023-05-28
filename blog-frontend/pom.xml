@@ -32,6 +32,9 @@
   </parent>
 
   <artifactId>today-blog-ui</artifactId>
+
+  <name>today-blog UI</name>
+
   <packaging>pom</packaging>
 
   <properties>
