@@ -45,6 +45,7 @@ import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.stereotype.Component;
 import cn.taketoday.web.config.ViewControllerRegistry;
 import cn.taketoday.web.config.WebMvcConfigurer;
+import io.prometheus.client.CollectorRegistry;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -98,6 +99,11 @@ public class AppConfig implements WebMvcConfigurer {
   DefaultPointcutAdvisor pointcutAdvisor(LoggingInterceptor loggingInterceptor) {
     var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
     return new DefaultPointcutAdvisor(pointcut, loggingInterceptor);
+  }
+
+  @Component
+  public CollectorRegistry collectorRegistry() {
+    return CollectorRegistry.defaultRegistry;
   }
 
 }

@@ -83,7 +83,7 @@ public class UserController {
 
   protected void assertFound(Pageable pageable, int rowCount) {
 
-    if (BlogUtils.notFound(pageable.getCurrent(), BlogUtils.pageCount(rowCount, pageable.getSize()))) {
+    if (BlogUtils.notFound(pageable.current(), BlogUtils.pageCount(rowCount, pageable.size()))) {
       throw ErrorMessageException.failed("分页不存在");
     }
   }

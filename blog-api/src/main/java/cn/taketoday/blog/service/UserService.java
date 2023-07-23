@@ -47,11 +47,11 @@ public class UserService {
   }
 
   public List<User> get(Pageable pageable) {
-    return get(pageable.getCurrent(), pageable.getSize());
+    return get(pageable.current(), pageable.size());
   }
 
   public List<User> getByStatus(UserStatus status, Pageable pageable) {
-    return getByStatus(status, pageable.getCurrent(), pageable.getSize());
+    return getByStatus(status, pageable.current(), pageable.size());
   }
 
   public String getAvatar(String email) {

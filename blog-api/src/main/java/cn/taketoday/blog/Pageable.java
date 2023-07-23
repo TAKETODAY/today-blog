@@ -20,8 +20,6 @@
 
 package cn.taketoday.blog;
 
-import java.util.Objects;
-
 import cn.taketoday.core.style.ToStringBuilder;
 
 /**
@@ -37,37 +35,20 @@ public interface Pageable {
    *
    * @return the page to be returned.
    */
-  int getCurrent();
+  int current();
 
   /**
    * Returns the number of items to be returned.
    *
    * @return the number of items of that page
    */
-  int getSize();
+  int size();
 
   static Simple of(int size, int current) {
     return new Simple(size, current);
   }
 
-  class Simple implements Pageable {
-    private final int size;
-    private final int current;
-
-    public Simple(int size, int current) {
-      this.size = size;
-      this.current = current;
-    }
-
-    @Override
-    public int getCurrent() {
-      return current;
-    }
-
-    @Override
-    public int getSize() {
-      return size;
-    }
+  record Simple(int size, int current) implements Pageable {
 
     @Override
     public boolean equals(Object o) {
@@ -76,11 +57,6 @@ public interface Pageable {
       if (!(o instanceof Simple simple))
         return false;
       return size == simple.size && current == simple.current;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(size, current);
     }
 
     @Override

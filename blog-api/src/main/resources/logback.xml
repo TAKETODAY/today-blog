@@ -20,6 +20,7 @@
 <configuration>
   <contextName>TODAY BLOG</contextName>
   <include resource="cn/taketoday/framework/logging/logback/base.xml" />
+  <appender name="METRICS" class="io.prometheus.client.logback.InstrumentedAppender" />
 
   <infra-profile name="dev">
     <!--
@@ -29,6 +30,7 @@
         value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){red} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} - %blue([%16.16t]) %cyan(%-40.40logger{40}) %4.4L - %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
 
     <root level="INFO">
+      <appender-ref ref="METRICS" />
       <appender-ref ref="CONSOLE" />
     </root>
 

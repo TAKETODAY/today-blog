@@ -88,7 +88,7 @@ public class User implements Serializable {
   }
 
   public boolean isDefaultPassword() {
-    return DEFAULT_PASSWORD.equals(getPassword());
+    return DEFAULT_PASSWORD.equals(password);
   }
 
   @Override

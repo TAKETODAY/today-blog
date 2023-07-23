@@ -33,7 +33,6 @@ import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.AttachmentConfig;
-import cn.taketoday.blog.config.OssConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
@@ -109,8 +108,8 @@ public class AttachmentService {
 
     List<Attachment> rets = repository.filter(
             form,
-            getPageNow(pageable.getCurrent(), pageable.getSize()),
-            pageable.getSize()
+            getPageNow(pageable.current(), pageable.size()),
+            pageable.size()
     );
 
     return Pagination.ok(rets, count, pageable);
@@ -259,7 +258,7 @@ public class AttachmentService {
   }
 
   public List<Attachment> pageable(Pageable pageable) {
-    return pageable(pageable.getCurrent(), pageable.getSize());
+    return pageable(pageable.current(), pageable.size());
   }
 
   @Transactional

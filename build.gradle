@@ -1,0 +1,27 @@
+plugins {
+  id 'de.undercouch.download' version '5.4.0'
+//  id 'org.graalvm.buildtools.native' version '0.9.23'
+}
+
+
+configure(allprojects) {
+  group = "cn.taketoday"
+
+  repositories {
+    mavenLocal()
+    maven { url "https://maven.aliyun.com/repository/public" }
+    maven { url "https://repo.huaweicloud.com/repository/maven" }
+  }
+
+  configurations.configureEach {
+    resolutionStrategy {
+      cacheChangingModulesFor 0, "seconds"
+      cacheDynamicVersionsFor 0, "seconds"
+    }
+  }
+}
+
+
+configure(rootProject) {
+  description = "TODAY BLOG"
+}

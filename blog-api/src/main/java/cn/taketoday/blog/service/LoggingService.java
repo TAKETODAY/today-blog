@@ -221,7 +221,7 @@ public class LoggingService {
                 "SELECT * FROM logging ORDER BY id DESC LIMIT :pageNow, :pageSize")) {
           // language=
           dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.getSize());
+          dataQuery.addParameter("pageSize", pageable.size());
           List<Operation> all = dataQuery.fetch(Operation.class);
           return Pagination.ok(all, count, pageable);
         }
@@ -230,7 +230,7 @@ public class LoggingService {
   }
 
   private static int pageNow(Pageable pageable) {
-    return (pageable.getCurrent() - 1) * pageable.getSize();
+    return (pageable.current() - 1) * pageable.size();
   }
 
 }

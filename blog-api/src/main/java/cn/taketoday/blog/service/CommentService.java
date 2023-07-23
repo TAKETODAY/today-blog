@@ -303,17 +303,17 @@ public class CommentService {
   }
 
   private List<Comment> getAll(Pageable pageable) {
-    int pageSize = pageable.getSize();
-    int pageNow = pageable.getCurrent();
+    int pageSize = pageable.size();
+    int pageNow = pageable.current();
     return commentRepository.find((pageNow - 1) * pageSize, pageSize);
   }
 
   public List<Comment> getByStatus(CommentStatus valueOf, Pageable pageable) {
-    return getByStatus(valueOf, pageable.getCurrent(), pageable.getSize());
+    return getByStatus(valueOf, pageable.current(), pageable.size());
   }
 
   public List<Comment> getByUser(User userInfo, Pageable pageable) {
-    return getByUser(userInfo, pageable.getCurrent(), pageable.getSize());
+    return getByUser(userInfo, pageable.current(), pageable.size());
   }
 
 }

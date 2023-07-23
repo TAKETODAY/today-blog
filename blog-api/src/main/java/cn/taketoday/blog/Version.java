@@ -18,38 +18,12 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.handler;
-
-import cn.taketoday.blog.ErrorMessage;
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.stereotype.Component;
-import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.handler.NotFoundHandler;
-import io.prometheus.client.Counter;
+package cn.taketoday.blog;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2020-01-01 22:29
+ * @since 4.0 2023/7/20 23:12
  */
-@Component
-public class ResourceNotFoundHandler extends NotFoundHandler {
-
-  static final Counter requests = Counter.build()
-          .name("requests_not_found")
-          .labelNames("uri")
-          .help("Total Not Found requests.").register();
-
-  @Nullable
-  @Override
-  public Object handleRequest(RequestContext request) {
-    requests.labels(request.getRequestURI())
-            .inc();
-
-    request.setStatus(HttpStatus.NOT_FOUND);
-
-    logNotFound(request);
-    return ErrorMessage.failed("资源找不到");
-  }
+public class Version {
 
 }

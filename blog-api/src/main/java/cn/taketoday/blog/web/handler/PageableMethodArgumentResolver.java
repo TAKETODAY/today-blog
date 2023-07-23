@@ -90,7 +90,7 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
     }
 
     @Override
-    public int getCurrent() {
+    public int current() {
       if (current == null) {
         String parameter = request.getParameter(pageRequestParameterName);
         if (StringUtils.isEmpty(parameter)) {
@@ -104,7 +104,7 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
     }
 
     @Override
-    public int getSize() {
+    public int size() {
       if (size == null) {
         int size;
         String parameter = request.getParameter(pageSizeRequestParameterName);

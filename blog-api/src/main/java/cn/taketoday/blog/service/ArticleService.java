@@ -233,7 +233,7 @@ public class ArticleService implements InitializingBean {
         try (NamedQuery query = repository.createNamedQuery(sql)) {
           query.addParameter("pageNow", pageNow(pageable));
           query.addParameter("status", PostStatus.PUBLISHED);
-          query.addParameter("pageSize", pageable.getSize());
+          query.addParameter("pageSize", pageable.size());
 
           return fetchArticleItems(pageable, count, query);
         }
@@ -268,7 +268,7 @@ public class ArticleService implements InitializingBean {
           // language=
           dataQuery.addParameter("q", "%" + q + "%");
           dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.getSize());
+          dataQuery.addParameter("pageSize", pageable.size());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -286,8 +286,8 @@ public class ArticleService implements InitializingBean {
       return Pagination.empty();
     }
     List<Article> articles = articleRepository.find(from,
-            getPageNow(pageable.getCurrent(), pageable.getSize()),
-            pageable.getSize());
+            getPageNow(pageable.current(), pageable.size()),
+            pageable.size());
     return Pagination.ok(articles, count, pageable);
   }
 
@@ -327,7 +327,7 @@ public class ArticleService implements InitializingBean {
           dataQuery.addParameter("name", label);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
           dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.getSize());
+          dataQuery.addParameter("pageSize", pageable.size());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -360,7 +360,7 @@ public class ArticleService implements InitializingBean {
           dataQuery.addParameter("name", categoryName);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
           dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.getSize());
+          dataQuery.addParameter("pageSize", pageable.size());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -575,11 +575,11 @@ public class ArticleService implements InitializingBean {
   }
 
   public List<Article> get(Pageable pageable) {
-    return get(pageable.getCurrent(), pageable.getSize());
+    return get(pageable.current(), pageable.size());
   }
 
   public List<Article> getByStatus(PostStatus status, Pageable pageable) {
-    return getByStatus(status, pageable.getCurrent(), pageable.getSize());
+    return getByStatus(status, pageable.current(), pageable.size());
   }
 
   // private
@@ -603,7 +603,7 @@ public class ArticleService implements InitializingBean {
   }
 
   private static int pageNow(Pageable pageable) {
-    return (pageable.getCurrent() - 1) * pageable.getSize();
+    return (pageable.current() - 1) * pageable.size();
   }
 
   private List<Article> applyLabels(List<Article> ret) {
