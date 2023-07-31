@@ -2,16 +2,12 @@ description = "today-blog API"
 
 apply plugin: "java"
 apply plugin: 'cn.taketoday.application'
-apply plugin: 'cn.taketoday.application.aot'
+//apply plugin: 'cn.taketoday.application.aot'
 apply plugin: 'io.spring.dependency-management'
 //apply plugin: 'org.graalvm.buildtools.native'
 
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
-
-//infraApplication {
-//  mainClass = 'cn.taketoday.blog.BlogApplication'
-//}
 
 dependencies {
 
@@ -21,7 +17,7 @@ dependencies {
   implementation 'cn.taketoday:today-starter-validation'
   implementation 'cn.taketoday:today-mybatis'
   implementation 'cn.taketoday:today-starter-jdbc'
-  implementation 'org.freemarker:freemarker'
+  implementation 'cn.taketoday:today-starter-freemarker'
   implementation 'org.kohsuke:github-api:1.301'
   implementation 'eu.bitwalker:UserAgentUtils:1.21'
   implementation 'mysql:mysql-connector-java'

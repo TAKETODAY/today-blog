@@ -137,8 +137,7 @@ public class LoginInfoParameterResolver
   }
 
   @Nullable
-  private static Object getAttribute(
-          WebSession session, Class<?> targetType, String key) {
+  private static Object getAttribute(WebSession session, Class<?> targetType, String key) {
     Object attribute = session.getAttribute(key);
     if (targetType.isInstance(attribute)) {
       return attribute;
@@ -147,8 +146,8 @@ public class LoginInfoParameterResolver
   }
 
   @Nullable
-  private static Object getAttribute(
-          ResolvableMethodParameter parameter, WebSession session, Class<?> targetType, String key) {
+  private static Object getAttribute(ResolvableMethodParameter parameter,
+          WebSession session, Class<?> targetType, String key) {
     Object attribute = getAttribute(session, targetType, key);
     if (attribute != null) {
       return attribute;
