@@ -22,10 +22,8 @@ import { LockOutlined } from '@ant-design/icons';
 import { Form, Input, message, Skeleton } from 'antd';
 import React from 'react';
 import { Link, withRouter } from 'react-router-dom';
-import qq from '../assets/images/share/qq.png';
-import weibo from '../assets/images/share/weibo.png';
 import zone from '../assets/images/share/zone.png';
-import { ArticleComment, AdminLink } from 'src/components';
+import { AdminLink, ArticleComment } from 'src/components';
 import { articleService } from 'src/services';
 import {
   applySEO,
@@ -37,9 +35,7 @@ import {
   logging,
   scrollTop,
   setTitle,
-  shareQQ,
-  shareQQZone,
-  shareWeiBo
+  shareQQZone
 } from 'src/utils';
 import { connect } from "react-redux";
 import { navigationsUserSessionMapStateToProps } from "src/redux/action-types";
@@ -80,21 +76,6 @@ function setSEO(article) {
 
 class ArticleDetail extends React.Component {
 
-  /**
-   {
-      url: null,
-      title: null,
-      category: null,
-      content: null,
-      copyright: null,
-      cover: null,
-      labels: [],
-      updateAt: 0,
-      markdown: null,
-      pv: 0,
-      summary: null
-    }
-   */
   state = {
     key: null,
     article: null,
@@ -175,16 +156,8 @@ class ArticleDetail extends React.Component {
     this.loadArticle(articleId, formData.key)
   }
 
-  shareQQ = () => {
-    shareQQ(buildOptions(this.state))
-  }
-
   shareQQZone = () => {
     shareQQZone(buildOptions(this.state))
-  }
-
-  shareWeiBo = () => {
-    shareWeiBo(buildOptions(this.state))
   }
 
   renderPassword() {
@@ -209,7 +182,6 @@ class ArticleDetail extends React.Component {
     }
     const { userSession } = this.props
 
-
     return (<>
 
       <div className="shadow-box">
@@ -218,22 +190,20 @@ class ArticleDetail extends React.Component {
           <div className="property">
             <span>发布于 {new Date(article.createAt).toLocaleString()}</span> |
             <span> 更新 {new Date(article.updateAt).toLocaleString()}</span> |
-            <span> 分类 <Link to={`/categories/${article.category}`} title={article.category}>{article.category}</Link></span> |
             <span> 浏览 {article.pv} </span> |
+            <span> <Link to={`/categories/${article.category}`}
+                         title={`点击查看分类 ${article.category}`}>{article.category}</Link></span> |
             {userSession?.blogger && <>
-              <span>
+            <span>
                 <AdminLink href={`/articles/${article.uri}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
                            target='_blank'>
                   &nbsp;编辑
                 </AdminLink>
-              </span> |</>
-            }
-            <span style={{ cursor: "pointer" }}>
-              &nbsp;分享 <img onClick={this.shareQQ} className="share" title="分享到QQ好友" src={qq}
-                              width="16" alt="分享到QQ好友"/>
-            <img onClick={this.shareQQZone} className="share" title="分享到QQ空间" src={zone} width="18" alt="分享到QQ空间"/>
-            <img onClick={this.shareWeiBo} className="share" title="分享到微博" src={weibo} width="18" alt="分享到微博"/>
-          </span>
+            </span> |
+              <span style={{ cursor: "pointer" }}>
+              <img onClick={this.shareQQZone} className="share" title="分享到QQ空间" src={zone} width="18" alt="分享到QQ空间"/>
+            </span>
+            </>}
           </div>
           <div className="markdown contentTxt" dangerouslySetInnerHTML={{ __html: article.content }}/>
         </article>
