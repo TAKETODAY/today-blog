@@ -52,4 +52,4 @@ logging:
   level:
     sql: debug
     web: trace
-    root: info
+    root: debug

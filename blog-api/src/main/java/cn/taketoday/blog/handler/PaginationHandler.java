@@ -52,7 +52,6 @@ public class PaginationHandler {
     try (JdbcConnection connection = repository.open()) {
       try (Query countQuery = connection.createQuery(
               "SELECT COUNT(id) FROM article WHERE `status` = ?")) {
-        // language=
         handler.queryCallback.call(countQuery);
 
         int count = countQuery.fetchScalar(int.class);

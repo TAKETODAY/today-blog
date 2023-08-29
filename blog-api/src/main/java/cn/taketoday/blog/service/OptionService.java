@@ -56,9 +56,7 @@ public class OptionService {
 
   private final Map<String, String> optionsMap = new HashMap<>();
 
-  public OptionService(
-          BlogConfig blogConfig,
-          OptionRepository repository, CommentService commentService,
+  public OptionService(BlogConfig blogConfig, OptionRepository repository, CommentService commentService,
           ConfigurableEnvironment environment, BeanFactory beanFactory, CommentConfig commentConfig) {
     this.blogConfig = blogConfig;
     this.beanFactory = beanFactory;
@@ -77,7 +75,7 @@ public class OptionService {
   }
 
   public void saveOptions(Map<String, String> optionsMap) {
-    if (!CollectionUtils.isEmpty(optionsMap)) {
+    if (CollectionUtils.isNotEmpty(optionsMap)) {
       optionsMap.forEach(this::saveOption);
     }
   }
@@ -105,7 +103,7 @@ public class OptionService {
 
   @Transactional
   public void update(Map<String, String> optionsMap) {
-    if (!CollectionUtils.isEmpty(optionsMap)) {
+    if (CollectionUtils.isNotEmpty(optionsMap)) {
 
       optionsMap.forEach(this::update);
       resolveBinding(optionsMap);

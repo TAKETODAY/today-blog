@@ -219,7 +219,6 @@ public class LoggingService {
         int count = countQuery.fetchScalar(int.class);
         try (NamedQuery dataQuery = connection.createNamedQuery(
                 "SELECT * FROM logging ORDER BY id DESC LIMIT :pageNow, :pageSize")) {
-          // language=
           dataQuery.addParameter("pageNow", pageNow(pageable));
           dataQuery.addParameter("pageSize", pageable.size());
           List<Operation> all = dataQuery.fetch(Operation.class);

@@ -58,12 +58,12 @@ import io.prometheus.client.CollectorRegistry;
 public class AppConfig implements WebMvcConfigurer {
 
   @Component
-  RepositoryManager repositoryManager(DataSource dataSource) {
+  static RepositoryManager repositoryManager(DataSource dataSource) {
     return new RepositoryManager(dataSource);
   }
 
   @Component
-  public CaffeineCacheManager caffeineCacheManager() {
+  static CaffeineCacheManager caffeineCacheManager() {
     return new CaffeineCacheManager(Caffeine.newBuilder()
             .expireAfterWrite(10, TimeUnit.SECONDS)
             .maximumSize(100));
@@ -87,7 +87,7 @@ public class AppConfig implements WebMvcConfigurer {
   @Component
   @Order(Ordered.HIGHEST_PRECEDENCE)
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  LoggingInterceptor loggingInterceptor(
+  static LoggingInterceptor loggingInterceptor(
           ObjectProvider<Executor> executor,
           ObjectProvider<LoggingService> loggerService,
           ObjectProvider<UserSessionResolver> sessionResolver) {
@@ -96,13 +96,13 @@ public class AppConfig implements WebMvcConfigurer {
 
   @Component
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  DefaultPointcutAdvisor pointcutAdvisor(LoggingInterceptor loggingInterceptor) {
+  static DefaultPointcutAdvisor pointcutAdvisor(LoggingInterceptor loggingInterceptor) {
     var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
     return new DefaultPointcutAdvisor(pointcut, loggingInterceptor);
   }
 
   @Component
-  public CollectorRegistry collectorRegistry() {
+  static CollectorRegistry collectorRegistry() {
     return CollectorRegistry.defaultRegistry;
   }
 

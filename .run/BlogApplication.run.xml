@@ -1,7 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="BlogApplication" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="azul-17" />
-    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="cn.taketoday.blog.BlogApplication" />
     <module name="today-blog.blog-api.main" />
     <extension name="coverage">
@@ -10,6 +9,15 @@
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+  <configuration default="false" name="BlogApplication" type="InfraApplicationConfigurationType" factoryName="Infra">
+    <option name="ACTIVE_PROFILES" value="dev" />
+    <option name="DEBUG_MODE" value="true" />
+    <option name="MAIN_CLASS_NAME" value="cn.taketoday.blog.BlogApplication" />
+    <module name="today-blog.blog-api.main" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

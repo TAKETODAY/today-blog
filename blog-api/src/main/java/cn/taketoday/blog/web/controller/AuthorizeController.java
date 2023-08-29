@@ -164,13 +164,11 @@ public class AuthorizeController extends SessionManagerOperations {
     UserStatus status = loginUser.getStatus();
     // log.info("Check state: [{}]", status);
     switch (status) {
-      case NORMAL:
-        break;
-      case LOCKED:
-      case RECYCLE:
-      case INACTIVE:
+      case NORMAL -> { }
+      case LOCKED, RECYCLE, INACTIVE -> {
         return Json.failed(status.getDescription(), user.email);
-      default: {
+      }
+      default -> {
         return Json.failed("系统错误", user.email);
       }
     }

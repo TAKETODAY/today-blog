@@ -47,7 +47,7 @@ import cn.taketoday.lang.Nullable;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/3/26 20:45
  */
-public class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
+class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
   static final ParserContext parserContext = new TemplateParserContext(
           "${", "}");
 
