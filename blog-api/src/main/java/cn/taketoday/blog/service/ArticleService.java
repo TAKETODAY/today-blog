@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import cn.taketoday.beans.factory.InitializingBean;
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.BlogConfig;
@@ -55,7 +56,6 @@ import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
 import cn.taketoday.web.InternalServerException;
-import cn.taketoday.web.NotFoundException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
@@ -179,7 +179,9 @@ public class ArticleService implements InitializingBean {
    */
   protected Article obtainById(long id) {
     Article byId = getById(id);
-    NotFoundException.notNull(byId, "该文章不存在或已删除不能操作");
+    if (byId == null) {
+      throw ErrorMessageException.failed("该文章不存在或已删除不能操作");
+    }
     return byId;
   }
 

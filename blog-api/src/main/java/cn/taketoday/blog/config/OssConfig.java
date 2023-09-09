@@ -40,6 +40,9 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "aliyun.oss")
 public class OssConfig {
 
+  /**
+   * 启用 OSS
+   */
   private boolean enabled;
 
   private String bucket;

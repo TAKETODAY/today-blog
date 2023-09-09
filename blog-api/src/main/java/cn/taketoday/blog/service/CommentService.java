@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.BlogConfig;
@@ -40,7 +41,6 @@ import cn.taketoday.lang.Assert;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
-import cn.taketoday.web.NotFoundException;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -238,7 +238,7 @@ public class CommentService {
   public Comment obtainById(long id) {
     Comment comment = getById(id);
     if (comment == null) {
-      throw new NotFoundException("该评论不存在");
+      throw ErrorMessageException.failed("该评论不存在");
     }
     return comment;
   }

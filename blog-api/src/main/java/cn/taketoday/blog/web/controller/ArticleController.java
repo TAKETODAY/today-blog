@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.log.Logging;
@@ -46,7 +47,6 @@ import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.util.CollectionUtils;
 import cn.taketoday.util.StringUtils;
-import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.Interceptor;
@@ -187,10 +187,10 @@ public class ArticleController {
    * @return {@link Article}
    */
   @GET("/{uri}")
-  public Article detail(@Nullable String key, @PathVariable("uri") String uri, LoginInfo loginInfo) {
+  public Article detail(@Nullable String key, @PathVariable String uri, LoginInfo loginInfo) {
     Article article = articleService.getByURI(uri);
     if (article == null) {
-      throw new NotFoundException("地址为 '" + uri + "' 的文章不存在");
+      throw ErrorMessageException.failed("地址为 '" + uri + "' 的文章不存在");
     }
 
     if (loginInfo.isBloggerLoggedIn()) {
@@ -198,7 +198,7 @@ public class ArticleController {
     }
 
     if (article.getStatus() != PostStatus.PUBLISHED) { // 放在控制器层控制
-      throw new NotFoundException("文章不能访问");
+      throw ErrorMessageException.failed("文章不能访问");
     }
     if (article.needPassword()) {
       if (key == null) {

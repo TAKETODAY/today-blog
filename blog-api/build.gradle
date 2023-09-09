@@ -34,6 +34,10 @@ dependencies {
   implementation 'io.prometheus:simpleclient'
   implementation 'io.prometheus:simpleclient_common'
   implementation 'io.prometheus:simpleclient_logback'
+
+  annotationProcessor("cn.taketoday:infra-configuration-processor")
+  annotationProcessor("cn.taketoday:infra-annotation-config-processor")
+
   testImplementation 'cn.taketoday:today-starter-test'
   testImplementation 'io.projectreactor:reactor-test'
   testImplementation 'org.apache.tomcat.embed:tomcat-embed-core'

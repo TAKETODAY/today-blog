@@ -32,8 +32,6 @@ import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import cn.taketoday.web.BadRequestException;
-import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;
@@ -73,7 +71,7 @@ public class LabelController {
     Set<Label> labels = new HashSet<>(name.length);
     for (String label : name) {
       if (StringUtils.isEmpty(label)) {
-        throw new BadRequestException("标签名不能为空");
+        throw ErrorMessageException.failed("标签名不能为空");
       }
       Label byName = labelService.getByName(label);
       if (byName != null) {
@@ -91,7 +89,7 @@ public class LabelController {
   @Logging(title = "标签更新", content = "update:[${#id}] with name:[${#name}]")
   public void put(@RequestParam(required = true) String name, @PathVariable int id) {
     Label label = labelService.getById(id);
-    NotFoundException.notNull(label, "标签不存在");
+    ErrorMessageException.notNull(label, "标签不存在");
 
     if (Objects.equals(label.getName(), name)) {
       throw ErrorMessageException.failed("标签名未更改");
@@ -105,7 +103,7 @@ public class LabelController {
   @Logging(title = "删除标签", content = "delete id:[${#id}]")
   public void delete(@PathVariable long id) {
     Label byName = labelService.getById(id);
-    NotFoundException.notNull(byName, "标签不存在");
+    ErrorMessageException.notNull(byName, "标签不存在");
     labelService.deleteById(byName.getId());
   }
 

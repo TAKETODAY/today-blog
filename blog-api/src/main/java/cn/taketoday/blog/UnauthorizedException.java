@@ -18,37 +18,34 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web;
+package cn.taketoday.blog;
 
-import cn.taketoday.blog.UnauthorizedException;
-import cn.taketoday.blog.model.Blogger;
-import cn.taketoday.blog.model.User;
-import lombok.Data;
+import java.io.Serial;
 
-/**
- * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 4.0 2022/8/11 08:05
- */
-@Data
-public class LoginInfo {
+import cn.taketoday.http.HttpStatus;
+import cn.taketoday.web.ResponseStatusException;
 
-  private User loginUser;
+public class UnauthorizedException extends ResponseStatusException {
 
-  private Blogger blogger;
+  @Serial
+  private static final long serialVersionUID = 1L;
 
-  public boolean isLoggedIn() {
-    return loginUser != null;
+  public static final String UNAUTHORIZED = HttpStatus.UNAUTHORIZED.getReasonPhrase();
+
+  public UnauthorizedException() {
+    super(HttpStatus.UNAUTHORIZED, UNAUTHORIZED);
   }
 
-  public boolean isBloggerLoggedIn() {
-    return blogger != null;
+  public UnauthorizedException(String message) {
+    super(HttpStatus.UNAUTHORIZED, message);
   }
 
-  public long getLoginUserId() {
-    if (loginUser == null) {
-      throw new UnauthorizedException();
-    }
-    return loginUser.getId();
+  public UnauthorizedException(String message, Throwable cause) {
+    super(HttpStatus.UNAUTHORIZED, message, cause);
+  }
+
+  public UnauthorizedException(Throwable cause) {
+    super(HttpStatus.UNAUTHORIZED, UNAUTHORIZED, cause);
   }
 
 }

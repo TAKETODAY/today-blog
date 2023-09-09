@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -25,21 +25,37 @@ import java.io.File;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.context.properties.ConfigurationProperties;
 import cn.taketoday.stereotype.Component;
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/8/12 18:59
  */
-@Getter
-@Setter
 @Component
 @ConfigurationProperties(prefix = "attachment")
 public class AttachmentConfig {
 
   private String outsideResource;
+
+    /**
+     * CDN
+     */
   private String cdnHostPrefix;
+
+  public void setCdnHostPrefix(String cdnHostPrefix) {
+    this.cdnHostPrefix = cdnHostPrefix;
+  }
+
+  public void setOutsideResource(String outsideResource) {
+    this.outsideResource = outsideResource;
+  }
+
+  public String getCdnHostPrefix() {
+    return cdnHostPrefix;
+  }
+
+  public String getOutsideResource() {
+    return outsideResource;
+  }
 
   public String getRemoteURL(String uri) {
     return cdnHostPrefix + uri;

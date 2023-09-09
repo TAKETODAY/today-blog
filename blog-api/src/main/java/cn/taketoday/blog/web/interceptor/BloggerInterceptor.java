@@ -22,6 +22,7 @@ package cn.taketoday.blog.web.interceptor;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessage;
+import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
@@ -30,7 +31,6 @@ import cn.taketoday.session.SessionManager;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.web.InterceptorChain;
 import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.UnauthorizedException;
 import cn.taketoday.web.resource.ResourceHttpRequestHandler;
 
 /**

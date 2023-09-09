@@ -31,7 +31,6 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.NotRequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.stereotype.Controller;
-import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;
@@ -89,7 +88,7 @@ public class CategoriesController {
   @Logging(title = "更新分类", content = "update name:[${#name}]")
   public void put(@RequestBody Category category, @PathVariable String name) {
     Category oldCategory = categoryService.getCategory(name);
-    NotFoundException.notNull(oldCategory, "要更新的分类不存在");
+    ErrorMessageException.notNull(oldCategory, "要更新的分类不存在");
 
     if (oldCategory.equals(category)) {
       throw ErrorMessageException.failed("分类未更改");
@@ -100,7 +99,7 @@ public class CategoriesController {
   @DELETE("/{name}")
   @Logging(title = "删除分类", content = "delete name:[${#name}]")
   public void delete(@PathVariable String name) {
-    NotFoundException.notNull(categoryService.getCategory(name), () -> "分类'" + name + "'不存在");
+    ErrorMessageException.notNull(categoryService.getCategory(name), () -> "分类'" + name + "'不存在");
     categoryService.delete(name);
   }
 

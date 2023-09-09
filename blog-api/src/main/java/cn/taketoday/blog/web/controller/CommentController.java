@@ -37,7 +37,8 @@ import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import cn.taketoday.web.AccessForbiddenException;
+import cn.taketoday.http.HttpStatus;
+import cn.taketoday.web.ResponseStatusException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.PATCH;
@@ -194,7 +195,7 @@ public class CommentController {
 
     // not blogger
     if (!loginInfo.isBloggerLoggedIn() && (loginInfo.getLoginUserId() != byId.getUserId())) {
-      throw new AccessForbiddenException("权限不足");
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "权限不足");
     }
 
     comment.setId(id);
