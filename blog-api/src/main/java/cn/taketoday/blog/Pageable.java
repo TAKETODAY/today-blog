@@ -44,6 +44,10 @@ public interface Pageable {
    */
   int size();
 
+  default int size(int max) {
+    return Math.min(size(), max);
+  }
+
   static Simple of(int size, int current) {
     return new Simple(size, current);
   }
