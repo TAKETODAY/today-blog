@@ -93,7 +93,6 @@ datasource:
 logging:
   level:
     root: info
-    web: debug
   pattern:
     dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'
   group:

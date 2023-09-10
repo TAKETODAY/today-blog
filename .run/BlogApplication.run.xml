@@ -15,7 +15,6 @@
   </configuration>
   <configuration default="false" name="BlogApplication" type="InfraApplicationConfigurationType" factoryName="Infra">
     <option name="ACTIVE_PROFILES" value="dev" />
-    <option name="DEBUG_MODE" value="true" />
     <option name="MAIN_CLASS_NAME" value="cn.taketoday.blog.BlogApplication" />
     <module name="today-blog.blog-api.main" />
     <method v="2">
