@@ -194,14 +194,12 @@ public class ArticleService implements InitializingBean {
    *
    * @return 受欢迎的文章
    */
-  public List<ArticleItem> getMostPopularArticles() {
-    int listSize = blogConfig.getListSize();
+  public List<ArticleItem> getMostPopularArticles(Pageable pageable) {
     try (var query = repository.createQuery("""
             SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-            FROM article
-            WHERE status = ? order by pv DESC LIMIT ?""")) {
+            FROM article WHERE status = ? order by pv DESC LIMIT ?""")) {
       query.addParameter(PostStatus.PUBLISHED);
-      query.addParameter(listSize);
+      query.addParameter(pageable.size());
       return applyTags(query.fetch(ArticleItem.class));
     }
   }

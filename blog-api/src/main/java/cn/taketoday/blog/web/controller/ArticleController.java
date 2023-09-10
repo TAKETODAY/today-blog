@@ -157,8 +157,8 @@ public class ArticleController {
    * 获取受欢迎的文章 API
    */
   @GET(params = "most-popular")
-  public List<ArticleItem> mostPopular() {
-    return articleService.getMostPopularArticles();
+  public List<ArticleItem> mostPopular(Pageable pageable) {
+    return articleService.getMostPopularArticles(pageable);
   }
 
   /**
