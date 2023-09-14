@@ -40,8 +40,6 @@
   <infra-profile name="prod">
     <include resource="cn/taketoday/framework/logging/logback/file-appender.xml" />
 
-    <property name="LOG_FILE" value="logs/today-blog.log" />
-
     <root level="INFO">
       <appender-ref ref="FILE" />
     </root>

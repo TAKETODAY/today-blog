@@ -4,6 +4,10 @@
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
 ########################################################
 
+server:
+  session:
+    timeout: 3D
+
 datasource:
   username: root
   password: 88888888
@@ -50,3 +54,5 @@ app:
 logging:
   level:
     root: info
+    web: debug
+    sql: debug

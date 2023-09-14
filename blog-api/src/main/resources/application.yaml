@@ -44,7 +44,15 @@ freemarker:
     url_escaping_charset: UTF-8
 
 jackson:
+  time-zone: GMT+8
   date-format: 'yyyy-MM-dd HH:mm:ss'
+  deserialization:
+    # 常用,json中含pojo不存在属性时是否失败报错,默认true
+    FAIL_ON_UNKNOWN_PROPERTIES: false
+  serialization:
+    WRITE_DATES_AS_TIMESTAMPS: false # 返回的java.util.date转换成timestamp
+    FAIL_ON_EMPTY_BEANS: false # 对象为空时是否报错，默认true
+
 
 aliyun:
   oss:
@@ -81,6 +89,7 @@ site:
   version: TODAY BLOG v3.1
 
 datasource:
+  name: 'blog-datasource'
   url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true
   type: com.zaxxer.hikari.HikariDataSource
   username: root
@@ -88,9 +97,11 @@ datasource:
   driver-class-name: com.mysql.cj.jdbc.Driver
   hikari:
     maximum-pool-size: 20
-    max-lifetime: 1800000
+    max-lifetime: 120000
 
 logging:
+  file:
+    path: ./logs
   level:
     root: info
   pattern:
