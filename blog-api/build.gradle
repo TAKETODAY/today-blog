@@ -1,6 +1,7 @@
 description = "today-blog API"
 
 apply plugin: "java"
+apply plugin: "application"
 apply plugin: 'cn.taketoday.application'
 //apply plugin: 'cn.taketoday.application.aot'
 apply plugin: 'io.spring.dependency-management'
@@ -68,6 +69,10 @@ compileJava {
   options.encoding = 'UTF-8'
   options.compilerArgs << '-parameters'
 
+}
+
+application {
+  mainClass = 'cn.taketoday.blog.BlogApplication'
 }
 
 infraBuildImage {
