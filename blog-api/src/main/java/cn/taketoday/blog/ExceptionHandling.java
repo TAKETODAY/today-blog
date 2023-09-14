@@ -156,18 +156,18 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler {
     return ErrorMessage.failed("数据库连接出错");
   }
 
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ExceptionHandler({ ParameterReadFailedException.class })
+  public ErrorMessage parameterReadFailed(Exception exception) {
+    log.error("参数读取错误", exception);
+    return ErrorMessage.failed("参数读取错误，请检查格式");
+  }
+
   @Nullable
   @Override
   protected ResponseEntity<Object> handleHttpMessageNotReadable(
           HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, parameterReadFailed(ex), headers, status, request);
-  }
-
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler({ ParameterReadFailedException.class })
-  public ErrorMessage parameterReadFailed(Exception exception) {
-    log.error("参数读取错误", exception);
-    return ErrorMessage.failed("参数读取错误");
   }
 
   @Nullable

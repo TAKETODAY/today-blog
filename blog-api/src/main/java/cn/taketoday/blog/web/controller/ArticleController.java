@@ -20,6 +20,8 @@
 
 package cn.taketoday.blog.web.controller;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -190,7 +192,14 @@ public class ArticleController {
   public Article detail(@Nullable String key, @PathVariable String uri, LoginInfo loginInfo) {
     Article article = articleService.getByURI(uri);
     if (article == null) {
-      throw ErrorMessageException.failed("地址为 '" + uri + "' 的文章不存在");
+      try {
+        article = articleService.getById(Integer.parseInt(uri));
+      }
+      catch (NumberFormatException ignored) { }
+
+      if (article == null) {
+        throw ErrorMessageException.failed("地址为 '" + uri + "' 的文章不存在");
+      }
     }
 
     if (loginInfo.isBloggerLoggedIn()) {
@@ -286,7 +295,9 @@ public class ArticleController {
   static class ArticleForm {
 
     @Nullable
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     public LocalDateTime createAt;
+
     public String category;
     public String copyright;
     public Set<String> labels;
