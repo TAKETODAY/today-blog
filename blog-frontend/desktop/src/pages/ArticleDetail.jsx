@@ -101,7 +101,7 @@ class ArticleDetail extends React.Component {
       setSEO(article)
       this.updateNavigations()
       setTimeout(() => {
-        articleService.updatePageView(articleId)
+        articleService.updatePageView(article.id)
       }, 1500);
       if (key) {
         sessionStorage.setItem("article-password:" + articleId, key)
@@ -145,7 +145,7 @@ class ArticleDetail extends React.Component {
     const navigations = [
       { name: '全部博客', url: '/' },
       { name: this.state.article.category, url: `/categories/${this.state.article.category}` },
-      { name: this.state.article.title, url: `/articles/${this.state.article.id}` }
+      { name: this.state.article.title, url: `/articles/${this.state.article.uri}` }
     ]
 
     this.props.updateNavigations(navigations)
@@ -195,7 +195,7 @@ class ArticleDetail extends React.Component {
                          title={`点击查看分类 ${article.category}`}>{article.category}</Link></span> |
             {userSession?.blogger && <>
             <span>
-                <AdminLink href={`/articles/${article.uri}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
+                <AdminLink href={`/articles/${article.id}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
                            target='_blank'>
                   &nbsp;编辑
                 </AdminLink>
@@ -218,7 +218,7 @@ class ArticleDetail extends React.Component {
           {article.copyright || '本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。'}
         </div>
       </div>
-      <ArticleComment articleId={this.props.match.params.articleId}/>
+      <ArticleComment articleId={article.id}/>
     </>)
   }
 }
