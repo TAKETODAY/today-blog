@@ -51,18 +51,10 @@ class CommentEdit extends React.Component {
     }
     else {
       const { commentId, articleId } = this.props
-      commentService
-        .createComment(commentId ? { commentId, articleId, content } : { articleId, content })
-        .then(res => {
-          if (res.data) {
-            if (res.data.success) {
-              this.editor.value("")
-              message.success(res.data.message)
-            }
-            else {
-              message.error(res.data.message)
-            }
-          }
+      commentService.createComment(commentId ? { commentId, articleId, content } : { articleId, content })
+        .then(_ => {
+          this.editor.value("")
+          return message.success("评论成功")
         })
         .catch(err => {
           // console.log(JSON.stringify(err))
@@ -90,7 +82,7 @@ class CommentEdit extends React.Component {
       <i className='fa fa-reply fa-flip-horizontal'/>
       <div className='comment_user_info' style={{ display: 'inline', marginLeft: '5px' }}>
         <a href={user.site}>
-          <Image className='comment_avatar' alt={user.name} src={user.image} title={user.name}
+          <Image className='comment_avatar' alt={user.name} src={user.avatar} title={user.name}
                  style={{ borderRadius: '6px', width: '40px' }}/>
         </a>
         <div className='user_info'>

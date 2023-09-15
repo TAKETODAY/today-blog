@@ -1,3 +1,23 @@
+<!--
+  - Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+  - Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+  -
+  - DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see [http://www.gnu.org/licenses/]
+  -->
+
 <template>
   <div class="container">
     <!-- comment input -->
@@ -8,7 +28,7 @@
           <van-button size="small" type="danger" @click="createComment">留言</van-button>
         </template>
         <template #left-icon>
-          <img :src="loginUser.image" />
+          <img :src="loginUser.avatar" />
         </template>
       </van-field>
       <van-button v-else size="small" type="danger" :to="loginBackUrl">请登录后留言</van-button>
@@ -17,7 +37,7 @@
     <van-empty v-if="isEmpty(comments)" description="暂无评论"/>
     <div v-else class="comment" v-for="comment in comments" :key="comment.id">
       <div class="info">
-        <img class="avatar" :src="comment.user.image" width="36" height="36"/>
+        <img class="avatar" :src="comment.user.avatar" width="36" height="36"/>
         <div class="right">
           <div class="name">
             <a :href="comment.user.site" target="_blank">{{ comment.user.name }}</a>
