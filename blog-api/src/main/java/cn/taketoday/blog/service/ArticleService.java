@@ -221,10 +221,10 @@ public class ArticleService implements InitializingBean {
         String sql = """
                 SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
                 FROM article WHERE `status` = :status
-                order by create_at DESC LIMIT :pageNow, :pageSize
+                order by create_at DESC LIMIT :offset, :pageSize
                 """;
         try (NamedQuery query = repository.createNamedQuery(sql)) {
-          query.addParameter("pageNow", pageNow(pageable));
+          query.addParameter("offset", pageable.offset());
           query.addParameter("status", PostStatus.PUBLISHED);
           query.addParameter("pageSize", pageable.size());
 
@@ -254,11 +254,11 @@ public class ArticleService implements InitializingBean {
         try (NamedQuery dataQuery = connection.createNamedQuery("""
                 SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
                 FROM article WHERE `title` LIKE :q OR `content` LIKE :q
-                ORDER BY create_at DESC LIMIT :pageNow, :pageSize""")) {
+                ORDER BY create_at DESC LIMIT :offset, :size""")) {
 
           dataQuery.addParameter("q", "%" + q + "%");
-          dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.size());
+          dataQuery.addParameter("offset", pageable.offset());
+          dataQuery.addParameter("size", pageable.size());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -275,9 +275,7 @@ public class ArticleService implements InitializingBean {
     if (count < 1) {
       return Pagination.empty();
     }
-    List<Article> articles = articleRepository.find(from,
-            getPageNow(pageable.current(), pageable.size()),
-            pageable.size());
+    List<Article> articles = articleRepository.find(from, pageable.offset(), pageable.size());
     return Pagination.ok(articles, count, pageable);
   }
 
@@ -308,12 +306,12 @@ public class ArticleService implements InitializingBean {
                     SELECT labelId FROM article_label
                       WHERE labelId = (SELECT id FROM label WHERE name = :name)
                   )
-                LIMIT :pageNow, :pageSize""")) {
+                LIMIT :offset, :size""")) {
 
           dataQuery.addParameter("name", label);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
-          dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.size());
+          dataQuery.addParameter("offset", pageable.offset());
+          dataQuery.addParameter("size", pageable.size());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -339,10 +337,10 @@ public class ArticleService implements InitializingBean {
 
         try (var dataQuery = connection.createNamedQuery("""
                 SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-                FROM article WHERE status = :status AND category = :name LIMIT :pageNow, :pageSize""")) {
+                FROM article WHERE status = :status AND category = :name LIMIT :offset, :pageSize""")) {
           dataQuery.addParameter("name", categoryName);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
-          dataQuery.addParameter("pageNow", pageNow(pageable));
+          dataQuery.addParameter("offset", pageable.offset());
           dataQuery.addParameter("pageSize", pageable.size());
           return fetchArticleItems(pageable, count, dataQuery);
         }
@@ -521,11 +519,6 @@ public class ArticleService implements InitializingBean {
     return articleRepository.getTotalRecord();
   }
 
-  @Cacheable(key = "'all_'+#status+'_'+#pageNow+'_'+#pageSize")
-  public List<Article> getByStatus(PostStatus status, int pageNow, int pageSize) {
-    return applyLabels(articleRepository.findByStatus(status, getPageNow(pageNow, pageSize), pageSize));
-  }
-
   /**
    * 获取最新文章
    */
@@ -538,10 +531,6 @@ public class ArticleService implements InitializingBean {
     }
   }
 
-  public List<Article> get(int pageNow, int pageSize) {
-    return applyLabels(articleRepository.find(getPageNow(pageNow, pageSize), pageSize));
-  }
-
   public Rss getRss() {
     return rss;
   }
@@ -552,14 +541,6 @@ public class ArticleService implements InitializingBean {
 
   public Sitemap getSitemap() {
     return sitemap;
-  }
-
-  public List<Article> get(Pageable pageable) {
-    return get(pageable.current(), pageable.size());
-  }
-
-  public List<Article> getByStatus(PostStatus status, Pageable pageable) {
-    return getByStatus(status, pageable.current(), pageable.size());
   }
 
   // private
@@ -580,10 +561,6 @@ public class ArticleService implements InitializingBean {
 
   protected int getPageNow(int pageNow, int pageSize) {
     return (pageNow - 1) * pageSize;
-  }
-
-  private static int pageNow(Pageable pageable) {
-    return (pageable.current() - 1) * pageable.size();
   }
 
   private List<Article> applyLabels(List<Article> ret) {

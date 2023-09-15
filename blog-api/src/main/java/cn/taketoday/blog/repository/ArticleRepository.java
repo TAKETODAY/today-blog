@@ -89,7 +89,7 @@ public interface ArticleRepository extends DefaultRepository<Article, Long> {
           @Param("pageNow") int pageNow, @Param("pageSize") int pageSize);
 
   List<Article> find(@Param("args") SearchForm args,
-          @Param("pageNow") int pageNow, @Param("pageSize") int pageSize);
+          @Param("pageNow") int offset, @Param("pageSize") int pageSize);
 
   int getRecord(@Param("args") SearchForm args);
 
