@@ -55,7 +55,7 @@ public class LabelController {
 
   @POST("/{name}")
   @RequiresBlogger
-  @Logging(title = "保存标签", content = "name: [#{name}]")
+  @Logging(title = "保存标签", content = "name: [#{#name}]")
   public void post(@PathVariable String name) {
     Label byName = labelService.getByName(name);
     if (byName != null) {

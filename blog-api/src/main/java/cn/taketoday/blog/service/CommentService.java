@@ -37,12 +37,18 @@ import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.repository.CommentRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
+import cn.taketoday.jdbc.JdbcConnection;
+import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
+import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.jdbc.persistence.PropertyUpdateStrategy;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
 import lombok.RequiredArgsConstructor;
+
+import static cn.taketoday.jdbc.persistence.QueryCondition.isEqualsTo;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -60,16 +66,13 @@ public class CommentService {
   private final ArticleService articleService;
   private final BloggerService bloggerService;
   private final CommentRepository commentRepository;
-  private final RepositoryManager repository;
 
-  //  @Cacheable(key = "'countById_'+#id")
-  public int countByArticleId(long id) {
-    return commentRepository.getRecordByArticleId(id);
-  }
+  private final RepositoryManager repository;
+  private final EntityManager entityManager;
 
   //  @Cacheable(key = "'ByArticleId_'+#id")
   public List<Comment> getAllByArticleId(long id) {
-    List<Comment> commentsToUse = commentRepository.getArticleComment(id);
+    List<Comment> commentsToUse = entityManager.find(Comment.class, isEqualsTo("article_id", id));
     if (CollectionUtils.isNotEmpty(commentsToUse)) {
       for (Comment comment : commentsToUse) {
         comment.setUser(userService.getById(comment.getUserId()));
@@ -79,7 +82,7 @@ public class CommentService {
   }
 
   //  @Cacheable(key = "'i'+#id+'p'+#pageNow+'s'+#pageSize")
-  public List<Comment> getByArticleId(long id, int pageNow, int pageSize) {
+  public List<Comment> listByArticleId(long id, Pageable pageable) {
     List<Comment> commentsToUse = getAllByArticleId(id);
 
     if (CollectionUtils.isEmpty(commentsToUse)) {
@@ -88,19 +91,52 @@ public class CommentService {
 
     List<Comment> comments = new ArrayList<>();
     for (Comment comment : commentsToUse) {
-      if (comment.getCommentId() == 0) {
+      if (comment.getCommentId() == null) {
         comments.add(comment);
       }
     }
 
     int size = comments.size();
-    int offset = (pageNow - 1) * pageSize;
-    int toIndex = offset + pageSize;
+    int offset = pageable.offset();
+    int toIndex = offset + pageable.size();
     if (size <= toIndex) {
       toIndex = size;
     }
     List<Comment> subList = comments.subList(offset, toIndex);
     return getComments(new ArrayList<>(subList), commentsToUse);
+  }
+
+  public Pagination<Comment> getByArticleId(long articleId, Pageable pageable) {
+    try (JdbcConnection connection = repository.open()) {
+      try (Query countQuery = connection.createQuery(
+              "SELECT COUNT(id) FROM t_comment WHERE `status` = ? and article_id=?")) {
+        countQuery.addParameter(CommentStatus.CHECKED);
+        countQuery.addParameter(articleId);
+
+        int totalRecord = countQuery.fetchScalar(int.class);
+        if (totalRecord < 1) {
+          return Pagination.empty();
+        }
+
+//        String sql = """
+//                SELECT * FROM t_comment WHERE `status` = :status and article_id=:articleId
+//                order by create_at DESC LIMIT :offset, :size
+//                """;
+//        int commentPageSize = commentConfig.getListSize();
+//        try (NamedQuery query = repository.createNamedQuery(sql)) {
+//          query.addParameter("offset", pageable.offset(commentPageSize));
+//          query.addParameter("size", pageable.size(commentPageSize));
+//
+//          query.addParameter("articleId", articleId);
+//          query.addParameter("status", CommentStatus.CHECKED);
+//
+//          return Pagination.ok(query.fetch(Comment.class), totalRecord, pageable);
+//        }
+
+        List<Comment> comments = listByArticleId(articleId, pageable);
+        return Pagination.ok(comments, totalRecord, pageable);
+      }
+    }
   }
 
   public static List<Comment> getComments(List<Comment> commentsRoot, List<Comment> child) {
@@ -120,12 +156,12 @@ public class CommentService {
 
     List<Comment> commentsChild = new ArrayList<>();
     for (Comment comment : commentsRoot) {
-      if (comment.getCommentId() == parentId) {
+      if (Objects.equals(parentId, comment.getCommentId())) {
         commentsChild.add(comment);
       }
     }
     for (Comment comment : commentsChild) {
-      if (comment.getCommentId() != 0) {
+      if (comment.getCommentId() != null) {
         comment.setReplies(getReplies(comment.getId(), commentsRoot));
       }
     }
@@ -134,7 +170,7 @@ public class CommentService {
 
   @Transactional
   public void save(Comment comment) {
-    repository.persist(comment);
+    entityManager.persist(comment, PropertyUpdateStrategy.updateNoneNull());
 
     sendMail(comment);
   }
@@ -152,9 +188,9 @@ public class CommentService {
       dataModel.put("article", articleService.getById(comment.getArticleId()));
       dataModel.put("comment", comment);
 
-      mailService.sendTemplateMail(bloggerService.getBlogger().getEmail(), //
-              blogConfig.getName() + " 有了新评论请查看", //
-              dataModel, "/core/mail/admin"//
+      mailService.sendTemplateMail(bloggerService.getBlogger().getEmail(),
+              blogConfig.getName() + " 有了新评论请查看",
+              dataModel, "/core/mail/admin"
       );
     }
     long commentId = comment.getCommentId();
@@ -185,9 +221,9 @@ public class CommentService {
       dataModel.put("reply", comment);
       dataModel.put("comment", parentComment);
 
-      mailService.sendTemplateMail(parentUser.getEmail(), //
-              "您在 " + blogConfig.getName() + " 的评论有了新回复", //
-              dataModel, "/core/mail/reply"//
+      mailService.sendTemplateMail(parentUser.getEmail(),
+              "您在 " + blogConfig.getName() + " 的评论有了新回复",
+              dataModel, "/core/mail/reply"
       );
     }
   }

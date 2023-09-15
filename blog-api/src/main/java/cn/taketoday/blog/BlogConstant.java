@@ -149,8 +149,6 @@ public interface BlogConstant extends cn.taketoday.lang.Constant {
   /** 文章详情页面article Session */
   String ARTICLE = "article";
 
-  String COMMENT_SUCCESS = "评论成功";
-
   String NONE_LOGIN_MSG = "{\"message\":\"登录超时\"}";
 
   String LOGIN_URL = "/login";

@@ -44,6 +44,14 @@ public interface Pageable {
    */
   int size();
 
+  default int offset() {
+    return (current() - 1) * size();
+  }
+
+  default int offset(int max) {
+    return (current() - 1) * size(max);
+  }
+
   default int size(int max) {
     return Math.min(size(), max);
   }

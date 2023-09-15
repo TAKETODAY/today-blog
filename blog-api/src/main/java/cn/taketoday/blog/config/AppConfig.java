@@ -49,7 +49,9 @@ import cn.taketoday.context.condition.ConditionalOnProperty;
 import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
 import cn.taketoday.jdbc.RepositoryManager;
+import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.stereotype.Component;
+import cn.taketoday.web.config.ResourceHandlerRegistry;
 import cn.taketoday.web.config.ViewControllerRegistry;
 import cn.taketoday.web.config.WebMvcConfigurer;
 import io.prometheus.client.CollectorRegistry;
@@ -70,10 +72,21 @@ public class AppConfig implements WebMvcConfigurer {
   }
 
   @Component
+  static EntityManager entityManager(RepositoryManager repositoryManager) {
+    return repositoryManager.getEntityManager();
+  }
+
+  @Component
   static CaffeineCacheManager caffeineCacheManager() {
     return new CaffeineCacheManager(Caffeine.newBuilder()
             .expireAfterWrite(10, TimeUnit.SECONDS)
             .maximumSize(100));
+  }
+
+  @Override
+  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    registry.addResourceHandler("/upload/**")
+            .addResourceLocations("file:/Users/today/website/data/docs/upload/");
   }
 
   @Override

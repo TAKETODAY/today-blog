@@ -161,10 +161,10 @@ public class LoggingService {
     entity.setType(LoggingType.ERROR);
     String content = entity.getContent();
     if (content == null) {
-      entity.setContent("msg: <em>操作失败: </em>" + throwable);
+      entity.setContent("操作失败: " + throwable);
     }
     else {
-      entity.setContent("msg: <em>" + content + "操作失败: </em>" + throwable);
+      entity.setContent(content + "操作失败: " + throwable);
     }
   }
 
