@@ -198,14 +198,15 @@ create table user
     primary key (id, email)
 );
 
-create table comment
+create table t_comment
 (
-    `id`         bigint                  not null comment '评论时间戳' primary key,
-    `articleId`  bigint                  null comment '评论文章id',
-    `replyUser`  bigint                  null comment '回复者id',
-    `content`    text                    not null comment '评论内容',
-    `status`     tinyint(1) default 0    not null comment '状态（审核，未审核，回收站）',
-    `commentId`  bigint                  null comment '父评论id',
-    `lastModify` bigint     default 0    null comment '最后一次更改',
-    `sendMail`   bit        default b'0' null comment '是否已经发送过邮件'
+    `id`         bigint             not null auto_increment primary key,
+    `article_id` bigint             null comment '评论文章id',
+    `user_id`    bigint             null comment '评论者id',
+    `content`    text               not null comment '评论内容',
+    `status`     tinyint  default 0 not null comment '状态（审核，未审核，回收站）',
+    `comment_id` bigint             null comment '父评论id',
+
+    `create_at`  datetime default CURRENT_TIMESTAMP comment '创建时间',
+    `update_at`  datetime on update CURRENT_TIMESTAMP comment '更新时间'
 );

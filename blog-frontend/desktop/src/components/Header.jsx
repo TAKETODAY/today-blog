@@ -149,7 +149,7 @@ class NavHeader extends React.Component {
             </Menu.Item>
             <Menu.Item key="userSession">
               {userSession ?
-                <Dropdown menu={this.renderUserMenu()} placement="bottomRight" trigger='click'>
+                <Dropdown overlay={this.renderUserMenu()} placement="bottomRight" trigger='click'>
                   <Image original width="30" src={userSession.avatar} className="avatar"/>
                 </Dropdown>
                 : <Link to='/login' title="登录"><i className="fa fa-sign-in"/> 登录</Link>

@@ -39,14 +39,14 @@ export default props => {
   return (<>
     <div className="container" style={{ marginTop: '100px' }} align="center">
       <div className="img">
-        <img src={head}/>
+        <img src={head} alt={error.msg}/>
       </div>
       <h1 style={{ fontSize: '48px' }}>{error.msg}</h1>
       <div id="msg" style={{ fontSize: '15px', marginBottom: 20 }}>{error.desc}</div>
 
-      <Button type="primary" onClick={() => props.history.push('/')}>
-        返回首页
-      </Button>
+      <Button onClick={() => window.location.replace('/')} style={{ marginRight: 10 }}>首页</Button>
+
+      <Button type="primary" onClick={() => window.history.back()}>返回</Button>
     </div>
   </>)
 }

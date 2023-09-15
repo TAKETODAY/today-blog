@@ -37,6 +37,7 @@ import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.repository.CommentRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
+import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
@@ -59,6 +60,7 @@ public class CommentService {
   private final ArticleService articleService;
   private final BloggerService bloggerService;
   private final CommentRepository commentRepository;
+  private final RepositoryManager repository;
 
   //  @Cacheable(key = "'countById_'+#id")
   public int countByArticleId(long id) {
@@ -132,7 +134,7 @@ public class CommentService {
 
   @Transactional
   public void save(Comment comment) {
-    commentRepository.save(comment);
+    repository.persist(comment);
 
     sendMail(comment);
   }
@@ -223,7 +225,6 @@ public class CommentService {
   @Transactional
 //  @CacheEvict(allEntries = true)
   public void update(Comment comment) {
-    comment.setLastModify(System.currentTimeMillis());
     commentRepository.update(comment);
   }
 
@@ -261,9 +262,7 @@ public class CommentService {
     if (!commentConfig.isSendMail()) {
       return;
     }
-    if (!comment.getSendMail()) {
-      return;
-    }
+
     User user = comment.getUser();
     Assert.state(user != null, "用户找不到");
     if (user.getNotification()) {

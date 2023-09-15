@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,7 +42,7 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-@Table("comment")
+@Table("t_comment")
 public class Comment implements Serializable {
 
   @Serial
@@ -63,11 +64,9 @@ public class Comment implements Serializable {
   @JsonIgnore
   private Long userId;
 
-  @JsonIgnore
-  private Long lastModify;
+  private LocalDateTime createAt;
 
-  /** for checked mail */
-  private Boolean sendMail;
+  private LocalDateTime updateAt;
 
   @Nullable
   @Transient
@@ -77,30 +76,27 @@ public class Comment implements Serializable {
   @Transient
   private List<Comment> replies;
 
-  public boolean getSendMail() {
-    return sendMail != null && sendMail;
-  }
-
   @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
+  public boolean equals(Object o) {
+    if (this == o)
       return true;
-    }
-
-    if (obj instanceof Comment comment) {
-      return Objects.equals(comment.id, id)
-              && Objects.equals(comment.userId, userId)
-              && Objects.equals(comment.articleId, articleId)
-              && Objects.equals(comment.commentId, commentId)
-              && Objects.equals(comment.content, content);
-    }
-    return false;
+    if (!(o instanceof Comment comment))
+      return false;
+    return Objects.equals(id, comment.id)
+            && status == comment.status
+            && Objects.equals(content, comment.content)
+            && Objects.equals(articleId, comment.articleId)
+            && Objects.equals(commentId, comment.commentId)
+            && Objects.equals(userId, comment.userId)
+            && Objects.equals(createAt, comment.createAt)
+            && Objects.equals(updateAt, comment.updateAt)
+            && Objects.equals(user, comment.user)
+            && Objects.equals(replies, comment.replies);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, content, articleId, commentId,
-            status, userId, user, lastModify, replies, sendMail);
+    return Objects.hash(id, content, articleId, commentId, status, userId, createAt, updateAt, user, replies);
   }
 
   @Override
@@ -112,11 +108,10 @@ public class Comment implements Serializable {
             .append("commentId", commentId)
             .append("status", status)
             .append("userId", userId)
+            .append("createAt", createAt)
+            .append("updateAt", updateAt)
             .append("user", user)
-            .append("lastModify", lastModify)
             .append("replies", replies)
-            .append("sendMail", sendMail)
             .toString();
   }
-
 }

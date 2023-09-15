@@ -76,10 +76,7 @@ class CommentEdit extends React.Component {
             message.error(err.response.data.message)
             this.props.history.push("/access-forbidden");
           }
-          else {
-            this.props.history.push("/internal-server-error");
-          }
-          message.error(err.response.data?.message)
+          return message.error(err.response.data?.message)
         })
     }
   }
