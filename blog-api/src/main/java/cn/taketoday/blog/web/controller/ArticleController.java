@@ -20,8 +20,6 @@
 
 package cn.taketoday.blog.web.controller;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -228,7 +226,7 @@ public class ArticleController {
   @POST
   @RequiresBlogger
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "创建文章", content = "标题: [${#form.title}]")
+  @Logging(title = "创建文章", content = "标题: [#{#form.title}]")
   public void create(@RequestBody ArticleForm form) {
     Article article = ArticleForm.forArticle(form, labelService);
 
@@ -246,7 +244,7 @@ public class ArticleController {
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequiresBlogger
-  @Logging(title = "更新文章", content = "更新文章: [${#from.title}]")
+  @Logging(title = "更新文章", content = "更新文章: [#{#from.title}]")
   public void update(@PathVariable("id") Integer id, @RequestBody ArticleForm from) {
     Article article = ArticleForm.forArticle(from, labelService);
     article.setId(id);
@@ -256,7 +254,7 @@ public class ArticleController {
   @PUT("/{id}/status/{status}")
   @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新文章状态", content = "更新文章：[${#id}]状态为：[${#status}]")
+  @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
   public void status(@PathVariable Long id, @PathVariable PostStatus status) {
     articleService.updateStatusById(status, id);
   }
@@ -264,7 +262,7 @@ public class ArticleController {
   @DELETE("/{id}")
   @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "删除文章", content = "删除文章: [${#id}]")
+  @Logging(title = "删除文章", content = "删除文章: [#{#id}]")
   public void delete(@PathVariable Long id) {
     articleService.deleteById(id);
   }
@@ -295,7 +293,6 @@ public class ArticleController {
   static class ArticleForm {
 
     @Nullable
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     public LocalDateTime createAt;
 
     public String category;

@@ -66,7 +66,7 @@ public class AttachmentController {
    */
   @POST
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "上传附件", content = "文件名: [${#file.originalFilename}]")
+  @Logging(title = "上传附件", content = "文件名: [#{#file.originalFilename}]")
   public UploadReturnValue upload(MultipartFile file) {
     Attachment attachment = attachmentService.upload(file, null);
     String uri = attachment.getUri();
@@ -86,14 +86,14 @@ public class AttachmentController {
 
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新附件", content = "更新附件:[${#attachment.name}] 地址:[${#attachment.uri}]")
+  @Logging(title = "更新附件", content = "更新附件:[#{#attachment.name}] 地址:[#{#attachment.uri}]")
   public void put(@RequestBody Attachment attachment, @PathVariable long id) {
     attachmentService.updateById(attachment.setId(id));
   }
 
   @DELETE("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "删除附件", content = "删除ID为: [${#id}]的附件")
+  @Logging(title = "删除附件", content = "删除ID为: [#{#id}]的附件")
   public void delete(@PathVariable long id) {
     Attachment attachment = attachmentService.removeById(id);
     if (attachment != null && log.isInfoEnabled()) {
@@ -106,14 +106,14 @@ public class AttachmentController {
    */
   @PutMapping("/{id}/sync-aliyun")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "同步附件到阿里云", content = "ID为: [${#id}]")
+  @Logging(title = "同步附件到阿里云", content = "ID为: [#{#id}]")
   public void syncToAliyun(long id) {
     attachmentService.uploadOSS(id);
   }
 
   @PutMapping("/{id}/delete-aliyun")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "删除阿里云附件", content = "ID为: [${#id}]")
+  @Logging(title = "删除阿里云附件", content = "ID为: [#{#id}]")
   public void deleteAliyun(long id) {
     attachmentService.deleteOSS(id);
   }

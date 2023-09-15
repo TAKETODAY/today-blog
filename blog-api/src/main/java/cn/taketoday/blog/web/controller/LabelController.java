@@ -55,7 +55,7 @@ public class LabelController {
 
   @POST("/{name}")
   @RequiresBlogger
-  @Logging(title = "保存标签", content = "name: [${name}]")
+  @Logging(title = "保存标签", content = "name: [#{name}]")
   public void post(@PathVariable String name) {
     Label byName = labelService.getByName(name);
     if (byName != null) {
@@ -66,7 +66,7 @@ public class LabelController {
 
   @POST
   @RequiresBlogger
-  @Logging(title = "批量保存标签", content = "names: ${Arrays.toString(#name)}")
+  @Logging(title = "批量保存标签", content = "names: #{Arrays.toString(#name)}")
   public Json post(@RequestParam(required = true) String[] name) {
     Set<Label> labels = new HashSet<>(name.length);
     for (String label : name) {
@@ -86,7 +86,7 @@ public class LabelController {
 
   @PUT("/{id}")
   @RequiresBlogger
-  @Logging(title = "标签更新", content = "update:[${#id}] with name:[${#name}]")
+  @Logging(title = "标签更新", content = "update:[#{#id}] with name:[#{#name}]")
   public void put(@RequestParam(required = true) String name, @PathVariable int id) {
     Label label = labelService.getById(id);
     ErrorMessageException.notNull(label, "标签不存在");
@@ -100,7 +100,7 @@ public class LabelController {
 
   @DELETE("/{id}")
   @RequiresBlogger
-  @Logging(title = "删除标签", content = "delete id:[${#id}]")
+  @Logging(title = "删除标签", content = "delete id:[#{#id}]")
   public void delete(@PathVariable long id) {
     Label byName = labelService.getById(id);
     ErrorMessageException.notNull(byName, "标签不存在");

@@ -38,9 +38,7 @@ import cn.taketoday.context.expression.CachedExpressionEvaluator;
 import cn.taketoday.context.expression.MethodBasedEvaluationContext;
 import cn.taketoday.expression.Expression;
 import cn.taketoday.expression.ParserContext;
-import cn.taketoday.expression.common.TemplateParserContext;
 import cn.taketoday.expression.spel.support.StandardTypeLocator;
-import cn.taketoday.lang.NonNull;
 import cn.taketoday.lang.Nullable;
 
 /**
@@ -48,8 +46,7 @@ import cn.taketoday.lang.Nullable;
  * @since 4.0 2022/3/26 20:45
  */
 class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
-  static final ParserContext parserContext = new TemplateParserContext(
-          "${", "}");
+  static final ParserContext parserContext = ParserContext.TEMPLATE_EXPRESSION;
 
   /**
    * The name of the variable holding the result object.
@@ -68,9 +65,8 @@ class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
     typeLocator.importClass(CommentStatus.class);
   }
 
-  @NonNull
   @Override
-  protected Expression parseExpression(@NonNull String expression) {
+  protected Expression parseExpression(String expression) {
     return parser.parseExpression(expression, parserContext);
   }
 

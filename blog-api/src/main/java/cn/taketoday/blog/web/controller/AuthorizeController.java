@@ -148,7 +148,7 @@ public class AuthorizeController extends SessionManagerOperations {
    */
   @POST
   @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
-  @Logging(title = "登录", content = "email:[${#user.email}]")
+  @Logging(title = "登录", content = "email:[#{#user.email}]")
   public Json login(@Valid @RequestBody UserFrom user, RequestContext request) {
     User loginUser = userService.getByEmail(user.email);
     if (loginUser == null) {
@@ -282,7 +282,7 @@ public class AuthorizeController extends SessionManagerOperations {
 
   @ResponseBody(false)
   @GET("/{app}/callback")
-  @Logging(title = "第三方登录回调", content = "app:[${#app}]")
+  @Logging(title = "第三方登录回调", content = "app:[#{#app}]")
   public String loginCallback(WebSession session,
           @PathVariable String app, @Nullable String forward,
           @RequestParam String code, @RequestParam String state,

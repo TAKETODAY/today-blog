@@ -55,7 +55,7 @@ public class CategoriesController {
   }
 
   @POST
-  @Logging(title = "创建分类", content = "name:[${#category.name}]")
+  @Logging(title = "创建分类", content = "name:[#{#category.name}]")
   public Json post(@RequestBody Category category) {
     validateCategory(category);
 
@@ -85,7 +85,7 @@ public class CategoriesController {
   }
 
   @PUT("/{name}")
-  @Logging(title = "更新分类", content = "update name:[${#name}]")
+  @Logging(title = "更新分类", content = "update name:[#{#name}]")
   public void put(@RequestBody Category category, @PathVariable String name) {
     Category oldCategory = categoryService.getCategory(name);
     ErrorMessageException.notNull(oldCategory, "要更新的分类不存在");
@@ -97,7 +97,7 @@ public class CategoriesController {
   }
 
   @DELETE("/{name}")
-  @Logging(title = "删除分类", content = "delete name:[${#name}]")
+  @Logging(title = "删除分类", content = "delete name:[#{#name}]")
   public void delete(@PathVariable String name) {
     ErrorMessageException.notNull(categoryService.getCategory(name), () -> "分类'" + name + "'不存在");
     categoryService.delete(name);

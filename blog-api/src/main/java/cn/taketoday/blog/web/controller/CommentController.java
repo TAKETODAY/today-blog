@@ -49,6 +49,7 @@ import cn.taketoday.web.annotation.RequestBody;
 import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RequestParam;
 import cn.taketoday.web.annotation.RestController;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 
 /**
@@ -57,7 +58,7 @@ import jakarta.validation.constraints.NotEmpty;
  */
 @RestController
 @RequestMapping("/api/comments")
-public class CommentController {
+class CommentController {
 
   private final CommentConfig commentConfig;
   private final CommentService commentService;
@@ -85,9 +86,9 @@ public class CommentController {
    */
   @POST
   @RequestLimit
-  @Logging(title = "用户评论", content = "用户：[${#loginInfo.loginUser.name}] " +
-          "评论了文章:[${#from.articleId}] 回复了:[${#from.commentId}] 结果: [${#result}]")
-  public Json post(@RequiresUser LoginInfo loginInfo, @RequestBody CommentFrom from) {
+  @Logging(title = "用户评论", content = "用户：[{#loginInfo.loginUser.name}] " +
+          "评论了文章:[#{#from.articleId}] 回复了:[#{#from.commentId}] 结果: [#{#result}]")
+  public Json post(@RequiresUser LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
     Comment comment = new Comment();
     comment.setUser(loginInfo.getLoginUser());
     comment.setUserId(loginInfo.getLoginUser().getId());
@@ -143,13 +144,13 @@ public class CommentController {
 
   @RequiresBlogger
   @PATCH("/{id}/status")
-  @Logging(title = "更新评论状态", content = "更新评论：[${#id}]状态为：[${#status}]")
+  @Logging(title = "更新评论状态", content = "更新评论：[#{id}]状态为：[#{status}]")
   public void status(@PathVariable Long id, @RequestParam CommentStatus status) {
     commentService.updateStatusById(status, id);
   }
 
   @DELETE("/{id}")
-  @Logging(title = "删除评论", content = "删除评论：[${#id}]")
+  @Logging(title = "删除评论", content = "删除评论：[#{id}]")
   public Json delete(@RequiresUser LoginInfo loginInfo, @PathVariable Long id) {
     Comment byId = commentService.obtainById(id);
 
@@ -189,7 +190,7 @@ public class CommentController {
    * 更新评论
    */
   @PUT("/{id}")
-  @Logging(title = "更新评论", content = "更新评论：[${#id}]")
+  @Logging(title = "更新评论", content = "更新评论：[#{#id}]")
   public Json put(@RequiresUser LoginInfo loginInfo, @PathVariable Long id, @RequestBody Comment comment) {
     Comment byId = commentService.obtainById(id);
 
