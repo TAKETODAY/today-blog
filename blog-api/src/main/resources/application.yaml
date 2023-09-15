@@ -44,7 +44,7 @@ freemarker:
     url_escaping_charset: UTF-8
 
 jackson:
-  time-zone: GMT+8
+  #  time-zone: GMT+8
   date-format: 'yyyy-MM-dd HH:mm:ss'
   deserialization:
     # 常用,json中含pojo不存在属性时是否失败报错,默认true
@@ -90,7 +90,7 @@ site:
 
 datasource:
   name: 'blog-datasource'
-  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true
+  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
   type: com.zaxxer.hikari.HikariDataSource
   username: root
   password: 88888888
