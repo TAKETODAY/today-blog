@@ -26,6 +26,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +41,10 @@ import cn.taketoday.beans.factory.annotation.Value;
 import cn.taketoday.beans.factory.config.BeanDefinition;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.log.LoggingInterceptor;
+import cn.taketoday.blog.service.ArticleService;
+import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.service.LoggingService;
+import cn.taketoday.blog.service.OptionService;
 import cn.taketoday.cache.annotation.EnableCaching;
 import cn.taketoday.cache.support.CaffeineCacheManager;
 import cn.taketoday.context.annotation.Configuration;
@@ -54,17 +58,24 @@ import cn.taketoday.stereotype.Component;
 import cn.taketoday.web.config.ResourceHandlerRegistry;
 import cn.taketoday.web.config.ViewControllerRegistry;
 import cn.taketoday.web.config.WebMvcConfigurer;
+import cn.taketoday.web.view.ModelAndView;
 import io.prometheus.client.CollectorRegistry;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-05-26 17:28
  */
 @EnableCaching
+@RequiredArgsConstructor
 @DisableAllDependencyInjection
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @Configuration(proxyBeanMethods = false)
 public class AppConfig implements WebMvcConfigurer {
+
+  private final OptionService optionService;
+  private final BloggerService bloggerService;
+  private final ArticleService articleService;
 
   @Component
   static RepositoryManager repositoryManager(DataSource dataSource) {
@@ -91,9 +102,27 @@ public class AppConfig implements WebMvcConfigurer {
 
   @Override
   public void addViewControllers(ViewControllerRegistry registry) {
-    registry.addViewController("/sitemap.xml", "/sitemap").setContentType("application/xml");
-    registry.addViewController("/rss.xml", "/rss").setContentType("application/rss+xml;charset=utf-8");
-    registry.addViewController("/atom.xml", "/atom").setContentType("application/atom+xml;charset=utf-8");
+    registry.addViewController("/sitemap.xml")
+            .setContentType("application/xml")
+            .setReturnValue(() -> new ModelAndView("sitemap", getModel()));
+
+    registry.addViewController("/feed.rss")
+            .setContentType("application/xml;charset=utf-8")
+            .setReturnValue(() -> new ModelAndView("rss", getModel()));
+
+    registry.addViewController("/feed.atom")
+            .setContentType("application/xml;charset=utf-8")
+            .setReturnValue(() -> new ModelAndView("atom", getModel()));
+  }
+
+  private Map<String, Object> getModel() {
+    return Map.of(
+            "sitemap", articleService.getSitemap(),
+            "rss", articleService.getRss(),
+            "atom", articleService.getAtom(),
+            "opt", optionService.getOptionsMap(),
+            "author", bloggerService.getBlogger()
+    );
   }
 
   // 异常

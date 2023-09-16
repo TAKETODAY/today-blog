@@ -142,7 +142,7 @@ class NavHeader extends React.Component {
               </Menu.ItemGroup>
             </SubMenu>
             <Menu.Item key="atom">
-              <ApiLink target='_blank' href='/atom.xml' title="订阅"> <i className="fa fa-rss"/> 订阅 </ApiLink>
+              <ApiLink target='_blank' href='/feed.atom' title="订阅"> <i className="fa fa-rss"/> 订阅 </ApiLink>
             </Menu.Item>
             <Menu.Item key="search">
               <Search/>

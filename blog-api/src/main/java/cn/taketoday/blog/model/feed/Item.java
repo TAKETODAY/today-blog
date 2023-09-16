@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -63,11 +63,8 @@ public class Item implements Serializable {
   public String toString() {
     return ToStringBuilder.from(this)
             .append("id", id)
-            .append("pubDate", pubDate)
             .append("image", image)
             .append("title", title)
-            .append("summary", summary)
-            .append("content", content)
             .append("categories", categories)
             .toString();
   }

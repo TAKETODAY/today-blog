@@ -1,3 +1,6 @@
+<#-- @ftlvariable name="atom" type="cn.taketoday.blog.model.feed.Atom" -->
+<#-- @ftlvariable name="author" type="cn.taketoday.blog.model.Blogger" -->
+<#-- @ftlvariable name="opt" type="java.util.Map" -->
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>${opt['site.name']}</title>
@@ -8,9 +11,9 @@
   </author>
   <updated>${atom.updated?number_to_datetime}</updated>
   <link rel="alternate" type="text/html" href="${opt['site.host']}"/>
-  <link rel="self" type="application/atom+xml" href="${opt['site.host']}${contextPath}/atom.xml"/>
+  <link rel="self" type="application/atom+xml" href="${opt['site.host']}/feed.atom"/>
   <generator>${opt['site.version']}</generator>
-  <copyright>${opt['site.copyright']}</copyright>
+  <copyright><![CDATA[${opt['site.copyright']}]]></copyright>
     <#list atom.entries as entry>
       <entry>
         <title>${entry.title}</title>
@@ -21,8 +24,8 @@
           </#if>
         <link rel="alternate" type="text/html" href="${opt['site.host']}${contextPath}/articles/${entry.id}"/>
         <id>${opt['site.host']}${contextPath}/articles/${entry.id}</id>
-        <published>${entry.published?number_to_datetime}</published>
-        <updated>${entry.updated?number_to_datetime}</updated>
+        <published>${entry.published}</published>
+        <updated>${entry.updated}</updated>
         <summary>
           <![CDATA[${entry.summary}]]>
         </summary>
