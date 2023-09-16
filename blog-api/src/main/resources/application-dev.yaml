@@ -28,7 +28,7 @@ aliyun:
 
 attachment:
   outside-resource: /Users/today/website/data/docs
-  cdn-host-prefix:
+  cdn-host-prefix: https://cdn.taketoday.cn
 
 ######################################## github login
 github:
