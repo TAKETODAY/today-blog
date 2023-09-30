@@ -49,7 +49,6 @@ import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.PropertyUpdateStrategy;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
@@ -58,8 +57,6 @@ import cn.taketoday.util.CollectionUtils;
 import cn.taketoday.web.InternalServerException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
-
-import static cn.taketoday.jdbc.persistence.PropertyUpdateStrategy.updateNoneNull;
 
 @Service
 @CustomLog
@@ -88,7 +85,7 @@ public class ArticleService implements InitializingBean {
     Assert.notNull(article.getId(), "文章ID不能为空");
     Article oldArticle = obtainById(article.getId());
 
-    repository.getEntityManager().updateById(article, updateNoneNull());
+    repository.getEntityManager().updateById(article);
 
     // update category
     if (!Objects.equals(article.getCategory(), oldArticle.getCategory())) {
@@ -479,7 +476,7 @@ public class ArticleService implements InitializingBean {
   public void saveArticle(Article article) {
     // save
     // TODO 保存策略
-    repository.getEntityManager().persist(article, PropertyUpdateStrategy.updateNoneNull());
+    repository.getEntityManager().persist(article);
     // save labels
     Set<Label> labels = article.getLabels();
     if (CollectionUtils.isNotEmpty(labels)) {

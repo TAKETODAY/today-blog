@@ -48,8 +48,6 @@ import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.multipart.MultipartFile;
 
-import static cn.taketoday.jdbc.persistence.PropertyUpdateStrategy.updateNoneNull;
-
 /**
  * 附件服务
  *
@@ -270,7 +268,7 @@ public class AttachmentService {
       update.setId(id);
       update.setSync(true);
       // 数据库删除之后文件没有删除可以回滚
-      entityManager.updateById(update, updateNoneNull());
+      entityManager.updateById(update);
 
       File dest = attachmentConfig.getLocalFile(attachment);
       ossOperations.uploadFile(attachment.getLocation(), dest);
@@ -289,7 +287,7 @@ public class AttachmentService {
       update.setId(id);
       update.setSync(false);
       // 数据库删除之后文件没有删除可以回滚
-      entityManager.updateById(update, updateNoneNull());
+      entityManager.updateById(update);
 
       String location = attachment.getLocation();
       ossOperations.removeFile(location);

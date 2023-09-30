@@ -54,5 +54,5 @@ app:
 logging:
   level:
     root: info
-    web: debug
-    sql: debug
+#    web: debug
+#    sql: debug
