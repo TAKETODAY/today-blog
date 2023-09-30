@@ -41,7 +41,6 @@ import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.persistence.EntityManager;
-import cn.taketoday.jdbc.persistence.PropertyUpdateStrategy;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
@@ -170,7 +169,7 @@ public class CommentService {
 
   @Transactional
   public void save(Comment comment) {
-    entityManager.persist(comment, PropertyUpdateStrategy.updateNoneNull());
+    entityManager.persist(comment);
 
     sendMail(comment);
   }

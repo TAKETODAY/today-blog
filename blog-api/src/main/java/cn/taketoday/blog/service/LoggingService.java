@@ -43,7 +43,6 @@ import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.persistence.EntityManager;
-import cn.taketoday.jdbc.persistence.PropertyUpdateStrategy;
 import cn.taketoday.lang.Constant;
 import cn.taketoday.stereotype.Service;
 import lombok.CustomLog;
@@ -69,7 +68,7 @@ public class LoggingService {
   }
 
   public void persist(Operation operation) {
-    entityManager.persist(operation, PropertyUpdateStrategy.updateNoneNull());
+    entityManager.persist(operation);
   }
 
   public void persist(MethodOperation operation) {
