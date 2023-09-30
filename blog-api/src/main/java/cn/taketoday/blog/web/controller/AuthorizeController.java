@@ -148,7 +148,7 @@ public class AuthorizeController extends SessionManagerOperations {
    */
   @POST
   @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
-  @Logging(title = "登录", content = "email:[#{#user.email}]")
+  @Logging(title = "登录", content = "邮箱:[#{#user.email}]登录")
   public Json login(@Valid @RequestBody UserFrom user, RequestContext request) {
     User loginUser = userService.getByEmail(user.email);
     if (loginUser == null) {
@@ -494,9 +494,7 @@ public class AuthorizeController extends SessionManagerOperations {
   @PatchMapping(params = "password")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次密码")
-  public void changePassword(@RequiresUser User loginUser,
-          @RequestBody @Valid ChangePasswordForm form) {
-
+  public void changePassword(@RequiresUser User loginUser, @RequestBody @Valid ChangePasswordForm form) {
     // 校验密码是否有效
     if (!Objects.equals(form.confirmNewPassword, form.newPassword)) {
       throw ErrorMessageException.failed("两次输入的新密码不一致");

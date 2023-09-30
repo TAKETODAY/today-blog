@@ -90,7 +90,7 @@ class CommentController {
   @RequestLimit
   @ResponseStatus(HttpStatus.CREATED)
   @Logging(title = "用户评论", content = "用户：[#{#loginInfo.loginUser.name}] " +
-          "评论了文章:[#{@articleService.getById(#from.articleId).title}] 回复了:[#{#from.commentId}] 结果: [#{result}]")
+          "评论了文章:[#{@articleService.getById(#from.articleId).title}] 回复了:[#{#from.commentId}]")
   public void post(@RequiresUser LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
     Comment comment = new Comment();
     comment.setUser(loginInfo.getLoginUser());

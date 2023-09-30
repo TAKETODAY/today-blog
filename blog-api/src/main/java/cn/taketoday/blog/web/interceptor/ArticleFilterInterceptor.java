@@ -42,11 +42,13 @@ public class ArticleFilterInterceptor extends SessionHandlerInterceptor {
   @Override
   @SuppressWarnings("unchecked")
   public void afterProcess(RequestContext context, Object handler, Object result) {
-    if (result instanceof Pagination && getAttribute(context, BlogConstant.BLOGGER_INFO) == null) {
+    if (result instanceof Pagination<?> pagination
+            && getAttribute(context, BlogConstant.BLOGGER_INFO) == null) {
       // 过滤
-      final List<Article> articles = (List<Article>) ((Pagination<?>) result).getData();
-      if (CollectionUtils.isNotEmpty(articles)) {
-        for (final Article article : articles) {
+      List<?> objects = pagination.getData();
+      Object first = CollectionUtils.firstElement(objects);
+      if (first instanceof Article) {
+        for (Article article : (List<Article>) objects) {
           // 过滤有密码的
           if (article.needPassword()) {
             article.setCover(null);
