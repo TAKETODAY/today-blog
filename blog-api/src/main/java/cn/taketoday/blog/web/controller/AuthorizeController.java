@@ -82,7 +82,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.CustomLog;
-import lombok.Setter;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -91,7 +90,7 @@ import lombok.Setter;
 @CustomLog
 @RestController
 @RequestMapping("/api/auth")
-public class AuthorizeController extends SessionManagerOperations {
+class AuthorizeController extends SessionManagerOperations {
   private final Oauth giteeOauth;
   private final Oauth gitHubOauth;
 
@@ -124,8 +123,7 @@ public class AuthorizeController extends SessionManagerOperations {
     session.invalidate();
   }
 
-  @Setter
-  public static class UserFrom {
+  static class UserFrom {
 
     @NotEmpty(message = "邮箱不能为空")
     @Email(message = "请您输入正确格式的邮箱")
@@ -254,7 +252,7 @@ public class AuthorizeController extends SessionManagerOperations {
 
     OauthMetadata metadata = this.oauthMetadata.get(app);
     if (metadata == null) {
-      throw ErrorMessageException.failed("不支持的登录方式");
+      throw ErrorMessageException.failed("登录方式不支持");
     }
     return metadata;
   }
