@@ -20,6 +20,8 @@
 
 package cn.taketoday.blog;
 
+import cn.taketoday.lang.VersionExtractor;
+
 /**
  * 时间:2018,1,6 2018 1 16
  *
@@ -27,7 +29,9 @@ package cn.taketoday.blog;
  * @since 2018-09-16 21:09 s
  */
 public interface BlogConstant extends cn.taketoday.lang.Constant {
-  String applicationName = "today-blog";
+  String applicationName = "today-blog-api";
+
+  String version = VersionExtractor.forClass(BlogConstant.class);
 
   // default font
   String DEFAULT_FONT = "Verdana";
@@ -40,8 +44,6 @@ public interface BlogConstant extends cn.taketoday.lang.Constant {
 
   String OPERATION_OK = "ok";
   String OPERATION_FAILED = "操作失败";
-
-  //@off
 
   String SITE_ICP = "site.icp";
   String SITE_CDN = "site.cdn";
@@ -106,10 +108,6 @@ public interface BlogConstant extends cn.taketoday.lang.Constant {
   String KEY_ROOT = "root";
   String KEY_RESULT = "result";
 
-  /**
-   *
-   *************************************************/
-
   /*************************************************
    *
    */
@@ -151,19 +149,6 @@ public interface BlogConstant extends cn.taketoday.lang.Constant {
   /** 文章详情页面article Session */
   String ARTICLE = "article";
 
-  String LOAD_SUCCESS = "加载成功";
-  String LOAD_FALIED = "加载失败";
-  String SAVE_SUCCESS = "保存成功";
-  String SAVE_FALIED = "保存失败";
-  String LOGIN_TIME_OUT = "登录超时";
-  String OVER = "超出限制";
-  String COMMENT_SUCCESS = "评论成功";
-  String REPLY_SUCCESS = "回复成功";
-  String REPLY_FALIED = "回复失败";
-  String COMMENT_FALIED = "评论失败";
-  String RAND_CODE_ERROR = "验证码错误";
-  String SERVER_IS_BUSY = "服务器繁忙";
-
   String NONE_LOGIN_MSG = "{\"message\":\"登录超时\"}";
 
   String LOGIN_URL = "/login";
@@ -172,7 +157,5 @@ public interface BlogConstant extends cn.taketoday.lang.Constant {
   /** 默认列表大小 */
   int DEFAULT_LIST_SIZE = 10;
   int DEFAULT_MAX_PAGE_SIZE = 100;
-
-  //@on
 
 }

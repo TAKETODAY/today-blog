@@ -78,8 +78,8 @@ public class Pagination<T> implements ListableResult<T> {
   }
 
   public Pagination<T> pageable(Pageable pageable) {
-    this.size = pageable.getSize();
-    this.current = pageable.getCurrent();
+    this.size = pageable.size();
+    this.current = pageable.current();
     applyNum();
     return this;
   }

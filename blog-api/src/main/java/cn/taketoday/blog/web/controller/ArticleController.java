@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.log.Logging;
@@ -46,7 +47,6 @@ import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.util.CollectionUtils;
 import cn.taketoday.util.StringUtils;
-import cn.taketoday.web.NotFoundException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.Interceptor;
@@ -157,8 +157,8 @@ public class ArticleController {
    * 获取受欢迎的文章 API
    */
   @GET(params = "most-popular")
-  public List<ArticleItem> mostPopular() {
-    return articleService.getMostPopularArticles();
+  public List<ArticleItem> mostPopular(Pageable pageable) {
+    return articleService.getMostPopularArticles(pageable);
   }
 
   /**
@@ -187,10 +187,17 @@ public class ArticleController {
    * @return {@link Article}
    */
   @GET("/{uri}")
-  public Article detail(@Nullable String key, @PathVariable("uri") String uri, LoginInfo loginInfo) {
+  public Article detail(@Nullable String key, @PathVariable String uri, LoginInfo loginInfo) {
     Article article = articleService.getByURI(uri);
     if (article == null) {
-      throw new NotFoundException("地址为 '" + uri + "' 的文章不存在");
+      try {
+        article = articleService.getById(Integer.parseInt(uri));
+      }
+      catch (NumberFormatException ignored) { }
+
+      if (article == null) {
+        throw ErrorMessageException.failed("地址为 '" + uri + "' 的文章不存在");
+      }
     }
 
     if (loginInfo.isBloggerLoggedIn()) {
@@ -198,7 +205,7 @@ public class ArticleController {
     }
 
     if (article.getStatus() != PostStatus.PUBLISHED) { // 放在控制器层控制
-      throw new NotFoundException("文章不能访问");
+      throw ErrorMessageException.failed("文章不能访问");
     }
     if (article.needPassword()) {
       if (key == null) {
@@ -219,7 +226,7 @@ public class ArticleController {
   @POST
   @RequiresBlogger
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "创建文章", content = "标题: [${#form.title}]")
+  @Logging(title = "创建文章", content = "标题: [#{#form.title}]")
   public void create(@RequestBody ArticleForm form) {
     Article article = ArticleForm.forArticle(form, labelService);
 
@@ -237,7 +244,7 @@ public class ArticleController {
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequiresBlogger
-  @Logging(title = "更新文章", content = "更新文章: [${#from.title}]")
+  @Logging(title = "更新文章", content = "更新文章: [#{#from.title}]")
   public void update(@PathVariable("id") Integer id, @RequestBody ArticleForm from) {
     Article article = ArticleForm.forArticle(from, labelService);
     article.setId(id);
@@ -247,7 +254,7 @@ public class ArticleController {
   @PUT("/{id}/status/{status}")
   @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新文章状态", content = "更新文章：[${#id}]状态为：[${#status}]")
+  @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
   public void status(@PathVariable Long id, @PathVariable PostStatus status) {
     articleService.updateStatusById(status, id);
   }
@@ -255,7 +262,7 @@ public class ArticleController {
   @DELETE("/{id}")
   @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "删除文章", content = "删除文章: [${#id}]")
+  @Logging(title = "删除文章", content = "删除文章: [#{#id}]")
   public void delete(@PathVariable Long id) {
     articleService.deleteById(id);
   }
@@ -287,6 +294,7 @@ public class ArticleController {
 
     @Nullable
     public LocalDateTime createAt;
+
     public String category;
     public String copyright;
     public Set<String> labels;

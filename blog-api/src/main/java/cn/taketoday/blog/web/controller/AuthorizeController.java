@@ -82,7 +82,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.CustomLog;
-import lombok.Setter;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -91,7 +90,7 @@ import lombok.Setter;
 @CustomLog
 @RestController
 @RequestMapping("/api/auth")
-public class AuthorizeController extends SessionManagerOperations {
+class AuthorizeController extends SessionManagerOperations {
   private final Oauth giteeOauth;
   private final Oauth gitHubOauth;
 
@@ -124,8 +123,7 @@ public class AuthorizeController extends SessionManagerOperations {
     session.invalidate();
   }
 
-  @Setter
-  public static class UserFrom {
+  static class UserFrom {
 
     @NotEmpty(message = "邮箱不能为空")
     @Email(message = "请您输入正确格式的邮箱")
@@ -148,7 +146,7 @@ public class AuthorizeController extends SessionManagerOperations {
    */
   @POST
   @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
-  @Logging(title = "登录", content = "email:[${#user.email}]")
+  @Logging(title = "登录", content = "邮箱:[#{#user.email}]登录")
   public Json login(@Valid @RequestBody UserFrom user, RequestContext request) {
     User loginUser = userService.getByEmail(user.email);
     if (loginUser == null) {
@@ -164,13 +162,11 @@ public class AuthorizeController extends SessionManagerOperations {
     UserStatus status = loginUser.getStatus();
     // log.info("Check state: [{}]", status);
     switch (status) {
-      case NORMAL:
-        break;
-      case LOCKED:
-      case RECYCLE:
-      case INACTIVE:
+      case NORMAL -> { }
+      case LOCKED, RECYCLE, INACTIVE -> {
         return Json.failed(status.getDescription(), user.email);
-      default: {
+      }
+      default -> {
         return Json.failed("系统错误", user.email);
       }
     }
@@ -256,7 +252,7 @@ public class AuthorizeController extends SessionManagerOperations {
 
     OauthMetadata metadata = this.oauthMetadata.get(app);
     if (metadata == null) {
-      throw ErrorMessageException.failed("不支持的登录方式");
+      throw ErrorMessageException.failed("登录方式不支持");
     }
     return metadata;
   }
@@ -284,7 +280,7 @@ public class AuthorizeController extends SessionManagerOperations {
 
   @ResponseBody(false)
   @GET("/{app}/callback")
-  @Logging(title = "第三方登录回调", content = "app:[${#app}]")
+  @Logging(title = "第三方登录回调", content = "app:[#{#app}]")
   public String loginCallback(WebSession session,
           @PathVariable String app, @Nullable String forward,
           @RequestParam String code, @RequestParam String state,
@@ -368,7 +364,7 @@ public class AuthorizeController extends SessionManagerOperations {
     void appendRedirectUri(@Nullable String forward, StringBuilder url) {
       url.append("&redirect_uri=")
               .append(decode(blogConfig.getHost()))
-              .append(decode(StringUtils.formatURL(callback)));
+              .append(decode(StringUtils.prependLeadingSlash(callback)));
 
       if (StringUtils.isNotEmpty(forward)) {
         url.append(decode("?forward="))
@@ -496,9 +492,7 @@ public class AuthorizeController extends SessionManagerOperations {
   @PatchMapping(params = "password")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次密码")
-  public void changePassword(@RequiresUser User loginUser,
-          @RequestBody @Valid ChangePasswordForm form) {
-
+  public void changePassword(@RequiresUser User loginUser, @RequestBody @Valid ChangePasswordForm form) {
     // 校验密码是否有效
     if (!Objects.equals(form.confirmNewPassword, form.newPassword)) {
       throw ErrorMessageException.failed("两次输入的新密码不一致");

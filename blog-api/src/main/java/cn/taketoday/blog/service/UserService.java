@@ -22,6 +22,7 @@ package cn.taketoday.blog.service;
 
 import java.util.List;
 
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
@@ -29,9 +30,9 @@ import cn.taketoday.blog.repository.UserRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
+import cn.taketoday.http.HttpStatus;
 import cn.taketoday.stereotype.Service;
-import cn.taketoday.web.InternalServerException;
-import cn.taketoday.web.NotFoundException;
+import cn.taketoday.web.ResponseStatusException;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -47,17 +48,17 @@ public class UserService {
   }
 
   public List<User> get(Pageable pageable) {
-    return get(pageable.getCurrent(), pageable.getSize());
+    return get(pageable.current(), pageable.size());
   }
 
   public List<User> getByStatus(UserStatus status, Pageable pageable) {
-    return getByStatus(status, pageable.getCurrent(), pageable.getSize());
+    return getByStatus(status, pageable.current(), pageable.size());
   }
 
   public String getAvatar(String email) {
     User findByEmail = getByEmail(email);
     if (findByEmail == null) {
-      throw new NotFoundException("用户'" + email + "'不存在");
+      throw ErrorMessageException.failed("用户'" + email + "'不存在");
     }
     return findByEmail.getAvatar();
   }
@@ -68,7 +69,7 @@ public class UserService {
       repository.update(user);
     }
     catch (Exception e) {
-      throw InternalServerException.failed("更新失败", e);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "更新失败", e);
     }
   }
 

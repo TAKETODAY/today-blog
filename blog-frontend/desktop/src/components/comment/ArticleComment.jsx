@@ -21,7 +21,7 @@
 import { Empty, message, Pagination, Skeleton } from 'antd';
 import React from 'react';
 import { commentService } from '../../services';
-import { extractData, getArticleId, isEmpty, isNotEmpty, scrollTo } from '../../utils';
+import { extractData, isEmpty, isNotEmpty, scrollTo } from '../../utils';
 import { CommentEdit, CommentList } from '..';
 
 export default class ArticleComment extends React.Component {
@@ -78,7 +78,7 @@ export default class ArticleComment extends React.Component {
   }
 
   loadComment = (page = 1) => {
-    const articleId = getArticleId(this.props.articleId)
+    const articleId = this.props.articleId
     commentService.getComments(articleId, page)
       .then(extractData)
       .then(comments => {
@@ -92,7 +92,7 @@ export default class ArticleComment extends React.Component {
 
   render() {
     const { comments, replying, commentId, commentsLoaded } = this.state
-    const articleId = getArticleId(this.props.articleId)
+    const articleId = this.props.articleId
 
     return (<>
       <div className="shadow-box markdown" id="comment_area">

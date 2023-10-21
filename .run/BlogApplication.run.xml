@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="BlogApplication" type="InfraApplicationConfigurationType" factoryName="Infra">
+    <option name="ACTIVE_PROFILES" value="dev" />
+    <option name="MAIN_CLASS_NAME" value="cn.taketoday.blog.BlogApplication" />
+    <module name="today-blog.blog-api.main" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

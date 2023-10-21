@@ -20,7 +20,6 @@
 
 package cn.taketoday.blog.web.controller;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Json;
 import cn.taketoday.blog.Pageable;
@@ -37,7 +36,9 @@ import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import cn.taketoday.web.AccessForbiddenException;
+import cn.taketoday.http.HttpStatus;
+import cn.taketoday.lang.Nullable;
+import cn.taketoday.web.ResponseStatusException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.PATCH;
@@ -47,7 +48,9 @@ import cn.taketoday.web.annotation.PathVariable;
 import cn.taketoday.web.annotation.RequestBody;
 import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RequestParam;
+import cn.taketoday.web.annotation.ResponseStatus;
 import cn.taketoday.web.annotation.RestController;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 
 /**
@@ -56,7 +59,7 @@ import jakarta.validation.constraints.NotEmpty;
  */
 @RestController
 @RequestMapping("/api/comments")
-public class CommentController {
+class CommentController {
 
   private final CommentConfig commentConfig;
   private final CommentService commentService;
@@ -73,6 +76,7 @@ public class CommentController {
 
     public Long articleId;
 
+    @Nullable
     public Long commentId;
   }
 
@@ -84,9 +88,10 @@ public class CommentController {
    */
   @POST
   @RequestLimit
-  @Logging(title = "用户评论", content = "用户：[${#loginInfo.loginUser.name}] " +
-          "评论了文章:[${#from.articleId}] 回复了:[${#from.commentId}] 结果: [${#result}]")
-  public Json post(@RequiresUser LoginInfo loginInfo, @RequestBody CommentFrom from) {
+  @ResponseStatus(HttpStatus.CREATED)
+  @Logging(title = "用户评论", content = "用户：[#{#loginInfo.loginUser.name}] " +
+          "评论了文章:[#{@articleService.getById(#from.articleId).title}] 回复了:[#{#from.commentId}]")
+  public void post(@RequiresUser LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
     Comment comment = new Comment();
     comment.setUser(loginInfo.getLoginUser());
     comment.setUserId(loginInfo.getLoginUser().getId());
@@ -100,55 +105,37 @@ public class CommentController {
     else {
       // check comment length
       if (comment.getContent().length() >= commentConfig.getContentLength()) {
-        return Json.failed("字数超出限制");
+        throw ErrorMessageException.failed("字数超出限制");
       }
       if (commentConfig.isCheck()) {
+        // 检查是否需要审核
         comment.setStatus(CommentStatus.CHECKING);
       }
       else {
         comment.setStatus(CommentStatus.CHECKED);
       }
     }
-    comment.setId(System.currentTimeMillis());
 
     // comment.setContent(BlogUtils.stripXss(comment.getContent()));
 
     // save
     commentService.save(comment);
-    return Json.ok(BlogConstant.COMMENT_SUCCESS);
   }
 
   @GET("/articles/{id}")
-  public Result get(@PathVariable Long id, @RequestParam(defaultValue = "1") int page) {
-
-    int totalRecord = commentService.countByArticleId(id);
-    if (totalRecord <= 0) {
-      return Pagination.empty();
-    }
-
-    int commentPageSize = commentConfig.getListSize();
-    int pageCount = BlogUtils.pageCount(totalRecord, commentPageSize);
-
-    if (BlogUtils.notFound(page, pageCount)) {
-      throw ErrorMessageException.failed("页数不存在");
-    }
-
-    return Pagination.ok(commentService.getByArticleId(id, page, commentPageSize))
-            .size(commentPageSize)
-            .total(totalRecord)
-            .current(page)
-            .applyNum();
+  public Result get(@PathVariable Long id, Pageable pageable) {
+    return commentService.getByArticleId(id, pageable);
   }
 
   @RequiresBlogger
   @PATCH("/{id}/status")
-  @Logging(title = "更新评论状态", content = "更新评论：[${#id}]状态为：[${#status}]")
+  @Logging(title = "更新评论状态", content = "更新评论：[#{#id}]状态为：[#{#status}]")
   public void status(@PathVariable Long id, @RequestParam CommentStatus status) {
     commentService.updateStatusById(status, id);
   }
 
   @DELETE("/{id}")
-  @Logging(title = "删除评论", content = "删除评论：[${#id}]")
+  @Logging(title = "删除评论", content = "删除评论：[#{#id}]")
   public Json delete(@RequiresUser LoginInfo loginInfo, @PathVariable Long id) {
     Comment byId = commentService.obtainById(id);
 
@@ -171,7 +158,7 @@ public class CommentController {
   }
 
   protected void assertFound(Pageable pageable, int rowCount) {
-    if (BlogUtils.notFound(pageable.getCurrent(), BlogUtils.pageCount(rowCount, pageable.getSize()))) {
+    if (BlogUtils.notFound(pageable.current(), BlogUtils.pageCount(rowCount, pageable.size()))) {
       throw ErrorMessageException.failed("分页不存在");
     }
   }
@@ -188,13 +175,13 @@ public class CommentController {
    * 更新评论
    */
   @PUT("/{id}")
-  @Logging(title = "更新评论", content = "更新评论：[${#id}]")
+  @Logging(title = "更新评论", content = "更新评论：[#{#id}]")
   public Json put(@RequiresUser LoginInfo loginInfo, @PathVariable Long id, @RequestBody Comment comment) {
     Comment byId = commentService.obtainById(id);
 
     // not blogger
     if (!loginInfo.isBloggerLoggedIn() && (loginInfo.getLoginUserId() != byId.getUserId())) {
-      throw new AccessForbiddenException("权限不足");
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "权限不足");
     }
 
     comment.setId(id);

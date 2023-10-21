@@ -29,27 +29,25 @@ import cn.taketoday.blog.repository.CategoryRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
+import cn.taketoday.context.event.EventListener;
+import cn.taketoday.framework.context.event.ApplicationStartedEvent;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-11-02 21:02
  */
 @Service
-@CacheConfig(cacheNames = "categories"/*, expire = 1, timeUnit = TimeUnit.MINUTES*/)
+@RequiredArgsConstructor
+@CacheConfig(cacheNames = "categories")
 public class CategoryService {
-  private final CategoryRepository categoryRepository;
-
   private final RepositoryManager repositoryManager;
-
-  public CategoryService(CategoryRepository categoryRepository, RepositoryManager repositoryManager) {
-    this.categoryRepository = categoryRepository;
-    this.repositoryManager = repositoryManager;
-  }
+  private final CategoryRepository categoryRepository;
 
   @CacheEvict(allEntries = true)
   public void save(Category category) {
@@ -73,7 +71,6 @@ public class CategoryService {
    */
   @CacheEvict(allEntries = true)
   public void updateArticleCount(String categoryName) {
-    // language=MySQL
     try (NamedQuery query = repositoryManager.createNamedQuery("""
             UPDATE category SET articleCount = (
                 SELECT COUNT(id) FROM article WHERE status = 0 and category =:name
@@ -89,8 +86,8 @@ public class CategoryService {
    */
   @Transactional
   @CacheEvict(allEntries = true)
+  @EventListener(ApplicationStartedEvent.class)
   public void updateArticleCount() {
-    // language=MySQL
     try (Query query = repositoryManager.createQuery("""
             UPDATE category SET articleCount =
                     (SELECT COUNT(id)

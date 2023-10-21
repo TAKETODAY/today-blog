@@ -9,11 +9,16 @@ app:
 
 server:
   session:
+    cookie:
+      http-only: true
+      secure: true
+      max-age: 1d
+      same-site: lax
     persistent: true
   multipart:
-    fileSizeThreshold: 512MB
-    maxFileSize: 20MB
-    maxRequestSize: 100MB
+    max-file-size: 20MB
+    max-request-size: 100MB
+    file-size-threshold: 512MB
 
 infra:
   output:
@@ -39,12 +44,18 @@ freemarker:
     url_escaping_charset: UTF-8
 
 jackson:
+  #  time-zone: GMT+8
   date-format: 'yyyy-MM-dd HH:mm:ss'
+  deserialization:
+    # 常用,json中含pojo不存在属性时是否失败报错,默认true
+    FAIL_ON_UNKNOWN_PROPERTIES: false
+  serialization:
+    WRITE_DATES_AS_TIMESTAMPS: false # 返回的java.util.date转换成timestamp
+    FAIL_ON_EMPTY_BEANS: false # 对象为空时是否报错，默认true
+
 
 aliyun:
   oss:
-    accessKey:
-      name:
     accessKeyId:
     bucket:
     enabled: false
@@ -78,15 +89,22 @@ site:
   version: TODAY BLOG v3.1
 
 datasource:
-  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true
+  name: 'blog-datasource'
+  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
   type: com.zaxxer.hikari.HikariDataSource
   username: root
   password: 88888888
   driver-class-name: com.mysql.cj.jdbc.Driver
   hikari:
-    maxLifetime: 1800000
-    maxPoolSize: 20
+    maximum-pool-size: 20
+    max-lifetime: 120000
 
 logging:
+  file:
+    path: ./logs
   level:
     root: info
+  pattern:
+    dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'
+  group:
+    blog: cn.taketoday.blog

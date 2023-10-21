@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import cn.taketoday.beans.factory.InitializingBean;
+import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.BlogConfig;
@@ -48,18 +49,14 @@ import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.PropertyUpdateStrategy;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
 import cn.taketoday.web.InternalServerException;
-import cn.taketoday.web.NotFoundException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
-
-import static cn.taketoday.jdbc.persistence.PropertyUpdateStrategy.updateNoneNull;
 
 @Service
 @CustomLog
@@ -88,7 +85,7 @@ public class ArticleService implements InitializingBean {
     Assert.notNull(article.getId(), "文章ID不能为空");
     Article oldArticle = obtainById(article.getId());
 
-    repository.getEntityManager().updateById(article, updateNoneNull());
+    repository.getEntityManager().updateById(article);
 
     // update category
     if (!Objects.equals(article.getCategory(), oldArticle.getCategory())) {
@@ -144,7 +141,6 @@ public class ArticleService implements InitializingBean {
    * 更新PV
    */
   public void updatePageView(long id) {
-    // language=MySQL
     try (var query = repository.createQuery("update article set `pv`= pv + 1 where `id` = ?")) {
       query.addParameter(id);
       query.executeUpdate();
@@ -153,7 +149,6 @@ public class ArticleService implements InitializingBean {
 
   @Cacheable(key = "'ById_'+#id")
   public Article getById(long id) {
-    // language=MySQL
     try (Query query = repository.createQuery("SELECT * FROM article WHERE id = ? LIMIT 1")) {
       query.addParameter(id);
 
@@ -167,7 +162,6 @@ public class ArticleService implements InitializingBean {
   @Cacheable(key = "'getByURI_'+#uri")
   public Article getByURI(String uri) {
     Assert.notNull(uri, "文章地址不能为空");
-    // language=MySQL
     try (Query query = repository.createQuery("SELECT * FROM article WHERE uri=? LIMIT 1")) {
       query.addParameter(uri);
 
@@ -182,7 +176,9 @@ public class ArticleService implements InitializingBean {
    */
   protected Article obtainById(long id) {
     Article byId = getById(id);
-    NotFoundException.notNull(byId, "该文章不存在或已删除不能操作");
+    if (byId == null) {
+      throw ErrorMessageException.failed("该文章不存在或已删除不能操作");
+    }
     return byId;
   }
 
@@ -195,15 +191,12 @@ public class ArticleService implements InitializingBean {
    *
    * @return 受欢迎的文章
    */
-  public List<ArticleItem> getMostPopularArticles() {
-    int listSize = blogConfig.getListSize();
-    // language=MySQL
+  public List<ArticleItem> getMostPopularArticles(Pageable pageable) {
     try (var query = repository.createQuery("""
             SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-            FROM article
-            WHERE status = ? order by pv DESC LIMIT ?""")) {
+            FROM article WHERE status = ? order by pv DESC LIMIT ?""")) {
       query.addParameter(PostStatus.PUBLISHED);
-      query.addParameter(listSize);
+      query.addParameter(pageable.size(20));
       return applyTags(query.fetch(ArticleItem.class));
     }
   }
@@ -211,29 +204,26 @@ public class ArticleService implements InitializingBean {
   /**
    * 获取首页文章
    */
-  // @Cacheable(key = "'home-'+#pageable.getCurrent()+'-'+#pageable.getSize()")
+  @Cacheable(key = "'home-'+#pageable.current()+'-'+#pageable.size()")
   public Pagination<ArticleItem> getHomeArticles(Pageable pageable) {
     try (JdbcConnection connection = repository.open()) {
-      // language=MySQL
       try (Query countQuery = connection.createQuery(
               "SELECT COUNT(id) FROM article WHERE `status` = ?")) {
-        // language=
         countQuery.addParameter(PostStatus.PUBLISHED);
         int count = countQuery.fetchScalar(int.class);
         if (count < 1) {
           return Pagination.empty();
         }
 
-        // language=MySQL
         String sql = """
                 SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
                 FROM article WHERE `status` = :status
-                order by create_at DESC LIMIT :pageNow, :pageSize
+                order by create_at DESC LIMIT :offset, :pageSize
                 """;
         try (NamedQuery query = repository.createNamedQuery(sql)) {
-          query.addParameter("pageNow", pageNow(pageable));
+          query.addParameter("offset", pageable.offset());
           query.addParameter("status", PostStatus.PUBLISHED);
-          query.addParameter("pageSize", pageable.getSize());
+          query.addParameter("pageSize", pageable.size());
 
           return fetchArticleItems(pageable, count, query);
         }
@@ -251,24 +241,21 @@ public class ArticleService implements InitializingBean {
    */
   public Pagination<ArticleItem> search(String q, Pageable pageable) {
     try (JdbcConnection connection = repository.open()) {
-      // language=MySQL
       try (NamedQuery countQuery = connection.createNamedQuery(
               "select count(*) from article WHERE `title` like :q OR `content` like :q")) {
-        // language=
         countQuery.addParameter("q", "%" + q + "%");
         int count = countQuery.fetchScalar(int.class);
         if (count < 1) {
           return Pagination.empty();
         }
-        // language=MySQL
         try (NamedQuery dataQuery = connection.createNamedQuery("""
                 SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
                 FROM article WHERE `title` LIKE :q OR `content` LIKE :q
-                ORDER BY create_at DESC LIMIT :pageNow, :pageSize""")) {
-          // language=
+                ORDER BY create_at DESC LIMIT :offset, :size""")) {
+
           dataQuery.addParameter("q", "%" + q + "%");
-          dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.getSize());
+          dataQuery.addParameter("offset", pageable.offset());
+          dataQuery.addParameter("size", pageable.size());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -276,18 +263,16 @@ public class ArticleService implements InitializingBean {
   }
 
   public Pagination<Article> search(SearchForm from, Pageable pageable) {
-    try (Query query = repository.createQuery(
-            "SELECT COUNT(id) FROM article")) {
+//    try (Query query = repository.createQuery(
+//            "SELECT COUNT(id) FROM article")) {
 //      query.executeUpdate();
-    }
+//    }
 
     int count = articleRepository.getRecord(from);
     if (count < 1) {
       return Pagination.empty();
     }
-    List<Article> articles = articleRepository.find(from,
-            getPageNow(pageable.getCurrent(), pageable.getSize()),
-            pageable.getSize());
+    List<Article> articles = articleRepository.find(from, pageable.offset(), pageable.size());
     return Pagination.ok(articles, count, pageable);
   }
 
@@ -296,7 +281,6 @@ public class ArticleService implements InitializingBean {
    */
   public Pagination<ArticleItem> getArticlesByTag(String label, Pageable pageable) {
     try (JdbcConnection connection = repository.open()) {
-      // language=MySQL
       try (var countQuery = connection.createNamedQuery("""
               SELECT COUNT(*) FROM article
               LEFT JOIN article_label ON article.id = article_label.articleId
@@ -305,14 +289,12 @@ public class ArticleService implements InitializingBean {
                   SELECT labelId FROM article_label
                     WHERE labelId = (SELECT id FROM label WHERE name = :name))""")) {
 
-        // language=
         countQuery.addParameter("name", label);
         countQuery.addParameter("status", PostStatus.PUBLISHED);
         int count = countQuery.fetchScalar(int.class);
         if (count < 1) {
           return Pagination.empty();
         }
-        // language=MySQL
         try (var dataQuery = connection.createNamedQuery("""
                 SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
                 FROM article LEFT JOIN article_label ON article.id = article_label.articleId
@@ -321,13 +303,12 @@ public class ArticleService implements InitializingBean {
                     SELECT labelId FROM article_label
                       WHERE labelId = (SELECT id FROM label WHERE name = :name)
                   )
-                LIMIT :pageNow, :pageSize""")) {
+                LIMIT :offset, :size""")) {
 
-          // language=
           dataQuery.addParameter("name", label);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
-          dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.getSize());
+          dataQuery.addParameter("offset", pageable.offset());
+          dataQuery.addParameter("size", pageable.size());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -336,31 +317,28 @@ public class ArticleService implements InitializingBean {
 
   /***
    * 根据类型找文章
+   * @param pageable 分页
    */
   @Cacheable(key = "'cate_'+#categoryName+'_'+#pageable")
   public Pagination<ArticleItem> getArticlesByCategory(String categoryName, Pageable pageable) {
     try (JdbcConnection connection = repository.open()) {
-      // language=MySQL
+
       try (var countQuery = connection.createNamedQuery("""
               SELECT COUNT(id) FROM article WHERE status = :status AND category = :name""")) {
-
-        // language=
         countQuery.addParameter("name", categoryName);
         countQuery.addParameter("status", PostStatus.PUBLISHED);
         int count = countQuery.fetchScalar(int.class);
         if (count < 1) {
           return Pagination.empty();
         }
-        // language=MySQL
+
         try (var dataQuery = connection.createNamedQuery("""
                 SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-                FROM article WHERE status = :status AND category = :name LIMIT :pageNow, :pageSize""")) {
-
-          // language=
+                FROM article WHERE status = :status AND category = :name LIMIT :offset, :pageSize""")) {
           dataQuery.addParameter("name", categoryName);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
-          dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.getSize());
+          dataQuery.addParameter("offset", pageable.offset());
+          dataQuery.addParameter("pageSize", pageable.size());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -372,7 +350,6 @@ public class ArticleService implements InitializingBean {
    */
   public void refreshFeedArticles() {
     int listSize = blogConfig.getArticleFeedListSize();
-    // language=MySQL
     try (Query query = repository.createQuery(
             "SELECT * FROM article WHERE status=0 order by id DESC LIMIT ?")) {
       query.addParameter(listSize);
@@ -458,7 +435,6 @@ public class ArticleService implements InitializingBean {
 
   protected void buildSitemap() {
     log.debug("Build Sitemap");
-    // language=MySQL
     try (var query = repository.createQuery("SELECT * FROM article ORDER BY create_at DESC")) {
       sitemap.getUrls().clear();
       for (Article article : query.fetch(Article.class)) {
@@ -500,7 +476,7 @@ public class ArticleService implements InitializingBean {
   public void saveArticle(Article article) {
     // save
     // TODO 保存策略
-    repository.getEntityManager().persist(article, PropertyUpdateStrategy.updateNoneNull());
+    repository.getEntityManager().persist(article);
     // save labels
     Set<Label> labels = article.getLabels();
     if (CollectionUtils.isNotEmpty(labels)) {
@@ -540,26 +516,16 @@ public class ArticleService implements InitializingBean {
     return articleRepository.getTotalRecord();
   }
 
-  @Cacheable(key = "'all_'+#status+'_'+#pageNow+'_'+#pageSize")
-  public List<Article> getByStatus(PostStatus status, int pageNow, int pageSize) {
-    return applyLabels(articleRepository.findByStatus(status, getPageNow(pageNow, pageSize), pageSize));
-  }
-
   /**
    * 获取最新文章
    */
   @Cacheable(key = "'latest'")
   public List<Article> getLatestArticles() {
-    // language=MySQL
     try (var query = repository.createQuery("""
             SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`, `update_at`
             FROM article ORDER BY id DESC LIMIT 6""")) {
       return applyLabels(query.fetch(Article.class));
     }
-  }
-
-  public List<Article> get(int pageNow, int pageSize) {
-    return applyLabels(articleRepository.find(getPageNow(pageNow, pageSize), pageSize));
   }
 
   public Rss getRss() {
@@ -572,14 +538,6 @@ public class ArticleService implements InitializingBean {
 
   public Sitemap getSitemap() {
     return sitemap;
-  }
-
-  public List<Article> get(Pageable pageable) {
-    return get(pageable.getCurrent(), pageable.getSize());
-  }
-
-  public List<Article> getByStatus(PostStatus status, Pageable pageable) {
-    return getByStatus(status, pageable.getCurrent(), pageable.getSize());
   }
 
   // private
@@ -600,10 +558,6 @@ public class ArticleService implements InitializingBean {
 
   protected int getPageNow(int pageNow, int pageSize) {
     return (pageNow - 1) * pageSize;
-  }
-
-  private static int pageNow(Pageable pageable) {
-    return (pageable.getCurrent() - 1) * pageable.getSize();
   }
 
   private List<Article> applyLabels(List<Article> ret) {

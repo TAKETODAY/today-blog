@@ -371,8 +371,8 @@ public abstract class BlogUtils {
   }
 
   public static void prepareModel(Pageable pageable, int count, Model model) {
-    model.setAttribute("size", pageable.getSize());
-    model.setAttribute("pageNow", pageable.getCurrent());
+    model.setAttribute("size", pageable.size());
+    model.setAttribute("pageNow", pageable.current());
     model.setAttribute("count", count);
   }
 

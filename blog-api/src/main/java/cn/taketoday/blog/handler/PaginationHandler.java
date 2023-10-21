@@ -52,7 +52,6 @@ public class PaginationHandler {
     try (JdbcConnection connection = repository.open()) {
       try (Query countQuery = connection.createQuery(
               "SELECT COUNT(id) FROM article WHERE `status` = ?")) {
-        // language=
         handler.queryCallback.call(countQuery);
 
         int count = countQuery.fetchScalar(int.class);
@@ -69,7 +68,7 @@ public class PaginationHandler {
           handler.queryCallback.call(countQuery);
 
           query.addParameter("pageNow", pageNow(pageable));
-          query.addParameter("pageSize", pageable.getSize());
+          query.addParameter("pageSize", pageable.size());
 
           List<T> items = query.fetch(requiredType);
           return Pagination.ok(items, count, pageable);
@@ -79,7 +78,7 @@ public class PaginationHandler {
   }
 
   private static int pageNow(Pageable pageable) {
-    return (pageable.getCurrent() - 1) * pageable.getSize();
+    return (pageable.current() - 1) * pageable.size();
   }
 
   static class Handler<Q extends AbstractQuery> {

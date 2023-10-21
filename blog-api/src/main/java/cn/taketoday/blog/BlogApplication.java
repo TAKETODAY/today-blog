@@ -20,13 +20,10 @@
 
 package cn.taketoday.blog;
 
-import cn.taketoday.blog.service.CategoryService;
-import cn.taketoday.context.ConfigurableApplicationContext;
 import cn.taketoday.context.event.EventListener;
 import cn.taketoday.framework.Application;
 import cn.taketoday.framework.InfraApplication;
 import cn.taketoday.framework.context.event.ApplicationFailedEvent;
-import cn.taketoday.framework.context.event.ApplicationStartedEvent;
 import cn.taketoday.orm.mybatis.annotation.MapperScan;
 import cn.taketoday.session.config.EnableWebSession;
 import lombok.CustomLog;
@@ -43,16 +40,6 @@ public class BlogApplication {
 
   public static void main(String[] args) {
     Application.run(BlogApplication.class, args);
-  }
-
-  @EventListener
-  public void applicationStarted(ApplicationStartedEvent event) {
-    ConfigurableApplicationContext context = event.getApplicationContext();
-    CategoryService categoryService = context.getBean(CategoryService.class);
-
-    // update article count to cache
-    categoryService.updateArticleCount();
-
     log.info("----------------Application Started------------------");
   }
 

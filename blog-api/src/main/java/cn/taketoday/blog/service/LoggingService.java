@@ -43,7 +43,6 @@ import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.persistence.EntityManager;
-import cn.taketoday.jdbc.persistence.PropertyUpdateStrategy;
 import cn.taketoday.lang.Constant;
 import cn.taketoday.stereotype.Service;
 import lombok.CustomLog;
@@ -69,7 +68,7 @@ public class LoggingService {
   }
 
   public void persist(Operation operation) {
-    entityManager.persist(operation, PropertyUpdateStrategy.updateNoneNull());
+    entityManager.persist(operation);
   }
 
   public void persist(MethodOperation operation) {
@@ -161,10 +160,10 @@ public class LoggingService {
     entity.setType(LoggingType.ERROR);
     String content = entity.getContent();
     if (content == null) {
-      entity.setContent("msg: <em>操作失败: </em>" + throwable);
+      entity.setContent("操作失败: " + throwable);
     }
     else {
-      entity.setContent("msg: <em>" + content + "操作失败: </em>" + throwable);
+      entity.setContent(content + "操作失败: " + throwable);
     }
   }
 
@@ -219,9 +218,8 @@ public class LoggingService {
         int count = countQuery.fetchScalar(int.class);
         try (NamedQuery dataQuery = connection.createNamedQuery(
                 "SELECT * FROM logging ORDER BY id DESC LIMIT :pageNow, :pageSize")) {
-          // language=
           dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.getSize());
+          dataQuery.addParameter("pageSize", pageable.size());
           List<Operation> all = dataQuery.fetch(Operation.class);
           return Pagination.ok(all, count, pageable);
         }
@@ -230,7 +228,7 @@ public class LoggingService {
   }
 
   private static int pageNow(Pageable pageable) {
-    return (pageable.getCurrent() - 1) * pageable.getSize();
+    return (pageable.current() - 1) * pageable.size();
   }
 
 }

@@ -4,6 +4,10 @@
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
 ########################################################
 
+server:
+  session:
+    timeout: 3D
+
 datasource:
   username: root
   password: 88888888
@@ -15,17 +19,16 @@ datasource:
   #jdbc.pool.connectionTimeout = 30000
 
 site:
-  upload: ${site.serverPath}/
   #aliyun.oss.enable=false
   host: http://localhost:8080
 
 aliyun:
   oss:
-  enable: true
+    enabled: false
 
 attachment:
   outside-resource: /Users/today/website/data/docs
-  cdn-host-prefix:
+  cdn-host-prefix: https://cdn.taketoday.cn
 
 ######################################## github login
 github:
@@ -50,6 +53,6 @@ app:
 
 logging:
   level:
-    sql: debug
-    web: trace
     root: info
+#    web: debug
+#    sql: debug

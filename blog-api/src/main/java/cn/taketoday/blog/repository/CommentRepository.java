@@ -39,13 +39,6 @@ import cn.taketoday.stereotype.Repository;
 @Repository
 public interface CommentRepository extends DefaultRepository<Comment, Long> {
 
-  /**
-   * @param id article id
-   */
-  List<Comment> getArticleComment(@Param("id") final long id);
-
-  int getRecordByArticleId(long articleId);
-
   @ResultMap("BaseResultMap")
   @Select("SELECT * FROM comment ORDER BY id DESC LIMIT 0, 5")
   List<Comment> findLatest();

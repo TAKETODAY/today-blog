@@ -26,6 +26,7 @@ import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Component;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.handler.NotFoundHandler;
+import io.prometheus.client.Counter;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -34,9 +35,17 @@ import cn.taketoday.web.handler.NotFoundHandler;
 @Component
 public class ResourceNotFoundHandler extends NotFoundHandler {
 
+  static final Counter requests = Counter.build()
+          .name("requests_not_found")
+          .labelNames("uri")
+          .help("Total Not Found requests.").register();
+
   @Nullable
   @Override
   public Object handleRequest(RequestContext request) {
+    requests.labels(request.getRequestURI())
+            .inc();
+
     request.setStatus(HttpStatus.NOT_FOUND);
 
     logNotFound(request);

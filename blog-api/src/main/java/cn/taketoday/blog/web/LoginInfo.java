@@ -20,9 +20,9 @@
 
 package cn.taketoday.blog.web;
 
+import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.web.UnauthorizedException;
 import lombok.Data;
 
 /**

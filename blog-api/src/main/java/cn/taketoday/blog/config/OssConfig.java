@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -20,14 +20,13 @@
 
 package cn.taketoday.blog.config;
 
+import cn.taketoday.context.properties.ConfigurationProperties;
+import cn.taketoday.context.properties.NestedConfigurationProperty;
+import cn.taketoday.stereotype.Singleton;
 import com.aliyun.oss.ClientConfiguration;
 import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.common.auth.DefaultCredentialProvider;
 import com.aliyun.oss.common.auth.DefaultCredentials;
-
-import cn.taketoday.context.properties.ConfigurationProperties;
-import cn.taketoday.context.properties.NestedConfigurationProperty;
-import cn.taketoday.stereotype.Singleton;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -41,6 +40,9 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "aliyun.oss")
 public class OssConfig {
 
+  /**
+   * 启用 OSS
+   */
   private boolean enabled;
 
   private String bucket;

@@ -24,6 +24,8 @@ import java.util.function.Supplier;
 
 import cn.taketoday.core.NoStackTraceRuntimeException;
 import cn.taketoday.http.HttpStatus;
+import cn.taketoday.http.HttpStatusCode;
+import cn.taketoday.http.HttpStatusCodeProvider;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 
@@ -33,7 +35,7 @@ import cn.taketoday.lang.Nullable;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/7/19 22:01
  */
-public class ErrorMessageException extends NoStackTraceRuntimeException {
+public class ErrorMessageException extends NoStackTraceRuntimeException implements HttpStatusCodeProvider {
 
   private final HttpStatus status;
 
@@ -47,7 +49,8 @@ public class ErrorMessageException extends NoStackTraceRuntimeException {
     this.status = status;
   }
 
-  public HttpStatus getStatus() {
+  @Override
+  public HttpStatusCode getStatusCode() {
     return status;
   }
 

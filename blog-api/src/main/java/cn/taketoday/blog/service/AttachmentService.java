@@ -33,7 +33,6 @@ import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.config.AttachmentConfig;
-import cn.taketoday.blog.config.OssConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
@@ -49,8 +48,6 @@ import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.multipart.MultipartFile;
 
-import static cn.taketoday.jdbc.persistence.PropertyUpdateStrategy.updateNoneNull;
-
 /**
  * 附件服务
  *
@@ -65,12 +62,12 @@ public class AttachmentService {
   private final AttachmentConfig attachmentConfig;
   private final RepositoryManager repositoryManager;
 
-  public AttachmentService(AttachmentConfig attachmentConfig,
-          AttachmentRepository repository, OssConfig ossConfig, RepositoryManager repositoryManager) {
+  public AttachmentService(OssOperations ossOperations, AttachmentRepository repository,
+          AttachmentConfig attachmentConfig, RepositoryManager repositoryManager) {
     this.repository = repository;
     this.attachmentConfig = attachmentConfig;
     this.repositoryManager = repositoryManager;
-    this.ossOperations = new OssOperations(ossConfig);
+    this.ossOperations = ossOperations;
     this.entityManager = repositoryManager.getEntityManager();
   }
 
@@ -109,8 +106,8 @@ public class AttachmentService {
 
     List<Attachment> rets = repository.filter(
             form,
-            getPageNow(pageable.getCurrent(), pageable.getSize()),
-            pageable.getSize()
+            getPageNow(pageable.current(), pageable.size()),
+            pageable.size()
     );
 
     return Pagination.ok(rets, count, pageable);
@@ -259,7 +256,7 @@ public class AttachmentService {
   }
 
   public List<Attachment> pageable(Pageable pageable) {
-    return pageable(pageable.getCurrent(), pageable.getSize());
+    return pageable(pageable.current(), pageable.size());
   }
 
   @Transactional
@@ -271,7 +268,7 @@ public class AttachmentService {
       update.setId(id);
       update.setSync(true);
       // 数据库删除之后文件没有删除可以回滚
-      entityManager.updateById(update, updateNoneNull());
+      entityManager.updateById(update);
 
       File dest = attachmentConfig.getLocalFile(attachment);
       ossOperations.uploadFile(attachment.getLocation(), dest);
@@ -290,7 +287,7 @@ public class AttachmentService {
       update.setId(id);
       update.setSync(false);
       // 数据库删除之后文件没有删除可以回滚
-      entityManager.updateById(update, updateNoneNull());
+      entityManager.updateById(update);
 
       String location = attachment.getLocation();
       ossOperations.removeFile(location);

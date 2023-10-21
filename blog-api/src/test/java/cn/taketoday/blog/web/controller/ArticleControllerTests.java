@@ -142,12 +142,12 @@ class ArticleControllerTests {
   static class SessionConfig {
 
     @Bean
-    SessionIdResolver sessionIdResolver() {
+    static SessionIdResolver sessionIdResolver() {
       return HeaderSessionIdResolver.authenticationInfo();
     }
 
     @Bean
-    SessionRepository sessionRepository(
+    public SessionRepository sessionRepository(
             SessionEventDispatcher eventDispatcher, SessionIdGenerator idGenerator) {
       return new InMemorySessionRepository(eventDispatcher, idGenerator) {
         @Override

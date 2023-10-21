@@ -28,21 +28,25 @@ import java.sql.SQLException;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.dao.DataAccessResourceFailureException;
+import cn.taketoday.http.HttpHeaders;
 import cn.taketoday.http.HttpStatus;
+import cn.taketoday.http.HttpStatusCode;
 import cn.taketoday.http.ResponseEntity;
 import cn.taketoday.http.converter.HttpMessageNotReadableException;
+import cn.taketoday.lang.Nullable;
 import cn.taketoday.util.ObjectUtils;
-import cn.taketoday.web.BadRequestException;
 import cn.taketoday.web.InternalServerException;
+import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.ResponseStatusException;
-import cn.taketoday.web.UnauthorizedException;
 import cn.taketoday.web.annotation.ExceptionHandler;
 import cn.taketoday.web.annotation.ResponseStatus;
 import cn.taketoday.web.annotation.RestControllerAdvice;
+import cn.taketoday.web.bind.MethodArgumentNotValidException;
 import cn.taketoday.web.bind.MissingRequestParameterException;
 import cn.taketoday.web.bind.NotMultipartRequestException;
 import cn.taketoday.web.bind.resolver.ParameterConversionException;
 import cn.taketoday.web.bind.resolver.ParameterReadFailedException;
+import cn.taketoday.web.handler.ResponseEntityExceptionHandler;
 import cn.taketoday.web.multipart.MaxUploadSizeExceededException;
 import lombok.CustomLog;
 
@@ -54,14 +58,14 @@ import lombok.CustomLog;
  */
 @CustomLog
 @RestControllerAdvice
-public class ExceptionHandling {
+public class ExceptionHandling extends ResponseEntityExceptionHandler {
 
   private static final ErrorMessage illegalArgument = ErrorMessage.failed("参数错误");
   private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
 
   @ExceptionHandler(ErrorMessageException.class)
   public ResponseEntity<ErrorMessage> errorMessage(ErrorMessageException errorMessage) {
-    HttpStatus httpStatus = errorMessage.getStatus();
+    HttpStatusCode httpStatus = errorMessage.getStatusCode();
     return ResponseEntity.status(httpStatus)
             .body(ErrorMessage.failed(errorMessage.getMessage()));
   }
@@ -84,14 +88,6 @@ public class ExceptionHandling {
     log.error(e.getMessage(), e);
     String formattedSize = BlogUtils.formatSize(e.getMaxUploadSize());
     return ErrorMessage.failed("上传文件大小超出限制: '" + formattedSize + "'");
-  }
-
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler(BadRequestException.class)
-  public ErrorMessage badRequest(BadRequestException e) {
-    return e.getCause() instanceof NumberFormatException
-           ? ErrorMessage.failed("数字格式错误")
-           : ErrorMessage.failed(e.getReason());
   }
 
   @ExceptionHandler(InternalServerException.class)
@@ -142,19 +138,6 @@ public class ExceptionHandling {
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler(MissingRequestParameterException.class)
-  public ErrorMessage missingParameter(MissingRequestParameterException parameterException) {
-    return ErrorMessage.failed("缺少参数'" + parameterException.getParameterName() + "'");
-  }
-
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler({ ParameterReadFailedException.class, HttpMessageNotReadableException.class })
-  public ErrorMessage parameterReadFailed(Exception exception) {
-    log.error("参数读取错误", exception);
-    return ErrorMessage.failed("参数读取错误");
-  }
-
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(NotMultipartRequestException.class)
   public ErrorMessage notMultipart() {
     return ErrorMessage.failed("请求错误");
@@ -171,6 +154,34 @@ public class ExceptionHandling {
   public ErrorMessage dataAccessException(DataAccessResourceFailureException accessException) {
     log.error("数据库连接出错", accessException);
     return ErrorMessage.failed("数据库连接出错");
+  }
+
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ExceptionHandler({ ParameterReadFailedException.class })
+  public ErrorMessage parameterReadFailed(Exception exception) {
+    log.error("参数读取错误", exception);
+    return ErrorMessage.failed("参数读取错误，请检查格式");
+  }
+
+  @Nullable
+  @Override
+  protected ResponseEntity<Object> handleHttpMessageNotReadable(
+          HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+    return handleExceptionInternal(ex, parameterReadFailed(ex), headers, status, request);
+  }
+
+  @Nullable
+  @Override
+  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers,
+          HttpStatusCode status, RequestContext request) {
+    return handleExceptionInternal(ex, illegalArgument, headers, status, request);
+  }
+
+  @Nullable
+  @Override
+  protected ResponseEntity<Object> handleMissingRequestParameter(
+          MissingRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+    return handleExceptionInternal(ex, ErrorMessage.failed("缺少参数'" + ex.getParameterName() + "'"), headers, status, request);
   }
 
 }

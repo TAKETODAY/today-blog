@@ -23,6 +23,7 @@ package cn.taketoday.blog.web.handler;
 import java.util.Optional;
 
 import cn.taketoday.blog.BlogConstant;
+import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.LoginInfo;
@@ -33,7 +34,6 @@ import cn.taketoday.session.SessionManagerOperations;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.stereotype.Singleton;
 import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.UnauthorizedException;
 import cn.taketoday.web.bind.resolver.ParameterResolvingStrategy;
 import cn.taketoday.web.handler.method.ResolvableMethodParameter;
 
@@ -137,8 +137,7 @@ public class LoginInfoParameterResolver
   }
 
   @Nullable
-  private static Object getAttribute(
-          WebSession session, Class<?> targetType, String key) {
+  private static Object getAttribute(WebSession session, Class<?> targetType, String key) {
     Object attribute = session.getAttribute(key);
     if (targetType.isInstance(attribute)) {
       return attribute;
@@ -147,8 +146,8 @@ public class LoginInfoParameterResolver
   }
 
   @Nullable
-  private static Object getAttribute(
-          ResolvableMethodParameter parameter, WebSession session, Class<?> targetType, String key) {
+  private static Object getAttribute(ResolvableMethodParameter parameter,
+          WebSession session, Class<?> targetType, String key) {
     Object attribute = getAttribute(session, targetType, key);
     if (attribute != null) {
       return attribute;

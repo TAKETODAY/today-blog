@@ -22,10 +22,8 @@ import { LockOutlined } from '@ant-design/icons';
 import { Form, Input, message, Skeleton } from 'antd';
 import React from 'react';
 import { Link, withRouter } from 'react-router-dom';
-import qq from '../assets/images/share/qq.png';
-import weibo from '../assets/images/share/weibo.png';
 import zone from '../assets/images/share/zone.png';
-import { ArticleComment, AdminLink } from 'src/components';
+import { AdminLink, ArticleComment } from 'src/components';
 import { articleService } from 'src/services';
 import {
   applySEO,
@@ -37,9 +35,7 @@ import {
   logging,
   scrollTop,
   setTitle,
-  shareQQ,
-  shareQQZone,
-  shareWeiBo
+  shareQQZone
 } from 'src/utils';
 import { connect } from "react-redux";
 import { navigationsUserSessionMapStateToProps } from "src/redux/action-types";
@@ -80,21 +76,6 @@ function setSEO(article) {
 
 class ArticleDetail extends React.Component {
 
-  /**
-   {
-      url: null,
-      title: null,
-      category: null,
-      content: null,
-      copyright: null,
-      cover: null,
-      labels: [],
-      updateAt: 0,
-      markdown: null,
-      pv: 0,
-      summary: null
-    }
-   */
   state = {
     key: null,
     article: null,
@@ -120,7 +101,7 @@ class ArticleDetail extends React.Component {
       setSEO(article)
       this.updateNavigations()
       setTimeout(() => {
-        articleService.updatePageView(articleId)
+        articleService.updatePageView(article.id)
       }, 1500);
       if (key) {
         sessionStorage.setItem("article-password:" + articleId, key)
@@ -164,7 +145,7 @@ class ArticleDetail extends React.Component {
     const navigations = [
       { name: '全部博客', url: '/' },
       { name: this.state.article.category, url: `/categories/${this.state.article.category}` },
-      { name: this.state.article.title, url: `/articles/${this.state.article.id}` }
+      { name: this.state.article.title, url: `/articles/${this.state.article.uri}` }
     ]
 
     this.props.updateNavigations(navigations)
@@ -175,16 +156,8 @@ class ArticleDetail extends React.Component {
     this.loadArticle(articleId, formData.key)
   }
 
-  shareQQ = () => {
-    shareQQ(buildOptions(this.state))
-  }
-
   shareQQZone = () => {
     shareQQZone(buildOptions(this.state))
-  }
-
-  shareWeiBo = () => {
-    shareWeiBo(buildOptions(this.state))
   }
 
   renderPassword() {
@@ -209,7 +182,6 @@ class ArticleDetail extends React.Component {
     }
     const { userSession } = this.props
 
-
     return (<>
 
       <div className="shadow-box">
@@ -218,22 +190,20 @@ class ArticleDetail extends React.Component {
           <div className="property">
             <span>发布于 {new Date(article.createAt).toLocaleString()}</span> |
             <span> 更新 {new Date(article.updateAt).toLocaleString()}</span> |
-            <span> 分类 <Link to={`/categories/${article.category}`} title={article.category}>{article.category}</Link></span> |
             <span> 浏览 {article.pv} </span> |
+            <span> <Link to={`/categories/${article.category}`}
+                         title={`点击查看分类 ${article.category}`}>{article.category}</Link></span> |
             {userSession?.blogger && <>
-              <span>
-                <AdminLink href={`/articles/${article.uri}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
+            <span>
+                <AdminLink href={`/articles/${article.id}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
                            target='_blank'>
                   &nbsp;编辑
                 </AdminLink>
-              </span> |</>
-            }
-            <span style={{ cursor: "pointer" }}>
-              &nbsp;分享 <img onClick={this.shareQQ} className="share" title="分享到QQ好友" src={qq}
-                              width="16" alt="分享到QQ好友"/>
-            <img onClick={this.shareQQZone} className="share" title="分享到QQ空间" src={zone} width="18" alt="分享到QQ空间"/>
-            <img onClick={this.shareWeiBo} className="share" title="分享到微博" src={weibo} width="18" alt="分享到微博"/>
-          </span>
+            </span> |
+              <span style={{ cursor: "pointer" }}>
+              <img onClick={this.shareQQZone} className="share" title="分享到QQ空间" src={zone} width="18" alt="分享到QQ空间"/>
+            </span>
+            </>}
           </div>
           <div className="markdown contentTxt" dangerouslySetInnerHTML={{ __html: article.content }}/>
         </article>
@@ -248,7 +218,7 @@ class ArticleDetail extends React.Component {
           {article.copyright || '本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。'}
         </div>
       </div>
-      <ArticleComment articleId={this.props.match.params.articleId}/>
+      <ArticleComment articleId={article.id}/>
     </>)
   }
 }
