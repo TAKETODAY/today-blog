@@ -53,7 +53,7 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.context.properties.bind.Binder;
-import cn.taketoday.core.env.Environment;
+import cn.taketoday.core.env.ConfigurableEnvironment;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.session.SessionManager;
@@ -102,7 +102,7 @@ class AuthorizeController extends SessionManagerOperations {
   private Map<String, OauthMetadata> oauthMetadata;
 
   public AuthorizeController(SessionManager sessionManager,
-          Environment environment, BlogConfig blogConfig, UserService userService,
+          ConfigurableEnvironment environment, BlogConfig blogConfig, UserService userService,
           BloggerService bloggerService, AttachmentService attachmentService) {
     super(sessionManager);
     this.blogConfig = blogConfig;

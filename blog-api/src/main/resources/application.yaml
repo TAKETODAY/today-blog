@@ -108,3 +108,5 @@ logging:
     dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'
   group:
     blog: cn.taketoday.blog
+    netty: io.netty
+    nettyLogging: io.netty.handler.logging
