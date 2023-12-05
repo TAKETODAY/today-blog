@@ -82,14 +82,6 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler {
     return illegalArgument;
   }
 
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler({ MaxUploadSizeExceededException.class })
-  public ErrorMessage maxUploadSizeExceeded(MaxUploadSizeExceededException e) {
-    log.error(e.getMessage(), e);
-    String formattedSize = BlogUtils.formatSize(e.getMaxUploadSize());
-    return ErrorMessage.failed("上传文件大小超出限制: '" + formattedSize + "'");
-  }
-
   @ExceptionHandler(InternalServerException.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ErrorMessage internal(InternalServerException internal) {
@@ -182,6 +174,14 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler {
   protected ResponseEntity<Object> handleMissingRequestParameter(
           MissingRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("缺少参数'" + ex.getParameterName() + "'"), headers, status, request);
+  }
+
+  @Nullable
+  @Override
+  protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+          MaxUploadSizeExceededException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+    String formattedSize = BlogUtils.formatSize(ex.getMaxUploadSize());
+    return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制: '" + formattedSize + "'"), headers, status, request);
   }
 
 }
