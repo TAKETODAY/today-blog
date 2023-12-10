@@ -17,17 +17,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
+
 package cn.taketoday.blog;
 
-import java.util.List;
+import cn.taketoday.lang.Nullable;
 
 /**
+ * The request result
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2019-08-05 12:34
+ * @since 2019-04-23 08:58
  */
-public interface ListableResult<T> extends Result {
+public interface HttpResult {
 
-  @Override
-  List<T> getData();
-
+  @Nullable
+  Object getData();
 }

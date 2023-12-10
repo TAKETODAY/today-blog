@@ -28,7 +28,7 @@ import cn.taketoday.core.style.ToStringBuilder;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-17 17:46
  */
-public final class Json implements Result {
+public final class Json implements HttpResult {
 
   private Object data;
   private String message;

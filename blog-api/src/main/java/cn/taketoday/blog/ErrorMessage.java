@@ -28,7 +28,7 @@ import cn.taketoday.core.style.ToStringBuilder;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2020-04-16 14:23
  */
-public class ErrorMessage implements Result {
+public class ErrorMessage implements HttpResult {
 
   private String message;
 

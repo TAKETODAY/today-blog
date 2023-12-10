@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
  * @since 2018-09-23 15:58
  */
 @NoArgsConstructor
-public class Pagination<T> implements ListableResult<T> {
+public class Pagination<T> implements ListableHttpResult<T> {
 
   @SuppressWarnings("rawtypes")
   private static final Pagination empty = new Pagination<>();

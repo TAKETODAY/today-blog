@@ -24,7 +24,7 @@ import cn.taketoday.blog.ErrorMessageException;
 import cn.taketoday.blog.Json;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
-import cn.taketoday.blog.Result;
+import cn.taketoday.blog.HttpResult;
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Comment;
@@ -123,7 +123,7 @@ class CommentController {
   }
 
   @GET("/articles/{id}")
-  public Result get(@PathVariable Long id, Pageable pageable) {
+  public HttpResult get(@PathVariable Long id, Pageable pageable) {
     return commentService.getByArticleId(id, pageable);
   }
 
