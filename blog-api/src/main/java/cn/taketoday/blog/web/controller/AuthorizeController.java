@@ -91,6 +91,7 @@ import lombok.CustomLog;
 @RestController
 @RequestMapping("/api/auth")
 class AuthorizeController extends SessionManagerOperations {
+
   private final Oauth giteeOauth;
   private final Oauth gitHubOauth;
 
@@ -535,8 +536,7 @@ class AuthorizeController extends SessionManagerOperations {
    */
   @PatchMapping(params = "email-mobile-phone")
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次邮箱或手机")
-  public User changeEmailAndMobilePhone(
-          @RequiresUser User loginUser, @Valid @RequestBody UserEmailForm form) {
+  public User changeEmailAndMobilePhone(@RequiresUser User loginUser, @Valid @RequestBody UserEmailForm form) {
     if (Objects.equals(loginUser.getEmail(), form.email)) {
       throw ErrorMessageException.failed("未更改任何信息");
     }

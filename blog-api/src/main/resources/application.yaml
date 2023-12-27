@@ -86,7 +86,7 @@ mybatis:
 
 site:
   subTitle: 代码是我心中的一首诗
-  version: TODAY BLOG v3.1
+  version: v3.1
 
 datasource:
   name: 'blog-datasource'

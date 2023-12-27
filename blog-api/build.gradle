@@ -73,6 +73,15 @@ compileJava {
 
 application {
   mainClass = 'cn.taketoday.blog.BlogApplication'
+  applicationDefaultJvmArgs = [
+      "-server",
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+      "-Dinfra.profiles.active=prod",
+      "-Dio.netty.noResourceLeakDetection=true",
+      "-Xms512M",
+      "-Xmx512M"
+  ]
 }
 
 infraBuildImage {

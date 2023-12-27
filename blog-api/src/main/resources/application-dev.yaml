@@ -30,10 +30,6 @@ aliyun:
   oss:
     enabled: false
 
-attachment:
-  outside-resource: /Users/today/website/data/docs
-  cdn-host-prefix: https://cdn.taketoday.cn
-
 ######################################## github login
 github:
   app-id:
