@@ -78,7 +78,7 @@ application {
       "--add-opens=java.base/java.nio=ALL-UNNAMED",
       "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
       "-Dinfra.profiles.active=prod",
-      "-Dio.netty.noResourceLeakDetection=true",
+      "-Dio.netty.leakDetection.level=disabled",
       "-Xms512M",
       "-Xmx512M"
   ]

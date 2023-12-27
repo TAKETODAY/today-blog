@@ -35,13 +35,13 @@ import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
-import cn.taketoday.blog.repository.CommentRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.lang.Assert;
+import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
@@ -64,7 +64,6 @@ public class CommentService {
   private final CommentConfig commentConfig;
   private final ArticleService articleService;
   private final BloggerService bloggerService;
-  private final CommentRepository commentRepository;
 
   private final RepositoryManager repository;
   private final EntityManager entityManager;
@@ -171,7 +170,7 @@ public class CommentService {
   public void save(Comment comment) {
     entityManager.persist(comment);
 
-    sendMail(comment);
+    //sendMail(comment);
   }
 
   protected void sendMail(Comment comment) {
@@ -228,43 +227,65 @@ public class CommentService {
   }
 
   public int count() {
-    return commentRepository.getTotalRecord();
+    try (JdbcConnection connection = repository.open()) {
+      try (Query countQuery = connection.createQuery(
+              "SELECT COUNT(id) FROM t_comment")) {
+        return countQuery.fetchScalar(int.class);
+      }
+    }
   }
 
   @Transactional
 //  @CacheEvict(allEntries = true)
   public void delete(long id) {
-    commentRepository.deleteById(id);
+    entityManager.delete(Comment.class, id);
   }
 
   //  @Cacheable(cacheNames = "LatestComments", unless = "#result.isEmpty()")
   public List<Comment> getLatest() {
-    return commentRepository.findLatest();
+    try (JdbcConnection connection = repository.open()) {
+      try (Query countQuery = connection.createQuery(
+              "SELECT * FROM t_comment ORDER BY id DESC LIMIT 5")) {
+        return countQuery.fetch(Comment.class);
+      }
+    }
   }
 
   public List<Comment> getByStatus(CommentStatus status, int pageNow, int pageSize) {
-    List<Comment> commentsToUse = commentRepository.findByStatus(
-            status, (pageNow - 1) * pageSize, pageSize);
-    if (CollectionUtils.isNotEmpty(commentsToUse)) {
-      for (Comment comment : commentsToUse) {
-        comment.setUser(userService.getById(comment.getUserId()));
+    try (Query query = repository.createQuery(""" 
+            SELECT * FROM t_comment WHERE `status` = ? ORDER BY id DESC LIMIT ?, ?""")) {
+      query.addParameter(status);
+      query.addParameter((pageNow - 1) * pageSize);
+      query.addParameter(pageSize);
+      List<Comment> commentsToUse = query.fetch(Comment.class);
+      if (CollectionUtils.isNotEmpty(commentsToUse)) {
+        for (Comment comment : commentsToUse) {
+          comment.setUser(userService.getById(comment.getUserId()));
+        }
       }
+      return commentsToUse;
     }
-    return commentsToUse;
   }
 
   public int countByStatus(CommentStatus status) {
-    return commentRepository.getRecord(status);
+    try (JdbcConnection connection = repository.open()) {
+      try (Query countQuery = connection.createQuery(
+              "SELECT COUNT(id) FROM t_comment WHERE `status` = ?")) {
+        countQuery.addParameter(status);
+        return countQuery.fetchScalar(int.class);
+      }
+    }
   }
 
   @Transactional
 //  @CacheEvict(allEntries = true)
-  public void update(Comment comment) {
-    commentRepository.update(comment);
+  public void updateById(Comment comment) {
+    entityManager.updateById(comment);
   }
 
+  @Nullable
   public Comment getById(long id) {
-    return commentRepository.findById(id);
+    return entityManager.findById(Comment.class, id);
   }
 
   /**
@@ -282,15 +303,18 @@ public class CommentService {
   @Transactional
 //  @CacheEvict(allEntries = true)
   public void updateStatusById(CommentStatus status, long id) {
+    Comment comment1 = new Comment();
+    comment1.setId(id);
+    comment1.setStatus(status);
+    entityManager.updateById(comment1);
 
-    commentRepository.updateStatus(status, id);
-    Comment byId = obtainById(id);
-    byId.setUser(userService.getById(byId.getUserId()));
-    sendMail(byId);
+//    Comment byId = obtainById(id);
+//    byId.setUser(userService.getById(byId.getUserId()));
+//    sendMail(byId);
 
-    if (status == CommentStatus.CHECKED) {
-      sendCheckedMail(byId);
-    }
+//    if (status == CommentStatus.CHECKED) {
+//      sendCheckedMail(byId);
+//    }
   }
 
   private void sendCheckedMail(Comment comment) {
@@ -311,23 +335,40 @@ public class CommentService {
               "您在 " + blogConfig.getName() + " 的评论审核通过", //
               dataModel, "/core/mail/checked.ftl"//
       );
-      commentRepository.checked(comment.getId());
+
     }
   }
 
   //  @Cacheable(key = "'u_'+#userInfo.id+'p'+#pageNow+'s'+#pageSize")
   public List<Comment> getByUser(User userInfo, int pageNow, int pageSize) {
-    return commentRepository.findByUser(userInfo, (pageNow - 1) * pageSize, pageSize);
+    try (Query query = repository.createQuery(""" 
+            SELECT * FROM t_comment WHERE `user_id` = ? ORDER BY id DESC LIMIT ?, ?""")) {
+
+      query.addParameter(userInfo.getId());
+      query.addParameter((pageNow - 1) * pageSize);
+      query.addParameter(pageSize);
+      List<Comment> commentsToUse = query.fetch(Comment.class);
+      if (CollectionUtils.isNotEmpty(commentsToUse)) {
+        for (Comment comment : commentsToUse) {
+          comment.setUser(userService.getById(comment.getUserId()));
+        }
+      }
+      return commentsToUse;
+    }
+
   }
 
   //  @Cacheable(key = "'ByUser_'+#userInfo.id")
   public int countByUser(User userInfo) {
-    return commentRepository.getRecordByUser(userInfo);
+    try (Query countQuery = repository.createQuery(
+            "SELECT COUNT(id) FROM t_comment WHERE `user_id` = ?")) {
+      countQuery.addParameter(userInfo.getId());
+      return countQuery.fetchScalar(int.class);
+    }
   }
 
   @Transactional
   public void closeEmailNotification() {
-    commentRepository.closeAllNotification();
   }
 
   public Pagination<Comment> pagination(Pageable pageable) {
@@ -337,9 +378,18 @@ public class CommentService {
   }
 
   private List<Comment> getAll(Pageable pageable) {
-    int pageSize = pageable.size();
-    int pageNow = pageable.current();
-    return commentRepository.find((pageNow - 1) * pageSize, pageSize);
+    try (Query query = repository.createQuery(""" 
+            SELECT * FROM t_comment ORDER BY id DESC LIMIT ?, ?""")) {
+      query.addParameter(pageable.offset());
+      query.addParameter(pageable.size());
+      List<Comment> commentsToUse = query.fetch(Comment.class);
+      if (CollectionUtils.isNotEmpty(commentsToUse)) {
+        for (Comment comment : commentsToUse) {
+          comment.setUser(userService.getById(comment.getUserId()));
+        }
+      }
+      return commentsToUse;
+    }
   }
 
   public List<Comment> getByStatus(CommentStatus valueOf, Pageable pageable) {

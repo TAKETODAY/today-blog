@@ -185,7 +185,7 @@ class CommentController {
     }
 
     comment.setId(id);
-    commentService.update(comment);
+    commentService.updateById(comment);
     return Json.ok("更新成功");
   }
 
