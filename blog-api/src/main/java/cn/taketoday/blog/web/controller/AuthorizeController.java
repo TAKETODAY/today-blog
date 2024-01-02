@@ -516,6 +516,12 @@ class AuthorizeController extends SessionManagerOperations {
     User user = new User();
     user.setId(loginUser.getId());
     user.setPassword(newPassword);
+
+    Blogger blogger = bloggerService.getBlogger();
+    if (byId.isBlogger() && Objects.equals(blogger.getEmail(), byId.getEmail())) {
+      bloggerService.updatePassword(newPassword);
+    }
+
     userService.update(user);
   }
 

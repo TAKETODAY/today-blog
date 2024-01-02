@@ -21,10 +21,10 @@
 package cn.taketoday.blog.web.controller;
 
 import cn.taketoday.blog.ErrorMessageException;
+import cn.taketoday.blog.HttpResult;
 import cn.taketoday.blog.Json;
 import cn.taketoday.blog.Pageable;
 import cn.taketoday.blog.Pagination;
-import cn.taketoday.blog.HttpResult;
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Comment;
@@ -52,6 +52,7 @@ import cn.taketoday.web.annotation.ResponseStatus;
 import cn.taketoday.web.annotation.RestController;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -74,6 +75,7 @@ class CommentController {
     @NotEmpty(message = "请输入评论内容")
     public String content;
 
+    @NotNull
     public Long articleId;
 
     @Nullable

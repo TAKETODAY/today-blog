@@ -248,6 +248,7 @@ public class ArticleController {
   public void update(@PathVariable("id") Integer id, @RequestBody ArticleForm from) {
     Article article = ArticleForm.forArticle(from, labelService);
     article.setId(id);
+    article.setUpdateAt(LocalDateTime.now());
     articleService.update(article);
   }
 

@@ -204,6 +204,7 @@
     <include refid="selectAllCol" />
     FROM article
     <include refid="find_where" />
+    order by create_at desc
     LIMIT #{pageNow}, #{pageSize}
   </select>
 

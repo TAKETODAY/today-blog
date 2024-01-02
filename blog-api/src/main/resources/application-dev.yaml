@@ -53,7 +53,7 @@ app:
 
 logging:
   level:
-    netty: debug
-    nettyLogging: debug
-#    web: debug
-#    sql: debug
+    netty: info
+    nettyLogging: info
+    web: trace
+    sql: debug

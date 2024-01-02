@@ -100,6 +100,10 @@ public class CommentService {
     if (size <= toIndex) {
       toIndex = size;
     }
+
+    if (offset >= size) {
+      return Collections.emptyList();
+    }
     List<Comment> subList = comments.subList(offset, toIndex);
     return getComments(new ArrayList<>(subList), commentsToUse);
   }

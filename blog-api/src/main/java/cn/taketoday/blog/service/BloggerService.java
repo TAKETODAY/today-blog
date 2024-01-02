@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -22,6 +22,7 @@ package cn.taketoday.blog.service;
 
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.repository.BloggerRepository;
+import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
@@ -34,7 +35,10 @@ import lombok.RequiredArgsConstructor;
 public class BloggerService {
 
   private volatile Blogger blogger;
+
   private final BloggerRepository bloggerRepository;
+
+  private final EntityManager entityManager;
 
   public Blogger fetchBlogger() {
     Blogger blogger = bloggerRepository.getBlogger();
@@ -45,6 +49,14 @@ public class BloggerService {
   public void update(Blogger blogger) {
     bloggerRepository.update(blogger);
     setBlogger(blogger);
+  }
+
+  public void updatePassword(String password) {
+    Blogger blogger = new Blogger();
+    blogger.setPasswd(password);
+    blogger.setId(getBlogger().getId());
+    entityManager.updateById(blogger);
+    getBlogger().setPasswd(password);
   }
 
   public void setBlogger(Blogger blogger) {
