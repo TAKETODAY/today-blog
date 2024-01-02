@@ -18,17 +18,17 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import { useRef, useState } from 'react';
-import { Button, Divider, message, Popconfirm } from 'antd';
-import { PageContainer } from '@ant-design/pro-layout';
-import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
-import { PlusOutlined } from '@ant-design/icons';
+import {useRef, useState} from 'react';
+import {Button, Divider, message, Popconfirm} from 'antd';
+import {PageContainer} from '@ant-design/pro-layout';
+import ProTable, {ActionType, ProColumns} from '@ant-design/pro-table'
+import {PlusOutlined} from '@ant-design/icons';
 
 import LabelUpdateForm from "./LabelUpdateForm";
 import CreateForm from "../components/CreateForm";
 
-import { LabelItem } from "../data.d";
-import { create, deleteLabel, queryTags, update } from "./service";
+import {LabelItem} from "../data.d";
+import {create, deleteLabel, queryTags, update} from "./service";
 
 
 /**
@@ -119,7 +119,7 @@ export default () => {
           <>
             <a onClick={() => {
               setUpdateModalVisible(true)
-              setUpdateLabel({ ...record })
+              setUpdateLabel({...record})
             }}
             > 编辑</a>
             <Divider type="vertical"/>

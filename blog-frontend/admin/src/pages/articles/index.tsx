@@ -202,7 +202,7 @@ export default () => {
       valueType: 'dateTimeRange',
       render: (_, record) => (
           <>
-            {moment(record.id).format('lll')}
+            {moment(record.createAt).format('lll')}
           </>
       ),
     },
@@ -225,7 +225,7 @@ export default () => {
       valueType: 'option',
       render: (_, record) => (
           <>
-            <Link to={isEmpty(record.markdown) ? `/articles/${record.uri}/modify-rich-text` : `/articles/${record.uri}/modify`}
+            <Link to={isEmpty(record.markdown) ? `/articles/${record.id}/modify-rich-text` : `/articles/${record.id}/modify`}
                   target='_blank'>修改</Link>
             <Divider type="vertical"/>
             <Popconfirm title="您确定要删除该文章吗" placement="topLeft" onConfirm={() => remove(record)}>

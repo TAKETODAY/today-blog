@@ -12,7 +12,7 @@
         <van-tag plain type="primary" v-if="'CHECKED'===comment.status">通过审核</van-tag>
         <van-tag plain type="primary" v-if="'RECYCLE'===comment.status">已经丢入垃圾桶</van-tag>
         <van-tag plain type="primary" v-if="'CHECKING'===comment.status">等待审核</van-tag>
-        <div class="date">{{ moment(comment.id).fromNow() }}</div>
+        <div class="date">{{ moment(comment.createAt).fromNow() }}</div>
       </div>
       <!-- 分页 -->
       <van-pagination @change="load"

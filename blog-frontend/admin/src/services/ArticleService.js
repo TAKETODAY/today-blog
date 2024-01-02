@@ -32,8 +32,6 @@ export default new class {
   }
 
   updateById(id, article) {
-    delete article['id']
-    delete article['updateAt']
     const createAt = moment(article.createAt).format('yyyy-MM-DD HH:mm:ss')
     return http.put('/api/articles/' + id, { ...article, createAt })
   }

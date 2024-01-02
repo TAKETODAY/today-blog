@@ -53,7 +53,7 @@
           <router-link v-for="(label, idx) in article.labels" :key="idx" :class="getRandLabel()" :to="`/tags/${label.name}`">{{ label.name }}</router-link>
           <!--          </van-tag>-->
         </van-cell>
-        <van-cell title="发布时间" :value="moment(article.id).format('lll')"/>
+        <van-cell title="发布时间" :value="moment(article.createAt).format('lll')"/>
         <van-cell is-link title="分类" :value="article.category" :to="`/categories/${article.category}`"/>
       </van-cell-group>
 
@@ -71,7 +71,7 @@
       <div class="comments-info" id="comments">
         <div class="info-title">互动</div>
         <div class="details">
-          <comment :comments="comments" :reload="loadComments"/>
+          <comment :comments="comments" :reload="loadComments" :article="article"/>
           <van-pagination v-if="showCommentsPagination"
                           @change="pageChangeComments"
                           v-model="commentsData.current"
@@ -130,7 +130,7 @@ const defaultArticle = {
 
 function getId(id) {
   if (id && id.endsWith('.html')) {
-    return id.substr(0, id.length - '.html'.length)
+    return id.substring(0, id.length - '.html'.length)
   }
   return id
 }
@@ -193,7 +193,7 @@ export default {
       option.share && option.share({
         url: location.href,
         desc: article.title,
-        image: article.image,
+        image: article.cover,
         summary: article.summary,
       })
       this.share.show = false;
@@ -214,7 +214,7 @@ export default {
         setTitle(article.title)
 
         setTimeout(() => {
-          articleService.updatePV(id)
+          articleService.updatePV(article.id)
         }, 1500);
         if (key) {
           sessionStorage.setItem("article-password:" + id, key)
@@ -234,7 +234,7 @@ export default {
           logging("懒加载出错")
         }
 
-        this.loadComments(id)
+        this.loadComments(article.id)
       }).catch((e) => {
         const { status } = e.response || { status: 0 }
 
@@ -253,9 +253,9 @@ export default {
       });
     },
     pageChangeComments(page) {
-      this.loadComments()
+      this.loadComments(this.article.id)
     },
-    loadComments(id = this.$route.params.id) {
+    loadComments(id = this.article.id) {
       commentService.getComments(id, this.commentsData.current).then((res) => {
         this.commentsData = res.data
       }).catch((e) => {

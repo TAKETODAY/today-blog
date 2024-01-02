@@ -85,8 +85,8 @@ function shareWeiBo(options) {
 function windowOpen(url) {
   let indexOf = url.indexOf('?');
   if (indexOf > -1) {
-    const query = encodeURI(url.substr(indexOf + 1))
-    window.open(url.substr(0, indexOf + 1) + query)
+    const query = encodeURI(url.substring(indexOf + 1))
+    window.open(url.substring(0, indexOf + 1) + query)
   }
   else {
     window.open(url)

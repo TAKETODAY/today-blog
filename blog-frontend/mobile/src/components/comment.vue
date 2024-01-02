@@ -28,7 +28,7 @@
           <van-button size="small" type="danger" @click="createComment">留言</van-button>
         </template>
         <template #left-icon>
-          <img :src="loginUser.avatar" />
+          <img :src="loginUser.avatar"/>
         </template>
       </van-field>
       <van-button v-else size="small" type="danger" :to="loginBackUrl">请登录后留言</van-button>
@@ -93,11 +93,11 @@
 </template>
 
 <script>
-import { Toast } from "vant";
-import { commentService, userService } from 'src/services'
-import { isNotEmpty, isEmpty } from 'src/utils'
+import {Toast} from "vant";
+import {commentService, userService} from 'src/services'
+import {isNotEmpty, isEmpty} from 'src/utils'
 import moment from "moment";
-import { mapGetters } from "vuex";
+import {mapGetters} from "vuex";
 
 export default {
   name: "comment",
@@ -106,20 +106,23 @@ export default {
       type: Array,
       required: true
     },
+    article: {},
     reload: Function
   },
   data() {
     return {
       loginUser: null,
       inputComment: '',
-      replyId: 0,
-      loginBackUrl: `/login?forward=/articles/${ this.$route.params.id }#comments`
+      replyId: null
     }
   },
   computed: {
     ...mapGetters({
       options: "options/options",
     }),
+    loginBackUrl() {
+      return `/login?forward=/articles/${this.article.uri}#comments`
+    },
     isLoggedIn() {
       return this.loginUser !== null
     },
@@ -132,7 +135,7 @@ export default {
      * 点击取消按钮
      */
     cancel() {
-      this.replyId = 0
+      this.replyId = null
     },
     /**
      * 提交评论
@@ -143,15 +146,14 @@ export default {
       }
       else {
         // console.log(this.inputComment)
-        const { id } = this.$route.params;
         commentService.createComment({
           content: this.inputComment,
           commentId: this.replyId,
-          articleId: id,
+          articleId: this.article.id,
         }).then(() => {
-          this.replyId = 0
+          this.replyId = null
           this.inputComment = ''
-          this.reload(id)
+          this.reload(this.article.id)
         }).catch(res => {
           console.log(res)
           Toast("留言失败")
@@ -165,7 +167,7 @@ export default {
      */
     showCommentInput(item, reply) {
       this.replyId = item.id
-      this.inputComment = reply ? `@${ reply.user.name } ` : ''
+      this.inputComment = reply ? `@${reply.user.name} ` : ''
     }
   },
   async mounted() {
