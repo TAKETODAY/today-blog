@@ -82,7 +82,7 @@ export default (props: { match: { params: { id: string } } }) => {
     const article = { ...post, ...values }
     savePostToLocal(article)
 
-    articleService.create(article).then((_: AxiosResponse) => {
+    articleService.updateById(article.id, article).then((_: AxiosResponse) => {
       setDrawerVisible(false)
       removeStorage(articleCacheKey)
       return message.success("更新成功")

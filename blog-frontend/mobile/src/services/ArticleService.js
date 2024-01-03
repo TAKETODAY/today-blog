@@ -31,11 +31,11 @@ export default class ArticleService {
   }
 
   getByTagName(name, page = 1) {
-    return getCacheable(`/api/articles/tags/${ name }?page=${ page }`)
+    return getCacheable(`/api/articles?tag=${ name }&page=${ page }`)
   }
 
   getByCategoryName(name, page = 1) {
-    return getCacheable(`/api/articles/categories/${ name }?page=${ page }`)
+    return getCacheable(`/api/articles?category=${ name }&page=${ page }`)
   }
 
   getById(articleId, key) {
@@ -47,7 +47,7 @@ export default class ArticleService {
   }
 
   updatePV(id) {
-    return http.post(`/api/articles/${ id }/pv`)
+    return http.patch(`/api/articles/${ id }/pv`)
   }
 
   search(search, page = 1) {

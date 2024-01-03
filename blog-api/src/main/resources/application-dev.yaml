@@ -7,6 +7,10 @@
 server:
   session:
     timeout: 3D
+  netty:
+    worker-threads: 8
+    acceptor-threads: 1
+    logging-level: debug
 
 datasource:
   username: root
@@ -25,10 +29,6 @@ site:
 aliyun:
   oss:
     enabled: false
-
-attachment:
-  outside-resource: /Users/today/website/data/docs
-  cdn-host-prefix: https://cdn.taketoday.cn
 
 ######################################## github login
 github:
@@ -53,6 +53,7 @@ app:
 
 logging:
   level:
-    root: info
-#    web: debug
-#    sql: debug
+    netty: info
+    nettyLogging: info
+    web: trace
+    sql: debug

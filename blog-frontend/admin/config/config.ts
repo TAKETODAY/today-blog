@@ -46,7 +46,7 @@ export default defineConfig({
   },
   // base: '/blog-admin/',
   // publicPath: '/blog-admin/',
-  publicPath: '/',
+  publicPath: production ? '/blog-admin/' : '/',
   layout: {
     // https://umijs.org/zh-CN/plugins/plugin-layout
     locale: true,

@@ -4,7 +4,7 @@ export default props => {
   const { article, id, children, target, ...rest } = props
   const getArticleId = () => {
     if (article) {
-      return article.id
+      return article.uri
     }
     else {
       return id
@@ -15,7 +15,7 @@ export default props => {
   const targetToUse = target ? target : "_blank"
   return (
     <>
-      <a target={targetToUse} href={`/#/articles/${articleId}`} {...rest}>
+      <a target={targetToUse} href={`/articles/${articleId}`} {...rest}>
         {children || article?.title || ''}
       </a>
     </>

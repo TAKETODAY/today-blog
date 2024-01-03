@@ -55,9 +55,11 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
   private int maxCacheSize = 1024;
 
   private String defaultErrorMessage = "操作频繁";
+
   private Clock clock = Clock.system(ZoneId.of("GMT"));
 
   private final ExpiredChecker expiredChecker = new ExpiredChecker();
+
   private final ConcurrentHashMap<RequestKey, RequestLimitEntry> requestLimitCache = new ConcurrentHashMap<>();
 
   public RequestLimitInterceptor(SessionManager sessionManager) {
@@ -130,9 +132,7 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
     String ip = BlogUtils.remoteAddress(request);
     RequestKey key = new RequestKey(ip, method);
 
-    RequestLimitEntry entry = requestLimitCache.computeIfAbsent(
-            key, requestKey -> new RequestLimitEntry(requestLimit));
-
+    RequestLimitEntry entry = requestLimitCache.computeIfAbsent(key, requestKey -> new RequestLimitEntry(requestLimit));
     return entry.isExceeded(now);
   }
 

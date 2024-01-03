@@ -433,13 +433,13 @@ public class ArticleService implements InitializingBean {
     rss.setLastBuildDate(System.currentTimeMillis());
   }
 
-  protected void buildSitemap() {
+  protected synchronized void buildSitemap() {
     log.debug("Build Sitemap");
     try (var query = repository.createQuery("SELECT * FROM article ORDER BY create_at DESC")) {
       sitemap.getUrls().clear();
       for (Article article : query.fetch(Article.class)) {
         if (article.getStatus() == PostStatus.PUBLISHED) {
-          sitemap.addUrl(Sitemap.newURL(article));
+          sitemap.addArticle(article);
         }
       }
     }

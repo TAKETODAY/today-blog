@@ -51,12 +51,18 @@ import lombok.RequiredArgsConstructor;
 @RequiresBlogger
 @RequiredArgsConstructor
 @RequestMapping("/api/statistics")
-public class StatisticsController {
+class StatisticsController {
+
   private final BlogConfig blogConfig;
+
   private final LoggingService loggerService;
+
   private final CommentService commentService;
+
   private final ArticleService articleService;
+
   private final AttachmentService attachmentService;
+
   private final StatisticsService statisticsService;
 
   @GET("/dashboard")

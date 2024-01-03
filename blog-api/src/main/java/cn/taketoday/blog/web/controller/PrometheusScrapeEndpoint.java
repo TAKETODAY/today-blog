@@ -47,8 +47,8 @@ import io.prometheus.client.exporter.common.TextFormat;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2023/5/29 15:03
  */
-@RestController
-@RequestMapping("/api/prometheus")
+//@RestController
+//@RequestMapping("/api/prometheus")
 public class PrometheusScrapeEndpoint {
   private static final MediaType contentType = MediaType.parseMediaType(
           "text/plain;version=0.0.4;charset=utf-8");

@@ -33,7 +33,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorData implements Result {
+public class ErrorData implements HttpResult {
 
   private Object data;
 

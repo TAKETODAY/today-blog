@@ -66,6 +66,8 @@ class Login extends React.PureComponent {
       else {
         message.error(result.message)
       }
+    }).catch(res => {
+      message.error(res.message)
     })
   }
 

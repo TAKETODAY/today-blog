@@ -22,7 +22,7 @@ import React from 'react';
 
 let apiBase;
 if (process.env.NODE_ENV === 'production') {
-  apiBase = '/'
+  apiBase = 'https://taketoday.cn'
 }
 else {
   apiBase = 'http://localhost:8080'

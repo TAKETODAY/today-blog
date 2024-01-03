@@ -51,7 +51,7 @@ function buildOptions(state) {
   const { article } = state
   const host = store.getState().options["site.host"];
   return {
-    url: `${host}/articles/${article.id}`,
+    url: `${host}/articles/${article.uri}`,
     desc: article.title,
     cover: article.cover,
     summary: article.summary,

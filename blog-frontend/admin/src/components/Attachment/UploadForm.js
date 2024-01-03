@@ -40,7 +40,7 @@ const draggerProps = {
 };
 
 const UploadForm = props => {
-  const { onCancel: hideUpdateModal, visible, onRefresh } = props
+  const { onCancel: hideUpdateModal, open, onRefresh } = props
 
   return (
     <Modal
@@ -54,7 +54,7 @@ const UploadForm = props => {
       onCancel={() => {
         hideUpdateModal()
       }}
-      open={visible}
+      open={open}
       bodyStyle={{ padding: '32px 40px 48px' }}
     >
       <Dragger {...draggerProps}>

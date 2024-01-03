@@ -49,7 +49,7 @@ export async function getInitialState(): Promise<{
 
   const options = await getCacheable("/api/options").then(extractData).catch(() => ({
     'site.icp': '',
-    'site.copyright': 'TODAY & 2017 - 2023 All Rights Reserved.',
+    'site.copyright': 'TODAY & 2017 - 2024 All Rights Reserved.',
     'site.otherFooter': ''
   }))
   // 如果是登录页面，不执行

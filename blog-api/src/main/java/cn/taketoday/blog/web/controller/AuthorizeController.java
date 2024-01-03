@@ -53,7 +53,7 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.context.properties.bind.Binder;
-import cn.taketoday.core.env.Environment;
+import cn.taketoday.core.env.ConfigurableEnvironment;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.session.SessionManager;
@@ -91,6 +91,7 @@ import lombok.CustomLog;
 @RestController
 @RequestMapping("/api/auth")
 class AuthorizeController extends SessionManagerOperations {
+
   private final Oauth giteeOauth;
   private final Oauth gitHubOauth;
 
@@ -102,7 +103,7 @@ class AuthorizeController extends SessionManagerOperations {
   private Map<String, OauthMetadata> oauthMetadata;
 
   public AuthorizeController(SessionManager sessionManager,
-          Environment environment, BlogConfig blogConfig, UserService userService,
+          ConfigurableEnvironment environment, BlogConfig blogConfig, UserService userService,
           BloggerService bloggerService, AttachmentService attachmentService) {
     super(sessionManager);
     this.blogConfig = blogConfig;
@@ -515,6 +516,12 @@ class AuthorizeController extends SessionManagerOperations {
     User user = new User();
     user.setId(loginUser.getId());
     user.setPassword(newPassword);
+
+    Blogger blogger = bloggerService.getBlogger();
+    if (byId.isBlogger() && Objects.equals(blogger.getEmail(), byId.getEmail())) {
+      bloggerService.updatePassword(newPassword);
+    }
+
     userService.update(user);
   }
 
@@ -535,8 +542,7 @@ class AuthorizeController extends SessionManagerOperations {
    */
   @PatchMapping(params = "email-mobile-phone")
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次邮箱或手机")
-  public User changeEmailAndMobilePhone(
-          @RequiresUser User loginUser, @Valid @RequestBody UserEmailForm form) {
+  public User changeEmailAndMobilePhone(@RequiresUser User loginUser, @Valid @RequestBody UserEmailForm form) {
     if (Objects.equals(loginUser.getEmail(), form.email)) {
       throw ErrorMessageException.failed("未更改任何信息");
     }

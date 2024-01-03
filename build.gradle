@@ -11,6 +11,7 @@ configure(allprojects) {
     mavenLocal()
     maven { url "https://maven.aliyun.com/repository/public" }
     maven { url "https://repo.huaweicloud.com/repository/maven" }
+    maven { url "https://repo.spring.io/milestone" }
   }
 
   configurations.configureEach {

@@ -23,6 +23,7 @@ package cn.taketoday.blog.model;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.Objects;
 
@@ -37,38 +38,58 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Sitemap implements Serializable {
+  static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
   @Serial
   private static final long serialVersionUID = 1L;
 
   //	always hourly daily weekly monthly yearly never
 
-  private final LinkedList<URL> urls = new LinkedList<>();
+  private final LinkedList<SiteURL> urls = new LinkedList<>();
 
-  public void addUrl(URL url) {
+  public void addArticle(Article article) {
+    addUrl(newURL(article));
+  }
+
+  public void addUrl(SiteURL url) {
     urls.add(url);
   }
 
-  public static URL newURL(Article article) {
-    return newURL(0.9f, "/articles/" + article.getUri(),
-            article.getUpdateAt(), "always");
+  public static SiteURL newURL(Article article) {
+    LocalDateTime updateAt = article.getUpdateAt();
+    if (updateAt == null) {
+      updateAt = article.getCreateAt();
+      if (updateAt == null) {
+        updateAt = LocalDateTime.now();
+      }
+    }
+
+    String format = formatter.format(updateAt);
+    return newURL(0.9f, "/articles/" + article.getUri(), format, "daily");
   }
 
-  public static URL newURL(float priority, String location, LocalDateTime lastModify, String changeFreq) {
-    return new URL()
-            .setLoc(location)
-            .setPriority(priority)
-            .setChangeFreq(changeFreq)
-            .setLastModify(lastModify);
+  public static SiteURL newURL(float priority, String location, String lastModify, String changeFreq) {
+    return new SiteURL(location, priority, lastModify, changeFreq);
   }
 
-  @Setter
   @Getter
-  public static final class URL implements Serializable {
-    private String loc; // location
-    private float priority; // 优先级
+  public static final class SiteURL implements Serializable {
+
+    private final String loc; // location
+
+    private final float priority; // 优先级
+
     @Nullable
-    private LocalDateTime lastModify;// 最后更改
-    private String changeFreq;// 更新频率
+    private final String lastModify;// 最后更改
+
+    private final String changeFreq;// 更新频率
+
+    public SiteURL(String loc, float priority, @Nullable String lastModify, String changeFreq) {
+      this.loc = loc;
+      this.priority = priority;
+      this.lastModify = lastModify;
+      this.changeFreq = changeFreq;
+    }
   }
 
   @Override

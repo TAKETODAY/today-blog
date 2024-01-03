@@ -25,7 +25,7 @@ dependencies {
   implementation 'com.aliyun.oss:aliyun-sdk-oss:3.16.0'
 
   compileOnly 'org.projectlombok:lombok'
-  annotationProcessor 'org.projectlombok:lombok:1.18.28'
+  annotationProcessor 'org.projectlombok:lombok'
 
   implementation 'ch.qos.logback:logback-classic'
   implementation 'jakarta.mail:jakarta.mail-api'
@@ -51,7 +51,7 @@ dependencies {
   testImplementation("junit:junit")
   testImplementation("org.assertj:assertj-core")
   testImplementation 'org.projectlombok:lombok'
-  testAnnotationProcessor("org.projectlombok:lombok:1.18.28")
+  testAnnotationProcessor("org.projectlombok:lombok")
 
   // Pull in the latest JUnit 5 Launcher API to ensure proper support in IDEs.
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -73,6 +73,15 @@ compileJava {
 
 application {
   mainClass = 'cn.taketoday.blog.BlogApplication'
+  applicationDefaultJvmArgs = [
+      "-server",
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+      "-Dinfra.profiles.active=prod",
+      "-Dio.netty.leakDetection.level=disabled",
+      "-Xms512M",
+      "-Xmx512M"
+  ]
 }
 
 infraBuildImage {
