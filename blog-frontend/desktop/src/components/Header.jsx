@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -156,6 +156,11 @@ class NavHeader extends React.Component {
               }
             </Menu.Item>
 
+            {window.shouldGotoMobile &&
+              <Menu.Item key="isMobile">
+                <a href={window.mobilePath}><i className="fa fa-mobile"/> 跳转到移动版本</a>
+              </Menu.Item>
+            }
           </Menu>
         </div>
       </Header>
