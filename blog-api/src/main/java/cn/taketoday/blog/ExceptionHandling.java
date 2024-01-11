@@ -167,13 +167,6 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
     return ErrorMessage.failed("数据库连接出错");
   }
 
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler({ HttpMessageNotReadableException.class })
-  public ErrorMessage parameterReadFailed(Exception exception) {
-    log.error("参数读取错误", exception);
-    return ErrorMessage.failed("参数读取错误，请检查格式");
-  }
-
   @Nullable
   @Override
   protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
@@ -196,4 +189,9 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
     return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制: '" + formattedSize + "'"), headers, status, request);
   }
 
+  @Nullable
+  @Override
+  protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpStatusCode status, RequestContext request) {
+    return handleExceptionInternal(ex, ErrorMessage.failed("参数读取错误，请检查格式"), null, status, request);
+  }
 }
