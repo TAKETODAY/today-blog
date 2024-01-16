@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -36,6 +36,7 @@ import cn.taketoday.http.converter.HttpMessageNotReadableException;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.util.ObjectUtils;
 import cn.taketoday.web.InternalServerException;
+import cn.taketoday.web.NotFoundHandler;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.ResponseStatusException;
 import cn.taketoday.web.annotation.ExceptionHandler;
@@ -45,9 +46,10 @@ import cn.taketoday.web.bind.MethodArgumentNotValidException;
 import cn.taketoday.web.bind.MissingRequestParameterException;
 import cn.taketoday.web.bind.NotMultipartRequestException;
 import cn.taketoday.web.bind.resolver.ParameterConversionException;
-import cn.taketoday.web.bind.resolver.ParameterReadFailedException;
 import cn.taketoday.web.handler.ResponseEntityExceptionHandler;
+import cn.taketoday.web.handler.SimpleNotFoundHandler;
 import cn.taketoday.web.multipart.MaxUploadSizeExceededException;
+import io.prometheus.client.Counter;
 import lombok.CustomLog;
 
 /**
@@ -58,10 +60,27 @@ import lombok.CustomLog;
  */
 @CustomLog
 @RestControllerAdvice
-public class ExceptionHandling extends ResponseEntityExceptionHandler {
+public class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFoundHandler {
 
   private static final ErrorMessage illegalArgument = ErrorMessage.failed("参数错误");
   private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
+
+  static final Counter requests = Counter.build()
+          .name("requests_not_found")
+          .labelNames("uri")
+          .help("Total Not Found requests.").register();
+
+  @Nullable
+  @Override
+  public Object handleNotFound(RequestContext request) {
+    requests.labels(request.getRequestURI())
+            .inc();
+
+    request.setStatus(HttpStatus.NOT_FOUND);
+
+    SimpleNotFoundHandler.logNotFound(request);
+    return ErrorMessage.failed("资源找不到");
+  }
 
   @ExceptionHandler(ErrorMessageException.class)
   public ResponseEntity<ErrorMessage> errorMessage(ErrorMessageException errorMessage) {
@@ -148,24 +167,10 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler {
     return ErrorMessage.failed("数据库连接出错");
   }
 
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler({ ParameterReadFailedException.class })
-  public ErrorMessage parameterReadFailed(Exception exception) {
-    log.error("参数读取错误", exception);
-    return ErrorMessage.failed("参数读取错误，请检查格式");
-  }
-
   @Nullable
   @Override
-  protected ResponseEntity<Object> handleHttpMessageNotReadable(
-          HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
-    return handleExceptionInternal(ex, parameterReadFailed(ex), headers, status, request);
-  }
-
-  @Nullable
-  @Override
-  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers,
-          HttpStatusCode status, RequestContext request) {
+  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+          HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, illegalArgument, headers, status, request);
   }
 
@@ -184,4 +189,9 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler {
     return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制: '" + formattedSize + "'"), headers, status, request);
   }
 
+  @Nullable
+  @Override
+  protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpStatusCode status, RequestContext request) {
+    return handleExceptionInternal(ex, ErrorMessage.failed("参数读取错误，请检查格式"), null, status, request);
+  }
 }
