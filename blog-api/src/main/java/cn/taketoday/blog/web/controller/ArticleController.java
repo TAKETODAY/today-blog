@@ -197,7 +197,7 @@ class ArticleController {
       catch (NumberFormatException ignored) { }
 
       if (article == null) {
-        throw ErrorMessageException.failed("地址为 '" + uri + "' 的文章不存在");
+        throw ErrorMessageException.failed("文章不存在", HttpStatus.NOT_FOUND);
       }
     }
 
