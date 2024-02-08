@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -20,9 +20,9 @@
 
 package cn.taketoday.blog.web.interceptor;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessage;
 import cn.taketoday.blog.Json;
+import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.session.SessionHandlerInterceptor;
 import cn.taketoday.session.SessionManager;
 import cn.taketoday.session.WebSession;
@@ -43,7 +43,7 @@ public class LoginLimitInterceptor extends SessionHandlerInterceptor {
 
   @Override
   public Object intercept(RequestContext context, InterceptorChain chain) throws Throwable {
-    if (getAttribute(context, BlogConstant.BLOGGER_INFO) == null) {
+    if (!Blogger.isPresent(context)) {
       WebSession session = getSession(context); // TODO 客户端 删除了session-key 就会出错
       Object attribute = session.getAttribute(loginAttributeName);
       int loginTimes = 0;

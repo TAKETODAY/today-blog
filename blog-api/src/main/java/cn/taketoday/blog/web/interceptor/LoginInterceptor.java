@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -20,8 +20,8 @@
 
 package cn.taketoday.blog.web.interceptor;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.UnauthorizedException;
+import cn.taketoday.blog.model.User;
 import cn.taketoday.session.SessionHandlerInterceptor;
 import cn.taketoday.session.SessionManager;
 import cn.taketoday.web.RequestContext;
@@ -41,7 +41,7 @@ public class LoginInterceptor extends SessionHandlerInterceptor {
 
   @Override
   public boolean beforeProcess(RequestContext request, Object handler) throws Throwable {
-    if (getAttribute(request, BlogConstant.USER_INFO) != null) {
+    if (User.isPresent(getSession(request, false))) {
       return true;
     }
 

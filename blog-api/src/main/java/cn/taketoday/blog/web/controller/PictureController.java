@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -42,9 +42,6 @@ import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
-import static cn.taketoday.blog.BlogConstant.IMG_HEIGHT;
-import static cn.taketoday.blog.BlogConstant.IMG_WIDTH;
-
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 13:30
@@ -55,11 +52,18 @@ import static cn.taketoday.blog.BlogConstant.IMG_WIDTH;
 @RequiredArgsConstructor
 @RequestLimit(count = 5, unit = TimeUnit.MINUTES, errorMessage = "一分钟最多请求5次")
 public class PictureController {
-  private final AttachmentConfig attachmentConfig;
-  private final Random randCodeSource = new Random();
-  private final Font font = new Font(BlogConstant.DEFAULT_FONT, Font.PLAIN, 25);
+
+  private static final int IMG_WIDTH = 70;
+  private static final int IMG_HEIGHT = 28;
+
   private static final char[] captchaCodes =
           "abcdefghijklmnopqrstuvwxyzABCD0123456789EFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
+
+  private final AttachmentConfig attachmentConfig;
+
+  private final Random randCodeSource = new Random();
+
+  private final Font font = new Font(BlogConstant.DEFAULT_FONT, Font.PLAIN, 25);
 
   /**
    * Display login user avatar

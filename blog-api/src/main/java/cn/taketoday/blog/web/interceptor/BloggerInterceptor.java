@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -20,9 +20,10 @@
 
 package cn.taketoday.blog.web.interceptor;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ErrorMessage;
 import cn.taketoday.blog.UnauthorizedException;
+import cn.taketoday.blog.model.Blogger;
+import cn.taketoday.blog.model.User;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
@@ -47,8 +48,8 @@ public class BloggerInterceptor extends SessionHandlerInterceptor {
   public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
     WebSession session = getSession(request, false);
     if (session != null) {
-      if (session.getAttribute(BlogConstant.USER_INFO) != null) {
-        if (session.getAttribute(BlogConstant.BLOGGER_INFO) != null) {
+      if (User.isPresent(session)) {
+        if (Blogger.isPresent(request)) {
           return chain.proceed(request);
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

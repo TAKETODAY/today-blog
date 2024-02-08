@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -24,7 +24,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+import cn.taketoday.blog.UnauthorizedException;
+import cn.taketoday.core.AttributeAccessor;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.lang.Nullable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -37,6 +40,8 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 public class Blogger implements Serializable {
+  public static final String AttributeKey = "bloggerInfo";
+
   @Serial
   private static final long serialVersionUID = 1L;
 
@@ -89,6 +94,45 @@ public class Blogger implements Serializable {
   @Override
   public int hashCode() {
     return Objects.hash(id, age, sex, name, email, passwd, introduce, image, address);
+  }
+
+  /**
+   * Bind this instance to AttributeAccessor
+   *
+   * @param accessor session or request
+   */
+  public void bindTo(AttributeAccessor accessor) {
+    accessor.setAttribute(AttributeKey, this);
+  }
+
+  // Static
+
+  @Nullable
+  public static Blogger find(AttributeAccessor accessor) {
+    Object attribute = accessor.getAttribute(AttributeKey);
+    if (attribute instanceof Blogger blogger) {
+      return blogger;
+    }
+    return null;
+  }
+
+  public static Blogger obtain(AttributeAccessor accessor) {
+    Blogger blogger = find(accessor);
+    if (blogger == null) {
+      throw new UnauthorizedException();
+    }
+    return blogger;
+  }
+
+  public static void unbind(AttributeAccessor accessor) {
+    accessor.removeAttribute(AttributeKey);
+  }
+
+  /**
+   * Is blogger logged in
+   */
+  public static boolean isPresent(@Nullable AttributeAccessor accessor) {
+    return accessor != null && find(accessor) != null;
   }
 
 }

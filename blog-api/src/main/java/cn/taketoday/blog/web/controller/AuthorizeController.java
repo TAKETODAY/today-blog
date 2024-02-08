@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -174,7 +174,7 @@ class AuthorizeController extends SessionManagerOperations {
 
     WebSession session = getSession(request);
     // login success
-    session.setAttribute(BlogConstant.USER_INFO, loginUser);
+    loginUser.bindTo(session);
 
     // is blogger ?
     Blogger blogger = bloggerService.getBlogger();
@@ -196,7 +196,7 @@ class AuthorizeController extends SessionManagerOperations {
   }
 
   private void applyBlogger(WebSession session, User loginUser, Blogger blogger) {
-    session.setAttribute(BlogConstant.BLOGGER_INFO, blogger);
+    blogger.bindTo(session);
     loginUser.setBlogger(true);
   }
 
@@ -332,8 +332,8 @@ class AuthorizeController extends SessionManagerOperations {
     UserStatus status = user.getStatus();
     switch (status) {
       case NORMAL -> {
-        session.removeAttribute(BlogConstant.BLOGGER_INFO);
-        session.setAttribute(BlogConstant.USER_INFO, user);
+        Blogger.unbind(session);
+        user.bindTo(session);
         return redirectLogin(forward);
       }
       case LOCKED, RECYCLE, INACTIVE -> {

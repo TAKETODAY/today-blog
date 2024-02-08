@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -26,9 +26,12 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.util.HashUtils;
+import cn.taketoday.core.AttributeAccessor;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.lang.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -42,6 +45,8 @@ public class User implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;
+
+  public static final String AttributeKey = "userInfo";
 
   private static final String DEFAULT_PASSWORD = HashUtils.getEncodedPassword("https://taketoday.cn");
 
@@ -131,6 +136,48 @@ public class User implements Serializable {
   @Override
   public int hashCode() {
     return Objects.hash(id, status, name, email, site, type, password, avatar, introduce, background, notification, isBlogger);
+  }
+
+  /**
+   * Bind this instance to AttributeAccessor
+   *
+   * @param accessor session or request
+   */
+  public void bindTo(AttributeAccessor accessor) {
+    accessor.setAttribute(AttributeKey, this);
+  }
+
+  // Static
+
+  /**
+   * Find login user
+   */
+  @Nullable
+  public static User find(AttributeAccessor accessor) {
+    Object attribute = accessor.getAttribute(AttributeKey);
+    if (attribute instanceof User user) {
+      return user;
+    }
+    return null;
+  }
+
+  public static User obtain(AttributeAccessor accessor) {
+    User blogger = find(accessor);
+    if (blogger == null) {
+      throw new UnauthorizedException();
+    }
+    return blogger;
+  }
+
+  public static void unbind(AttributeAccessor accessor) {
+    accessor.removeAttribute(AttributeKey);
+  }
+
+  /**
+   * Is user logged in
+   */
+  public static boolean isPresent(@Nullable AttributeAccessor accessor) {
+    return accessor != null && find(accessor) != null;
   }
 
 }

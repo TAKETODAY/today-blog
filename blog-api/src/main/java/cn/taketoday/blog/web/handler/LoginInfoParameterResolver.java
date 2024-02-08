@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -21,8 +21,8 @@
 package cn.taketoday.blog.web.handler;
 
 import java.util.Optional;
+import java.util.function.Function;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
@@ -81,37 +81,35 @@ public class LoginInfoParameterResolver
   public Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
     WebSession session = getSession(context, false);
     if (session != null) {
-
       if (parameter.is(Optional.class)) {
         // Optional<User>
         if (parameter.nested().is(User.class)) {
-          return Optional.ofNullable(getAttribute(session, User.class, BlogConstant.USER_INFO));
+          return Optional.ofNullable(User.find(session));
         }
         // Optional<Blogger>
-        return Optional.ofNullable(getAttribute(session, Blogger.class, BlogConstant.BLOGGER_INFO));
+        return Optional.ofNullable(Blogger.find(context));
       }
 
       if (parameter.is(User.class)) {
-        return getAttribute(parameter, session, User.class, BlogConstant.USER_INFO);
+        return getAttribute(parameter, session, User::find);
       }
       else if (parameter.is(Blogger.class)) {
-        return getAttribute(parameter, session, Blogger.class, BlogConstant.BLOGGER_INFO);
+        return getAttribute(parameter, session, Blogger::find);
       }
       else {
         // 使用了 LoginInfo 并且有 RequiresUser ，在没有登录情况下会抛出异常 UnauthorizedException
         LoginInfo info = new LoginInfo();
-        Object attribute = session.getAttribute(BlogConstant.USER_INFO);
-        if (attribute instanceof User loginUser) {
+        User loginUser = User.find(session);
+        if (loginUser != null) {
           info.setLoginUser(loginUser);
         }
         else if (parameter.hasParameterAnnotation(RequiresUser.class)) {
           throw new UnauthorizedException();
         }
-        attribute = session.getAttribute(BlogConstant.BLOGGER_INFO);
-        if (attribute instanceof Blogger blogger) {
+        Blogger blogger = Blogger.find(session);
+        if (blogger != null) {
           info.setBlogger(blogger);
         }
-
         return info;
       }
     }
@@ -137,18 +135,9 @@ public class LoginInfoParameterResolver
   }
 
   @Nullable
-  private static Object getAttribute(WebSession session, Class<?> targetType, String key) {
-    Object attribute = session.getAttribute(key);
-    if (targetType.isInstance(attribute)) {
-      return attribute;
-    }
-    return null;
-  }
-
-  @Nullable
-  private static Object getAttribute(ResolvableMethodParameter parameter,
-          WebSession session, Class<?> targetType, String key) {
-    Object attribute = getAttribute(session, targetType, key);
+  private static <T> T getAttribute(ResolvableMethodParameter parameter,
+          WebSession session, Function<WebSession, T> finder) {
+    T attribute = finder.apply(session);
     if (attribute != null) {
       return attribute;
     }
