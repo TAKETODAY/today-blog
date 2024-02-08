@@ -20,13 +20,14 @@
 
 package cn.taketoday.blog.config;
 
-import cn.taketoday.context.properties.ConfigurationProperties;
-import cn.taketoday.context.properties.NestedConfigurationProperty;
-import cn.taketoday.stereotype.Singleton;
 import com.aliyun.oss.ClientConfiguration;
 import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.common.auth.DefaultCredentialProvider;
 import com.aliyun.oss.common.auth.DefaultCredentials;
+
+import cn.taketoday.context.properties.ConfigurationProperties;
+import cn.taketoday.context.properties.NestedConfigurationProperty;
+import cn.taketoday.stereotype.Singleton;
 import lombok.Getter;
 import lombok.Setter;
 

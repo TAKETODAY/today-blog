@@ -37,8 +37,6 @@ import cn.taketoday.web.HandlerMatchingMetadata;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.GetMapping;
 import cn.taketoday.web.annotation.RequestBody;
-import cn.taketoday.web.annotation.RequestMapping;
-import cn.taketoday.web.annotation.RestController;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;

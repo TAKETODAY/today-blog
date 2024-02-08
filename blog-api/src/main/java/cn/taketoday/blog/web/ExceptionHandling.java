@@ -18,15 +18,15 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog;
+package cn.taketoday.blog.web;
 
 import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSSException;
 
 import java.sql.SQLException;
 
+import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.util.BlogUtils;
-import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.dao.DataAccessResourceFailureException;
 import cn.taketoday.http.HttpHeaders;
 import cn.taketoday.http.HttpStatus;

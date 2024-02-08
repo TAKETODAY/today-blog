@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -17,17 +17,50 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
-package cn.taketoday.blog;
 
-import java.util.List;
+package cn.taketoday.blog.web;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import cn.taketoday.core.style.ToStringBuilder;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2019-08-05 12:34
+ * @since 2020-04-16 14:23
  */
-public interface ListableHttpResult<T> extends HttpResult {
+public class ErrorMessage implements HttpResult {
+
+  private String message;
+
+  public ErrorMessage() { }
+
+  public ErrorMessage(String message) {
+    this.setMessage(message);
+  }
+
+  public static ErrorMessage failed(String message) {
+    return new ErrorMessage(message);
+  }
 
   @Override
-  List<T> getData();
+  @JsonIgnore
+  public Object getData() {
+    return message;
+  }
+
+  public String getMessage() {
+    return message;
+  }
+
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.from(this)
+            .append("message", message)
+            .toString();
+  }
 
 }

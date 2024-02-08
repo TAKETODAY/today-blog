@@ -22,9 +22,9 @@ package cn.taketoday.blog.web.interceptor;
 
 import java.util.List;
 
-import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Blogger;
+import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.session.SessionHandlerInterceptor;
 import cn.taketoday.session.SessionManager;
 import cn.taketoday.util.CollectionUtils;

@@ -31,9 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import cn.taketoday.blog.ErrorMessage;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.util.BlogUtils;
+import cn.taketoday.blog.web.ErrorMessage;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
