@@ -36,6 +36,7 @@ import cn.taketoday.blog.model.form.SearchForm;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.util.BlogUtils;
+import cn.taketoday.blog.util.DateFormatter;
 import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.LoginInfo;
@@ -246,7 +247,7 @@ class ArticleController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequiresBlogger
   @Logging(title = "更新文章", content = "更新文章: [#{#from.title}]")
-  public void update(@PathVariable("id") Integer id, @RequestBody ArticleForm from) {
+  public void update(@PathVariable("id") Long id, @RequestBody ArticleForm from) {
     Article article = ArticleForm.forArticle(from, labelService);
     article.setId(id);
     article.setUpdateAt(LocalDateTime.now());
@@ -295,7 +296,7 @@ class ArticleController {
   static class ArticleForm {
 
     @Nullable
-    public LocalDateTime createAt;
+    public String createAt;
 
     public String category;
     public String copyright;
@@ -331,7 +332,9 @@ class ArticleController {
       );
 
       article.setUri(form.uri);
-      article.setCreateAt(form.createAt);
+      if (StringUtils.hasText(form.createAt)) {
+        article.setCreateAt(DateFormatter.parse(form.createAt));
+      }
       return article;
     }
 
