@@ -98,6 +98,7 @@ datasource:
   hikari:
     maximum-pool-size: 20
     max-lifetime: 120000
+    connection-test-query: 'select 1'
 
 logging:
   file:
