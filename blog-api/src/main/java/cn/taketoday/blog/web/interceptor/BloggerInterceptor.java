@@ -49,7 +49,7 @@ public class BloggerInterceptor extends SessionHandlerInterceptor {
     WebSession session = getSession(request, false);
     if (session != null) {
       if (User.isPresent(session)) {
-        if (Blogger.isPresent(request)) {
+        if (Blogger.isPresent(session)) {
           return chain.proceed(request);
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

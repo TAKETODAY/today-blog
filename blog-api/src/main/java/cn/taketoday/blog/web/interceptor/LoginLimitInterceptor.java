@@ -43,7 +43,7 @@ public class LoginLimitInterceptor extends SessionHandlerInterceptor {
 
   @Override
   public Object intercept(RequestContext context, InterceptorChain chain) throws Throwable {
-    if (!Blogger.isPresent(context)) {
+    if (!Blogger.isPresent(getSession(context, false))) {
       WebSession session = getSession(context); // TODO 客户端 删除了session-key 就会出错
       Object attribute = session.getAttribute(loginAttributeName);
       int loginTimes = 0;

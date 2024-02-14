@@ -84,7 +84,7 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
 
   @Override
   public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
-    if (!Blogger.isPresent(request)) {
+    if (!Blogger.isPresent(getSession(request, false))) {
       // 非博主，进行限流
       HandlerMethod handlerMethod = HandlerMethod.unwrap(chain.getHandler());
       if (handlerMethod != null) {
