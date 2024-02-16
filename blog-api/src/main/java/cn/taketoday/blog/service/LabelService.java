@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -30,11 +30,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import cn.taketoday.blog.model.ArticleLabel;
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.repository.LabelRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
+import cn.taketoday.jdbc.Query;
+import cn.taketoday.jdbc.RepositoryManager;
+import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 
@@ -46,6 +50,10 @@ import cn.taketoday.transaction.annotation.Transactional;
 @CacheConfig(cacheNames = "labels"/*, expire = 1, timeUnit = TimeUnit.MINUTES*/)
 public class LabelService {
 
+  private final EntityManager entityManager;
+
+  private final RepositoryManager repository;
+
   private final LabelRepository labelRepository;
 
   private final Cache<Long, Set<Label>> articleLabelsCache = Caffeine.newBuilder()
@@ -53,7 +61,9 @@ public class LabelService {
           .expireAfterWrite(10, TimeUnit.SECONDS)
           .build();
 
-  public LabelService(LabelRepository labelRepository) {
+  public LabelService(EntityManager entityManager, RepositoryManager repository, LabelRepository labelRepository) {
+    this.entityManager = entityManager;
+    this.repository = repository;
     this.labelRepository = labelRepository;
   }
 
@@ -117,7 +127,7 @@ public class LabelService {
 
   @CacheEvict(allEntries = true)
   public void saveArticleLabels(Set<Label> labels, long articleId) {
-    labelRepository.saveArticleLabels(labels, articleId);
+    entityManager.persist(labels.stream().map(label -> ArticleLabel.of(label.getId(), articleId)));
   }
 
   @Transactional
@@ -129,8 +139,12 @@ public class LabelService {
   @Transactional
   @CacheEvict(allEntries = true)
   public void removeArticleLabels(long articleId) {
+    try (Query query = repository.createQuery("""
+            DELETE from article_label WHERE articleId = ?""")) {
+      query.addParameter(articleId);
+      query.executeUpdate();
+    }
 
-    labelRepository.removeArticleLabels(articleId);
     articleLabelsCache.invalidate(articleId);
   }
 

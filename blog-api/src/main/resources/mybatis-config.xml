@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?><!--
   ~ Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
-  ~ Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+  ~ Copyright © TODAY & 2017 - 2024 All Rights Reserved.
   ~
   ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
   ~
@@ -33,7 +33,6 @@
     <mapper resource="mapper/ArticleMapper.xml" />
     <mapper resource="mapper/BloggerMapper.xml" />
     <mapper resource="mapper/PageViewMapper.xml" />
-    <mapper resource="mapper/CategoryMapper.xml" />
     <mapper resource="mapper/AttachmentMapper.xml" />
   </mappers>
 

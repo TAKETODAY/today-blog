@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -18,30 +18,31 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.repository;
+package cn.taketoday.blog.model;
 
-import org.apache.ibatis.annotations.Param;
-
-import java.util.Map;
-
-import cn.taketoday.blog.model.Category;
-import cn.taketoday.stereotype.Repository;
+import cn.taketoday.jdbc.persistence.Table;
+import lombok.Data;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2018-10-10 19:42
+ * @since 1.0 2024/2/14 18:13
  */
-@Repository
-public interface CategoryRepository extends DefaultRepository<Category, String> {
+@Data
+@Table("article_label")
+public class ArticleLabel {
 
-  @Deprecated
-  void updateArticleCount(@Param("name") String name);
+  private Long labelId;
 
-  /**
-   * @param name
-   */
-  int findArticleCount(String name);
+  private Long articleId;
 
-  void updateById(Map<String, Object> model);
+  public ArticleLabel() { }
 
+  public ArticleLabel(Long labelId, Long articleId) {
+    this.labelId = labelId;
+    this.articleId = articleId;
+  }
+
+  public static ArticleLabel of(Long labelId, Long articleId) {
+    return new ArticleLabel(labelId, articleId);
+  }
 }

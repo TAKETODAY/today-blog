@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,25 +15,21 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import cn.taketoday.blog.model.Category;
-import cn.taketoday.blog.repository.CategoryRepository;
-import cn.taketoday.cache.annotation.CacheConfig;
-import cn.taketoday.cache.annotation.CacheEvict;
-import cn.taketoday.cache.annotation.Cacheable;
 import cn.taketoday.context.event.EventListener;
 import cn.taketoday.framework.context.event.ApplicationStartedEvent;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
+import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -44,24 +40,23 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = "categories")
 public class CategoryService {
-  private final RepositoryManager repositoryManager;
-  private final CategoryRepository categoryRepository;
 
-  @CacheEvict(allEntries = true)
+  private final EntityManager entityManager;
+
+  private final RepositoryManager repository;
+
   public void save(Category category) {
-    categoryRepository.save(category);
+    entityManager.persist(category, false);
   }
 
-  @Cacheable(key = "'all'")
   public List<Category> getAllCategories() {
-    return categoryRepository.findAll();
+    return entityManager.find(Category.class);
   }
 
-  @Cacheable(key = "'ByName'+#name")
+  @Nullable
   public Category getCategory(String name) {
-    return categoryRepository.findById(name);
+    return entityManager.findById(Category.class, name);
   }
 
   /**
@@ -69,10 +64,9 @@ public class CategoryService {
    *
    * @param categoryName 分类名称
    */
-  @CacheEvict(allEntries = true)
   public void updateArticleCount(String categoryName) {
-    try (NamedQuery query = repositoryManager.createNamedQuery("""
-            UPDATE category SET articleCount = (
+    try (NamedQuery query = repository.createNamedQuery("""
+            UPDATE category SET article_count = (
                 SELECT COUNT(id) FROM article WHERE status = 0 and category =:name
             ) WHERE name = :name""")) {
       // language=
@@ -85,11 +79,10 @@ public class CategoryService {
    * 更新所有的分类对应文章数量
    */
   @Transactional
-  @CacheEvict(allEntries = true)
   @EventListener(ApplicationStartedEvent.class)
   public void updateArticleCount() {
-    try (Query query = repositoryManager.createQuery("""
-            UPDATE category SET articleCount =
+    try (Query query = repository.createQuery("""
+            UPDATE category SET article_count =
                     (SELECT COUNT(id)
                      FROM article
                      WHERE status = 0
@@ -99,26 +92,23 @@ public class CategoryService {
     }
   }
 
-  public void delete(Category category) {
-    delete(category.getName());
+  /**
+   * 根据 name 删除
+   *
+   * @param name id
+   */
+  public void deleteById(String name) {
+    entityManager.delete(Category.class, name);
   }
 
-  @CacheEvict(allEntries = true)
-  public void delete(String name) {
-    categoryRepository.deleteById(name);
-  }
-
-  @CacheEvict(allEntries = true)
-  public void update(Category category, String name) {
-
-    Map<String, Object> map = new HashMap<>();
-
-    map.put("id", name);
-    map.put("name", category.getName());
-    map.put("order", category.getOrder());
-    map.put("description", category.getDescription());
-
-    categoryRepository.updateById(map);
+  /**
+   * 根据 name 更新 信息
+   *
+   * @param category 更新的数据体
+   * @param name id
+   */
+  public void updateById(Category category, String name) {
+    entityManager.updateById(category, name);
   }
 
 }
