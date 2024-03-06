@@ -21,6 +21,7 @@
 package cn.taketoday.blog.service;
 
 import java.util.List;
+import java.util.Map;
 
 import cn.taketoday.blog.model.Category;
 import cn.taketoday.context.event.EventListener;
@@ -29,6 +30,7 @@ import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.jdbc.persistence.Order;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
@@ -51,7 +53,7 @@ public class CategoryService {
   }
 
   public List<Category> getAllCategories() {
-    return entityManager.find(Category.class);
+    return entityManager.find(Category.class, Map.of("order", Order.ASC));
   }
 
   @Nullable
