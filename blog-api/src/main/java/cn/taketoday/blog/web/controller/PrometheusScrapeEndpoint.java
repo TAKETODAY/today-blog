@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.controller;
@@ -23,7 +23,6 @@ package cn.taketoday.blog.web.controller;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -93,7 +92,7 @@ public class PrometheusScrapeEndpoint {
       arguments.putAll(body);
     }
     request.getParameters().forEach(
-            (name, values) -> arguments.put(name, (values.length != 1) ? Arrays.asList(values) : values[0]));
+            (name, values) -> arguments.put(name, (values.size() != 1) ? values : values.get(0)));
     return arguments;
   }
 
