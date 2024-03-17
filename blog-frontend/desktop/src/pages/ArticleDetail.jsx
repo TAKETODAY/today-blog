@@ -131,7 +131,7 @@ class ArticleDetail extends React.Component {
     })
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.match.params.articleId) {
       const { articleId } = this.props.match.params
       if (articleId !== nextProps.match.params.articleId) {
