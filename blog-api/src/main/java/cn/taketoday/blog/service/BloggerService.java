@@ -15,13 +15,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
 
 import cn.taketoday.blog.model.Blogger;
-import cn.taketoday.blog.repository.BloggerRepository;
+import cn.taketoday.jdbc.Query;
+import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -36,19 +37,16 @@ public class BloggerService {
 
   private volatile Blogger blogger;
 
-  private final BloggerRepository bloggerRepository;
-
   private final EntityManager entityManager;
 
-  public Blogger fetchBlogger() {
-    Blogger blogger = bloggerRepository.getBlogger();
-    setBlogger(blogger);
-    return blogger;
-  }
+  private final RepositoryManager repository;
 
-  public void update(Blogger blogger) {
-    bloggerRepository.update(blogger);
-    setBlogger(blogger);
+  public Blogger fetchBlogger() {
+    try (Query query = repository.createQuery("  SELECT * FROM blogger LIMIT 1")) {
+      Blogger blogger = query.iterate(Blogger.class).unique();
+      setBlogger(blogger);
+      return blogger;
+    }
   }
 
   public void updatePassword(String password) {
@@ -69,7 +67,7 @@ public class BloggerService {
       synchronized(this) {
         blogger = this.blogger;
         if (blogger == null) {
-          blogger = bloggerRepository.getBlogger();
+          blogger = fetchBlogger();
           setBlogger(blogger);
         }
       }

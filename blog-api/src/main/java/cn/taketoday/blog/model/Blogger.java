@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
@@ -27,6 +27,8 @@ import java.util.Objects;
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.core.AttributeAccessor;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.jdbc.persistence.Id;
+import cn.taketoday.jdbc.persistence.Table;
 import cn.taketoday.lang.Nullable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,6 +40,7 @@ import lombok.Setter;
  */
 @Setter
 @Getter
+@Table("blogger")
 @NoArgsConstructor
 public class Blogger implements Serializable {
   public static final String AttributeKey = "bloggerInfo";
@@ -45,8 +48,11 @@ public class Blogger implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  private int id = 0;
+  @Id
+  private int id;
+
   private int age;
+
   private String sex;
   private String name;
   private String email;
