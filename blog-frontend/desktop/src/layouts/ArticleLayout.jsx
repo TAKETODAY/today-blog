@@ -11,21 +11,21 @@ export default class ArticleLayout extends React.Component {
 
   }
 
+  updatePageView() {
+    setTimeout(() => {
+      startNProgress()
+      http.post("/api/pv?referer=" + encodeURIComponent(location.href))
+          .then(stopNProgress)
+    }, 1500)
+  }
+
   componentDidUpdate(prevProps) {
-    console.log(this.props)
-    console.log(prevProps)
-    // will be true
     const locationChanged =
         this.props.location !== prevProps.location;
 
     if (locationChanged) {
-      setTimeout(() => {
-        startNProgress()
-        http.post("/api/pv?referer=" + encodeURIComponent(location.href))
-            .then(stopNProgress)
-      }, 1500)
-
       console.log("路由发生了变化")
+      this.updatePageView()
     }
   }
 
