@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,38 +15,27 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
+
 package cn.taketoday.blog.model;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
-import cn.taketoday.core.style.ToStringBuilder;
-import lombok.Getter;
-import lombok.Setter;
+import cn.taketoday.jdbc.persistence.Id;
+import cn.taketoday.jdbc.persistence.Table;
+import lombok.Data;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-05-23 09:20
  */
-@Setter
-@Getter
-public class PageView implements Serializable {
-  @Serial
-  private static final long serialVersionUID = 1L;
+@Data
+@Table("t_page_view")
+public class PageView {
 
+  @Id
   private Long id;
-
-  private String ip;
-
-  private String ipCountry;
-  private String IpProvince;
-  private String ipCity;
-  private String ipArea;
-  private String ipIsp;
 
   private String url;
 
@@ -61,47 +50,17 @@ public class PageView implements Serializable {
   private String browser;
   private String browserVersion;
 
+  /**
+   * IP 地址的位置
+   */
+  private String ip;
+
+  private String ipCountry;
+  private String ipProvince;
+  private String ipCity;
+  private String ipArea;
+  private String ipIsp;
+
   private LocalDateTime createAt;
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (!(o instanceof final PageView pageView))
-      return false;
-    return Objects.equals(id, pageView.id)
-            && Objects.equals(ip, pageView.ip)
-            && Objects.equals(url, pageView.url)
-            && Objects.equals(user, pageView.user)
-            && Objects.equals(os, pageView.os)
-            && Objects.equals(device, pageView.device)
-            && Objects.equals(referer, pageView.referer)
-            && Objects.equals(userAgent, pageView.userAgent)
-            && Objects.equals(browser, pageView.browser)
-            && Objects.equals(browserVersion, pageView.browserVersion)
-            && Objects.equals(createAt, pageView.createAt);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(id, ip, url, user, os, device, referer, userAgent, browser, browserVersion, createAt);
-  }
-
-  @Override
-  public String toString() {
-    return ToStringBuilder.from(this)
-            .append("id", id)
-            .append("ip", ip)
-            .append("url", url)
-            .append("user", user)
-            .append("os", os)
-            .append("device", device)
-            .append("referer", referer)
-            .append("userAgent", userAgent)
-            .append("browser", browser)
-            .append("browserVersion", browserVersion)
-            .append("createAt", createAt)
-            .toString();
-  }
 
 }

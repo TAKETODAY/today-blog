@@ -31,7 +31,6 @@
     <mapper resource="mapper/LabelMapper.xml" />
     <mapper resource="mapper/ArticleMapper.xml" />
     <mapper resource="mapper/BloggerMapper.xml" />
-    <mapper resource="mapper/PageViewMapper.xml" />
     <mapper resource="mapper/AttachmentMapper.xml" />
   </mappers>
 
