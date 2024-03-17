@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,11 +15,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 package cn.taketoday.blog.model.feed;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
@@ -35,27 +34,31 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public final class Entry implements Serializable {
-  private static final long serialVersionUID = 1L;
+public final class Entry {
 
   private long id;
   private String title;
 
+  private String uri;
+
   private LocalDateTime updated;
+
   private String image;
 
   private LocalDateTime published;
+
   private String summary;
+
   private String content;
 
-  private Set<String> categories = new HashSet<>();
+  private final Set<String> categories = new HashSet<>();
 
   public void addCategory(String category) {
     categories.add(category);
   }
 
   public void addCategories(Collection<String> categories) {
-    categories.addAll(categories);
+    this.categories.addAll(categories);
   }
 
   @Override

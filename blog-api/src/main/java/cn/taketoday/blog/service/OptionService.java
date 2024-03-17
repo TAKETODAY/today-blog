@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,24 +15,24 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 package cn.taketoday.blog.service;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import cn.taketoday.beans.factory.BeanFactory;
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.model.Option;
-import cn.taketoday.blog.repository.OptionRepository;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.core.env.ConfigurableEnvironment;
 import cn.taketoday.core.env.MapPropertySource;
 import cn.taketoday.core.env.PropertySources;
+import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.logging.LoggerFactory;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
@@ -49,22 +49,26 @@ import freemarker.template.TemplateModelException;
 public class OptionService {
 
   private final BlogConfig blogConfig;
+
   private final BeanFactory beanFactory;
+
   private final CommentConfig commentConfig;
+
   private final CommentService commentService;
-  private final OptionRepository optionRepository;
 
-  private final Map<String, String> optionsMap = new HashMap<>();
+  private final EntityManager entityManager;
 
-  public OptionService(BlogConfig blogConfig, OptionRepository repository, CommentService commentService,
-          ConfigurableEnvironment environment, BeanFactory beanFactory, CommentConfig commentConfig) {
+  private final ConcurrentHashMap<String, String> optionsMap = new ConcurrentHashMap<>();
+
+  public OptionService(BlogConfig blogConfig, CommentService commentService,
+          ConfigurableEnvironment environment, BeanFactory beanFactory, CommentConfig commentConfig, EntityManager entityManager) {
     this.blogConfig = blogConfig;
     this.beanFactory = beanFactory;
-    this.optionRepository = repository;
     this.commentService = commentService;
     this.commentConfig = commentConfig;
+    this.entityManager = entityManager;
 
-    for (Option option : repository.findAll()) {
+    for (Option option : entityManager.find(Option.class)) {
       optionsMap.put(option.getName(), option.getValue());
     }
 
@@ -81,7 +85,7 @@ public class OptionService {
   }
 
   public void saveOption(String key, String value) {
-    optionRepository.save(new Option(key, value));
+    entityManager.persist(new Option(key, value));
     optionsMap.put(key, value);
   }
 
@@ -95,8 +99,7 @@ public class OptionService {
       saveOption(key, value);
     }
     else if (!Objects.equals(oldValue, value)) {
-      optionRepository.update(new Option(key, value));
-
+      entityManager.updateById(new Option(key, value));
       optionsMap.put(key, value);
     }
   }

@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
@@ -24,6 +24,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+import cn.taketoday.jdbc.persistence.Id;
+import cn.taketoday.jdbc.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,11 +35,15 @@ import lombok.Setter;
  */
 @Setter
 @Getter
+@Table(name = "t_option")
 public class Option implements Serializable {
+
   @Serial
   private static final long serialVersionUID = 1L;
 
+  @Id
   private String name;
+
   private String value;
 
   public Option() { }

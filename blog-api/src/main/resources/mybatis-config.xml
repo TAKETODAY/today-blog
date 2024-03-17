@@ -15,7 +15,7 @@
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with this program.  If not, see [http://www.gnu.org/licenses/]
+  ~ along with this program. If not, see [https://www.gnu.org/licenses/]
   -->
 <!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
     "http://mybatis.org/dtd/mybatis-3-config.dtd">
@@ -29,7 +29,6 @@
   <mappers>
     <mapper resource="mapper/UserMapper.xml" />
     <mapper resource="mapper/LabelMapper.xml" />
-    <mapper resource="mapper/OptionMapper.xml" />
     <mapper resource="mapper/ArticleMapper.xml" />
     <mapper resource="mapper/BloggerMapper.xml" />
     <mapper resource="mapper/PageViewMapper.xml" />

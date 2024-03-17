@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
@@ -382,6 +382,7 @@ public class ArticleService implements InitializingBean {
 
       Entry entry = new Entry();
       entry.setId(article.getId());
+      entry.setUri(article.getUri());
       entry.setImage(article.getCover());
       entry.setTitle(article.getTitle());
       entry.setPublished(article.getCreateAt());
@@ -416,6 +417,7 @@ public class ArticleService implements InitializingBean {
 
       Item item = new Item();
       item.setId(article.getId());
+      item.setUri(article.getUri());
       item.setTitle(article.getTitle());
       item.setImage(article.getCover());
       item.setSummary(article.getSummary());
