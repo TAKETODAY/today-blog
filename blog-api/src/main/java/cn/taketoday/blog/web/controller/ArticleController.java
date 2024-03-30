@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.controller;
@@ -259,6 +259,14 @@ class ArticleController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
   public void status(@PathVariable Long id, @PathVariable PostStatus status) {
+    articleService.updateStatusById(status, id);
+  }
+
+  @RequiresBlogger
+  @PATCH(path = "/{id}", params = "status")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
+  public void updateStatus(@PathVariable Long id, PostStatus status) {
     articleService.updateStatusById(status, id);
   }
 
