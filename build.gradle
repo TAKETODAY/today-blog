@@ -9,6 +9,7 @@ configure(allprojects) {
 
   repositories {
     mavenLocal()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
     maven { url "https://maven.aliyun.com/repository/public" }
     maven { url "https://repo.huaweicloud.com/repository/maven" }
     maven { url "https://repo.spring.io/milestone" }
