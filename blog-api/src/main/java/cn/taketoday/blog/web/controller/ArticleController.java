@@ -254,14 +254,6 @@ class ArticleController {
     articleService.update(article);
   }
 
-  @PUT("/{id}/status/{status}")
-  @RequiresBlogger
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
-  public void status(@PathVariable Long id, @PathVariable PostStatus status) {
-    articleService.updateStatusById(status, id);
-  }
-
   @RequiresBlogger
   @PATCH(path = "/{id}", params = "status")
   @ResponseStatus(HttpStatus.NO_CONTENT)

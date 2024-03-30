@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 import { extractData, http } from '@/utils'
@@ -38,7 +38,7 @@ export async function getCategories() {
 }
 
 export async function toggleArticleStatus(id, status) {
-  return http.put(`/api/articles/${id}/status/${status}`)
+  return http.patch(`/api/articles/${id}?status=${status}`)
 }
 
 
