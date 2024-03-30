@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -23,6 +23,7 @@ package cn.taketoday.blog.web;
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
+import cn.taketoday.lang.Nullable;
 import lombok.Data;
 
 /**
@@ -32,8 +33,10 @@ import lombok.Data;
 @Data
 public class LoginInfo {
 
+  @Nullable
   private User loginUser;
 
+  @Nullable
   private Blogger blogger;
 
   public boolean isLoggedIn() {

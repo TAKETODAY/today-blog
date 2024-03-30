@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.controller;
@@ -34,8 +34,6 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.BlogConstant;
-import cn.taketoday.blog.ErrorMessageException;
-import cn.taketoday.blog.Json;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Attachment;
@@ -50,6 +48,8 @@ import cn.taketoday.blog.util.HashUtils;
 import cn.taketoday.blog.util.HttpUtils;
 import cn.taketoday.blog.util.ObjectUtils;
 import cn.taketoday.blog.util.StringUtils;
+import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.context.properties.bind.Binder;
@@ -174,7 +174,7 @@ class AuthorizeController extends SessionManagerOperations {
 
     WebSession session = getSession(request);
     // login success
-    session.setAttribute(BlogConstant.USER_INFO, loginUser);
+    loginUser.bindTo(session);
 
     // is blogger ?
     Blogger blogger = bloggerService.getBlogger();
@@ -196,8 +196,70 @@ class AuthorizeController extends SessionManagerOperations {
   }
 
   private void applyBlogger(WebSession session, User loginUser, Blogger blogger) {
-    session.setAttribute(BlogConstant.BLOGGER_INFO, blogger);
+    blogger.bindTo(session);
     loginUser.setBlogger(true);
+  }
+
+  /**
+   * 登录 v2
+   * <pre> {@code
+   * {
+   *   "id": 1544107262149,
+   *   "status": "NORMAL",
+   *   "name": "TAKETODAY",
+   *   "email": "taketoday@foxmail.com",
+   *   "site": "https://taketoday.cn",
+   *   "type": "master",
+   *   "avatar": "/upload/2019/4/9/6cd520c4-509a-4d35-9028-2485a87bd5c6.png",
+   *   "introduce": "代码是我心中的一首诗",
+   *   "background": "/upload/2019/4/9/eb785277-0aef-4e42-85f3-2f9280fc6c58.png",
+   * }
+   * } </pre>
+   */
+  @POST(params = "v2")
+  @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
+  @Logging(title = "登录", content = "邮箱:[#{#user.email}]登录")
+  public User loginV2(@Valid @RequestBody UserFrom user, RequestContext request) {
+    User loginUser = userService.getByEmail(user.email);
+    if (loginUser == null) {
+      throw ErrorMessageException.failed(user.email + " 账号不存在!");
+    }
+
+    String passwd = HashUtils.getEncodedPassword(user.password);
+    if (!Objects.equals(loginUser.getPassword(), passwd)) {
+      throw ErrorMessageException.failed("密码错误!");
+    }
+
+    // check user state
+    UserStatus status = loginUser.getStatus();
+    // log.info("Check state: [{}]", status);
+    switch (status) {
+      case NORMAL -> { }
+      case LOCKED, RECYCLE, INACTIVE -> throw ErrorMessageException.failed(status.getDescription());
+      default -> throw ErrorMessageException.failed("系统错误");
+    }
+
+    WebSession session = getSession(request);
+    // login success
+    loginUser.bindTo(session);
+
+    // is blogger ?
+    Blogger blogger = bloggerService.getBlogger();
+    // 是对应邮箱 判断密码
+
+    if (Objects.equals(loginUser.getEmail(), blogger.getEmail())) {
+      if (!Objects.equals(loginUser.getPassword(), blogger.getPasswd())) {
+        blogger = bloggerService.fetchBlogger();
+        if (Objects.equals(loginUser.getPassword(), blogger.getPasswd())) {
+          applyBlogger(session, loginUser, blogger);
+        }
+      }
+      else {
+        applyBlogger(session, loginUser, blogger);
+      }
+    }
+
+    return loginUser;
   }
 
   //---------------------------------------------------------------------
@@ -332,8 +394,8 @@ class AuthorizeController extends SessionManagerOperations {
     UserStatus status = user.getStatus();
     switch (status) {
       case NORMAL -> {
-        session.removeAttribute(BlogConstant.BLOGGER_INFO);
-        session.setAttribute(BlogConstant.USER_INFO, user);
+        Blogger.unbind(session);
+        user.bindTo(session);
         return redirectLogin(forward);
       }
       case LOCKED, RECYCLE, INACTIVE -> {

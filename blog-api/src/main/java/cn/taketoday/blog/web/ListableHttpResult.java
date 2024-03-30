@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -17,19 +17,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
+package cn.taketoday.blog.web;
 
-package cn.taketoday.blog;
-
-import cn.taketoday.lang.Nullable;
+import java.util.List;
 
 /**
- * The request result
- *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2019-04-23 08:58
+ * @since 2019-08-05 12:34
  */
-public interface HttpResult {
+public interface ListableHttpResult<T> extends HttpResult {
 
-  @Nullable
-  Object getData();
+  @Override
+  List<T> getData();
+
 }

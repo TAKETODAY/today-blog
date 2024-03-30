@@ -42,6 +42,7 @@ import { navigationsUserSessionMapStateToProps } from "src/redux/action-types";
 import { updateNavigations } from "src/redux/actions";
 import { store } from "src/redux/store";
 import lazyload from "src/utils/lazyload";
+import { http, startNProgress, stopNProgress } from "../utils";
 
 const passwordRules = [
   { required: true, message: '请输入访问密码!' }
@@ -84,6 +85,7 @@ class ArticleDetail extends React.Component {
 
   componentDidMount() {
     this.loadArticle(this.props.match.params.articleId)
+    this.updatePageView()
   }
 
   loadArticle(articleId, key = null) {
@@ -131,12 +133,31 @@ class ArticleDetail extends React.Component {
     })
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.match.params.articleId) {
       const { articleId } = this.props.match.params
       if (articleId !== nextProps.match.params.articleId) {
         this.loadArticle(nextProps.match.params.articleId)
       }
+    }
+  }
+
+  updatePageView() {
+    setTimeout(() => {
+      startNProgress()
+      http.post("/api/pv?referer=" + encodeURIComponent(location.href))
+          .then(stopNProgress)
+    }, 1500)
+  }
+
+  componentDidUpdate(prevProps) {
+    console.log(prevProps.location, this.props.location)
+    const locationChanged =
+        this.props.location !== prevProps.location;
+
+    if (locationChanged) {
+      console.log("路由发生了变化")
+      this.updatePageView()
     }
   }
 
@@ -208,11 +229,11 @@ class ArticleDetail extends React.Component {
           <div className="markdown contentTxt" dangerouslySetInnerHTML={{ __html: article.content }}/>
         </article>
         {isNotEmpty(article.labels) &&
-          <div className="article-tags" id="tagcloud">
-            {article.labels.map((label, idx) => {
-              return <Link key={idx} to={`/tags/${label.name}`} className={getRandLabel()}>{label.name}</Link>
-            })}
-          </div>
+            <div className="article-tags" id="tagcloud">
+              {article.labels.map((label, idx) => {
+                return <Link key={idx} to={`/tags/${label.name}`} className={getRandLabel()}>{label.name}</Link>
+              })}
+            </div>
         }
         <div className="article-copyright">
           {article.copyright || '本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。'}
@@ -224,7 +245,7 @@ class ArticleDetail extends React.Component {
 }
 
 export default connect(
-  navigationsUserSessionMapStateToProps, { updateNavigations }
+    navigationsUserSessionMapStateToProps, { updateNavigations }
 )(withRouter(ArticleDetail))
 
 

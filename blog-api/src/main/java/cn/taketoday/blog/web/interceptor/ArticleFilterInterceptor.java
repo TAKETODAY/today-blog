@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -22,9 +22,9 @@ package cn.taketoday.blog.web.interceptor;
 
 import java.util.List;
 
-import cn.taketoday.blog.BlogConstant;
-import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.model.Article;
+import cn.taketoday.blog.model.Blogger;
+import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.session.SessionHandlerInterceptor;
 import cn.taketoday.session.SessionManager;
 import cn.taketoday.util.CollectionUtils;
@@ -43,7 +43,8 @@ public class ArticleFilterInterceptor extends SessionHandlerInterceptor {
   @SuppressWarnings("unchecked")
   public void afterProcess(RequestContext context, Object handler, Object result) {
     if (result instanceof Pagination<?> pagination
-            && getAttribute(context, BlogConstant.BLOGGER_INFO) == null) {
+            && !Blogger.isPresent(getSession(context, false))) {
+
       // 过滤
       List<?> objects = pagination.getData();
       Object first = CollectionUtils.firstElement(objects);

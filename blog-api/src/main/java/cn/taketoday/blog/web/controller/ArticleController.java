@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.controller;
@@ -26,9 +26,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import cn.taketoday.blog.ErrorMessageException;
-import cn.taketoday.blog.Pageable;
-import cn.taketoday.blog.Pagination;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.ArticleItem;
@@ -39,8 +36,12 @@ import cn.taketoday.blog.model.form.SearchForm;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.util.BlogUtils;
+import cn.taketoday.blog.util.DateFormatter;
 import cn.taketoday.blog.web.ArticlePasswordException;
+import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.LoginInfo;
+import cn.taketoday.blog.web.Pageable;
+import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpStatus;
@@ -197,7 +198,7 @@ class ArticleController {
       catch (NumberFormatException ignored) { }
 
       if (article == null) {
-        throw ErrorMessageException.failed("地址为 '" + uri + "' 的文章不存在");
+        throw ErrorMessageException.failed("文章不存在", HttpStatus.NOT_FOUND);
       }
     }
 
@@ -246,7 +247,7 @@ class ArticleController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequiresBlogger
   @Logging(title = "更新文章", content = "更新文章: [#{#from.title}]")
-  public void update(@PathVariable("id") Integer id, @RequestBody ArticleForm from) {
+  public void update(@PathVariable("id") Long id, @RequestBody ArticleForm from) {
     Article article = ArticleForm.forArticle(from, labelService);
     article.setId(id);
     article.setUpdateAt(LocalDateTime.now());
@@ -258,6 +259,14 @@ class ArticleController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
   public void status(@PathVariable Long id, @PathVariable PostStatus status) {
+    articleService.updateStatusById(status, id);
+  }
+
+  @RequiresBlogger
+  @PATCH(path = "/{id}", params = "status")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
+  public void updateStatus(@PathVariable Long id, PostStatus status) {
     articleService.updateStatusById(status, id);
   }
 
@@ -295,7 +304,7 @@ class ArticleController {
   static class ArticleForm {
 
     @Nullable
-    public LocalDateTime createAt;
+    public String createAt;
 
     public String category;
     public String copyright;
@@ -331,7 +340,9 @@ class ArticleController {
       );
 
       article.setUri(form.uri);
-      article.setCreateAt(form.createAt);
+      if (StringUtils.hasText(form.createAt)) {
+        article.setCreateAt(DateFormatter.parse(form.createAt));
+      }
       return article;
     }
 

@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,15 +15,15 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
+
 package cn.taketoday.blog.web.controller;
 
 import java.util.List;
 
 import cn.taketoday.blog.model.PageView;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.service.PageViewService;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.IpSearchers;
 import cn.taketoday.blog.util.StringUtils;
@@ -31,6 +31,7 @@ import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpHeaders;
 import cn.taketoday.ip2region.IpLocation;
+import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;
@@ -39,23 +40,21 @@ import cn.taketoday.web.annotation.RestController;
 import eu.bitwalker.useragentutils.Browser;
 import eu.bitwalker.useragentutils.UserAgent;
 import eu.bitwalker.useragentutils.Version;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-05-23 17:10
  */
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/pv")
 public class PageViewController {
 
-  private final PageViewService pageViewService;
-
-  public PageViewController(final PageViewService pageViewService) {
-    this.pageViewService = pageViewService;
-  }
+  private final EntityManager entityManager;
 
   @POST
-  public void pv(String referer, final RequestContext request, LoginInfo loginInfo) {
+  public void create(String referer, final RequestContext request, LoginInfo loginInfo) {
     if (!loginInfo.isBloggerLoggedIn()) {
       HttpHeaders requestHeaders = request.requestHeaders();
 
@@ -70,7 +69,7 @@ public class PageViewController {
       UserAgent userAgent = UserAgent.parseUserAgentString(ua);
 
       String ip = BlogUtils.remoteAddress(request);
-      pageView.setIp(ip + ":" + IpSearchers.search(ip))
+      pageView.setIp(ip)
               .setUrl(url)
               .setOs(userAgent.getOperatingSystem().getName())
               .setDevice(userAgent.getOperatingSystem().getDeviceType().getName())
@@ -102,14 +101,14 @@ public class PageViewController {
         pageView.setUser(loginUser.getName() + ":" + loginUser.getEmail());
       }
 
-      pageViewService.save(pageView);
+      entityManager.persist(pageView);
     }
   }
 
   @GET
   @RequiresBlogger
-  public List<PageView> pv() {
-    return pageViewService.getAll();
+  public List<PageView> listPageViews() {
+    return entityManager.find(PageView.class);
   }
 
 }

@@ -58,7 +58,7 @@ class LabelsDetail extends React.Component {
     this.props.updateNavigations(navigations)
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.match.params.tagsId) {
       const { tagsId } = this.props.match.params
       if (tagsId !== nextProps.match.params.tagsId) {

@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -20,24 +20,18 @@
 
 package cn.taketoday.blog.config;
 
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
-import cn.taketoday.annotation.config.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import cn.taketoday.aop.support.DefaultPointcutAdvisor;
 import cn.taketoday.aop.support.annotation.AnnotationMatchingPointcut;
 import cn.taketoday.beans.factory.ObjectProvider;
 import cn.taketoday.beans.factory.annotation.DisableAllDependencyInjection;
-import cn.taketoday.beans.factory.annotation.Value;
 import cn.taketoday.beans.factory.config.BeanDefinition;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.log.LoggingInterceptor;
@@ -49,7 +43,6 @@ import cn.taketoday.cache.annotation.EnableCaching;
 import cn.taketoday.cache.support.CaffeineCacheManager;
 import cn.taketoday.context.annotation.Configuration;
 import cn.taketoday.context.annotation.Role;
-import cn.taketoday.context.condition.ConditionalOnProperty;
 import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
 import cn.taketoday.jdbc.RepositoryManager;
@@ -96,8 +89,8 @@ public class AppConfig implements WebMvcConfigurer {
 
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/upload/**")
-            .addResourceLocations("file:/Users/today/website/data/docs/upload/");
+//    registry.addResourceHandler("/upload/**")
+//            .addResourceLocations("file:/Users/today/website/data/docs/upload/");
   }
 
   @Override
@@ -155,16 +148,16 @@ public class AppConfig implements WebMvcConfigurer {
     return CollectorRegistry.defaultRegistry;
   }
 
-  @Component
-  @ConditionalOnProperty("jackson.date-format")
-  static Jackson2ObjectMapperBuilderCustomizer customizeLocalDateTimeFormat(@Value("${jackson.date-format}") String dateFormat) {
-    return builder -> {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
-
-      builder.serializerByType(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
-      builder.deserializerByType(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
-    };
-  }
+//  @Component
+//  @ConditionalOnProperty("jackson.date-format")
+//  static Jackson2ObjectMapperBuilderCustomizer customizeLocalDateTimeFormat(@Value("${jackson.date-format}") String dateFormat) {
+//    return builder -> {
+//      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
+//
+//      builder.serializerByType(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
+//      builder.deserializerByType(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
+//    };
+//  }
 
 }
 

@@ -6,7 +6,7 @@
   <channel>
     <title>${opt['site.name']}</title>
     <link>${opt['site.host']}</link>
-    <atom:link href="${opt['site.host']}${contextPath}/feed.rss" rel="self" type="application/rss+xml"/>
+    <atom:link href="${opt['site.host']}/feed.rss" rel="self" type="application/rss+xml"/>
     <language>zh_CN</language>
     <description>${opt['site.subTitle']}</description>
     <webMaster>${author.email}</webMaster>
@@ -23,10 +23,10 @@
               </image>
             </#if>
           <author>${author.name}</author>
-          <link>${opt['site.host']}${contextPath}/articles/${item.id}</link>
+          <link>${opt['site.host']}/articles/${item.uri}</link>
           <description><![CDATA[${item.summary}]]></description>
           <pubDate>${item.pubDate?number_to_datetime}</pubDate>
-          <guid>${opt['site.host']}${contextPath}/articles/${item.id}</guid>
+          <guid>${opt['site.host']}/articles/${item.uri}</guid>
             <#list item.categories as category>
               <category>${category}</category>
             </#list>

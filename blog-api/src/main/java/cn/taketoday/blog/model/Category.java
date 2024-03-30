@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,16 +15,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Objects;
 
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.jdbc.persistence.Id;
+import cn.taketoday.jdbc.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -34,19 +34,19 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class Category implements Serializable {
-  @Serial
-  private static final long serialVersionUID = 1L;
+@Table("category")
+public class Category {
 
   public static final int DEFAULT_ORDER = 128;
 
-  private int order;
+  @Id
   private String name;
-  private int articleCount;
+
+  private Integer order;
+
+  private Integer articleCount;
 
   private String description;
-
-  //	private List<Article> articles;
 
   @Override
   public String toString() {
@@ -64,7 +64,7 @@ public class Category implements Serializable {
       return true;
     }
     if (obj instanceof Category other) {
-      return this.order == other.order
+      return Objects.equals(this.order, other.order)
               && Objects.equals(this.name, other.name)
               && Objects.equals(this.description, other.description);
     }
@@ -73,6 +73,6 @@ public class Category implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(order, name, articleCount, description);
+    return Objects.hash(order, name, description);
   }
 }

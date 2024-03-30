@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -22,7 +22,6 @@ package cn.taketoday.blog.config;
 
 import java.util.Optional;
 
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.lang.Nullable;
@@ -65,10 +64,7 @@ public class UserSessionResolver extends SessionManagerOperations {
   public User getLoginUser(RequestContext request) {
     WebSession session = getSession(request, false);
     if (session != null) {
-      Object attribute = session.getAttribute(BlogConstant.USER_INFO);
-      if (attribute instanceof User loginUser) {
-        return loginUser;
-      }
+      return User.find(session);
     }
     return null;
   }
@@ -88,10 +84,7 @@ public class UserSessionResolver extends SessionManagerOperations {
   public Blogger getLoggedInBlogger(RequestContext request) {
     WebSession session = getSession(request, false);
     if (session != null) {
-      Object attribute = session.getAttribute(BlogConstant.BLOGGER_INFO);
-      if (attribute instanceof Blogger blogger) {
-        return blogger;
-      }
+      return Blogger.find(session);
     }
     return null;
   }

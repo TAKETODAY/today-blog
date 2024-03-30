@@ -68,7 +68,7 @@ class Home extends React.Component {
     this.props.updateNavigations(null)
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.match.params.categoryId) {
       const { categoryId } = this.props.match.params
       if (categoryId !== nextProps.match.params.categoryId) {

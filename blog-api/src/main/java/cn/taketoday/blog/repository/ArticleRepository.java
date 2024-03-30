@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -21,9 +21,6 @@
 package cn.taketoday.blog.repository;
 
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.ResultMap;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -39,37 +36,6 @@ import cn.taketoday.stereotype.Repository;
 @Repository
 public interface ArticleRepository extends DefaultRepository<Article, Long> {
 
-  /**
-   *
-   */
-  List<Article> findArticlesByLabel(@Param("pageNow") int pageNow, @Param("pageSize") int pageSize,
-          @Param("name") String name);
-
-  /**
-   *
-   */
-  List<Article> findArticlesByCategory(@Param("pageNow") int pageNow, @Param("pageSize") int pageSize,
-          @Param("category") String category);
-
-  @Deprecated
-  List<Article> findByClickHit(@Param("pageSize") int defaultListSize);
-
-  /**
-   * click hit update
-   */
-  @Deprecated
-  @Update("update article set `pv`=pv+1 where `id` = #{id}")
-  void updatePageView(@Param("id") long id);
-
-  /**
-   *
-   */
-  @Deprecated
-  @ResultMap("BaseResultMap")
-  @Select("SELECT * FROM article WHERE status=0 order by id DESC LIMIT 0, #{size}")
-  List<Article> getFeedArticles(@Param("size") int size);
-
-  // ---------------------------------------------------------
   int getStatusRecord(@Param("status") PostStatus status);
 
   int getRecordByCategory(String category);
@@ -80,13 +46,6 @@ public interface ArticleRepository extends DefaultRepository<Article, Long> {
   int getRecordByLabel(String name);
 
   List<Article> findLatest();
-
-  @Deprecated
-  @Update("UPDATE article set status = #{status} WHERE id = #{id}")
-  void updateStatus(@Param("status") PostStatus status, @Param("id") long id);
-
-  List<Article> findByStatus(@Param("status") PostStatus status,
-          @Param("pageNow") int pageNow, @Param("pageSize") int pageSize);
 
   List<Article> find(@Param("args") SearchForm args,
           @Param("pageNow") int offset, @Param("pageSize") int pageSize);

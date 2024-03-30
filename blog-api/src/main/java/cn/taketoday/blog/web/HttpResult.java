@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -18,13 +18,18 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.repository;
+package cn.taketoday.blog.web;
 
-import cn.taketoday.blog.model.Blogger;
-import cn.taketoday.stereotype.Repository;
+import cn.taketoday.lang.Nullable;
 
-@Repository
-public interface BloggerRepository extends DefaultRepository<Blogger, Integer> {
+/**
+ * The request result
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 2019-04-23 08:58
+ */
+public interface HttpResult {
 
-  Blogger getBlogger();
+  @Nullable
+  Object getData();
 }

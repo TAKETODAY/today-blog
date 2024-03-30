@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -31,9 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import cn.taketoday.blog.BlogConstant;
-import cn.taketoday.blog.ErrorMessage;
+import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.util.BlogUtils;
+import cn.taketoday.blog.web.ErrorMessage;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
@@ -84,7 +84,7 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
 
   @Override
   public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
-    if (getAttribute(request, BlogConstant.BLOGGER_INFO) == null) {
+    if (!Blogger.isPresent(getSession(request, false))) {
       // 非博主，进行限流
       HandlerMethod handlerMethod = HandlerMethod.unwrap(chain.getHandler());
       if (handlerMethod != null) {

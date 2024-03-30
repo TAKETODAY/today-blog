@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.controller;
@@ -26,7 +26,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import cn.taketoday.blog.BlogApplication;
-import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
@@ -84,7 +83,7 @@ class ArticleControllerTests {
 
   @Test
   @Transactional
-  void detail() throws Exception {
+  public void detail() throws Exception {
     ArticleForm form = new ArticleForm();
     form.uri = "test";
 
@@ -102,7 +101,7 @@ class ArticleControllerTests {
 
   @Test
   @Transactional(isolation = Isolation.READ_UNCOMMITTED)
-  void update() throws Exception {
+  public void update() throws Exception {
     ArticleForm form = new ArticleForm();
     form.uri = "test";
     mockMvc.perform(post("/api/articles")
@@ -143,7 +142,7 @@ class ArticleControllerTests {
 
     @Bean
     static SessionIdResolver sessionIdResolver() {
-      return HeaderSessionIdResolver.authenticationInfo();
+      return SessionIdResolver.authenticationInfo();
     }
 
     @Bean
@@ -153,8 +152,8 @@ class ArticleControllerTests {
         @Override
         public WebSession createSession(String id) {
           WebSession session = super.createSession(id);
-          session.setAttribute(BlogConstant.BLOGGER_INFO, new Blogger());
-          session.setAttribute(BlogConstant.USER_INFO, new User());
+          new Blogger().bindTo(session);
+          new User().bindTo(session);
           return session;
         }
 

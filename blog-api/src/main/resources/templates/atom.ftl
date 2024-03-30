@@ -22,15 +22,15 @@
               <url>${entry.image}</url>
             </image>
           </#if>
-        <link rel="alternate" type="text/html" href="${opt['site.host']}${contextPath}/articles/${entry.id}"/>
-        <id>${opt['site.host']}${contextPath}/articles/${entry.id}</id>
+        <link rel="alternate" type="text/html" href="${opt['site.host']}/articles/${entry.uri}"/>
+        <id>${opt['site.host']}/articles/${entry.uri}</id>
         <published>${entry.published}</published>
         <updated>${entry.updated}</updated>
         <summary>
           <![CDATA[${entry.summary}]]>
         </summary>
           <#list entry.categories as category>
-            <category term="${category}" href="${opt['site.host']}${contextPath}/tags/${category}"/>
+            <category term="${category}" href="${opt['site.host']}/tags/${category}"/>
           </#list>
       </entry>
     </#list>

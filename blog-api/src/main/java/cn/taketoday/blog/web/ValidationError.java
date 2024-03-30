@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -18,30 +18,25 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.repository;
+package cn.taketoday.blog.web;
 
-import org.apache.ibatis.annotations.Param;
-
-import java.util.Map;
-
-import cn.taketoday.blog.model.Category;
-import cn.taketoday.stereotype.Repository;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
- * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2018-10-10 19:42
+ * @author TODAY
+ * @since 2020/12/13 21:55
  */
-@Repository
-public interface CategoryRepository extends DefaultRepository<Category, String> {
+@Getter
+@Setter
+@AllArgsConstructor
+public class ValidationError {
 
-  @Deprecated
-  void updateArticleCount(@Param("name") String name);
+  private Object validation;
 
-  /**
-   * @param name
-   */
-  int findArticleCount(String name);
-
-  void updateById(Map<String, Object> model);
+  public static ValidationError failed(Object validation) {
+    return new ValidationError(validation);
+  }
 
 }

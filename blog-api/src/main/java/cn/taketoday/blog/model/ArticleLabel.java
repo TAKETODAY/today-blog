@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -17,16 +17,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
-package cn.taketoday.blog.repository;
 
-import cn.taketoday.blog.model.Option;
-import cn.taketoday.stereotype.Repository;
+package cn.taketoday.blog.model;
+
+import cn.taketoday.jdbc.persistence.Table;
+import lombok.Data;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2019-03-16 21:15
+ * @since 1.0 2024/2/14 18:13
  */
-@Repository
-public interface OptionRepository extends DefaultRepository<Option, String> {
+@Data
+@Table("article_label")
+public class ArticleLabel {
 
+  private Long labelId;
+
+  private Long articleId;
+
+  public ArticleLabel() { }
+
+  public ArticleLabel(Long labelId, Long articleId) {
+    this.labelId = labelId;
+    this.articleId = articleId;
+  }
+
+  public static ArticleLabel of(Long labelId, Long articleId) {
+    return new ArticleLabel(labelId, articleId);
+  }
 }
