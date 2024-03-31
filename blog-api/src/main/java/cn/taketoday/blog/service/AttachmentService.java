@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
@@ -24,7 +24,6 @@ import com.aliyun.oss.ClientException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,6 +46,7 @@ import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.multipart.MultipartFile;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 附件服务
@@ -55,31 +55,26 @@ import cn.taketoday.web.multipart.MultipartFile;
  * @since 2019-03-16 14:46
  */
 @Service
+@RequiredArgsConstructor
 public class AttachmentService {
-  private final EntityManager entityManager;
-  private final OssOperations ossOperations;
-  private final AttachmentRepository repository;
-  private final AttachmentConfig attachmentConfig;
-  private final RepositoryManager repositoryManager;
 
-  public AttachmentService(OssOperations ossOperations, AttachmentRepository repository,
-          AttachmentConfig attachmentConfig, RepositoryManager repositoryManager) {
-    this.repository = repository;
-    this.attachmentConfig = attachmentConfig;
-    this.repositoryManager = repositoryManager;
-    this.ossOperations = ossOperations;
-    this.entityManager = repositoryManager.getEntityManager();
-  }
+  private final EntityManager entityManager;
+
+  private final OssOperations ossOperations;
+
+  private final AttachmentRepository repository;
+
+  private final AttachmentConfig attachmentConfig;
+
+  private final RepositoryManager repositoryManager;
 
   /**
    * 新增附件信息
    *
    * @param attachment attachment
-   * @return Attachment
    */
-  public Attachment persist(Attachment attachment) {
+  public void persist(Attachment attachment) {
     repositoryManager.persist(attachment);
-    return attachment;
   }
 
   @Nullable
@@ -104,17 +99,8 @@ public class AttachmentService {
       return Pagination.empty();
     }
 
-    List<Attachment> rets = repository.filter(
-            form,
-            getPageNow(pageable.current(), pageable.size()),
-            pageable.size()
-    );
-
+    List<Attachment> rets = repository.filter(form, pageable.offset(), pageable.size());
     return Pagination.ok(rets, count, pageable);
-  }
-
-  protected int getPageNow(int pageNow, int pageSize) {
-    return (pageNow - 1) * pageSize;
   }
 
   public List<Attachment> pageable(int pageNow, int pageSize) {
@@ -194,19 +180,6 @@ public class AttachmentService {
 
   private File saveFile(MultipartFile file, String uploadUrl) throws IOException {
     File dest = attachmentConfig.getLocalFile(uploadUrl);
-    // fix #3 Upload file not found exception
-    File parentFile = dest.getParentFile();
-    if (!parentFile.exists()) {
-      parentFile.mkdirs();
-    }
-    /*
-     * The uploaded file is being stored on disk
-     * in a temporary location so move it to the
-     * desired file.
-     */
-    if (dest.exists()) {
-      Files.delete(dest.toPath());
-    }
     file.transferTo(dest);
     return dest;
   }
@@ -217,13 +190,14 @@ public class AttachmentService {
 
     try {
       File destFile = saveFile(file, uploadUri);
-      return repositoryManager.runInTransaction(status -> {
-        Attachment attachment = createAttachment(fileName, uploadUri, destFile);
-        ossOperations.uploadFile(uploadUri, destFile);
+      Attachment attachment = createAttachment(fileName, uploadUri, destFile);
+      repositoryManager.executeWithoutResult(status -> {
         attachment.setSync(true);
         persist(attachment);
-        return attachment;
+
+        ossOperations.uploadFile(uploadUri, destFile);
       });
+      return attachment;
     }
     catch (ClientException e) {
       throw new InternalServerException("附件OSS保存失败", e);

@@ -49,6 +49,7 @@ import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
+import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
@@ -63,10 +64,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "Articles")
 public class ArticleService implements InitializingBean {
+
   private final BlogConfig blogConfig;
+
   private final LabelService labelService;
+
+  private final EntityManager entityManager;
+
   private final RepositoryManager repository;
+
   private final CategoryService categoryService;
+
   private final ArticleRepository articleRepository;
 
   private final Rss rss = new Rss();
@@ -263,17 +271,8 @@ public class ArticleService implements InitializingBean {
   }
 
   public Pagination<Article> search(SearchForm from, Pageable pageable) {
-//    try (Query query = repository.createQuery(
-//            "SELECT COUNT(id) FROM article")) {
-//      query.executeUpdate();
-//    }
-
-    int count = articleRepository.getRecord(from);
-    if (count < 1) {
-      return Pagination.empty();
-    }
-    List<Article> articles = articleRepository.find(from, pageable.offset(), pageable.size());
-    return Pagination.ok(articles, count, pageable);
+    return entityManager.page(Article.class, from, pageable)
+            .map(page -> Pagination.ok(page.getRows(), page.getTotalRows().intValue(), pageable));
   }
 
   /**

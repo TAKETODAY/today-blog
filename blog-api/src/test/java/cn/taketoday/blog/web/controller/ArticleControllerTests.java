@@ -29,7 +29,7 @@ import cn.taketoday.blog.BlogApplication;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.web.controller.ArticleController.ArticleForm;
+import cn.taketoday.blog.web.console.ArticleForm;
 import cn.taketoday.context.annotation.Bean;
 import cn.taketoday.context.annotation.Configuration;
 import cn.taketoday.context.annotation.Import;

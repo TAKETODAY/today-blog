@@ -23,7 +23,7 @@ import { extractData, http } from '@/utils'
 export async function queryArticles(params, sort) {
   const { pageSize, current, ...rest } = params
   params = { ...rest, sort, size: pageSize, page: current }
-  return http.get('/api/articles/admin', { params }).then(extractData).then(data => {
+  return http.get('/api/console/articles', { params }).then(extractData).then(data => {
     return {
       ...data,
       success: true,
@@ -38,22 +38,9 @@ export async function getCategories() {
 }
 
 export async function toggleArticleStatus(id, status) {
-  return http.patch(`/api/articles/${id}?status=${status}`)
-}
-
-
-export async function create(data) {
-  return http.post('/api/books', data)
-}
-
-export async function update(book) {
-  return http.put(`/api/books/${book.id}`, book)
+  return http.patch(`/api/console/articles/${id}?status=${status}`)
 }
 
 export async function deleteArticle(article) {
-  return http.delete(`/api/articles/${article.id}`)
-}
-
-export async function toggleAlreadySold(id) {
-  return http.put(`/api/books/${id}/toggle-already-sold`)
+  return http.delete(`/api/console/articles/${article.id}`)
 }

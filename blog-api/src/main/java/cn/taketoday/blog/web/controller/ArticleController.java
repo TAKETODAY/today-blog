@@ -20,51 +20,40 @@
 
 package cn.taketoday.blog.web.controller;
 
-import java.time.LocalDateTime;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.ArticleItem;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.model.enums.PostStatus;
-import cn.taketoday.blog.model.form.SearchForm;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.util.BlogUtils;
-import cn.taketoday.blog.util.DateFormatter;
 import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
-import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
-import cn.taketoday.util.CollectionUtils;
-import cn.taketoday.util.StringUtils;
-import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.Interceptor;
 import cn.taketoday.web.annotation.PATCH;
-import cn.taketoday.web.annotation.POST;
-import cn.taketoday.web.annotation.PUT;
 import cn.taketoday.web.annotation.PathVariable;
-import cn.taketoday.web.annotation.RequestBody;
 import cn.taketoday.web.annotation.RequestHeader;
 import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RequestParam;
-import cn.taketoday.web.annotation.ResponseStatus;
 import cn.taketoday.web.annotation.RestController;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
 /**
+ * 公共页面文章接口
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-21 17:33
  */
@@ -222,121 +211,4 @@ class ArticleController {
     return article;
   }
 
-  /**
-   * 创建文章 API
-   */
-  @POST
-  @RequiresBlogger
-  @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "创建文章", content = "标题: [#{#form.title}]")
-  public void create(@RequestBody ArticleForm form) {
-    Article article = ArticleForm.forArticle(form, labelService);
-
-    if (StringUtils.isBlank(article.getUri())) {
-      article.setUri(form.title);
-    }
-
-    if (log.isDebugEnabled()) {
-      log.debug("创建新文章: [{}]", form.title);
-    }
-
-    articleService.saveArticle(article);
-  }
-
-  @PUT("/{id}")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @RequiresBlogger
-  @Logging(title = "更新文章", content = "更新文章: [#{#from.title}]")
-  public void update(@PathVariable("id") Long id, @RequestBody ArticleForm from) {
-    Article article = ArticleForm.forArticle(from, labelService);
-    article.setId(id);
-    article.setUpdateAt(LocalDateTime.now());
-    articleService.update(article);
-  }
-
-  @RequiresBlogger
-  @PATCH(path = "/{id}", params = "status")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
-  public void updateStatus(@PathVariable Long id, PostStatus status) {
-    articleService.updateStatusById(status, id);
-  }
-
-  @DELETE("/{id}")
-  @RequiresBlogger
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "删除文章", content = "删除文章: [#{#id}]")
-  public void delete(@PathVariable Long id) {
-    articleService.deleteById(id);
-  }
-
-  @GET("/admin")
-  @RequiresBlogger
-  public Pagination<Article> adminArticles(/*@RequestBody*/ SearchForm from, Pageable pageable) {
-    return articleService.search(from, pageable);
-  }
-
-  @Nullable
-  private static Set<Label> getLabels(ArticleForm from, LabelService labelService) {
-    if (CollectionUtils.isNotEmpty(from.labels)) {
-      var labels = new LinkedHashSet<Label>();
-      for (String label : from.labels) {
-        Label byName = labelService.getByName(label);
-        if (byName == null) {
-          byName = new Label().setName(label);
-          labelService.save(byName);
-        }
-        labels.add(byName);
-      }
-      return labels;
-    }
-    return null;
-  }
-
-  static class ArticleForm {
-
-    @Nullable
-    public String createAt;
-
-    public String category;
-    public String copyright;
-    public Set<String> labels;
-
-    public String cover;
-    public String title;
-    public PostStatus status;
-    public String summary;
-    public String content;
-    public String markdown;
-    public String password;
-
-    public String uri;
-
-    static Article forArticle(ArticleForm form, LabelService labelService) {
-      Set<Label> labels = getLabels(form, labelService);
-
-      Article article = new Article();
-
-      article.setLabels(labels);
-      article.setTitle(form.title);
-      article.setStatus(form.status);
-      article.setContent(form.content);
-      article.setSummary(form.summary);
-      article.setCategory(form.category);
-      article.setMarkdown(form.markdown);
-      article.setCopyright(form.copyright);
-      article.setPassword(StringUtils.hasText(form.password) ? form.password : null);
-      article.setCover(StringUtils.hasText(form.cover)
-                       ? form.cover
-                       : BlogUtils.getFirstImagePath(form.content)
-      );
-
-      article.setUri(form.uri);
-      if (StringUtils.hasText(form.createAt)) {
-        article.setCreateAt(DateFormatter.parse(form.createAt));
-      }
-      return article;
-    }
-
-  }
 }
