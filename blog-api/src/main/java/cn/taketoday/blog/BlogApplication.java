@@ -20,11 +20,8 @@
 
 package cn.taketoday.blog;
 
-import cn.taketoday.context.event.EventListener;
 import cn.taketoday.framework.Application;
 import cn.taketoday.framework.InfraApplication;
-import cn.taketoday.framework.context.event.ApplicationFailedEvent;
-import cn.taketoday.session.config.EnableWebSession;
 import lombok.CustomLog;
 
 /**
@@ -32,18 +29,12 @@ import lombok.CustomLog;
  * @since 2019-01-12 21:01
  */
 @CustomLog
-@EnableWebSession
 @InfraApplication
 public class BlogApplication {
 
   public static void main(String[] args) {
     Application.run(BlogApplication.class, args);
     log.info("----------------Application Started------------------");
-  }
-
-  @EventListener
-  public void appFailed(ApplicationFailedEvent event) {
-    log.info("----------------Application Started Failed ------------------", event.getException());
   }
 
 }

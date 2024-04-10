@@ -47,6 +47,7 @@ import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.session.config.EnableWebSession;
 import cn.taketoday.stereotype.Component;
 import cn.taketoday.web.config.ResourceHandlerRegistry;
 import cn.taketoday.web.config.ViewControllerRegistry;
@@ -60,6 +61,7 @@ import lombok.RequiredArgsConstructor;
  * @since 2019-05-26 17:28
  */
 @EnableCaching
+@EnableWebSession
 @RequiredArgsConstructor
 @DisableAllDependencyInjection
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
