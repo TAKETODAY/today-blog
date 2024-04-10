@@ -16,7 +16,6 @@ dependencies {
   implementation 'cn.taketoday:today-starter-netty'
   implementation 'cn.taketoday:today-starter-json'
   implementation 'cn.taketoday:today-starter-validation'
-  implementation 'cn.taketoday:today-mybatis'
   implementation 'cn.taketoday:today-starter-jdbc'
   implementation 'cn.taketoday:today-starter-freemarker'
   implementation 'org.kohsuke:github-api:1.301'

@@ -81,9 +81,6 @@ mail:
     protocol: smtp
   userName:
 
-mybatis:
-  config-location: classpath:mybatis-config.xml
-
 site:
   subTitle: 代码是我心中的一首诗
   version: v3.1
