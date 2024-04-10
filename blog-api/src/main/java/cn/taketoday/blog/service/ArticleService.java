@@ -36,8 +36,7 @@ import cn.taketoday.blog.model.feed.Atom;
 import cn.taketoday.blog.model.feed.Entry;
 import cn.taketoday.blog.model.feed.Item;
 import cn.taketoday.blog.model.feed.Rss;
-import cn.taketoday.blog.model.form.SearchForm;
-import cn.taketoday.blog.repository.ArticleRepository;
+import cn.taketoday.blog.model.form.ArticleSearchForm;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
@@ -59,6 +58,8 @@ import cn.taketoday.web.InternalServerException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
+import static cn.taketoday.jdbc.persistence.QueryCondition.isEqualsTo;
+
 @Service
 @CustomLog
 @RequiredArgsConstructor
@@ -74,8 +75,6 @@ public class ArticleService implements InitializingBean {
   private final RepositoryManager repository;
 
   private final CategoryService categoryService;
-
-  private final ArticleRepository articleRepository;
 
   private final Rss rss = new Rss();
   private final Atom atom = new Atom();
@@ -270,7 +269,7 @@ public class ArticleService implements InitializingBean {
     }
   }
 
-  public Pagination<Article> search(SearchForm from, Pageable pageable) {
+  public Pagination<Article> search(ArticleSearchForm from, Pageable pageable) {
     return entityManager.page(Article.class, from, pageable)
             .map(page -> Pagination.ok(page.getRows(), page.getTotalRows().intValue(), pageable));
   }
@@ -498,15 +497,18 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'countBy_'+#status")
   public int countByStatus(PostStatus status) {
-    return articleRepository.getStatusRecord(status);
+    return entityManager.count(Article.class, isEqualsTo("status", status)).intValue();
   }
 
   /***
    * 通过typeid 得到数目
    */
-  @Cacheable(key = "'countCategory_'+#categoryId", unless = "#result==0")
-  public int countByCategory(String categoryId) {
-    return articleRepository.getRecordByCategory(categoryId);
+  @Cacheable(key = "'countCategory_'+#category", unless = "#result==0")
+  public int countByCategory(String category) {
+    ArticleSearchForm form = new ArticleSearchForm();
+    form.setCategory(category);
+    form.setStatus(PostStatus.PUBLISHED);
+    return entityManager.count(Article.class, form).intValue();
   }
 
   /**
@@ -514,7 +516,7 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'count'")
   public int count() {
-    return articleRepository.getTotalRecord();
+    return entityManager.count(Article.class).intValue();
   }
 
   /**

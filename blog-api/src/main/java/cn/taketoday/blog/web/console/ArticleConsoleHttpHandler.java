@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.enums.PostStatus;
-import cn.taketoday.blog.model.form.SearchForm;
+import cn.taketoday.blog.model.form.ArticleSearchForm;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.web.Pageable;
@@ -120,7 +120,7 @@ class ArticleConsoleHttpHandler {
    * 查询 文章列表 API
    */
   @GET
-  public Pagination<Article> articles(SearchForm from, Pageable pageable) {
+  public Pagination<Article> articles(ArticleSearchForm from, Pageable pageable) {
     return articleService.search(from, pageable);
   }
 

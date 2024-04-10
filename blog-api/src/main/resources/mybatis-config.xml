@@ -28,7 +28,6 @@
 
   <mappers>
     <mapper resource="mapper/UserMapper.xml" />
-    <mapper resource="mapper/ArticleMapper.xml" />
   </mappers>
 
 </configuration>
