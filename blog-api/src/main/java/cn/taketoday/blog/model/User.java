@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
@@ -31,6 +31,7 @@ import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.util.HashUtils;
 import cn.taketoday.core.AttributeAccessor;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.jdbc.persistence.Transient;
 import cn.taketoday.lang.Nullable;
 import lombok.Getter;
 import lombok.Setter;
@@ -74,7 +75,8 @@ public class User implements Serializable {
   /** email notification */
   private Boolean notification;
 
-  private boolean isBlogger;
+  @Transient
+  private boolean blogger;
 
   public User() {
 
@@ -92,6 +94,7 @@ public class User implements Serializable {
     return notification == null || notification;
   }
 
+  @Transient
   public boolean isDefaultPassword() {
     return DEFAULT_PASSWORD.equals(password);
   }
@@ -109,7 +112,7 @@ public class User implements Serializable {
             .append("avatar", avatar)
             .append("introduce", introduce)
             .append("background", background)
-            .append("isBlogger", isBlogger)
+            .append("isBlogger", blogger)
             .toString();
   }
 
@@ -119,7 +122,7 @@ public class User implements Serializable {
       return true;
     if (!(o instanceof final User user))
       return false;
-    return isBlogger == user.isBlogger
+    return blogger == user.blogger
             && status == user.status
             && Objects.equals(id, user.id)
             && Objects.equals(name, user.name)
@@ -135,7 +138,7 @@ public class User implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, status, name, email, site, type, password, avatar, introduce, background, notification, isBlogger);
+    return Objects.hash(id, status, name, email, site, type, password, avatar, introduce, background, notification, blogger);
   }
 
   /**
