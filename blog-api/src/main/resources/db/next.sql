@@ -37,3 +37,7 @@ create table t_page_view
 
     `create_at`       datetime default CURRENT_TIMESTAMP not null
 ) comment 'page view stat';
+
+alter table article
+    modify update_at datetime default CURRENT_TIMESTAMP not null comment '更新时间',
+    modify uri varchar(255) not null comment '文章URI访问地址';
