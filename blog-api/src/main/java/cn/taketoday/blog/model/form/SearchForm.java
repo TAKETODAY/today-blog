@@ -31,7 +31,7 @@ import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.core.Pair;
 import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.jdbc.persistence.ConditionHandler;
+import cn.taketoday.jdbc.persistence.ConditionStatement;
 import cn.taketoday.jdbc.persistence.EntityMetadata;
 import cn.taketoday.jdbc.persistence.EntityProperty;
 import cn.taketoday.jdbc.persistence.Order;
@@ -48,7 +48,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class SearchForm implements ConditionHandler {
+public class SearchForm implements ConditionStatement {
 
   @Nullable
   private String q;

@@ -204,7 +204,7 @@ public class ArticleService implements InitializingBean {
             SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
             FROM article WHERE status = ? order by pv DESC LIMIT ?""")) {
       query.addParameter(PostStatus.PUBLISHED);
-      query.addParameter(pageable.size(20));
+      query.addParameter(pageable.pageSize(20));
       return applyTags(query.fetch(ArticleItem.class));
     }
   }
@@ -212,7 +212,7 @@ public class ArticleService implements InitializingBean {
   /**
    * 获取首页文章
    */
-  @Cacheable(key = "'home-'+#pageable.current()+'-'+#pageable.size()")
+  @Cacheable(key = "'home-'+#pageable.pageNumber()+'-'+#pageable.pageSize()")
   public Pagination<ArticleItem> getHomeArticles(Pageable pageable) {
     try (JdbcConnection connection = repository.open()) {
       try (Query countQuery = connection.createQuery(
@@ -231,7 +231,7 @@ public class ArticleService implements InitializingBean {
         try (NamedQuery query = repository.createNamedQuery(sql)) {
           query.addParameter("offset", pageable.offset());
           query.addParameter("status", PostStatus.PUBLISHED);
-          query.addParameter("pageSize", pageable.size());
+          query.addParameter("pageSize", pageable.pageSize());
 
           return fetchArticleItems(pageable, count, query);
         }
@@ -263,7 +263,7 @@ public class ArticleService implements InitializingBean {
 
           dataQuery.addParameter("q", "%" + q + "%");
           dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("size", pageable.size());
+          dataQuery.addParameter("size", pageable.pageSize());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -307,7 +307,7 @@ public class ArticleService implements InitializingBean {
           dataQuery.addParameter("name", label);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
           dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("size", pageable.size());
+          dataQuery.addParameter("size", pageable.pageSize());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -337,7 +337,7 @@ public class ArticleService implements InitializingBean {
           dataQuery.addParameter("name", categoryName);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
           dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("pageSize", pageable.size());
+          dataQuery.addParameter("pageSize", pageable.pageSize());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }

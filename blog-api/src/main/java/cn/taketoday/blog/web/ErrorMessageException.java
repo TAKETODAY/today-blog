@@ -62,13 +62,13 @@ public class ErrorMessageException extends NoStackTraceRuntimeException implemen
     return new ErrorMessageException(message, null, status);
   }
 
-  public static void notNull(Object obj, String message) {
+  public static void notNull(@Nullable Object obj, String message) {
     if (obj == null) {
       throw ErrorMessageException.failed(message, HttpStatus.NOT_FOUND);
     }
   }
 
-  public static void notNull(Object obj, Supplier<String> supplier) {
+  public static void notNull(@Nullable Object obj, Supplier<String> supplier) {
     if (obj == null) {
       throw new ErrorMessageException(supplier.get());
     }

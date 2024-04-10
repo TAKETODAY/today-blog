@@ -37,6 +37,7 @@ import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.http.HttpStatus;
+import cn.taketoday.jdbc.persistence.Page;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.web.ResponseStatusException;
 import cn.taketoday.web.annotation.DELETE;
@@ -63,6 +64,7 @@ import jakarta.validation.constraints.NotNull;
 class CommentController {
 
   private final CommentConfig commentConfig;
+
   private final CommentService commentService;
 
   public CommentController(CommentConfig commentConfig, CommentService commentService) {
@@ -93,10 +95,10 @@ class CommentController {
   @ResponseStatus(HttpStatus.CREATED)
   @Logging(title = "用户评论", content = "用户：[#{#loginInfo.loginUser.name}] " +
           "评论了文章:[#{@articleService.getById(#from.articleId).title}] 回复了:[#{#from.commentId}]")
-  public void post(@RequiresUser LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
+  public void create(@RequiresUser LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
     Comment comment = new Comment();
     comment.setUser(loginInfo.getLoginUser());
-    comment.setUserId(loginInfo.getLoginUser().getId());
+    comment.setUserId(loginInfo.getLoginUserId());
     comment.setContent(from.content);
     comment.setCommentId(from.commentId);
     comment.setArticleId(from.articleId);
@@ -154,13 +156,14 @@ class CommentController {
 
   @GET("/users")
   public Pagination<Comment> getByUser(User userInfo, Pageable pageable) {
-    int rowCount = commentService.countByUser(userInfo);
-    assertFound(pageable, rowCount);
-    return Pagination.ok(commentService.getByUser(userInfo, pageable), rowCount, pageable);
+    Page<Comment> byUser = commentService.getByUser(userInfo, pageable);
+    assertFound(pageable, byUser.getTotalRows().intValue());
+    return Pagination.from(byUser);
   }
 
+  @SuppressWarnings("removal")
   protected void assertFound(Pageable pageable, int rowCount) {
-    if (BlogUtils.notFound(pageable.current(), BlogUtils.pageCount(rowCount, pageable.size()))) {
+    if (BlogUtils.notFound(pageable.pageNumber(), BlogUtils.pageCount(rowCount, pageable.pageSize()))) {
       throw ErrorMessageException.failed("分页不存在");
     }
   }

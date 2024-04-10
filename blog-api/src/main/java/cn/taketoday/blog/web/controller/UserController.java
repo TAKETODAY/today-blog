@@ -42,6 +42,8 @@ import cn.taketoday.blog.web.interceptor.NoRequestLimit;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpStatus;
+import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.jdbc.persistence.Page;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;
@@ -65,10 +67,13 @@ import lombok.Setter;
 @RequestLimit(unit = TimeUnit.MINUTES)
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
-public class UserController {
+class UserController {
 
   private final UserService userService;
+
   private final AttachmentService attachmentService;
+
+  private final EntityManager entityManager;
 
   // ------------------------ api
 
@@ -76,14 +81,14 @@ public class UserController {
   @NoRequestLimit
   @RequiresBlogger
   public Pagination<User> get(Pageable pageable) {
-    int rowCount = userService.count();
-    assertFound(pageable, rowCount);
-    return Pagination.ok(userService.get(pageable), rowCount, pageable);
+    Page<User> page = entityManager.page(User.class, pageable);
+    assertFound(pageable, page.getTotalRows().intValue());
+    return Pagination.from(page);
   }
 
+  @SuppressWarnings("removal")
   protected void assertFound(Pageable pageable, int rowCount) {
-
-    if (BlogUtils.notFound(pageable.current(), BlogUtils.pageCount(rowCount, pageable.size()))) {
+    if (BlogUtils.notFound(pageable.pageNumber(), BlogUtils.pageCount(rowCount, pageable.pageSize()))) {
       throw ErrorMessageException.failed("分页不存在");
     }
   }
@@ -92,8 +97,9 @@ public class UserController {
   @NoRequestLimit
   @RequiresBlogger
   public Json update(@PathVariable long id, @Valid @RequestBody UserSettingsForm form) {
-
     User oldUser = userService.getById(id);
+    ErrorMessageException.notNull(oldUser, "用户不存在");
+
     User user = new User();
     boolean change = false;
     if (!Objects.equals(form.name, oldUser.getName())) {

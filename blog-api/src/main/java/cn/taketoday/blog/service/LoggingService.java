@@ -219,7 +219,7 @@ public class LoggingService {
         try (NamedQuery dataQuery = connection.createNamedQuery(
                 "SELECT * FROM logging ORDER BY id DESC LIMIT :pageNow, :pageSize")) {
           dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.size());
+          dataQuery.addParameter("pageSize", pageable.pageSize());
           List<Operation> all = dataQuery.fetch(Operation.class);
           return Pagination.ok(all, count, pageable);
         }
@@ -228,7 +228,7 @@ public class LoggingService {
   }
 
   private static int pageNow(Pageable pageable) {
-    return (pageable.current() - 1) * pageable.size();
+    return (pageable.pageNumber() - 1) * pageable.pageSize();
   }
 
 }

@@ -46,9 +46,11 @@ import cn.taketoday.web.handler.method.ResolvableMethodParameter;
 public class PageableMethodArgumentResolver implements ParameterResolvingStrategy {
 
   private final BlogConfig blogConfig;
+
   private final UserSessionResolver sessionResolver;
 
   private String pageRequestParameterName = BlogConstant.PARAMETER_CURRENT;
+
   private String pageSizeRequestParameterName = BlogConstant.PARAMETER_SIZE;
 
   public PageableMethodArgumentResolver(BlogConfig blogConfig, UserSessionResolver sessionResolver) {
@@ -90,7 +92,7 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
     }
 
     @Override
-    public int current() {
+    public int pageNumber() {
       if (current == null) {
         String parameter = request.getParameter(pageRequestParameterName);
         if (StringUtils.isEmpty(parameter)) {
@@ -104,7 +106,7 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
     }
 
     @Override
-    public int size() {
+    public int pageSize() {
       if (size == null) {
         int size;
         String parameter = request.getParameter(pageSizeRequestParameterName);

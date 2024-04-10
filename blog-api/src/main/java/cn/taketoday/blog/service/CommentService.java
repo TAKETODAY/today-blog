@@ -40,6 +40,8 @@ import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.jdbc.persistence.OrderBy;
+import cn.taketoday.jdbc.persistence.Page;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
@@ -96,7 +98,7 @@ public class CommentService {
 
     int size = comments.size();
     int offset = pageable.offset();
-    int toIndex = offset + pageable.size();
+    int toIndex = offset + pageable.pageSize();
     if (size <= toIndex) {
       toIndex = size;
     }
@@ -343,34 +345,6 @@ public class CommentService {
     }
   }
 
-  //  @Cacheable(key = "'u_'+#userInfo.id+'p'+#pageNow+'s'+#pageSize")
-  public List<Comment> getByUser(User userInfo, int pageNow, int pageSize) {
-    try (Query query = repository.createQuery(""" 
-            SELECT * FROM t_comment WHERE `user_id` = ? ORDER BY id DESC LIMIT ?, ?""")) {
-
-      query.addParameter(userInfo.getId());
-      query.addParameter((pageNow - 1) * pageSize);
-      query.addParameter(pageSize);
-      List<Comment> commentsToUse = query.fetch(Comment.class);
-      if (CollectionUtils.isNotEmpty(commentsToUse)) {
-        for (Comment comment : commentsToUse) {
-          comment.setUser(userService.getById(comment.getUserId()));
-        }
-      }
-      return commentsToUse;
-    }
-
-  }
-
-  //  @Cacheable(key = "'ByUser_'+#userInfo.id")
-  public int countByUser(User userInfo) {
-    try (Query countQuery = repository.createQuery(
-            "SELECT COUNT(id) FROM t_comment WHERE `user_id` = ?")) {
-      countQuery.addParameter(userInfo.getId());
-      return countQuery.fetchScalar(int.class);
-    }
-  }
-
   @Transactional
   public void closeEmailNotification() {
   }
@@ -385,7 +359,7 @@ public class CommentService {
     try (Query query = repository.createQuery(""" 
             SELECT * FROM t_comment ORDER BY id DESC LIMIT ?, ?""")) {
       query.addParameter(pageable.offset());
-      query.addParameter(pageable.size());
+      query.addParameter(pageable.pageSize());
       List<Comment> commentsToUse = query.fetch(Comment.class);
       if (CollectionUtils.isNotEmpty(commentsToUse)) {
         for (Comment comment : commentsToUse) {
@@ -397,11 +371,26 @@ public class CommentService {
   }
 
   public List<Comment> getByStatus(CommentStatus valueOf, Pageable pageable) {
-    return getByStatus(valueOf, pageable.current(), pageable.size());
+    return getByStatus(valueOf, pageable.pageNumber(), pageable.pageSize());
   }
 
-  public List<Comment> getByUser(User userInfo, Pageable pageable) {
-    return getByUser(userInfo, pageable.current(), pageable.size());
+  public Page<Comment> getByUser(User userInfo, Pageable pageable) {
+    return entityManager.page(Comment.class, new PageByUserQuery(userInfo), pageable)
+            .peek(comment -> comment.setUser(userService.getById(comment.getUserId())));
   }
 
+  @OrderBy(clause = "id DESC")
+  static class PageByUserQuery {
+
+    final Long userId;
+
+    PageByUserQuery(User userInfo) {
+      this.userId = userInfo.getId();
+    }
+
+    public Long getUserId() {
+      return userId;
+    }
+
+  }
 }

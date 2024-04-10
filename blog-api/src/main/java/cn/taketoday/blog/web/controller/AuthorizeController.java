@@ -100,6 +100,7 @@ class AuthorizeController extends SessionManagerOperations {
   private final BloggerService bloggerService;
   private final AttachmentService attachmentService;
 
+  @Nullable
   private Map<String, OauthMetadata> oauthMetadata;
 
   public AuthorizeController(SessionManager sessionManager,

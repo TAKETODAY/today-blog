@@ -31,6 +31,7 @@ import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
 import cn.taketoday.http.HttpStatus;
+import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.web.ResponseStatusException;
 
@@ -48,11 +49,11 @@ public class UserService {
   }
 
   public List<User> get(Pageable pageable) {
-    return get(pageable.current(), pageable.size());
+    return get(pageable.pageNumber(), pageable.pageSize());
   }
 
   public List<User> getByStatus(UserStatus status, Pageable pageable) {
-    return getByStatus(status, pageable.current(), pageable.size());
+    return getByStatus(status, pageable.pageNumber(), pageable.pageSize());
   }
 
   public String getAvatar(String email) {
@@ -73,6 +74,7 @@ public class UserService {
     }
   }
 
+  @Nullable
   @Cacheable(key = "'email_'+#email")
   public User getByEmail(String email) {
     return repository.findByEmail(email);
@@ -82,6 +84,7 @@ public class UserService {
     repository.save(user);
   }
 
+  @Nullable
   @Cacheable(key = "'ById_'+#id")
   public User getById(long id) {
     return repository.findById(id);

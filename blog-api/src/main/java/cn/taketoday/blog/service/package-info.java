@@ -15,17 +15,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program. If not, see [https://www.gnu.org/licenses/]
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web;
+@NonNullApi
+@NonNullFields
+package cn.taketoday.blog.service;
 
-/**
- * 分页
- *
- * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2019-07-25 01:11
- */
-public interface Pageable extends cn.taketoday.jdbc.persistence.Pageable {
-
-}
+import cn.taketoday.lang.NonNullApi;
+import cn.taketoday.lang.NonNullFields;
