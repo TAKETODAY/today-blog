@@ -95,7 +95,7 @@ public class LabelController {
       throw ErrorMessageException.failed("标签名未更改");
     }
 
-    labelService.update(label.setName(name));
+    labelService.updateById(label.setName(name));
   }
 
   @DELETE("/{id}")
