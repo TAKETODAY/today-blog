@@ -22,6 +22,7 @@ package cn.taketoday.blog.model.form;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +32,7 @@ import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.core.Pair;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.format.annotation.DateTimeFormat;
 import cn.taketoday.jdbc.persistence.ConditionStatement;
 import cn.taketoday.jdbc.persistence.EntityMetadata;
 import cn.taketoday.jdbc.persistence.EntityProperty;
@@ -62,6 +64,14 @@ public class ArticleSearchForm implements ConditionStatement {
   @Nullable
   private Map<String, OrderBy> sort;
 
+  @Nullable
+  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  private LocalDateTime[] createAt;
+
+  @Nullable
+  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  private LocalDateTime[] updateAt;
+
   @Override
   public void renderWhereClause(EntityMetadata metadata, List<Restriction> restrictions) {
     if (StringUtils.hasText(q)) {
@@ -75,6 +85,15 @@ public class ArticleSearchForm implements ConditionStatement {
     if (status != null) {
       restrictions.add(Restriction.equal("status"));
     }
+
+    if (createAt != null && createAt.length == 2) {
+      restrictions.add(Restriction.plain("create_at between ? and ?"));
+    }
+
+    if (updateAt != null && updateAt.length == 2) {
+      restrictions.add(Restriction.plain("update_at between ? and ?"));
+    }
+
   }
 
   @Nullable
@@ -110,8 +129,19 @@ public class ArticleSearchForm implements ConditionStatement {
     }
 
     if (status != null) {
-      smt.setInt(idx, status.getValue());
+      smt.setInt(idx++, status.getValue());
     }
+
+    if (createAt != null && createAt.length == 2) {
+      smt.setObject(idx++, createAt[0]);
+      smt.setObject(idx++, createAt[1]);
+    }
+
+    if (updateAt != null && updateAt.length == 2) {
+      smt.setObject(idx++, updateAt[0]);
+      smt.setObject(idx, updateAt[1]);
+    }
+
   }
 
   @Override

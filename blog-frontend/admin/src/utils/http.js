@@ -57,6 +57,10 @@ NProgress.configure({
 // http.defaults.baseURL = apiServer
 http.defaults.withCredentials = true
 http.defaults.timeout = 30000
+http.defaults.paramsSerializer = {
+  indexes: true
+}
+
 // http.defaults.headers.common['Authorization'] = AUTH_TOKEN;
 // http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
@@ -93,7 +97,7 @@ http.interceptors.response.use(function (response) {
 });
 
 
-const DEFAULT_CACHED_TIMEOUT = 10 * 1000  // 10s
+const DEFAULT_CACHED_TIMEOUT = 10*1000  // 10s
 
 export async function getCacheable(url) {
   startNProgress()
