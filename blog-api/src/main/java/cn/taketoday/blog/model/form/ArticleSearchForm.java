@@ -112,7 +112,7 @@ public class ArticleSearchForm implements ConditionStatement {
               .toList();
       return new MutableOrderByClause(list);
     }
-    return null;
+    return OrderByClause.plain("update_at DESC, create_at DESC");
   }
 
   @Override
