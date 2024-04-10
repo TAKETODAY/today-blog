@@ -50,7 +50,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ArticleSearchForm implements ConditionStatement {
+public class ArticleConditionForm implements ConditionStatement {
 
   @Nullable
   private String q;
@@ -158,7 +158,7 @@ public class ArticleSearchForm implements ConditionStatement {
   public boolean equals(Object o) {
     if (this == o)
       return true;
-    if (!(o instanceof final ArticleSearchForm that))
+    if (!(o instanceof final ArticleConditionForm that))
       return false;
     return status == that.status
             && Objects.equals(q, that.q)

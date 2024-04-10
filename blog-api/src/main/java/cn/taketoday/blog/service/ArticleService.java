@@ -36,7 +36,7 @@ import cn.taketoday.blog.model.feed.Atom;
 import cn.taketoday.blog.model.feed.Entry;
 import cn.taketoday.blog.model.feed.Item;
 import cn.taketoday.blog.model.feed.Rss;
-import cn.taketoday.blog.model.form.ArticleSearchForm;
+import cn.taketoday.blog.model.form.ArticleConditionForm;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
@@ -269,7 +269,7 @@ public class ArticleService implements InitializingBean {
     }
   }
 
-  public Pagination<Article> search(ArticleSearchForm from, Pageable pageable) {
+  public Pagination<Article> search(ArticleConditionForm from, Pageable pageable) {
     return entityManager.page(Article.class, from, pageable)
             .map(page -> Pagination.ok(page.getRows(), page.getTotalRows().intValue(), pageable));
   }
@@ -505,7 +505,7 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'countCategory_'+#category", unless = "#result==0")
   public int countByCategory(String category) {
-    ArticleSearchForm form = new ArticleSearchForm();
+    ArticleConditionForm form = new ArticleConditionForm();
     form.setCategory(category);
     form.setStatus(PostStatus.PUBLISHED);
     return entityManager.count(Article.class, form).intValue();
