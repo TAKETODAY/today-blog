@@ -24,7 +24,6 @@ import cn.taketoday.context.event.EventListener;
 import cn.taketoday.framework.Application;
 import cn.taketoday.framework.InfraApplication;
 import cn.taketoday.framework.context.event.ApplicationFailedEvent;
-import cn.taketoday.orm.mybatis.annotation.MapperScan;
 import cn.taketoday.session.config.EnableWebSession;
 import lombok.CustomLog;
 
@@ -35,7 +34,6 @@ import lombok.CustomLog;
 @CustomLog
 @EnableWebSession
 @InfraApplication
-@MapperScan("cn.taketoday.blog.repository")
 public class BlogApplication {
 
   public static void main(String[] args) {
