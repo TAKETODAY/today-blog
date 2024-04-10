@@ -121,7 +121,7 @@ class UserController {
 
     if (change) {
       user.setId(oldUser.getId());
-      userService.update(user);
+      userService.updateById(user);
       return Json.ok("资料修改成功");
     }
     return Json.failed("资料未更改");
@@ -177,7 +177,7 @@ class UserController {
     String path = attachment.getUri();
 
     if (!path.equals(loginUser.getAvatar())) { // not equals
-      userService.update(new User(loginUser.getId()).setAvatar(path));
+      userService.updateById(new User(loginUser.getId()).setAvatar(path));
       loginUser.setAvatar(path);
     }
     return Json.ok("修改成功", path);
@@ -197,7 +197,7 @@ class UserController {
 
     String path = attachment.getUri();
     if (!path.equals(loginUser.getBackground())) { // not equals
-      userService.update(new User(loginUser.getId()).setBackground(path));
+      userService.updateById(new User(loginUser.getId()).setBackground(path));
       loginUser.setBackground(path);
     }
     return Json.ok("修改成功", path);
@@ -236,7 +236,7 @@ class UserController {
 
     if (change) {
       user.setId(loginUser.getId());
-      userService.update(user);
+      userService.updateById(user);
       user.setBlogger(loginUser.isBlogger()); // @since 3.0 修复 更新后权限改变
 
       BeanProperties.copy(user, loginUser);
@@ -282,7 +282,7 @@ class UserController {
       throw ErrorMessageException.failed("密码未更改");
     }
 
-    userService.update(new User(userInfo.getId()).setPassword(newPassword));
+    userService.updateById(new User(userInfo.getId()).setPassword(newPassword));
 
     userInfo.setPassword(newPassword);
   }
@@ -310,7 +310,7 @@ class UserController {
     // Check User's Password
     if (HashUtils.getEncodedPassword(form.password).equals(userInfo.getPassword())) {
 
-      userService.update(new User(userInfo.getId()).setEmail(email));
+      userService.updateById(new User(userInfo.getId()).setEmail(email));
       userInfo.setEmail(email);
       return Json.ok("邮箱修改成功", userInfo);
     } // Password Incorrect.

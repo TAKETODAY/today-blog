@@ -26,8 +26,5 @@
     <!-- <package name="cn.taketoday.blog.model"/> -->
   </typeAliases>
 
-  <mappers>
-    <mapper resource="mapper/UserMapper.xml" />
-  </mappers>
 
 </configuration>

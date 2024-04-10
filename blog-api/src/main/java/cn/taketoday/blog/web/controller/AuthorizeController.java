@@ -528,7 +528,7 @@ class AuthorizeController extends SessionManagerOperations {
     user.setName(form.name);
     user.setIntroduce(form.introduce);
 
-    userService.update(user);
+    userService.updateById(user);
 
     // update to session
     loginUser.setName(form.name);
@@ -585,7 +585,7 @@ class AuthorizeController extends SessionManagerOperations {
       bloggerService.updatePassword(newPassword);
     }
 
-    userService.update(user);
+    userService.updateById(user);
   }
 
   public static class UserEmailForm {
@@ -619,7 +619,7 @@ class AuthorizeController extends SessionManagerOperations {
       user.setId(loginUser.getId());
 //      user.setMobilePhone(form.mobilePhone);
 
-      userService.update(user);
+      userService.updateById(user);
 
       loginUser.setEmail(form.email);
 //      loginUser.setMobilePhone(form.mobilePhone);
@@ -646,7 +646,7 @@ class AuthorizeController extends SessionManagerOperations {
     user.setId(loginUser.getId());
     user.setAvatar(uri);
 
-    userService.update(user);
+    userService.updateById(user);
     loginUser.setAvatar(uri);
 
     return loginUser;
