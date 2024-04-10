@@ -23,6 +23,9 @@ package cn.taketoday.blog.model.form;
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
+import cn.taketoday.jdbc.persistence.Like;
+import cn.taketoday.jdbc.persistence.OrderBy;
+import cn.taketoday.lang.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,10 +34,15 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@OrderBy(clause = "update_at DESC, create_at DESC")
 public class AttachmentForm {
 
-  private String name;
+  @Nullable
   private AttachmentType fileType;
+
+  @Like
+  @Nullable
+  private String name;
 
   @Override
   public boolean equals(Object o) {
@@ -49,4 +57,5 @@ public class AttachmentForm {
   public int hashCode() {
     return Objects.hash(name, fileType);
   }
+
 }

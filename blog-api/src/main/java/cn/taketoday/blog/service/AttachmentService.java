@@ -32,7 +32,6 @@ import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
-import cn.taketoday.blog.repository.AttachmentRepository;
 import cn.taketoday.blog.util.FileUtils;
 import cn.taketoday.blog.util.OssOperations;
 import cn.taketoday.blog.util.StringUtils;
@@ -41,6 +40,7 @@ import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.jdbc.persistence.Page;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
@@ -61,8 +61,6 @@ public class AttachmentService {
   private final EntityManager entityManager;
 
   private final OssOperations ossOperations;
-
-  private final AttachmentRepository repository;
 
   private final AttachmentConfig attachmentConfig;
 
@@ -90,21 +88,11 @@ public class AttachmentService {
    * 获取全部附件数量
    */
   public int count() {
-    return repository.getTotalRecord();
+    return entityManager.count(Attachment.class).intValue();
   }
 
   public Pagination<Attachment> filter(AttachmentForm form, Pageable pageable) {
-    int count = repository.getRecordFilter(form);
-    if (count < 1) {
-      return Pagination.empty();
-    }
-
-    List<Attachment> rets = repository.filter(form, pageable.offset(), pageable.pageSize());
-    return Pagination.ok(rets, count, pageable);
-  }
-
-  public List<Attachment> pageable(int pageNow, int pageSize) {
-    return repository.find((pageNow - 1) * pageSize, pageSize);
+    return Pagination.from(entityManager.page(Attachment.class, form, pageable));
   }
 
   public void updateById(Attachment model) {
@@ -225,12 +213,8 @@ public class AttachmentService {
     return attachment;
   }
 
-  public List<Attachment> getLatest() {
-    return repository.findLatest();
-  }
-
-  public List<Attachment> pageable(Pageable pageable) {
-    return pageable(pageable.pageNumber(), pageable.pageSize());
+  public Page<Attachment> pageable(Pageable pageable) {
+    return entityManager.page(Attachment.class, pageable);
   }
 
   @Transactional

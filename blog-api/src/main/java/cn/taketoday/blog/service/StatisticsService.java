@@ -29,8 +29,6 @@ import java.util.Map;
 import cn.taketoday.blog.model.enums.StatisticsField;
 import cn.taketoday.blog.model.form.PageViewStatistics;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.cache.CacheManager;
-import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.core.JdbcOperations;
 import cn.taketoday.jdbc.core.PreparedStatementCallback;
 import cn.taketoday.stereotype.Service;
@@ -50,8 +48,6 @@ public class StatisticsService {
 //          .build();
 
   private final JdbcOperations template;
-  private final RepositoryManager repositoryManager;
-  final CacheManager cacheManager;
 
   public Map<String, Integer> analyze(StatisticsField type) {
     String name = type.name();

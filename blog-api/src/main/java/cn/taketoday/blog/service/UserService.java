@@ -59,7 +59,7 @@ public class UserService {
   public String getAvatar(String email) {
     User findByEmail = getByEmail(email);
     if (findByEmail == null) {
-      throw ErrorMessageException.failed("用户'" + email + "'不存在");
+      throw ErrorMessageException.failed("用户 '%s' 不存在".formatted(email));
     }
     return findByEmail.getAvatar();
   }
