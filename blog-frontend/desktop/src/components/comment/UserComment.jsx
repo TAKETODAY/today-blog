@@ -140,9 +140,9 @@ class UserComment extends React.Component {
         key: 'time',
         render: (text, comment, _) => {
           return <>
-            <Tooltip title={ new Date(comment.id).toLocaleString() }>
+            <Tooltip title={ moment(comment.createAt).format("llll") }>
               <span style={ { cursor: 'pointer' } }>
-                <time> { moment(comment.id).fromNow() } </time>
+                <time> { moment(comment.createAt).fromNow() } </time>
               </span>
             </Tooltip>
           </>
