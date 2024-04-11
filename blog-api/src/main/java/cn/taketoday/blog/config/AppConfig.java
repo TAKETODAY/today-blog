@@ -46,7 +46,7 @@ import cn.taketoday.context.annotation.Role;
 import cn.taketoday.core.Ordered;
 import cn.taketoday.core.annotation.Order;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.session.config.EnableWebSession;
 import cn.taketoday.stereotype.Component;
 import cn.taketoday.web.config.ResourceHandlerRegistry;

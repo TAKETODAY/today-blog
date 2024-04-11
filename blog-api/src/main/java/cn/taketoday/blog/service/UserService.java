@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
@@ -27,14 +27,14 @@ import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
 import cn.taketoday.http.HttpStatus;
-import cn.taketoday.jdbc.persistence.EntityManager;
-import cn.taketoday.jdbc.persistence.Id;
-import cn.taketoday.jdbc.persistence.Table;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.EntityManager;
+import cn.taketoday.persistence.Id;
+import cn.taketoday.persistence.Table;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.web.ResponseStatusException;
 
-import static cn.taketoday.jdbc.persistence.QueryCondition.isEqualsTo;
+import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

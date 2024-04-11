@@ -26,6 +26,6 @@ package cn.taketoday.blog.web;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-07-25 01:11
  */
-public interface Pageable extends cn.taketoday.jdbc.persistence.Pageable {
+public interface Pageable extends cn.taketoday.persistence.Pageable {
 
 }

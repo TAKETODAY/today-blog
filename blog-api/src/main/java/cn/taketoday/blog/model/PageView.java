@@ -22,8 +22,8 @@ package cn.taketoday.blog.model;
 
 import java.time.LocalDateTime;
 
-import cn.taketoday.jdbc.persistence.Id;
-import cn.taketoday.jdbc.persistence.Table;
+import cn.taketoday.persistence.Id;
+import cn.taketoday.persistence.Table;
 import lombok.Data;
 
 /**

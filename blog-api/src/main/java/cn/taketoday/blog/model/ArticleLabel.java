@@ -20,7 +20,7 @@
 
 package cn.taketoday.blog.model;
 
-import cn.taketoday.jdbc.persistence.Table;
+import cn.taketoday.persistence.Table;
 import lombok.Data;
 
 /**

@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.jdbc.persistence.Id;
+import cn.taketoday.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 

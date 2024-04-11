@@ -31,7 +31,7 @@ import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpHeaders;
 import cn.taketoday.ip2region.IpLocation;
-import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;

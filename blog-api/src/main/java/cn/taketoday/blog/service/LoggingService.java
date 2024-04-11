@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
@@ -42,8 +42,8 @@ import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.lang.Constant;
+import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import lombok.CustomLog;
 

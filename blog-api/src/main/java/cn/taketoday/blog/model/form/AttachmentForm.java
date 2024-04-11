@@ -24,9 +24,9 @@ import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.jdbc.persistence.Like;
-import cn.taketoday.jdbc.persistence.OrderBy;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.Like;
+import cn.taketoday.persistence.OrderBy;
 import lombok.Getter;
 import lombok.Setter;
 

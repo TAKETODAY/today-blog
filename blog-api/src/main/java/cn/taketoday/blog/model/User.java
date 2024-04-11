@@ -31,8 +31,8 @@ import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.util.HashUtils;
 import cn.taketoday.core.AttributeAccessor;
 import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.jdbc.persistence.Transient;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 

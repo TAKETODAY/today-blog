@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,9 +45,9 @@ import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
@@ -58,7 +55,7 @@ import cn.taketoday.web.InternalServerException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
-import static cn.taketoday.jdbc.persistence.QueryCondition.isEqualsTo;
+import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
 
 @Service
 @CustomLog

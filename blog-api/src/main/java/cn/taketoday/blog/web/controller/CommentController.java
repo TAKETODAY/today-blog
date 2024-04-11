@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.controller;
@@ -37,8 +37,8 @@ import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.http.HttpStatus;
-import cn.taketoday.jdbc.persistence.Page;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.Page;
 import cn.taketoday.web.ResponseStatusException;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;

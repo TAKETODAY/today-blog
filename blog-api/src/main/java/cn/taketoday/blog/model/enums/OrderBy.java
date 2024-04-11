@@ -20,7 +20,7 @@
 
 package cn.taketoday.blog.model.enums;
 
-import cn.taketoday.jdbc.persistence.Order;
+import cn.taketoday.persistence.Order;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
