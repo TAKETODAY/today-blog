@@ -102,8 +102,6 @@ logging:
     path: ./logs
   level:
     root: info
-  pattern:
-    dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'
   group:
     blog: cn.taketoday.blog
     netty: io.netty

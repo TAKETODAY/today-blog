@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -132,7 +129,7 @@ public class OptionService {
     }
     catch (RuntimeException e) {
       LoggerFactory.getLogger(OptionService.class).error("When resolve binding options", e);
-      throw InternalServerException.failed(e);
+      throw InternalServerException.failed(null, e);
     }
   }
 

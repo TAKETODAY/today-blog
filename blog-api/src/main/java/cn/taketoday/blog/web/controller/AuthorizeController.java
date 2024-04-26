@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -288,7 +285,7 @@ class AuthorizeController extends SessionManagerOperations {
       github.callback = "/api/auth/github/callback";
       github.accessTokenUrl = "https://github.com/login/oauth/access_token?client_id=";
       github.oauthUserFunction = accessTokenInfo -> {
-        MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromHttpUrl("https://github.com")
+        MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUriString("https://github.com")
                 .query(accessTokenInfo)
                 .build()
                 .getQueryParams();
