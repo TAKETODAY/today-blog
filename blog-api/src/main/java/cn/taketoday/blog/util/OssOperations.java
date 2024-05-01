@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.util;
@@ -42,19 +39,19 @@ public class OssOperations {
   }
 
   public boolean isOssEnabled() {
-    return config.isEnabled();
+    return config.enabled;
   }
 
   public void removeFile(String filePath) {
-    obtainClient().deleteObject(config.getBucket(), getLocation(filePath));
+    obtainClient().deleteObject(config.bucket, getLocation(filePath));
   }
 
   public void uploadFile(String location, File destFile) {
-    obtainClient().putObject(config.getBucket(), getLocation(location), destFile);
+    obtainClient().putObject(config.bucket, getLocation(location), destFile);
   }
 
   public boolean exists(String location) {
-    return obtainClient().doesObjectExist(config.getBucket(), getLocation(location));
+    return obtainClient().doesObjectExist(config.bucket, getLocation(location));
   }
 
   OSSClient obtainClient() {
