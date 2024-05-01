@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,32 +17,27 @@
 
 package cn.taketoday.blog.web;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.lang.Nullable;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2020-04-16 14:23
  */
-public class ErrorMessage implements HttpResult {
+public final class ErrorMessage implements HttpResult {
 
+  @Nullable
   private final String message;
 
-  public ErrorMessage(String message) {
+  ErrorMessage(@Nullable String message) {
     this.message = message;
   }
 
-  public static ErrorMessage failed(String message) {
+  public static ErrorMessage failed(@Nullable String message) {
     return new ErrorMessage(message);
   }
 
-  @Override
-  @JsonIgnore
-  public Object getData() {
-    return message;
-  }
-
+  @Nullable
   public String getMessage() {
     return message;
   }

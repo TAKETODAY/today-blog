@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +15,19 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.controller;
+package cn.taketoday.blog.web.http;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import cn.taketoday.blog.config.ConditionalOnDevelop;
 import cn.taketoday.http.HttpMethod;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
@@ -36,6 +36,8 @@ import cn.taketoday.web.HandlerMatchingMetadata;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.GetMapping;
 import cn.taketoday.web.annotation.RequestBody;
+import cn.taketoday.web.annotation.RequestMapping;
+import cn.taketoday.web.annotation.RestController;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
@@ -44,9 +46,11 @@ import io.prometheus.client.exporter.common.TextFormat;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2023/5/29 15:03
  */
-//@RestController
-//@RequestMapping("/api/prometheus")
+@RestController
+@ConditionalOnDevelop
+@RequestMapping("/api/prometheus")
 public class PrometheusScrapeEndpoint {
+
   private static final MediaType contentType = MediaType.parseMediaType(
           "text/plain;version=0.0.4;charset=utf-8");
 
@@ -61,16 +65,14 @@ public class PrometheusScrapeEndpoint {
   }
 
   @GetMapping("/scrape")
-  public ResponseEntity<String> scrape(
-          RequestContext request, @RequestBody(required = false) Map<String, String> body) {
+  public ResponseEntity<String> scrape(RequestContext request, @Nullable @RequestBody Map<String, String> body) {
     Map<String, Object> arguments = getArguments(request, body);
-    Set<String> includedNames = (Set<String>) arguments.get("includedNames");
+    Collection<String> includedNames = (Set<String>) arguments.get("includedNames");
     try {
       Writer writer = new StringWriter(nextMetricsScrapeSize);
-      Enumeration<Collector.MetricFamilySamples> samples
-              = includedNames != null
-                ? collectorRegistry.filteredMetricFamilySamples(includedNames)
-                : collectorRegistry.metricFamilySamples();
+      Enumeration<Collector.MetricFamilySamples> samples = includedNames != null
+              ? collectorRegistry.filteredMetricFamilySamples(new LinkedHashSet<>(includedNames))
+              : collectorRegistry.metricFamilySamples();
       TextFormat.write004(writer, samples);
 
       String scrapePage = writer.toString();
@@ -85,7 +87,7 @@ public class PrometheusScrapeEndpoint {
     }
   }
 
-  private Map<String, Object> getArguments(RequestContext request, Map<String, String> body) {
+  private Map<String, Object> getArguments(RequestContext request, @Nullable Map<String, String> body) {
     Map<String, Object> arguments = new LinkedHashMap<>(getTemplateVariables(request));
 
     if (body != null && HttpMethod.POST.equals(request.getMethod())) {

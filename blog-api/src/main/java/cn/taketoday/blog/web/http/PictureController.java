@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +12,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.controller;
+package cn.taketoday.blog.web.http;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -33,9 +30,9 @@ import javax.imageio.ImageIO;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.config.AttachmentConfig;
+import cn.taketoday.blog.config.ConditionalOnDevelop;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
-import cn.taketoday.context.annotation.Profile;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.RequestMapping;
@@ -47,7 +44,7 @@ import lombok.RequiredArgsConstructor;
  * @since 2018-09-16 13:30
  */
 @RestController
-@Profile("dev")
+@ConditionalOnDevelop
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @RequestLimit(count = 5, unit = TimeUnit.MINUTES, errorMessage = "一分钟最多请求5次")
