@@ -344,7 +344,7 @@ public class ArticleService implements InitializingBean {
    * 刷新订阅文章
    */
   public void refreshFeedArticles() {
-    int listSize = blogConfig.getArticleFeedListSize();
+    int listSize = blogConfig.articleFeedListSize;
     try (Query query = repository.createQuery(
             "SELECT * FROM article WHERE status=0 order by id DESC LIMIT ?")) {
       query.addParameter(listSize);

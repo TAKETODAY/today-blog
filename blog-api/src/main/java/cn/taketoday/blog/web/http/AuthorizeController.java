@@ -424,7 +424,7 @@ class AuthorizeController extends SessionManagerOperations {
 
     void appendRedirectUri(@Nullable String forward, StringBuilder url) {
       url.append("&redirect_uri=")
-              .append(decode(blogConfig.getHost()))
+              .append(decode(blogConfig.host))
               .append(decode(StringUtils.prependLeadingSlash(callback)));
 
       if (StringUtils.isNotEmpty(forward)) {

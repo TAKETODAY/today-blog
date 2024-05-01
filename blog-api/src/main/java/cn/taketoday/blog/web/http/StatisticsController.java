@@ -76,7 +76,7 @@ class StatisticsController {
   }
 
   class DashboardStatistics {
-    public final long lastStartup = blogConfig.getStartupTimeMillis();
+    public final long lastStartup = blogConfig.startupTimeMillis;
     public int articleCount;
     public int commentCount;
     public int attachmentCount;

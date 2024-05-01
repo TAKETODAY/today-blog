@@ -110,7 +110,7 @@ public class OptionService {
 
       try {
         beanFactory.getBean(Configuration.class)
-                .setSharedVariable(BlogConstant.CDN, blogConfig.getCdn());
+                .setSharedVariable(BlogConstant.CDN, blogConfig.cdn);
       }
       catch (TemplateModelException e) {
         throw InternalServerException.failed("cdn 更新失败", e);

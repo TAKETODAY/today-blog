@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -193,7 +190,7 @@ public class CommentService {
       dataModel.put("comment", comment);
 
       mailService.sendTemplateMail(bloggerService.getBlogger().getEmail(),
-              blogConfig.getName() + " 有了新评论请查看",
+              blogConfig.name + " 有了新评论请查看",
               dataModel, "/core/mail/admin"
       );
     }
@@ -226,7 +223,7 @@ public class CommentService {
       dataModel.put("comment", parentComment);
 
       mailService.sendTemplateMail(parentUser.getEmail(),
-              "您在 " + blogConfig.getName() + " 的评论有了新回复",
+              "您在 " + blogConfig.name + " 的评论有了新回复",
               dataModel, "/core/mail/reply"
       );
     }
@@ -338,7 +335,7 @@ public class CommentService {
       dataModel.put("comment", comment);
 
       mailService.sendTemplateMail(user.getEmail(), //
-              "您在 " + blogConfig.getName() + " 的评论审核通过", //
+              "您在 " + blogConfig.name + " 的评论审核通过", //
               dataModel, "/core/mail/checked.ftl"//
       );
 
