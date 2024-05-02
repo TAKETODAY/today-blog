@@ -15,32 +15,23 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-plugins {
-  id 'de.undercouch.download' version '5.4.0'
-//  id 'org.graalvm.buildtools.native' version '0.9.23'
-}
+package cn.taketoday.blog;
 
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
 
-configure(allprojects) {
-  group = "cn.taketoday"
+/**
+ * Plugin to apply conventions to projects that are part of Infra build.
+ * Conventions are applied in response to various plugins being applied.
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0
+ */
+public class ConventionsPlugin implements Plugin<Project> {
 
-  repositories {
-    mavenLocal()
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-    maven { url "https://maven.aliyun.com/repository/public" }
-    maven { url "https://repo.huaweicloud.com/repository/maven" }
-    maven { url "https://repo.spring.io/milestone" }
+  @Override
+  public void apply(Project project) {
+
   }
 
-  configurations.configureEach {
-    resolutionStrategy {
-      cacheChangingModulesFor 0, "seconds"
-      cacheDynamicVersionsFor 0, "seconds"
-    }
-  }
-}
-
-
-configure(rootProject) {
-  description = "TODAY BLOG"
 }

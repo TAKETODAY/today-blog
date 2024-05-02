@@ -4,6 +4,7 @@
 *.war
 *.ear
 /target
+/build
 /.settings
 /.classpath
 /.project
@@ -27,3 +28,4 @@
 */.flattened-pom.xml
 /logs
 /resources
+/buildSrc/build
