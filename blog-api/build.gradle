@@ -16,10 +16,8 @@
  */
 description = "today-blog API"
 
-apply plugin: "java"
 apply plugin: "application"
 apply plugin: 'cn.taketoday.application'
-apply plugin: 'io.spring.dependency-management'
 apply plugin: 'cn.taketoday.blog.conventions'
 apply plugin: 'cn.taketoday.blog.optional-dependencies'
 
@@ -72,10 +70,6 @@ dependencies {
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
   testRuntimeOnly("org.junit.platform:junit-platform-suite-engine")
 
-}
-
-jar {
-  manifest.attributes["Implementation-Version"] = project.version
 }
 
 compileJava {
