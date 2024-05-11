@@ -19,19 +19,16 @@ package cn.taketoday.blog;
 
 import cn.taketoday.framework.Application;
 import cn.taketoday.framework.InfraApplication;
-import lombok.CustomLog;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-01-12 21:01
  */
-@CustomLog
 @InfraApplication(proxyBeanMethods = false)
 public class BlogApplication {
 
   public static void main(String[] args) {
     Application.run(BlogApplication.class, args);
-    log.info("----------------Application Started------------------");
   }
 
 }
