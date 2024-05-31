@@ -3,3 +3,5 @@
 /tomcat.8080/
 
 src/main/resources/application-prod.yaml
+
+logs

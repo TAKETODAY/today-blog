@@ -39,5 +39,6 @@ create table t_page_view
 ) comment 'page view stat';
 
 alter table article
+    modify create_at datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     modify update_at datetime default CURRENT_TIMESTAMP not null comment '更新时间',
     modify uri varchar(255) not null comment '文章URI访问地址';

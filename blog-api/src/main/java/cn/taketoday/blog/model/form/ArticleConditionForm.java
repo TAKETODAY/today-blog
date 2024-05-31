@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +33,7 @@ import cn.taketoday.format.annotation.DateTimeFormat;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.logging.LogMessage;
 import cn.taketoday.persistence.ConditionStatement;
+import cn.taketoday.persistence.DebugDescriptive;
 import cn.taketoday.persistence.EntityMetadata;
 import cn.taketoday.persistence.EntityProperty;
 import cn.taketoday.persistence.Order;
@@ -46,11 +44,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * @author TODAY 2020/12/20 22:42
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 2020/12/20 22:42
  */
 @Getter
 @Setter
-public class ArticleConditionForm implements ConditionStatement {
+public class ArticleConditionForm implements ConditionStatement, DebugDescriptive {
 
   @Nullable
   private String q;
