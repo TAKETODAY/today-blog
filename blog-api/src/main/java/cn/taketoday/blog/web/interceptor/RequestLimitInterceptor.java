@@ -34,13 +34,18 @@ import java.util.concurrent.locks.ReentrantLock;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.web.ErrorMessage;
+import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Constant;
+import cn.taketoday.lang.Nullable;
 import cn.taketoday.session.SessionHandlerInterceptor;
 import cn.taketoday.session.SessionManager;
+import cn.taketoday.stereotype.Component;
+import cn.taketoday.util.ConcurrentReferenceHashMap;
+import cn.taketoday.util.MapCache;
 import cn.taketoday.web.HandlerInterceptor;
 import cn.taketoday.web.InterceptorChain;
 import cn.taketoday.web.RequestContext;
@@ -50,7 +55,11 @@ import cn.taketoday.web.handler.method.HandlerMethod;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/8/11 10:22
  */
+@Component
 final class RequestLimitInterceptor extends SessionHandlerInterceptor implements HandlerInterceptor {
+
+  static final MapCache<HandlerMethod, RequestLimit, Object> requestLimitConfigCache = new MapCache<>(
+          new ConcurrentReferenceHashMap<>(128), RequestLimitInterceptor::findRequestLimit);
 
   private int maxCacheSize = 1024;
 
@@ -88,13 +97,9 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
       // 非博主，进行限流
       HandlerMethod handlerMethod = HandlerMethod.unwrap(chain.getHandler());
       if (handlerMethod != null) {
-        RequestLimit requestLimit = handlerMethod.getMethodAnnotation(RequestLimit.class);
-        if (requestLimit == null) {
-          requestLimit = handlerMethod.getBeanType().getAnnotation(RequestLimit.class);
-        }
-
+        RequestLimit requestLimit = requestLimitConfigCache.get(handlerMethod);
         if (requestLimit != null && hasTooManyRequests(request, handlerMethod, requestLimit)) {
-          return writeTooManyRequests(requestLimit);
+          return writeTooManyRequests(requestLimit, handlerMethod);
         }
         //不需要限流
       }
@@ -104,11 +109,19 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
     return chain.proceed(request);
   }
 
-  private ResponseEntity<ErrorMessage> writeTooManyRequests(RequestLimit requestLimit) {
+  private ResponseEntity<ErrorMessage> writeTooManyRequests(RequestLimit requestLimit, HandlerMethod handler) {
     String errorMessage = requestLimit.errorMessage();
     if (Constant.DEFAULT_NONE.equals(errorMessage)) {
       errorMessage = defaultErrorMessage;
     }
+
+    if (!handler.isResponseBody()) {
+      throw ErrorMessageException.failed(errorMessage, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    // X-RateLimit-Limit: The maximum number of requests you're permitted to make per hour.
+    // X-RateLimit-Remaining: The number of requests remaining in the current rate limit window.
+    // X-RateLimit-Reset: the time at which the current rate limit window resets in UTC epoch seconds
 
     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
             .contentType(MediaType.APPLICATION_JSON)
@@ -132,8 +145,8 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
     String ip = BlogUtils.remoteAddress(request);
     RequestKey key = new RequestKey(ip, method);
 
-    RequestLimitEntry entry = requestLimitCache.computeIfAbsent(key, requestKey -> new RequestLimitEntry(requestLimit));
-    return entry.isExceeded(now);
+    return requestLimitCache.computeIfAbsent(key, requestKey -> new RequestLimitEntry(requestLimit))
+            .isExceeded(now);
   }
 
   /**
@@ -143,6 +156,14 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
    */
   private void removeExpiredEntries() {
     expiredChecker.removeExpired(clock.instant());
+  }
+
+  @Nullable
+  private static RequestLimit findRequestLimit(HandlerMethod handlerMethod) {
+    if (handlerMethod.hasMethodAnnotation(RequestLimit.class)) {
+      return handlerMethod.getMethodAnnotation(RequestLimit.class);
+    }
+    return handlerMethod.getBeanType().getAnnotation(RequestLimit.class);
   }
 
   record RequestKey(String ip, Method action) {

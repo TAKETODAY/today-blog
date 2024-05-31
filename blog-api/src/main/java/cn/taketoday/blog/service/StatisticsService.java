@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
@@ -29,8 +29,6 @@ import java.util.Map;
 import cn.taketoday.blog.model.enums.StatisticsField;
 import cn.taketoday.blog.model.form.PageViewStatistics;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.cache.CacheManager;
-import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.jdbc.core.JdbcOperations;
 import cn.taketoday.jdbc.core.PreparedStatementCallback;
 import cn.taketoday.stereotype.Service;
@@ -48,14 +46,13 @@ public class StatisticsService {
 //          .maximumSize(3)
 //          .expireAfterWrite(10, TimeUnit.SECONDS) // 10s
 //          .build();
+
   private final JdbcOperations template;
-  private final RepositoryManager repositoryManager;
-  final CacheManager cacheManager;
 
   public Map<String, Integer> analyze(StatisticsField type) {
     String name = type.name();
     String sql = "SELECT `" + name + "`, COUNT(`" + name + "`) " +
-            "from page_view where `" + name + "` is not null GROUP BY `" + name + "`";
+            "from t_page_view where `" + name + "` is not null GROUP BY `" + name + "`";
     try {
       return template.execute(sql, (PreparedStatementCallback<Map<String, Integer>>) ps -> {
         Map<String, Integer> ret = new HashMap<>();
@@ -79,11 +76,11 @@ public class StatisticsService {
     String sql;
     if (hasPeriod) {
       sql = "SELECT DATE_FORMAT(create_at, '%Y-%m-%d') days, COUNT(DISTINCT `ip`), COUNT(user != 0), COUNT(*) " +
-              "from page_view where create_at between ? and ? GROUP BY `days`";
+              "from t_page_view where create_at between ? and ? GROUP BY `days`";
     }
     else {
       sql = "SELECT DATE_FORMAT(create_at, '%Y-%m-%d') days, COUNT(DISTINCT `ip`), COUNT(user != 0), COUNT(*) " +
-              "from page_view GROUP BY `days`";
+              "from t_page_view GROUP BY `days`";
     }
 
     try {

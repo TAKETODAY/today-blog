@@ -371,15 +371,17 @@ public abstract class BlogUtils {
   }
 
   public static void prepareModel(Pageable pageable, int count, Model model) {
-    model.setAttribute("size", pageable.size());
-    model.setAttribute("pageNow", pageable.current());
+    model.setAttribute("size", pageable.pageSize());
+    model.setAttribute("pageNow", pageable.pageNumber());
     model.setAttribute("count", count);
   }
 
+  @Deprecated(forRemoval = true)
   public static boolean notFound(int page, int pageCount) {
     return page > pageCount || page < 1;
   }
 
+  @Deprecated(forRemoval = true)
   public static int pageCount(int rowCount, int size) {
     return (rowCount - 1) / size + 1;
   }

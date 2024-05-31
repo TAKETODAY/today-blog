@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +26,8 @@ import cn.taketoday.blog.BlogApplication;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.web.controller.ArticleController.ArticleForm;
+import cn.taketoday.blog.web.console.ArticleForm;
+import cn.taketoday.context.ApplicationContext;
 import cn.taketoday.context.annotation.Bean;
 import cn.taketoday.context.annotation.Configuration;
 import cn.taketoday.context.annotation.Import;
@@ -49,7 +47,6 @@ import cn.taketoday.test.web.servlet.client.MockMvcWebTestClient;
 import cn.taketoday.test.web.servlet.setup.MockMvcBuilders;
 import cn.taketoday.transaction.annotation.Isolation;
 import cn.taketoday.transaction.annotation.Transactional;
-import cn.taketoday.web.servlet.WebApplicationContext;
 
 import static cn.taketoday.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static cn.taketoday.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -72,7 +69,7 @@ class ArticleControllerTests {
   MockMvc mockMvc;
 
   @BeforeEach
-  void setup(WebApplicationContext context) {
+  void setup(ApplicationContext context) {
     mockMvc = MockMvcBuilders.webAppContextSetup(context)
             .defaultRequest(
                     get("/")
@@ -146,8 +143,7 @@ class ArticleControllerTests {
     }
 
     @Bean
-    public SessionRepository sessionRepository(
-            SessionEventDispatcher eventDispatcher, SessionIdGenerator idGenerator) {
+    public SessionRepository sessionRepository(SessionEventDispatcher eventDispatcher, SessionIdGenerator idGenerator) {
       return new InMemorySessionRepository(eventDispatcher, idGenerator) {
         @Override
         public WebSession createSession(String id) {

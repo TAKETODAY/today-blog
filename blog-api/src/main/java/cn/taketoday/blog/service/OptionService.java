@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +29,8 @@ import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.core.env.ConfigurableEnvironment;
 import cn.taketoday.core.env.MapPropertySource;
 import cn.taketoday.core.env.PropertySources;
-import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.logging.LoggerFactory;
+import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
@@ -113,7 +110,7 @@ public class OptionService {
 
       try {
         beanFactory.getBean(Configuration.class)
-                .setSharedVariable(BlogConstant.CDN, blogConfig.getCdn());
+                .setSharedVariable(BlogConstant.CDN, blogConfig.cdn);
       }
       catch (TemplateModelException e) {
         throw InternalServerException.failed("cdn 更新失败", e);
@@ -132,7 +129,7 @@ public class OptionService {
     }
     catch (RuntimeException e) {
       LoggerFactory.getLogger(OptionService.class).error("When resolve binding options", e);
-      throw InternalServerException.failed(e);
+      throw InternalServerException.failed(null, e);
     }
   }
 

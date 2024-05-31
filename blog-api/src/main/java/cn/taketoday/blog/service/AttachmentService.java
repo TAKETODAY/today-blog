@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
@@ -24,8 +24,6 @@ import com.aliyun.oss.ClientException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -33,7 +31,6 @@ import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
-import cn.taketoday.blog.repository.AttachmentRepository;
 import cn.taketoday.blog.util.FileUtils;
 import cn.taketoday.blog.util.OssOperations;
 import cn.taketoday.blog.util.StringUtils;
@@ -41,12 +38,14 @@ import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.EntityManager;
+import cn.taketoday.persistence.Page;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.multipart.MultipartFile;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 附件服务
@@ -55,31 +54,24 @@ import cn.taketoday.web.multipart.MultipartFile;
  * @since 2019-03-16 14:46
  */
 @Service
+@RequiredArgsConstructor
 public class AttachmentService {
-  private final EntityManager entityManager;
-  private final OssOperations ossOperations;
-  private final AttachmentRepository repository;
-  private final AttachmentConfig attachmentConfig;
-  private final RepositoryManager repositoryManager;
 
-  public AttachmentService(OssOperations ossOperations, AttachmentRepository repository,
-          AttachmentConfig attachmentConfig, RepositoryManager repositoryManager) {
-    this.repository = repository;
-    this.attachmentConfig = attachmentConfig;
-    this.repositoryManager = repositoryManager;
-    this.ossOperations = ossOperations;
-    this.entityManager = repositoryManager.getEntityManager();
-  }
+  private final EntityManager entityManager;
+
+  private final OssOperations ossOperations;
+
+  private final AttachmentConfig attachmentConfig;
+
+  private final RepositoryManager repositoryManager;
 
   /**
    * 新增附件信息
    *
    * @param attachment attachment
-   * @return Attachment
    */
-  public Attachment persist(Attachment attachment) {
+  public void persist(Attachment attachment) {
     repositoryManager.persist(attachment);
-    return attachment;
   }
 
   @Nullable
@@ -95,30 +87,11 @@ public class AttachmentService {
    * 获取全部附件数量
    */
   public int count() {
-    return repository.getTotalRecord();
+    return entityManager.count(Attachment.class).intValue();
   }
 
   public Pagination<Attachment> filter(AttachmentForm form, Pageable pageable) {
-    int count = repository.getRecordFilter(form);
-    if (count < 1) {
-      return Pagination.empty();
-    }
-
-    List<Attachment> rets = repository.filter(
-            form,
-            getPageNow(pageable.current(), pageable.size()),
-            pageable.size()
-    );
-
-    return Pagination.ok(rets, count, pageable);
-  }
-
-  protected int getPageNow(int pageNow, int pageSize) {
-    return (pageNow - 1) * pageSize;
-  }
-
-  public List<Attachment> pageable(int pageNow, int pageSize) {
-    return repository.find((pageNow - 1) * pageSize, pageSize);
+    return Pagination.from(entityManager.page(Attachment.class, form, pageable));
   }
 
   public void updateById(Attachment model) {
@@ -163,7 +136,7 @@ public class AttachmentService {
     return attachment;
   }
 
-  public Attachment upload(MultipartFile file, String suffix) {
+  public Attachment upload(MultipartFile file, @Nullable String suffix) {
     if (ossOperations.isOssEnabled()) {
       return attachOssUpload(file, suffix);
     }
@@ -176,7 +149,7 @@ public class AttachmentService {
    * @param file file
    * @return Map
    */
-  public Attachment attachLocalUpload(MultipartFile file, String suffix) {
+  public Attachment attachLocalUpload(MultipartFile file, @Nullable String suffix) {
     String fileName = getName(file, suffix);
     String uploadUri = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
 
@@ -194,36 +167,24 @@ public class AttachmentService {
 
   private File saveFile(MultipartFile file, String uploadUrl) throws IOException {
     File dest = attachmentConfig.getLocalFile(uploadUrl);
-    // fix #3 Upload file not found exception
-    File parentFile = dest.getParentFile();
-    if (!parentFile.exists()) {
-      parentFile.mkdirs();
-    }
-    /*
-     * The uploaded file is being stored on disk
-     * in a temporary location so move it to the
-     * desired file.
-     */
-    if (dest.exists()) {
-      Files.delete(dest.toPath());
-    }
     file.transferTo(dest);
     return dest;
   }
 
-  public Attachment attachOssUpload(MultipartFile file, String suffix) {
+  public Attachment attachOssUpload(MultipartFile file, @Nullable String suffix) {
     String fileName = getName(file, suffix);
     String uploadUri = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
 
     try {
       File destFile = saveFile(file, uploadUri);
-      return repositoryManager.runInTransaction(status -> {
-        Attachment attachment = createAttachment(fileName, uploadUri, destFile);
-        ossOperations.uploadFile(uploadUri, destFile);
+      Attachment attachment = createAttachment(fileName, uploadUri, destFile);
+      repositoryManager.executeWithoutResult(status -> {
         attachment.setSync(true);
         persist(attachment);
-        return attachment;
+
+        ossOperations.uploadFile(uploadUri, destFile);
       });
+      return attachment;
     }
     catch (ClientException e) {
       throw new InternalServerException("附件OSS保存失败", e);
@@ -233,7 +194,7 @@ public class AttachmentService {
     }
   }
 
-  private String getName(MultipartFile file, String suffix) {
+  private String getName(MultipartFile file, @Nullable String suffix) {
     if (StringUtils.isNotEmpty(suffix)) {
       return suffix;
     }
@@ -251,12 +212,8 @@ public class AttachmentService {
     return attachment;
   }
 
-  public List<Attachment> getLatest() {
-    return repository.findLatest();
-  }
-
-  public List<Attachment> pageable(Pageable pageable) {
-    return pageable(pageable.current(), pageable.size());
+  public Page<Attachment> pageable(Pageable pageable) {
+    return entityManager.page(Attachment.class, pageable);
   }
 
   @Transactional

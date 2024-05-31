@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
@@ -30,10 +30,10 @@ import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.jdbc.persistence.Id;
-import cn.taketoday.jdbc.persistence.Table;
-import cn.taketoday.jdbc.persistence.Transient;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.Id;
+import cn.taketoday.persistence.Table;
+import cn.taketoday.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 

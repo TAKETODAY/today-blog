@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.config;
@@ -24,44 +21,48 @@ import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ConfigBinding;
 import cn.taketoday.context.properties.ConfigurationProperties;
 import cn.taketoday.stereotype.Component;
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:08
  */
-@Setter
-@Getter
 @Component
 @ConfigBinding("site.")
 @ConfigurationProperties(prefix = "site")
 public class BlogConfig {
 
-  private String cdn;
-  private String icp;
-  private String host;
-  private String name;
-  private String index;
+  public String cdn;
 
-  private String keywords;
-  private String copyright;
-  private String subTitle;
-  private String description;
-  private String otherFooter;
+  public String icp;
+
+  public String host;
+
+  public String name;
+
+  public String index;
+
+  public String keywords;
+
+  public String copyright;
+
+  public String subTitle;
+
+  public String description;
+
+  public String otherFooter;
 
   @ConfigBinding("author.email")
-  private String email;
+  public String email;
 
-  private final long startupTimeMillis = System.currentTimeMillis();
+  public final long startupTimeMillis = System.currentTimeMillis();
 
   @ConfigBinding(value = "article.feed.list.size", splice = false)
-  private int articleFeedListSize = 10;
+  public int articleFeedListSize = 10;
 
   @ConfigBinding("list.size")
-  private int listSize = BlogConstant.DEFAULT_LIST_SIZE; // articles list size
+  public int listSize = BlogConstant.DEFAULT_LIST_SIZE; // articles list size
 
   @ConfigBinding("max.list.size")
-  private int maxPageSize = BlogConstant.DEFAULT_MAX_PAGE_SIZE;
+  public int maxPageSize = BlogConstant.DEFAULT_MAX_PAGE_SIZE;
 
 }

@@ -19,8 +19,7 @@
  */
 
 import React from 'react';
-import { Switch } from 'react-router';
-import { Redirect, Route } from 'react-router-dom';
+import { Redirect, Route, Switch } from 'react-router-dom';
 import { Footer, Header } from './components';
 import { Layout } from 'antd';
 import { ArticleLayout, SearchLayout } from './layouts';

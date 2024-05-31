@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +33,7 @@ import cn.taketoday.blog.model.feed.Atom;
 import cn.taketoday.blog.model.feed.Entry;
 import cn.taketoday.blog.model.feed.Item;
 import cn.taketoday.blog.model.feed.Rss;
-import cn.taketoday.blog.model.form.SearchForm;
-import cn.taketoday.blog.repository.ArticleRepository;
+import cn.taketoday.blog.model.form.ArticleConditionForm;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
@@ -51,6 +47,7 @@ import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
@@ -58,16 +55,23 @@ import cn.taketoday.web.InternalServerException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
+import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
+
 @Service
 @CustomLog
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "Articles")
 public class ArticleService implements InitializingBean {
+
   private final BlogConfig blogConfig;
+
   private final LabelService labelService;
+
+  private final EntityManager entityManager;
+
   private final RepositoryManager repository;
+
   private final CategoryService categoryService;
-  private final ArticleRepository articleRepository;
 
   private final Rss rss = new Rss();
   private final Atom atom = new Atom();
@@ -196,7 +200,7 @@ public class ArticleService implements InitializingBean {
             SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
             FROM article WHERE status = ? order by pv DESC LIMIT ?""")) {
       query.addParameter(PostStatus.PUBLISHED);
-      query.addParameter(pageable.size(20));
+      query.addParameter(pageable.pageSize(20));
       return applyTags(query.fetch(ArticleItem.class));
     }
   }
@@ -204,7 +208,7 @@ public class ArticleService implements InitializingBean {
   /**
    * 获取首页文章
    */
-  @Cacheable(key = "'home-'+#pageable.current()+'-'+#pageable.size()")
+  @Cacheable(key = "'home-'+#pageable.pageNumber()+'-'+#pageable.pageSize()")
   public Pagination<ArticleItem> getHomeArticles(Pageable pageable) {
     try (JdbcConnection connection = repository.open()) {
       try (Query countQuery = connection.createQuery(
@@ -223,7 +227,7 @@ public class ArticleService implements InitializingBean {
         try (NamedQuery query = repository.createNamedQuery(sql)) {
           query.addParameter("offset", pageable.offset());
           query.addParameter("status", PostStatus.PUBLISHED);
-          query.addParameter("pageSize", pageable.size());
+          query.addParameter("pageSize", pageable.pageSize());
 
           return fetchArticleItems(pageable, count, query);
         }
@@ -255,25 +259,16 @@ public class ArticleService implements InitializingBean {
 
           dataQuery.addParameter("q", "%" + q + "%");
           dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("size", pageable.size());
+          dataQuery.addParameter("size", pageable.pageSize());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
     }
   }
 
-  public Pagination<Article> search(SearchForm from, Pageable pageable) {
-//    try (Query query = repository.createQuery(
-//            "SELECT COUNT(id) FROM article")) {
-//      query.executeUpdate();
-//    }
-
-    int count = articleRepository.getRecord(from);
-    if (count < 1) {
-      return Pagination.empty();
-    }
-    List<Article> articles = articleRepository.find(from, pageable.offset(), pageable.size());
-    return Pagination.ok(articles, count, pageable);
+  public Pagination<Article> search(ArticleConditionForm from, Pageable pageable) {
+    return entityManager.page(Article.class, from, pageable)
+            .map(page -> Pagination.ok(page.getRows(), page.getTotalRows().intValue(), pageable));
   }
 
   /**
@@ -308,7 +303,7 @@ public class ArticleService implements InitializingBean {
           dataQuery.addParameter("name", label);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
           dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("size", pageable.size());
+          dataQuery.addParameter("size", pageable.pageSize());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -338,7 +333,7 @@ public class ArticleService implements InitializingBean {
           dataQuery.addParameter("name", categoryName);
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
           dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("pageSize", pageable.size());
+          dataQuery.addParameter("pageSize", pageable.pageSize());
           return fetchArticleItems(pageable, count, dataQuery);
         }
       }
@@ -349,7 +344,7 @@ public class ArticleService implements InitializingBean {
    * 刷新订阅文章
    */
   public void refreshFeedArticles() {
-    int listSize = blogConfig.getArticleFeedListSize();
+    int listSize = blogConfig.articleFeedListSize;
     try (Query query = repository.createQuery(
             "SELECT * FROM article WHERE status=0 order by id DESC LIMIT ?")) {
       query.addParameter(listSize);
@@ -499,15 +494,18 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'countBy_'+#status")
   public int countByStatus(PostStatus status) {
-    return articleRepository.getStatusRecord(status);
+    return entityManager.count(Article.class, isEqualsTo("status", status)).intValue();
   }
 
   /***
    * 通过typeid 得到数目
    */
-  @Cacheable(key = "'countCategory_'+#categoryId", unless = "#result==0")
-  public int countByCategory(String categoryId) {
-    return articleRepository.getRecordByCategory(categoryId);
+  @Cacheable(key = "'countCategory_'+#category", unless = "#result==0")
+  public int countByCategory(String category) {
+    ArticleConditionForm form = new ArticleConditionForm();
+    form.setCategory(category);
+    form.setStatus(PostStatus.PUBLISHED);
+    return entityManager.count(Article.class, form).intValue();
   }
 
   /**
@@ -515,7 +513,7 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'count'")
   public int count() {
-    return articleRepository.getTotalRecord();
+    return entityManager.count(Article.class).intValue();
   }
 
   /**

@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
@@ -24,6 +24,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -32,15 +33,17 @@ import java.util.stream.Collectors;
 
 import cn.taketoday.blog.model.ArticleLabel;
 import cn.taketoday.blog.model.Label;
-import cn.taketoday.blog.repository.LabelRepository;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
+
+import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -54,61 +57,62 @@ public class LabelService {
 
   private final RepositoryManager repository;
 
-  private final LabelRepository labelRepository;
-
   private final Cache<Long, Set<Label>> articleLabelsCache = Caffeine.newBuilder()
           .maximumSize(100)
           .expireAfterWrite(10, TimeUnit.SECONDS)
           .build();
 
-  public LabelService(EntityManager entityManager, RepositoryManager repository, LabelRepository labelRepository) {
+  public LabelService(EntityManager entityManager, RepositoryManager repository) {
     this.entityManager = entityManager;
     this.repository = repository;
-    this.labelRepository = labelRepository;
   }
 
   @Cacheable(key = "'all'")
   public List<Label> getAllLabels() {
-    return labelRepository.findAll();
+    return entityManager.find(Label.class);
   }
 
+  @Nullable
   @Cacheable(key = "'ByName'+#name")
   public Label getByName(String name) {
-    return labelRepository.findByName(name);
+    return entityManager.findFirst(Label.class, isEqualsTo("name", name));
   }
 
+  @Nullable
   @Cacheable(key = "'ById'+#id")
   public Label getById(long id) {
-    return labelRepository.findById(id);
+    return entityManager.findById(Label.class, id);
   }
 
   @Transactional
   @CacheEvict(allEntries = true)
   public void save(Label label) {
-    labelRepository.save(label);
+    entityManager.persist(label);
   }
 
   @Transactional
   @CacheEvict(allEntries = true)
   public void saveAll(Collection<Label> labels) {
-    labelRepository.saveAll(labels);
+    entityManager.persist(labels);
   }
 
   @Transactional
   @CacheEvict(allEntries = true)
   public void deleteById(long id) {
-    labelRepository.deleteById(id);
+    entityManager.delete(Label.class, id);
   }
 
   public int count() {
     return getAllLabels().size();
   }
 
-  @SuppressWarnings("all")
   final class ArticleLabelMappingFunction implements Function<Long, Set<Label>> {
 
     public Set<Label> apply(Long articleId) {
-      return labelRepository.findByArticleId(articleId);
+      return new LinkedHashSet<>(repository.createQuery("""
+                      SELECT * FROM label WHERE `id` IN (SELECT `labelId` FROM article_label WHERE `articleId` = ? )""")
+              .addParameter(articleId)
+              .fetch(Label.class));
     }
   }
 
@@ -132,8 +136,8 @@ public class LabelService {
 
   @Transactional
   @CacheEvict(allEntries = true)
-  public void update(Label label) {
-    labelRepository.update(label);
+  public void updateById(Label label) {
+    entityManager.updateById(label);
   }
 
   @Transactional

@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model.form;
@@ -23,6 +23,10 @@ package cn.taketoday.blog.model.form;
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
+import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.Like;
+import cn.taketoday.persistence.OrderBy;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,10 +35,15 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@OrderBy(clause = "update_at DESC, create_at DESC")
 public class AttachmentForm {
 
-  private String name;
+  @Nullable
   private AttachmentType fileType;
+
+  @Like
+  @Nullable
+  private String name;
 
   @Override
   public boolean equals(Object o) {
@@ -49,4 +58,13 @@ public class AttachmentForm {
   public int hashCode() {
     return Objects.hash(name, fileType);
   }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.from(this)
+            .append("fileType", fileType)
+            .append("name", name)
+            .toString();
+  }
+
 }

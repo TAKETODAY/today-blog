@@ -15,12 +15,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web;
-
-import cn.taketoday.core.style.ToStringBuilder;
 
 /**
  * 分页
@@ -28,56 +26,6 @@ import cn.taketoday.core.style.ToStringBuilder;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-07-25 01:11
  */
-public interface Pageable {
-
-  /**
-   * Returns the page to be returned.
-   *
-   * @return the page to be returned.
-   */
-  int current();
-
-  /**
-   * Returns the number of items to be returned.
-   *
-   * @return the number of items of that page
-   */
-  int size();
-
-  default int offset() {
-    return (current() - 1) * size();
-  }
-
-  default int offset(int max) {
-    return (current() - 1) * size(max);
-  }
-
-  default int size(int max) {
-    return Math.min(size(), max);
-  }
-
-  static Simple of(int size, int current) {
-    return new Simple(size, current);
-  }
-
-  record Simple(int size, int current) implements Pageable {
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o)
-        return true;
-      if (!(o instanceof Simple simple))
-        return false;
-      return size == simple.size && current == simple.current;
-    }
-
-    @Override
-    public String toString() {
-      return ToStringBuilder.from(this)
-              .append("size", size)
-              .append("current", current)
-              .toString();
-    }
-  }
+public interface Pageable extends cn.taketoday.persistence.Pageable {
 
 }

@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web;
@@ -25,9 +22,9 @@ import java.util.function.Supplier;
 import cn.taketoday.core.NoStackTraceRuntimeException;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.http.HttpStatusCode;
-import cn.taketoday.http.HttpStatusCodeProvider;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.web.HttpStatusProvider;
 
 /**
  * No StackTrace Exception
@@ -35,7 +32,7 @@ import cn.taketoday.lang.Nullable;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/7/19 22:01
  */
-public class ErrorMessageException extends NoStackTraceRuntimeException implements HttpStatusCodeProvider {
+public class ErrorMessageException extends NoStackTraceRuntimeException implements HttpStatusProvider {
 
   private final HttpStatus status;
 
@@ -62,13 +59,13 @@ public class ErrorMessageException extends NoStackTraceRuntimeException implemen
     return new ErrorMessageException(message, null, status);
   }
 
-  public static void notNull(Object obj, String message) {
+  public static void notNull(@Nullable Object obj, String message) {
     if (obj == null) {
       throw ErrorMessageException.failed(message, HttpStatus.NOT_FOUND);
     }
   }
 
-  public static void notNull(Object obj, Supplier<String> supplier) {
+  public static void notNull(@Nullable Object obj, Supplier<String> supplier) {
     if (obj == null) {
       throw new ErrorMessageException(supplier.get());
     }

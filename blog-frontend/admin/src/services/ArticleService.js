@@ -24,16 +24,16 @@ import moment from "moment";
 export default new class {
 
   create(article) {
-    return http.post('/api/articles', article)
+    return http.post('/api/console/articles', article)
   }
 
   update(article) {
-    return http.put('/api/articles/' + article.id, article)
+    return http.put('/api/console/articles/' + article.id, article)
   }
 
   updateById(id, article) {
     const createAt = moment(article.createAt).format('yyyy-MM-DD HH:mm:ss')
-    return http.put('/api/articles/' + id, { ...article, createAt })
+    return http.put('/api/console/articles/' + id, { ...article, createAt })
   }
 
   getAllCategories() {

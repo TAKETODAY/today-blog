@@ -1,6 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.config;
@@ -36,9 +35,9 @@ public class AttachmentConfig {
 
   private String outsideResource;
 
-    /**
-     * CDN
-     */
+  /**
+   * CDN
+   */
   private String cdnHostPrefix;
 
   public void setCdnHostPrefix(String cdnHostPrefix) {

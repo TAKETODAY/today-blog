@@ -33,30 +33,32 @@ create table category
 (
     `name`        varchar(255)  default '未分类'       not null comment '类型名称'
         primary key,
-    articleCount  int           default 0              null comment '文章数',
+    article_count int           default 0              null comment '文章数',
     `order`       int unsigned  default '128'          null comment '分类排序',
     `description` varchar(1024) default '未分类的文章' not null comment '分类描述'
 );
 
 create table article
 (
-    `id`        int auto_increment primary key,
-    `title`     varchar(255) default null comment '标题',
-    `content`   longtext     default null comment '文章内容',
-    `summary`   text         default null comment '预览',
+    `id`        int unsigned auto_increment primary key,
+    `title`     varchar(255) default not null comment '标题',
+    `content`   longtext     default not null comment '文章内容',
+    `summary`   text         default not null comment '摘要',
     `cover`     text         default null comment '文章封面',
     `category`  varchar(255) default '未分类' comment '分类名',
-    `uri`       varchar(255) default null comment '文章URI访问地址',
+    `uri`       varchar(255) default not null comment '文章URI访问地址',
     `pv`        int          default 0 comment '点击量',
     `status`    tinyint      default 0 comment '状态',
     `markdown`  longtext     default null comment 'markdown',
-    `password`  varchar(255) default null comment '密码',
+    `password`  varchar(255) default default           null null comment '密码',
     `copyright` text         default null comment '版权',
-    `create_at` datetime     default CURRENT_TIMESTAMP comment '创建时间',
-    `update_at` datetime     default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP comment '更新时间',
 
+    `create_at` datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    `update_at` datetime     default CURRENT_TIMESTAMP not null comment '更新时间',
+
+    constraint uri_idx unique (uri),
     constraint Article_Category
-        foreign key (`category`) references category (name)
+        foreign key (category) references category (name)
             on update cascade on delete set null
 );
 

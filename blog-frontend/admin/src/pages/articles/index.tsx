@@ -157,7 +157,7 @@ export default () => {
     {
       title: '封面',
       width: 120,
-      dataIndex: 'image',
+      dataIndex: 'cover',
       hideInSearch: true,
       render: (_, article) => (
           <Image title={article.title} src={article.cover} width={120} original={false}/>
@@ -196,7 +196,7 @@ export default () => {
     },
     {
       title: '发表日期',
-      dataIndex: 'id',
+      dataIndex: 'createAt',
       width: 170,
       sorter: true,
       valueType: 'dateTimeRange',

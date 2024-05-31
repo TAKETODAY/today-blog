@@ -23,7 +23,7 @@ package cn.taketoday.blog.service;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.EntityManager;
+import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 

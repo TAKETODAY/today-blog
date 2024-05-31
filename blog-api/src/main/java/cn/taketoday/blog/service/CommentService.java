@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
@@ -39,15 +36,17 @@ import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.EntityManager;
+import cn.taketoday.persistence.OrderBy;
+import cn.taketoday.persistence.Page;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
 import lombok.RequiredArgsConstructor;
 
-import static cn.taketoday.jdbc.persistence.QueryCondition.isEqualsTo;
+import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -96,7 +95,7 @@ public class CommentService {
 
     int size = comments.size();
     int offset = pageable.offset();
-    int toIndex = offset + pageable.size();
+    int toIndex = offset + pageable.pageSize();
     if (size <= toIndex) {
       toIndex = size;
     }
@@ -191,7 +190,7 @@ public class CommentService {
       dataModel.put("comment", comment);
 
       mailService.sendTemplateMail(bloggerService.getBlogger().getEmail(),
-              blogConfig.getName() + " 有了新评论请查看",
+              blogConfig.name + " 有了新评论请查看",
               dataModel, "/core/mail/admin"
       );
     }
@@ -224,7 +223,7 @@ public class CommentService {
       dataModel.put("comment", parentComment);
 
       mailService.sendTemplateMail(parentUser.getEmail(),
-              "您在 " + blogConfig.getName() + " 的评论有了新回复",
+              "您在 " + blogConfig.name + " 的评论有了新回复",
               dataModel, "/core/mail/reply"
       );
     }
@@ -336,38 +335,10 @@ public class CommentService {
       dataModel.put("comment", comment);
 
       mailService.sendTemplateMail(user.getEmail(), //
-              "您在 " + blogConfig.getName() + " 的评论审核通过", //
+              "您在 " + blogConfig.name + " 的评论审核通过", //
               dataModel, "/core/mail/checked.ftl"//
       );
 
-    }
-  }
-
-  //  @Cacheable(key = "'u_'+#userInfo.id+'p'+#pageNow+'s'+#pageSize")
-  public List<Comment> getByUser(User userInfo, int pageNow, int pageSize) {
-    try (Query query = repository.createQuery(""" 
-            SELECT * FROM t_comment WHERE `user_id` = ? ORDER BY id DESC LIMIT ?, ?""")) {
-
-      query.addParameter(userInfo.getId());
-      query.addParameter((pageNow - 1) * pageSize);
-      query.addParameter(pageSize);
-      List<Comment> commentsToUse = query.fetch(Comment.class);
-      if (CollectionUtils.isNotEmpty(commentsToUse)) {
-        for (Comment comment : commentsToUse) {
-          comment.setUser(userService.getById(comment.getUserId()));
-        }
-      }
-      return commentsToUse;
-    }
-
-  }
-
-  //  @Cacheable(key = "'ByUser_'+#userInfo.id")
-  public int countByUser(User userInfo) {
-    try (Query countQuery = repository.createQuery(
-            "SELECT COUNT(id) FROM t_comment WHERE `user_id` = ?")) {
-      countQuery.addParameter(userInfo.getId());
-      return countQuery.fetchScalar(int.class);
     }
   }
 
@@ -385,7 +356,7 @@ public class CommentService {
     try (Query query = repository.createQuery(""" 
             SELECT * FROM t_comment ORDER BY id DESC LIMIT ?, ?""")) {
       query.addParameter(pageable.offset());
-      query.addParameter(pageable.size());
+      query.addParameter(pageable.pageSize());
       List<Comment> commentsToUse = query.fetch(Comment.class);
       if (CollectionUtils.isNotEmpty(commentsToUse)) {
         for (Comment comment : commentsToUse) {
@@ -397,11 +368,26 @@ public class CommentService {
   }
 
   public List<Comment> getByStatus(CommentStatus valueOf, Pageable pageable) {
-    return getByStatus(valueOf, pageable.current(), pageable.size());
+    return getByStatus(valueOf, pageable.pageNumber(), pageable.pageSize());
   }
 
-  public List<Comment> getByUser(User userInfo, Pageable pageable) {
-    return getByUser(userInfo, pageable.current(), pageable.size());
+  public Page<Comment> getByUser(User userInfo, Pageable pageable) {
+    return entityManager.page(Comment.class, new PageByUserQuery(userInfo), pageable)
+            .peek(comment -> comment.setUser(userService.getById(comment.getUserId())));
   }
 
+  @OrderBy(clause = "id DESC")
+  static class PageByUserQuery {
+
+    final Long userId;
+
+    PageByUserQuery(User userInfo) {
+      this.userId = userInfo.getId();
+    }
+
+    public Long getUserId() {
+      return userId;
+    }
+
+  }
 }

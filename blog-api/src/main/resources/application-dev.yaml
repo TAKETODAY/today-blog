@@ -57,3 +57,5 @@ logging:
     nettyLogging: info
     web: trace
     sql: debug
+  pattern:
+    dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'

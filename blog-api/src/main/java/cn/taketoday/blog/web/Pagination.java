@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web;
@@ -23,37 +23,44 @@ package cn.taketoday.blog.web;
 import java.util.Collections;
 import java.util.List;
 
-import lombok.NoArgsConstructor;
+import cn.taketoday.persistence.Page;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-23 15:58
  */
-@NoArgsConstructor
 public class Pagination<T> implements ListableHttpResult<T> {
 
   @SuppressWarnings("rawtypes")
-  private static final Pagination empty = new Pagination<>();
+  private static final Pagination empty = new Pagination<>(0, 0, 0, 0, Collections.emptyList());
 
   /** amount of page */
-  private int pages;
+  private final int pages;
 
   /** all row in database */
-  private int total;
+  private final int total;
 
   /** every page size */
-  private int size;
+  private final int size;
 
   /** current page */
-  private int current;
+  private final int current;
 
   // Json
   // --------------------------
-  private List<T> data = Collections.emptyList();
+  private final List<T> data;
 
-  public Pagination<T> applyNum() {
-    pages = (total - 1) / size + 1;
-    return this;
+  public Pagination(int pages, int total, int size, int current, List<T> data) {
+    this.pages = pages;
+    this.total = total;
+    this.size = size;
+    this.current = current;
+    this.data = data;
+  }
+
+  public static <T> Pagination<T> ok(List<T> data, int totalRecord, Pageable pageable) {
+    int pages = ((totalRecord - 1) / pageable.pageSize() + 1);
+    return new Pagination<>(pages, totalRecord, pageable.pageSize(), pageable.pageNumber(), data);
   }
 
   public int getPages() {
@@ -72,43 +79,6 @@ public class Pagination<T> implements ListableHttpResult<T> {
     return current;
   }
 
-  public Pagination<T> pageable(int total, Pageable pageable) {
-    this.total = total;
-    return pageable(pageable);
-  }
-
-  public Pagination<T> pageable(Pageable pageable) {
-    this.size = pageable.size();
-    this.current = pageable.current();
-    applyNum();
-    return this;
-  }
-
-  public Pagination<T> size(int size) {
-    this.size = size;
-    return this;
-  }
-
-  public Pagination<T> total(int all) {
-    this.total = all;
-    return this;
-  }
-
-  public Pagination<T> data(List<T> data) {
-    this.data = data;
-    return this;
-  }
-
-  public Pagination<T> pageCount(int num) {
-    this.pages = num;
-    return this;
-  }
-
-  public Pagination<T> current(int current) {
-    this.current = current;
-    return this;
-  }
-
   @Override
   public List<T> getData() {
     return data;
@@ -116,15 +86,14 @@ public class Pagination<T> implements ListableHttpResult<T> {
 
   // Static Factory Methods
 
+  @SuppressWarnings("unchecked")
   public static <T> Pagination<T> empty() {
     return empty;
   }
 
-  public static <T> Pagination<T> ok(List<T> data) {
-    return new Pagination<T>().data(data);
+  public static <T> Pagination<T> from(Page<T> page) {
+    return new Pagination<>(page.getTotalPages(), page.getTotalRows().intValue(),
+            page.getLimit(), page.getPageNumber(), page.getRows());
   }
 
-  public static <T> Pagination<T> ok(List<T> data, int total, Pageable pageable) {
-    return ok(data).pageable(total, pageable);
-  }
 }

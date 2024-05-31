@@ -15,24 +15,26 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
 
-import java.util.List;
-
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
-import cn.taketoday.blog.repository.UserRepository;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
 import cn.taketoday.http.HttpStatus;
+import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.EntityManager;
+import cn.taketoday.persistence.Id;
+import cn.taketoday.persistence.Table;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.web.ResponseStatusException;
+
+import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -41,76 +43,73 @@ import cn.taketoday.web.ResponseStatusException;
 @Service
 @CacheConfig(cacheNames = "users")
 public class UserService {
-  public final UserRepository repository;
 
-  public UserService(UserRepository repository) {
-    this.repository = repository;
-  }
+  private final EntityManager entityManager;
 
-  public List<User> get(Pageable pageable) {
-    return get(pageable.current(), pageable.size());
-  }
-
-  public List<User> getByStatus(UserStatus status, Pageable pageable) {
-    return getByStatus(status, pageable.current(), pageable.size());
+  public UserService(EntityManager entityManager) {
+    this.entityManager = entityManager;
   }
 
   public String getAvatar(String email) {
     User findByEmail = getByEmail(email);
     if (findByEmail == null) {
-      throw ErrorMessageException.failed("用户'" + email + "'不存在");
+      throw ErrorMessageException.failed("用户 '%s' 不存在".formatted(email));
     }
     return findByEmail.getAvatar();
   }
 
   @CacheEvict(allEntries = true)
-  public void update(User user) {
+  public void updateById(User user) {
     try {
-      repository.update(user);
+      entityManager.updateById(user);
     }
     catch (Exception e) {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "更新失败", e);
     }
   }
 
+  @Nullable
   @Cacheable(key = "'email_'+#email")
   public User getByEmail(String email) {
-    return repository.findByEmail(email);
+    return entityManager.findUnique(User.class, isEqualsTo("email", email));
   }
 
   public void register(User user) {
-    repository.save(user);
+    entityManager.persist(user);
   }
 
+  @Nullable
   @Cacheable(key = "'ById_'+#id")
   public User getById(long id) {
-    return repository.findById(id);
+    return entityManager.findById(User.class, id);
   }
 
   public int count() {
-    return repository.getTotalRecord();
-  }
-
-  public int countByStatus(UserStatus status) {
-    return repository.getRecord(status);
-  }
-
-  public List<User> getByStatus(UserStatus status, int pageNow, int pageSize) {
-    return repository.findByStatus(status, (pageNow - 1) * pageSize, pageSize);
-  }
-
-  public List<User> get(int pageNow, int pageSize) {
-    return repository.find((pageNow - 1) * pageSize, pageSize);
+    return entityManager.count(User.class).intValue();
   }
 
   @CacheEvict(allEntries = true)
   public void updateStatusById(UserStatus status, long id) {
-    repository.updateStatus(status, id);
+    entityManager.updateById(new UserStatusUpdate(id, status));
+  }
+
+  @Table("user")
+  static class UserStatusUpdate {
+
+    @Id
+    public final Long id;
+
+    public final UserStatus status;
+
+    UserStatusUpdate(Long id, UserStatus status) {
+      this.id = id;
+      this.status = status;
+    }
   }
 
   @CacheEvict(allEntries = true)
   public void deleteById(long id) {
-    repository.deleteById(id);
+    entityManager.delete(User.class, id);
   }
 
 }

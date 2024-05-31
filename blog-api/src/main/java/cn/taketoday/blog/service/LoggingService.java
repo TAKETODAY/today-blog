@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.service;
@@ -42,8 +42,8 @@ import cn.taketoday.jdbc.JdbcConnection;
 import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.jdbc.persistence.EntityManager;
 import cn.taketoday.lang.Constant;
+import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
 import lombok.CustomLog;
 
@@ -219,7 +219,7 @@ public class LoggingService {
         try (NamedQuery dataQuery = connection.createNamedQuery(
                 "SELECT * FROM logging ORDER BY id DESC LIMIT :pageNow, :pageSize")) {
           dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.size());
+          dataQuery.addParameter("pageSize", pageable.pageSize());
           List<Operation> all = dataQuery.fetch(Operation.class);
           return Pagination.ok(all, count, pageable);
         }
@@ -228,7 +228,7 @@ public class LoggingService {
   }
 
   private static int pageNow(Pageable pageable) {
-    return (pageable.current() - 1) * pageable.size();
+    return (pageable.pageNumber() - 1) * pageable.pageSize();
   }
 
 }
