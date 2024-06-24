@@ -17,7 +17,10 @@
 
 package cn.taketoday.blog.service;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,6 +51,15 @@ import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.persistence.EntityManager;
+import cn.taketoday.persistence.EntityMetadata;
+import cn.taketoday.persistence.EntityRef;
+import cn.taketoday.persistence.Id;
+import cn.taketoday.persistence.Order;
+import cn.taketoday.persistence.SimpleSelectQueryStatement;
+import cn.taketoday.persistence.Transient;
+import cn.taketoday.persistence.sql.OrderByClause;
+import cn.taketoday.persistence.sql.OrderBySource;
+import cn.taketoday.persistence.sql.SimpleSelect;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 import cn.taketoday.util.CollectionUtils;
@@ -154,13 +166,9 @@ public class ArticleService implements InitializingBean {
   @Nullable
   @Cacheable(key = "'ById_'+#id")
   public Article getById(long id) {
-    try (Query query = repository.createQuery("SELECT * FROM article WHERE id = ? LIMIT 1")) {
-      query.addParameter(id);
-
-      Article article = query.fetchFirst(Article.class);
-      applyTags(article);
-      return article;
-    }
+    Article article = entityManager.findById(Article.class, id);
+    applyTags(article);
+    return article;
   }
 
   @Nullable
@@ -345,18 +353,13 @@ public class ArticleService implements InitializingBean {
    * 刷新订阅文章
    */
   public void refreshFeedArticles() {
-    int listSize = blogConfig.articleFeedListSize;
-    try (Query query = repository.createQuery(
-            "SELECT * FROM article WHERE status=0 order by id DESC LIMIT ?")) {
-      query.addParameter(listSize);
+    int limit = blogConfig.articleFeedListSize;
+    List<Article> feedArticles = entityManager.find(Article.class, new FeedArticles(limit));
+    applyLabels(feedArticles);
 
-      List<Article> feedArticles = query.fetch(Article.class);
-      applyLabels(feedArticles);
-
-      buildAtom(feedArticles);
-      buildRss(feedArticles);
-      buildSitemap();
-    }
+    buildAtom(feedArticles);
+    buildRss(feedArticles);
+    buildSitemap();
   }
 
   @Override
@@ -431,14 +434,13 @@ public class ArticleService implements InitializingBean {
     rss.setLastBuildDate(System.currentTimeMillis());
   }
 
-  protected synchronized void buildSitemap() {
+  protected void buildSitemap() {
     log.debug("Build Sitemap");
-    try (var query = repository.createQuery("SELECT * FROM article ORDER BY create_at DESC")) {
-      sitemap.getUrls().clear();
-      for (Article article : query.fetch(Article.class)) {
-        if (article.getStatus() == PostStatus.PUBLISHED) {
-          sitemap.addArticle(article);
-        }
+    sitemap.getUrls().clear();
+
+    for (Article article : entityManager.find(Article.class, Map.of("create_at", Order.DESC))) {
+      if (article.getStatus() == PostStatus.PUBLISHED) {
+        sitemap.addArticle(article);
       }
     }
   }
@@ -455,15 +457,13 @@ public class ArticleService implements InitializingBean {
   @Transactional
   @CacheEvict(allEntries = true)
   public void updateStatusById(PostStatus status, long id) {
+    Assert.notNull(status, "status is required");
     Article findById = obtainById(id);
-    try (Query query = repository.createQuery(
-            "UPDATE article set status = ? WHERE id = ?")) {
-      query.addParameter(status);
-      query.addParameter(id);
-      query.executeUpdate();
-    }
 
-    categoryService.updateArticleCount(findById.getCategory());
+    repository.executeWithoutResult(status_ -> {
+      entityManager.update(new ArticleStatus(id, status));
+      categoryService.updateArticleCount(findById.getCategory());
+    });
     refreshFeedArticles();
   }
 
@@ -568,6 +568,46 @@ public class ArticleService implements InitializingBean {
       }
     }
     return ret;
+  }
+
+  @EntityRef(Article.class)
+  static class ArticleStatus {
+
+    @Id
+    public final long id;
+
+    public final PostStatus status;
+
+    ArticleStatus(long id, PostStatus status) {
+      this.id = id;
+      this.status = status;
+    }
+  }
+
+  static class FeedArticles extends SimpleSelectQueryStatement implements OrderBySource {
+
+    @Transient
+    public final int limit;
+
+    public FeedArticles(int limit) {
+      this.limit = limit;
+    }
+
+    @Override
+    public OrderByClause orderByClause() {
+      return OrderByClause.mutable().desc("id");
+    }
+
+    @Override
+    protected void renderInternal(EntityMetadata metadata, SimpleSelect select) {
+      select.addRestriction("status");
+      select.limit(limit);
+    }
+
+    @Override
+    public void setParameter(EntityMetadata metadata, PreparedStatement statement) throws SQLException {
+      statement.setInt(1, PostStatus.PUBLISHED.getValue());
+    }
   }
 
 }
