@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +12,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.interceptor;
+
+import java.time.Clock;
 
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
@@ -29,6 +28,7 @@ import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
 import cn.taketoday.session.SessionHandlerInterceptor;
 import cn.taketoday.session.SessionManager;
+import cn.taketoday.session.SessionRepository;
 import cn.taketoday.session.WebSession;
 import cn.taketoday.web.InterceptorChain;
 import cn.taketoday.web.RequestContext;
@@ -40,8 +40,13 @@ import cn.taketoday.web.resource.ResourceHttpRequestHandler;
  */
 public class BloggerInterceptor extends SessionHandlerInterceptor {
 
-  public BloggerInterceptor(SessionManager sessionManager) {
+  private final Clock clock = Clock.systemUTC();
+
+  private final SessionRepository repository;
+
+  public BloggerInterceptor(SessionManager sessionManager, SessionRepository repository) {
     super(sessionManager);
+    this.repository = repository;
   }
 
   @Override
@@ -50,6 +55,7 @@ public class BloggerInterceptor extends SessionHandlerInterceptor {
     if (session != null) {
       if (User.isPresent(session)) {
         if (Blogger.isPresent(session)) {
+          repository.updateLastAccessTime(session);
           return chain.proceed(request);
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
