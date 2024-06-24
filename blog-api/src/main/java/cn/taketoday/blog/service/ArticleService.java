@@ -151,6 +151,7 @@ public class ArticleService implements InitializingBean {
     }
   }
 
+  @Nullable
   @Cacheable(key = "'ById_'+#id")
   public Article getById(long id) {
     try (Query query = repository.createQuery("SELECT * FROM article WHERE id = ? LIMIT 1")) {
@@ -278,11 +279,11 @@ public class ArticleService implements InitializingBean {
     try (JdbcConnection connection = repository.open()) {
       try (var countQuery = connection.createNamedQuery("""
               SELECT COUNT(*) FROM article
-              LEFT JOIN article_label ON article.id = article_label.articleId
+              LEFT JOIN article_label ON article.id = article_label.article_id
               WHERE status = :status
-                and article_label.labelId IN (
-                  SELECT labelId FROM article_label
-                    WHERE labelId = (SELECT id FROM label WHERE name = :name))""")) {
+                and article_label.label_id IN (
+                  SELECT label_id FROM article_label
+                    WHERE label_id = (SELECT id FROM label WHERE name = :name))""")) {
 
         countQuery.addParameter("name", label);
         countQuery.addParameter("status", PostStatus.PUBLISHED);
@@ -292,11 +293,11 @@ public class ArticleService implements InitializingBean {
         }
         try (var dataQuery = connection.createNamedQuery("""
                 SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-                FROM article LEFT JOIN article_label ON article.id = article_label.articleId
+                FROM article LEFT JOIN article_label ON article.id = article_label.article_id
                 WHERE article.status = :status
-                  AND article_label.labelId IN (
-                    SELECT labelId FROM article_label
-                      WHERE labelId = (SELECT id FROM label WHERE name = :name)
+                  AND article_label.label_id IN (
+                    SELECT label_id FROM article_label
+                      WHERE label_id = (SELECT id FROM label WHERE name = :name)
                   )
                 LIMIT :offset, :size""")) {
 
@@ -542,7 +543,7 @@ public class ArticleService implements InitializingBean {
 
   // private
 
-  private void applyTags(Article article) {
+  private void applyTags(@Nullable Article article) {
     if (article != null) {
       article.setLabels(labelService.getByArticleId(article.getId()));
     }

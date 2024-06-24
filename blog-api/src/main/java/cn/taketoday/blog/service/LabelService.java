@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,10 +33,10 @@ import cn.taketoday.blog.model.Label;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
-import cn.taketoday.jdbc.Query;
-import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.persistence.EntityManager;
+import cn.taketoday.persistence.EntityRef;
+import cn.taketoday.persistence.Where;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.transaction.annotation.Transactional;
 
@@ -55,16 +52,13 @@ public class LabelService {
 
   private final EntityManager entityManager;
 
-  private final RepositoryManager repository;
-
   private final Cache<Long, Set<Label>> articleLabelsCache = Caffeine.newBuilder()
           .maximumSize(100)
           .expireAfterWrite(10, TimeUnit.SECONDS)
           .build();
 
-  public LabelService(EntityManager entityManager, RepositoryManager repository) {
+  public LabelService(EntityManager entityManager) {
     this.entityManager = entityManager;
-    this.repository = repository;
   }
 
   @Cacheable(key = "'all'")
@@ -108,11 +102,21 @@ public class LabelService {
 
   final class ArticleLabelMappingFunction implements Function<Long, Set<Label>> {
 
+    @Override
     public Set<Label> apply(Long articleId) {
-      return new LinkedHashSet<>(repository.createQuery("""
-                      SELECT * FROM label WHERE `id` IN (SELECT `labelId` FROM article_label WHERE `articleId` = ? )""")
-              .addParameter(articleId)
-              .fetch(Label.class));
+      return new LinkedHashSet<>(entityManager.find(Label.class, new TagQuery(articleId)));
+    }
+
+  }
+
+  @EntityRef(Label.class)
+  static class TagQuery {
+
+    @Where("`id` IN (SELECT `label_id` FROM article_label WHERE `article_id` = ? )")
+    public final Long articleId;
+
+    TagQuery(Long articleId) {
+      this.articleId = articleId;
     }
   }
 
@@ -143,12 +147,7 @@ public class LabelService {
   @Transactional
   @CacheEvict(allEntries = true)
   public void removeArticleLabels(long articleId) {
-    try (Query query = repository.createQuery("""
-            DELETE from article_label WHERE articleId = ?""")) {
-      query.addParameter(articleId);
-      query.executeUpdate();
-    }
-
+    entityManager.delete(ArticleLabel.forArticle(articleId));
     articleLabelsCache.invalidate(articleId);
   }
 

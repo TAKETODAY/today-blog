@@ -41,19 +41,19 @@ import cn.taketoday.session.SessionIdGenerator;
 import cn.taketoday.session.SessionIdResolver;
 import cn.taketoday.session.SessionRepository;
 import cn.taketoday.session.WebSession;
+import cn.taketoday.test.web.mock.MockMvc;
+import cn.taketoday.test.web.mock.client.MockMvcWebTestClient;
+import cn.taketoday.test.web.mock.setup.MockMvcBuilders;
 import cn.taketoday.test.web.reactive.server.WebTestClient;
-import cn.taketoday.test.web.servlet.MockMvc;
-import cn.taketoday.test.web.servlet.client.MockMvcWebTestClient;
-import cn.taketoday.test.web.servlet.setup.MockMvcBuilders;
 import cn.taketoday.transaction.annotation.Isolation;
 import cn.taketoday.transaction.annotation.Transactional;
 
-import static cn.taketoday.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static cn.taketoday.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static cn.taketoday.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static cn.taketoday.test.web.servlet.result.MockMvcResultMatchers.content;
-import static cn.taketoday.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static cn.taketoday.test.web.servlet.result.MockMvcResultMatchers.status;
+import static cn.taketoday.test.web.mock.request.MockMvcRequestBuilders.get;
+import static cn.taketoday.test.web.mock.request.MockMvcRequestBuilders.post;
+import static cn.taketoday.test.web.mock.request.MockMvcRequestBuilders.put;
+import static cn.taketoday.test.web.mock.result.MockMvcResultMatchers.content;
+import static cn.taketoday.test.web.mock.result.MockMvcResultMatchers.jsonPath;
+import static cn.taketoday.test.web.mock.result.MockMvcResultMatchers.status;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
