@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 import { Avatar, Card, Col, Row, Skeleton, Statistic, Table, Tag } from 'antd';
@@ -80,7 +77,7 @@ const PageHeaderContent: React.FC<{}> = () => {
         </div>
         <div className={styles.content}>
           <div className={styles.contentTitle}>
-            您好，{currentUser.name}，祝你开心每一天！
+            您好，{currentUser.name}
           </div>
           <div>
             {currentUser.email} | {currentUser.introduce}
@@ -124,6 +121,7 @@ const loggingColumns = [
     title: '内容',
     dataIndex: 'content',
     key: 'content',
+    width: 260,
   },
   {
     title: 'IP地址',
@@ -132,11 +130,10 @@ const loggingColumns = [
   },
   {
     title: '时间',
-    dataIndex: 'id',
     dataType: 'datetime',
-    key: 'id',
+    width: 160,
     render: (log: DashboardLog) => {
-      return moment(log.id).format("lll")
+      return moment(log.createAt).format("lll")
     }
   },
 ]
@@ -160,7 +157,7 @@ const commentColumns = [
     title: '时间',
     width: 180,
     render: (comment: DashboardComment) => {
-      return moment(comment.id).format("lll")
+      return moment(comment.createAt).format("lll")
     }
   },
 ]
@@ -223,7 +220,8 @@ const Workplace = (props: WorkplaceProps) => {
                   title="最近日志"
                   loading={loading}
             >
-              <Table columns={loggingColumns} rowKey='id' dataSource={statistics?.logs} pagination={false}/>
+              <Table scroll={{ x: 600, y: 600 }}
+                  columns={loggingColumns} rowKey='id' dataSource={statistics?.logs} pagination={false}/>
             </Card>
           </Col>
           <Col xl={8} lg={24} md={24} sm={24} xs={24}>
