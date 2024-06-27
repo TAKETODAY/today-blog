@@ -54,7 +54,7 @@ public class LabelService {
 
   private final Cache<Long, Set<Label>> articleLabelsCache = Caffeine.newBuilder()
           .maximumSize(100)
-          .expireAfterWrite(10, TimeUnit.SECONDS)
+          .expireAfterWrite(25, TimeUnit.SECONDS)
           .build();
 
   public LabelService(EntityManager entityManager) {
