@@ -323,30 +323,11 @@ public class ArticleService implements InitializingBean {
    * 根据类型找文章
    * @param pageable 分页
    */
-  @Cacheable(key = "'cate_'+#categoryName+'_'+#pageable")
+  @Cacheable(key = "'cate_'+#categoryName+'_'+#pageable.offset()")
   public Pagination<ArticleItem> getArticlesByCategory(String categoryName, Pageable pageable) {
-    try (JdbcConnection connection = repository.open()) {
-
-      try (var countQuery = connection.createNamedQuery("""
-              SELECT COUNT(id) FROM article WHERE status = :status AND category = :name""")) {
-        countQuery.addParameter("name", categoryName);
-        countQuery.addParameter("status", PostStatus.PUBLISHED);
-        int count = countQuery.fetchScalar(int.class);
-        if (count < 1) {
-          return Pagination.empty();
-        }
-
-        try (var dataQuery = connection.createNamedQuery("""
-                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-                FROM article WHERE status = :status AND category = :name LIMIT :offset, :pageSize""")) {
-          dataQuery.addParameter("name", categoryName);
-          dataQuery.addParameter("status", PostStatus.PUBLISHED);
-          dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("pageSize", pageable.pageSize());
-          return fetchArticleItems(pageable, count, dataQuery);
-        }
-      }
-    }
+    return entityManager.page(ArticleItem.class, Map.of("status", PostStatus.PUBLISHED, "category", categoryName), pageable)
+            .peek(this::applyTags)
+            .map(Pagination::from);
   }
 
   /**
@@ -546,6 +527,13 @@ public class ArticleService implements InitializingBean {
   private void applyTags(@Nullable Article article) {
     if (article != null) {
       article.setLabels(labelService.getByArticleId(article.getId()));
+    }
+  }
+
+  private void applyTags(@Nullable ArticleItem item) {
+    if (item != null) {
+      Set<Label> labels = labelService.getByArticleId(item.id);
+      item.tags = labels.stream().map(Label::getName).toList();
     }
   }
 

@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
@@ -26,6 +23,8 @@ import java.util.Objects;
 
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.core.style.ToStringBuilder;
+import cn.taketoday.persistence.EntityRef;
+import cn.taketoday.persistence.Transient;
 import lombok.Data;
 
 /**
@@ -33,16 +32,24 @@ import lombok.Data;
  * @since 4.0 2023/3/8 22:36
  */
 @Data
+@EntityRef(Article.class)
 public class ArticleItem {
 
   public long id;
 
   public int pv;
+
   public String uri;
+
   public String title;
+
   public String cover;
+
   public String summary;
+
+  @Transient
   public List<String> tags;
+
   public LocalDateTime createAt;
 
   public ArticleItem() { }
