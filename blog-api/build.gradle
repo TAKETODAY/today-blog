@@ -103,13 +103,6 @@ infraApplication {
   buildInfo()
 }
 
-infraBuildImage {
-//  pullPolicy = "IF_NOT_PRESENT"
-  applicationDirectory = "/application"
-  network = "host"
-//  createdDate = Instant.now().toString()
-}
-
 distributions {
   main {
     contents {
