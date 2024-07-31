@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +26,8 @@ import cn.taketoday.cache.annotation.Cacheable;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.persistence.EntityManager;
+import cn.taketoday.persistence.EntityRef;
 import cn.taketoday.persistence.Id;
-import cn.taketoday.persistence.Table;
 import cn.taketoday.stereotype.Service;
 import cn.taketoday.web.ResponseStatusException;
 
@@ -93,7 +90,7 @@ public class UserService {
     entityManager.updateById(new UserStatusUpdate(id, status));
   }
 
-  @Table("user")
+  @EntityRef(User.class)
   static class UserStatusUpdate {
 
     @Id
