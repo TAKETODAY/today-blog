@@ -14,20 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
-package cn.taketoday.blog.web.handler;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.Objects;
+package cn.taketoday.blog.web.handler;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.UserSessionResolver;
-import cn.taketoday.blog.model.Blogger;
-import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
-import cn.taketoday.core.style.ToStringBuilder;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.stereotype.Singleton;
@@ -72,101 +65,7 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
 
   @Override
   public Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
-    return new RequestContextPageable(context);
-  }
-
-  final class RequestContextPageable implements Pageable, Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    private Integer size;
-    private Integer current;
-    private final RequestContext request;
-
-    public RequestContextPageable(RequestContext request) {
-      this.request = request;
-    }
-
-    @Override
-    public int pageNumber() {
-      if (current == null) {
-        String parameter = request.getParameter(pageRequestParameterName);
-        if (StringUtils.isEmpty(parameter)) {
-          current = 1;
-        }
-        else if ((current = parseInt(parameter)) <= 0) {
-          throw ErrorMessageException.failed("分页页数必须大于0");
-        }
-      }
-      return current;
-    }
-
-    @Override
-    public int pageSize() {
-      if (size == null) {
-        int size;
-        String parameter = request.getParameter(pageSizeRequestParameterName);
-        if (StringUtils.isEmpty(parameter)) {
-          size = blogConfig.listSize;
-        }
-        else {
-          size = parseInt(parameter);
-          if (size <= 0) {
-            throw ErrorMessageException.failed("每页大小必须大于0");
-          }
-
-          if (size > blogConfig.maxPageSize) {
-            // 针对非博主的进行限制
-            Blogger loggedInBlogger = sessionResolver.getLoggedInBlogger(request);
-            if (loggedInBlogger == null) {
-              throw ErrorMessageException.failed("分页大小超出限制");
-            }
-          }
-        }
-        return this.size = size;
-      }
-      return size;
-    }
-
-    private Integer parseInt(String parameter) {
-      try {
-        return Integer.valueOf(parameter);
-      }
-      catch (NumberFormatException e) {
-        throw ErrorMessageException.failed("分页参数错误");
-      }
-    }
-
-    // Object
-    // ----------------------
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-
-      if (o instanceof RequestContextPageable that) {
-        return Objects.equals(size, that.size)
-                && Objects.equals(current, that.current);
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(size, current);
-    }
-
-    @Override
-    public String toString() {
-      return ToStringBuilder.from(this)
-              .append("size", size)
-              .append("current", current)
-              .append("request", request)
-              .toString();
-    }
+    return new LazyPageable(blogConfig, sessionResolver, context, pageRequestParameterName, pageSizeRequestParameterName);
   }
 
 }
