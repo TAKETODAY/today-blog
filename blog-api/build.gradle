@@ -28,6 +28,7 @@ dependencies {
 
   implementation 'cn.taketoday:ip2region-java:1.0-SNAPSHOT'
   implementation 'cn.taketoday:today-starter-netty'
+  implementation 'cn.taketoday:today-starter-web'
   implementation 'cn.taketoday:today-starter-json'
   implementation 'cn.taketoday:today-starter-validation'
   implementation 'cn.taketoday:today-starter-jdbc'
