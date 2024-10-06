@@ -44,8 +44,8 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
   private String pageSizeRequestParameterName = BlogConstant.PARAMETER_SIZE;
 
   public PageableMethodArgumentResolver(BlogConfig blogConfig, UserSessionResolver sessionResolver) {
-    Assert.notNull(blogConfig);
-    Assert.notNull(sessionResolver);
+    Assert.notNull(blogConfig, "BlogConfig is required");
+    Assert.notNull(sessionResolver, "UserSessionResolver is required");
     this.blogConfig = blogConfig;
     this.sessionResolver = sessionResolver;
   }
