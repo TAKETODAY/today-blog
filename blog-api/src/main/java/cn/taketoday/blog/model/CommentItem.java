@@ -19,40 +19,32 @@ package cn.taketoday.blog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
-import cn.taketoday.blog.model.enums.CommentStatus;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.core.style.ToStringBuilder;
 import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.Id;
-import cn.taketoday.persistence.Table;
 import cn.taketoday.persistence.Transient;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 /**
- * @author TODAY Time 2017 10 11--18:07
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 3.2 2024/10/8 22:02
  */
-@Setter
-@Getter
-@Table("t_comment")
-public class Comment implements Serializable {
+@Data
+public class CommentItem {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  @Id
   private Long id;
 
   private String content;
 
-  private CommentStatus status;
+  /** 父级 ID */
+  @JsonIgnore
+  private Long parentId;
 
-  private Long articleId;
+  @JsonIgnore
+  private Long userId;
 
   /**
    * 评论者的 邮箱
@@ -70,16 +62,8 @@ public class Comment implements Serializable {
   @Nullable
   private String commenterSite;
 
-  /** parent comment id */
-  @JsonIgnore
-  private Long parentId;
-
-  @JsonIgnore
-  private Long userId;
-
-  private LocalDateTime createAt;
-
-  private LocalDateTime updateAt;
+  @Nullable
+  private String commenterDesc;
 
   @Nullable
   @Transient
@@ -89,37 +73,43 @@ public class Comment implements Serializable {
   @Transient
   private List<Comment> replies;
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (!(o instanceof Comment comment))
-      return false;
-    return Objects.equals(id, comment.id)
-            && status == comment.status
-            && Objects.equals(content, comment.content)
-            && Objects.equals(articleId, comment.articleId)
-            && Objects.equals(parentId, comment.parentId)
-            && Objects.equals(userId, comment.userId)
-            && Objects.equals(createAt, comment.createAt)
-            && Objects.equals(updateAt, comment.updateAt)
-            && Objects.equals(user, comment.user)
-            && Objects.equals(replies, comment.replies);
+  private LocalDateTime createAt;
+
+  private LocalDateTime updateAt;
+
+  public void setUser(@Nullable User user) {
+    this.user = user;
+    if (user != null) {
+      commenterDesc = user.getIntroduce();
+    }
+    else {
+      commenterDesc = null;
+    }
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(id, content, articleId, parentId, status, userId, createAt, updateAt, user, replies);
+  public static CommentItem forComment(Comment comment) {
+    CommentItem commentItem = new CommentItem();
+    commentItem.setId(comment.getId());
+    commentItem.setContent(comment.getContent());
+    commentItem.setCreateAt(comment.getCreateAt());
+    commentItem.setUpdateAt(comment.getUpdateAt());
+    commentItem.setEmail(comment.getEmail());
+    commentItem.setReplies(comment.getReplies());
+    commentItem.setParentId(comment.getParentId());
+    commentItem.setUserId(comment.getUserId());
+    commentItem.setCommenter(comment.getCommenter());
+    commentItem.setCommenterSite(comment.getCommenterSite());
+    commentItem.setUser(comment.getUser());
+
+    return commentItem;
   }
 
   @Override
   public String toString() {
     return ToStringBuilder.from(this)
             .append("id", id)
-            .append("content", content)
-            .append("articleId", articleId)
+            .append("content", StringUtils.truncate(content, 10))
             .append("parent", parentId)
-            .append("status", status)
             .append("userId", userId)
             .append("createAt", createAt)
             .append("updateAt", updateAt)
@@ -127,4 +117,5 @@ public class Comment implements Serializable {
             .append("replies", replies)
             .toString();
   }
+
 }

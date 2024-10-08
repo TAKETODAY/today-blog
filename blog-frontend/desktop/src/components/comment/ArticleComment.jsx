@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 import { Empty, message, Pagination, Skeleton } from 'antd';
@@ -27,13 +24,7 @@ import { CommentEdit, CommentList } from '..';
 export default class ArticleComment extends React.Component {
 
   state = {
-    comments: {
-      total: 0,
-      current: 1,
-      pages: 0,
-      size: 8,
-      data: []
-    },
+    comments: null,
     commentsLoaded: false
   }
 
@@ -79,13 +70,15 @@ export default class ArticleComment extends React.Component {
 
   loadComment = (page = 1) => {
     const articleId = this.props.articleId
-    commentService.getComments(articleId, page)
+    commentService.fetchComments(articleId, page)
       .then(extractData)
       .then(comments => {
         scrollTo('div#comments.data_list.markdown')
+        console.log(comments)
         this.setState({ comments, commentsLoaded: true })
       })
       .catch(res => {
+        console.log(res)
         message.error("评论加载失败")
       })
   }
@@ -103,20 +96,21 @@ export default class ArticleComment extends React.Component {
         <div className="data-list-title" style={{ border: 'none' }}>
           <i className="fa fa-commenting-o"/> 评论
           {commentsLoaded
-            ? isEmpty(comments.data) && <Empty description="暂无评论"/>
+            ? isEmpty(comments) && <Empty description="暂无评论"/>
             : <Skeleton active/>
           }
         </div>
-        {comments.data && <>
-          <CommentList data={comments.data} onReply={this.onReply}/>
-          {isNotEmpty(comments.data) &&
+        {isNotEmpty(comments) && <>
+          <CommentList data={comments} onReply={this.onReply}/>
+          {isNotEmpty(comments) &&
             <div align='center' style={{ padding: '20px' }}>
-              <Pagination
-                total={comments.total}
-                onChange={this.loadComment.bind(this)}
-                current={comments.current}
-                showTotal={n => <>总共 <b className='red'>{n}</b> 条评论</>}
-              />
+              总共 <b className='red'>{comments.length}</b> 条评论
+              {/* <Pagination */}
+              {/*   total={comments.total} */}
+              {/*   onChange={this.loadComment.bind(this)} */}
+              {/*   current={comments.current} */}
+              {/*   showTotal={n => <>总共 <b className='red'>{n}</b> 条评论</>} */}
+              {/* /> */}
             </div>
           }</>
         }

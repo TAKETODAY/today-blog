@@ -27,6 +27,7 @@ import java.util.Objects;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.model.Comment;
+import cn.taketoday.blog.model.CommentItem;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.web.ErrorMessageException;
@@ -79,6 +80,7 @@ public class CommentService {
   }
 
   //  @Cacheable(key = "'i'+#id+'p'+#pageNow+'s'+#pageSize")
+  @Deprecated
   public List<Comment> listByArticleId(long id, Pageable pageable) {
     List<Comment> commentsToUse = getAllByArticleId(id);
 
@@ -88,7 +90,7 @@ public class CommentService {
 
     List<Comment> comments = new ArrayList<>();
     for (Comment comment : commentsToUse) {
-      if (comment.getCommentId() == null) {
+      if (comment.getParentId() == null) {
         comments.add(comment);
       }
     }
@@ -105,6 +107,33 @@ public class CommentService {
     }
     List<Comment> subList = comments.subList(offset, toIndex);
     return getComments(new ArrayList<>(subList), commentsToUse);
+  }
+
+  public List<CommentItem> fetchByArticleId(long articleId) {
+    List<Comment> comments = entityManager.find(Comment.class, new QueryByArticleId(articleId, CommentStatus.CHECKED));
+
+    comments = commentTree(comments);
+    List<CommentItem> commentItems = new ArrayList<>();
+    for (Comment comment : comments) {
+      comment.setUser(userService.getById(comment.getUserId()));
+      commentItems.add(CommentItem.forComment(comment));
+    }
+    return commentItems;
+  }
+
+  private List<Comment> commentTree(List<Comment> commentsToUse) {
+    if (CollectionUtils.isEmpty(commentsToUse)) {
+      return Collections.emptyList();
+    }
+
+    List<Comment> comments = new ArrayList<>();
+    for (Comment comment : commentsToUse) {
+      if (comment.getParentId() == null) {
+        comments.add(comment);
+      }
+    }
+
+    return getComments(comments, commentsToUse);
   }
 
   public Pagination<Comment> getByArticleId(long articleId, Pageable pageable) {
@@ -157,12 +186,12 @@ public class CommentService {
 
     List<Comment> commentsChild = new ArrayList<>();
     for (Comment comment : commentsRoot) {
-      if (Objects.equals(parentId, comment.getCommentId())) {
+      if (Objects.equals(parentId, comment.getParentId())) {
         commentsChild.add(comment);
       }
     }
     for (Comment comment : commentsChild) {
-      if (comment.getCommentId() != null) {
+      if (comment.getParentId() != null) {
         comment.setReplies(getReplies(comment.getId(), commentsRoot));
       }
     }
@@ -170,7 +199,7 @@ public class CommentService {
   }
 
   @Transactional
-  public void save(Comment comment) {
+  public void persist(Comment comment) {
     entityManager.persist(comment);
 
     //sendMail(comment);
@@ -194,7 +223,7 @@ public class CommentService {
               dataModel, "/core/mail/admin"
       );
     }
-    long commentId = comment.getCommentId();
+    long commentId = comment.getParentId();
     if (commentId <= 0) {
       return;
     }
@@ -390,4 +419,18 @@ public class CommentService {
     }
 
   }
+
+  @OrderBy(clause = "id DESC")
+  static class QueryByArticleId {
+
+    public final Long articleId;
+
+    public final CommentStatus status;
+
+    QueryByArticleId(Long articleId, CommentStatus status) {
+      this.articleId = articleId;
+      this.status = status;
+    }
+  }
+
 }

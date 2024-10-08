@@ -17,9 +17,12 @@
 
 package cn.taketoday.blog.web.http;
 
+import java.util.List;
+
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Comment;
+import cn.taketoday.blog.model.CommentItem;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.service.CommentService;
@@ -92,13 +95,17 @@ class CommentController {
   @ResponseStatus(HttpStatus.CREATED)
   @Logging(title = "用户评论", content = "用户：[#{#loginInfo.loginUser.name}] " +
           "评论了文章:[#{@articleService.getById(#from.articleId).title}] 回复了:[#{#from.commentId}]")
-  public void create(@RequiresUser LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
+  public void create(@RequiresUser LoginInfo loginInfo, User loginUser, @RequestBody @Valid CommentFrom from) {
     Comment comment = new Comment();
-    comment.setUser(loginInfo.getLoginUser());
-    comment.setUserId(loginInfo.getLoginUserId());
+    comment.setUser(loginUser);
+    comment.setUserId(loginUser.getId());
     comment.setContent(from.content);
-    comment.setCommentId(from.commentId);
+    comment.setParentId(from.commentId);
     comment.setArticleId(from.articleId);
+
+    comment.setEmail(loginUser.getEmail());
+    comment.setCommenter(loginUser.getName());
+    comment.setCommenterSite(loginUser.getSite());
 
     if (loginInfo.isBloggerLoggedIn()) {
       comment.setStatus(CommentStatus.CHECKED);
@@ -120,12 +127,20 @@ class CommentController {
     // comment.setContent(BlogUtils.stripXss(comment.getContent()));
 
     // save
-    commentService.save(comment);
+    commentService.persist(comment);
   }
 
   @GET("/articles/{id}")
   public HttpResult get(@PathVariable Long id, Pageable pageable) {
     return commentService.getByArticleId(id, pageable);
+  }
+
+  /**
+   * @since 3.2
+   */
+  @GET(params = "articleId")
+  public List<CommentItem> getArticleComments(long articleId) {
+    return commentService.fetchByArticleId(articleId);
   }
 
   @RequiresBlogger
@@ -169,7 +184,7 @@ class CommentController {
 
   @GET
   @RequiresBlogger
-  public Pagination<Comment> get(Pageable pageable) {
+  public Pagination<Comment> list(Pageable pageable) {
     return commentService.pagination(pageable);
   }
 

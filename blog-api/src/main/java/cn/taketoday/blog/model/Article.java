@@ -77,6 +77,7 @@ public class Article implements Serializable {
   private Set<Label> labels;
 
   private LocalDateTime createAt;
+
   private LocalDateTime updateAt;
 
   public boolean needPassword() {

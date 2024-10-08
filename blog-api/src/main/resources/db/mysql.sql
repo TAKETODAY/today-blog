@@ -162,13 +162,16 @@ create table user
 
 create table t_comment
 (
-    `id`         bigint             not null auto_increment primary key,
-    `article_id` bigint             null comment '评论文章id',
-    `user_id`    bigint             null comment '评论者id',
-    `content`    text               not null comment '评论内容',
-    `status`     tinyint  default 0 not null comment '状态（审核，未审核，回收站）',
-    `comment_id` bigint             null comment '父评论id',
+    `id`             bigint unsigned            not null auto_increment primary key,
+    `content`        text                       not null comment '评论内容',
+    `email`          varchar(255)               not null comment 'email',
+    `commenter`      varchar(255)               not null comment '评论者的名字',
+    `commenter_site` varchar(255)     default null comment '评论者的网站地址',
+    `status`         tinyint unsigned default 0 not null comment '状态（审核，未审核，回收站）',
+    `article_id`     bigint unsigned            not null comment '评论文章id',
+    `parent_id`      bigint unsigned  default null comment '父评论id',
+    `user_id`        bigint unsigned  default null comment '评论者id',
 
-    `create_at`  datetime default CURRENT_TIMESTAMP comment '创建时间',
-    `update_at`  datetime on update CURRENT_TIMESTAMP comment '更新时间'
+    `create_at`      datetime         default CURRENT_TIMESTAMP comment '创建时间',
+    `update_at`      datetime on update CURRENT_TIMESTAMP comment '更新时间'
 );

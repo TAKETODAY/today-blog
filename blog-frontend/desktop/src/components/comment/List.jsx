@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +12,33 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 import { Tooltip } from 'antd';
-import moment from 'moment';
 import React from 'react';
-import { isEmpty, scrollTo } from '../../utils';
+
+import sha256 from 'js-sha256';
+
+import { format, fromNow, isEmpty, scrollTo } from '../../utils';
 import { Image } from '../index';
 
-export default class Comment extends React.Component {
+//https://secure.gravatar.com/js/gprofiles.js
+
+function getGravatarURL(email) {
+  // Trim leading and trailing whitespace from
+  // an email address and force all characters
+  // to lower case
+  const address = String(email).trim().toLowerCase();
+
+  // Create a SHA256 hash of the final string
+  const hash = sha256(address);
+
+  // Grab the actual image URL
+  return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=80`;
+}
+
+export default class CommentList extends React.Component {
 
   onReply = (user, commentId) => {
     scrollTo('#comment_area')
@@ -57,9 +71,9 @@ export default class Comment extends React.Component {
                     <a href={parentUser.site} target='_blank'>
                       <span className='user_name'>{parentUser.name}</span>
                     </a>
-                    <Tooltip title={reply.createAt}>
+                    <Tooltip title={format(reply.createAt, "llll")}>
                       <span style={{ cursor: 'pointer' }}>
-                        <time> {moment(reply.createAt).fromNow()} </time>
+                        <time> {fromNow(reply.createAt)} </time>
                       </span>
                     </Tooltip>
                   </div>
@@ -94,24 +108,24 @@ export default class Comment extends React.Component {
         return (
           <div key={comment.id} className='comment'>
             <div className='comment_user_info'>
-              <a href={user.site}>
+              <a href={comment.commenterSite}>
                 <Image
                   alt={user.name}
                   src={user.avatar}
-                  title={user.name}
+                  title={comment.commenter}
                   className='comment_avatar'/>
               </a>
               <div className='user_info'>
-                <a href={user.site} target='_blank'>
-                  <span className='user_name'> {user.name} </span>
+                <a href={comment.commenterSite} target='_blank'>
+                  <span className='user_name'> {comment.commenter} </span>
                 </a>
-                <Tooltip title={comment.createAt}>
+                <Tooltip title={format(comment.createAt, "llll")}>
                   <span style={{ cursor: 'pointer' }}>
-                    <time> {moment(comment.createAt).fromNow()} </time>
+                    <time> {fromNow(comment.createAt)} </time>
                   </span>
                 </Tooltip>
               </div>
-              <div className='user_description'> {user.introduce} </div>
+              <div className='user_description'> {comment.commenterDesc || user?.introduce} </div>
             </div>
             <div className='comment_content'>
               <div className='content' dangerouslySetInnerHTML={{ __html: comment.content }}></div>
