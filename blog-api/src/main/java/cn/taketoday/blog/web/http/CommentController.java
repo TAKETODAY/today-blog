@@ -27,6 +27,7 @@ import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.service.CommentService;
 import cn.taketoday.blog.util.BlogUtils;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.HttpResult;
 import cn.taketoday.blog.web.Json;
@@ -51,7 +52,10 @@ import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RequestParam;
 import cn.taketoday.web.annotation.ResponseStatus;
 import cn.taketoday.web.annotation.RestController;
+import cn.taketoday.web.util.UriComponents;
+import cn.taketoday.web.util.UriComponentsBuilder;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -82,30 +86,60 @@ class CommentController {
 
     @Nullable
     public Long commentId;
+
+    /**
+     * 评论者的邮箱
+     */
+    @Email
+    public String email;
+
+    /**
+     * 评论者的昵称/名字
+     */
+    @NotEmpty(message = "请输入昵称")
+    public String commenter;
+
+    /**
+     * 评论者的网站地址
+     */
+    @Nullable
+    public String commenterSite;
+
   }
 
   /**
    * 评论文章
+   * <p>
+   * 十秒钟评论一次
    *
    * @param loginInfo 登录用户信息
    * @param from 评论表单
    */
   @POST
-  @RequestLimit
+  @RequestLimit(timeout = 10)
   @ResponseStatus(HttpStatus.CREATED)
-  @Logging(title = "用户评论", content = "用户：[#{#loginInfo.loginUser.name}] " +
-          "评论了文章:[#{@articleService.getById(#from.articleId).title}] 回复了:[#{#from.commentId}]")
-  public void create(@RequiresUser LoginInfo loginInfo, User loginUser, @RequestBody @Valid CommentFrom from) {
+  @Logging(title = "用户评论", content = "用户：[#{#from.commenter}] " +
+          "评论了文章:[#{@articleService.getById(#from.articleId)?.title}] 回复了:[#{#from.commentId}]")
+  public void create(LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
     Comment comment = new Comment();
-    comment.setUser(loginUser);
-    comment.setUserId(loginUser.getId());
     comment.setContent(from.content);
     comment.setParentId(from.commentId);
     comment.setArticleId(from.articleId);
 
-    comment.setEmail(loginUser.getEmail());
-    comment.setCommenter(loginUser.getName());
-    comment.setCommenterSite(loginUser.getSite());
+    comment.setEmail(from.email);
+    comment.setCommenter(from.commenter);
+    if (StringUtils.hasText(from.commenterSite)) {
+      UriComponents uriComponents = UriComponentsBuilder.fromUriString(from.commenterSite).build();
+      UriComponents commenterSite = UriComponentsBuilder.newInstance()
+              .scheme(uriComponents.getScheme() == null ? "http" : uriComponents.getScheme())
+              .host(uriComponents.getHost()).build();
+
+      comment.setCommenterSite(commenterSite.toUriString());
+    }
+
+    if (loginInfo.isLoggedIn()) {
+      comment.setUserId(loginInfo.getLoginUserId());
+    }
 
     if (loginInfo.isBloggerLoggedIn()) {
       comment.setStatus(CommentStatus.CHECKED);
@@ -130,6 +164,7 @@ class CommentController {
     commentService.persist(comment);
   }
 
+  @RequestLimit
   @GET("/articles/{id}")
   public HttpResult get(@PathVariable Long id, Pageable pageable) {
     return commentService.getByArticleId(id, pageable);
@@ -138,6 +173,7 @@ class CommentController {
   /**
    * @since 3.2
    */
+  @RequestLimit
   @GET(params = "articleId")
   public List<CommentItem> getArticleComments(long articleId) {
     return commentService.fetchByArticleId(articleId);

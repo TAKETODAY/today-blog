@@ -17,12 +17,14 @@
 
 import React from 'react';
 import { connect } from "react-redux";
-import { Button, message, Modal } from 'antd';
+import { Button, Form, Input, message } from 'antd';
+import { GlobalOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
+
 import { withRouter } from "react-router-dom";
 import { commentService } from 'src/services';
-import { Editor, Image, Login } from 'src/components';
+import { Editor, Image } from 'src/components';
 import { updateUserSession } from "src/redux/actions";
-import { getForward, isEmpty, isNotEmpty } from 'src/utils';
+import { isEmpty } from 'src/utils';
 import { userSessionOptionsMapStateToProps } from "src/redux/action-types";
 import { getGravatarURL } from "../../utils";
 
@@ -89,7 +91,7 @@ class CommentEdit extends React.Component {
             <span className='user_name'>{comment.commenter}</span>
           </a>
         </div>
-        <div className='user_description'>{comment.commenterDesc ||comment.user.introduce}</div>
+        <div className='user_description'>{comment.commenterDesc || comment.user.introduce}</div>
       </div>
       <div style={{ float: 'right', marginRight: '-10px' }}>
         <Button onClick={this.cancelReply} type="primary"> 取消评论</Button>
@@ -99,22 +101,6 @@ class CommentEdit extends React.Component {
 
   render() {
     const { userSession, replying } = this.props
-    if (isEmpty(userSession)) {
-      return (<>
-        <Modal width='300px' open={isNotEmpty(replying) || this.state.loginVisible} onCancel={() => {
-          this.loginVisible(false);
-          this.cancelReply()
-        }} footer={null}>
-          <Login forward={getForward()}/>
-        </Modal>
-        <div className="data-list-title" style={{ border: 'none' }}>
-          <i className="fa fa-edit"/> 发表评论
-          <p className="textCenter">目前您尚未登录，请<a onClick={() => {
-            this.loginVisible(true)
-          }}> 登录</a> 后进行评论</p>
-        </div>
-      </>)
-    }
 
     return (<>
       <div className="data-list-title" style={{ border: 'none' }}>
@@ -126,7 +112,24 @@ class CommentEdit extends React.Component {
       <Editor placeholder={this.props.options['comment.placeholder']}
               setEditor={this.setEditor} options={{ autofocus: false }}/>
       <div className="alignRight">{/* comment_footer */}
-        <Button type="primary" onClick={this.createComment}>发表评论</Button>
+
+        <Form layout="inline">
+          <Form.Item name="email" rules={[{ required: true, message: '请输入邮箱' }]}>
+            <Input prefix={<MailOutlined/>} placeholder="邮箱" defaultValue={userSession?.email}/>
+          </Form.Item>
+          <Form.Item name="name" rules={[{ required: true, message: '请输入昵称' }]}>
+            <Input prefix={<UserOutlined/>} placeholder="昵称" defaultValue={userSession?.name}/>
+          </Form.Item>
+          <Form.Item name="site">
+            <Input prefix={<GlobalOutlined/>} placeholder="个人网站" defaultValue={userSession?.site}/>
+          </Form.Item>
+          <Form.Item shouldUpdate>
+            {() => (
+              <Button type="primary" htmlType="submit" onClick={this.createComment}>提交评论</Button>
+            )}
+          </Form.Item>
+        </Form>
+
       </div>
     </>)
   }

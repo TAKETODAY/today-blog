@@ -72,6 +72,7 @@ public class Comment implements Serializable {
 
   /** parent comment id */
   @JsonIgnore
+  @Nullable
   private Long parentId;
 
   @Nullable
