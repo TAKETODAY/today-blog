@@ -18,6 +18,7 @@
 import { store } from "../redux/store";
 import { isEmpty, isNotEmpty, isZero } from "./object";
 import moment from 'moment';
+import sha256 from 'js-sha256';
 
 export function currentTimeMillis() {
   return new Date().getTime()
@@ -201,7 +202,7 @@ export function extractData(res) {
   return res.data
 }
 
-export function format(time, format) {
+export function format(time, format = "llll") {
   return toLocalTime(time).format(format)
 }
 
@@ -211,4 +212,16 @@ export function fromNow(time) {
 
 export function toLocalTime(time) {
   return moment.utc(time).local()
+}
+
+export function getGravatarURL(email, size = "40") {
+  // Trim leading and trailing whitespace from
+  // an email address and force all characters
+  // to lower case
+  const address = String(email).trim().toLowerCase();
+
+  // Create a SHA256 hash of the final string
+  const hash = sha256(address);
+  // Grab the actual image URL
+  return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=${size}`;
 }

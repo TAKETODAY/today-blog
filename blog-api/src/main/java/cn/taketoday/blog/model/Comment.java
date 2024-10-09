@@ -74,6 +74,7 @@ public class Comment implements Serializable {
   @JsonIgnore
   private Long parentId;
 
+  @Nullable
   @JsonIgnore
   private Long userId;
 

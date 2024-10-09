@@ -112,10 +112,16 @@ public class CommentService {
   public List<CommentItem> fetchByArticleId(long articleId) {
     List<Comment> comments = entityManager.find(Comment.class, new QueryByArticleId(articleId, CommentStatus.CHECKED));
 
+    for (Comment comment : comments) {
+      Long userId = comment.getUserId();
+      if (userId != null) {
+        comment.setUser(userService.getById(userId));
+      }
+    }
+
     comments = commentTree(comments);
     List<CommentItem> commentItems = new ArrayList<>();
     for (Comment comment : comments) {
-      comment.setUser(userService.getById(comment.getUserId()));
       commentItems.add(CommentItem.forComment(comment));
     }
     return commentItems;

@@ -18,34 +18,18 @@
 import { Tooltip } from 'antd';
 import React from 'react';
 
-import sha256 from 'js-sha256';
-
-import { format, fromNow, isEmpty, scrollTo } from '../../utils';
+import { format, fromNow, getGravatarURL, isEmpty, scrollTo } from '../../utils';
 import { Image } from '../index';
 
-//https://secure.gravatar.com/js/gprofiles.js
-
-function getGravatarURL(email) {
-  // Trim leading and trailing whitespace from
-  // an email address and force all characters
-  // to lower case
-  const address = String(email).trim().toLowerCase();
-
-  // Create a SHA256 hash of the final string
-  const hash = sha256(address);
-
-  // Grab the actual image URL
-  return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=80`;
-}
 
 export default class CommentList extends React.Component {
 
-  onReply = (user, commentId) => {
+  onReply = (comment) => {
     scrollTo('#comment_area')
-    this.props.onReply(user, commentId)
+    this.props.onReply(comment)
   }
 
-  renderReplies(replies, parentUser) {
+  renderReplies(replies, parent) {
     if (isEmpty(replies)) {
       return <></>;
     }
@@ -53,38 +37,34 @@ export default class CommentList extends React.Component {
       <div className='sub_comment'>
         {
           replies.map((reply, index) => {
-            let replyUser = reply.user
             return (
               <div className='sub_comment_item' key={reply.id}>
                 <div className='comment_user_info'>
-                  <a href={replyUser.site}>
-                    <Image
-                      alt={replyUser.name}
-                      src={replyUser.avatar}
-                      title={replyUser.name}
-                      className='comment_avatar'/>
+                  <a href={reply.commenterSite}>
+                    <Image alt={reply.commenter} title={reply.commenter} className='comment_avatar'
+                           src={getGravatarURL(reply.email)}/>
                   </a>
                   <div className='user_info'>
-                    <a href={replyUser.site} target='_blank'>
-                      <span className='user_name'>{replyUser.name}</span>
+                    <a href={reply.commenterSite} target='_blank'>
+                      <span className='user_name'>{reply.commenter}</span>
                     </a>回复
-                    <a href={parentUser.site} target='_blank'>
-                      <span className='user_name'>{parentUser.name}</span>
+                    <a href={reply.commenterSite} target='_blank'>
+                      <span className='user_name'>{parent.commenter}</span>
                     </a>
-                    <Tooltip title={format(reply.createAt, "llll")}>
+                    <Tooltip title={format(reply.createAt)}>
                       <span style={{ cursor: 'pointer' }}>
                         <time> {fromNow(reply.createAt)} </time>
                       </span>
                     </Tooltip>
                   </div>
-                  <div className='user_description'> {replyUser.introduce} </div>
+                  <div className='user_description'> {reply.commenterDesc || reply.user?.introduce} </div>
                 </div>
                 <div className='sub_comment_content'>
                   <div className='content' dangerouslySetInnerHTML={{ __html: reply.content }}/>
                   <div className='replyOper'>
-                    <a className='replyBtn' title={`回复 ${replyUser.name}`}
+                    <a className='replyBtn' title={`回复 ${reply.commenter}`}
                        onClick={() => {
-                         this.onReply(replyUser, reply.id)
+                         this.onReply(reply)
                        }}>
                       <i className='fa fa-reply'>
                         <span> 回复 </span>
@@ -92,7 +72,7 @@ export default class CommentList extends React.Component {
                     </a>
                   </div>
                 </div>
-                {this.renderReplies(reply.replies, replyUser)}
+                {this.renderReplies(reply.replies, reply)}
               </div>
             )
           })
@@ -104,43 +84,39 @@ export default class CommentList extends React.Component {
   render() {
     return (<>
       {this.props.data.map((comment, idx) => {
-        const user = comment.user
         return (
           <div key={comment.id} className='comment'>
             <div className='comment_user_info'>
               <a href={comment.commenterSite}>
-                <Image
-                  alt={user.name}
-                  src={user.avatar}
-                  title={comment.commenter}
-                  className='comment_avatar'/>
+                <Image alt={comment.commenter}
+                       src={getGravatarURL(comment.email)}
+                       title={comment.commenter}
+                       className='comment_avatar'/>
               </a>
               <div className='user_info'>
                 <a href={comment.commenterSite} target='_blank'>
                   <span className='user_name'> {comment.commenter} </span>
                 </a>
-                <Tooltip title={format(comment.createAt, "llll")}>
+                <Tooltip title={format(comment.createAt)}>
                   <span style={{ cursor: 'pointer' }}>
                     <time> {fromNow(comment.createAt)} </time>
                   </span>
                 </Tooltip>
               </div>
-              <div className='user_description'> {comment.commenterDesc || user?.introduce} </div>
+              <div className='user_description'> {comment.commenterDesc || comment.user?.introduce} </div>
             </div>
             <div className='comment_content'>
               <div className='content' dangerouslySetInnerHTML={{ __html: comment.content }}></div>
               <div className='replyOper'>
-                <a className='replyBtn' title={`回复 ${user.name}`}
-                   onClick={() => {
-                     this.onReply(user, comment.id)
-                   }}>
+                <a className='replyBtn' title={`回复 ${comment.commenter}`}
+                   onClick={() => this.onReply(comment)}>
                   <i className='fa fa-reply'>
                     <span> 回复 </span>
                   </i>
                 </a>
               </div>
             </div>
-            {this.renderReplies(comment.replies, user)}
+            {this.renderReplies(comment.replies, comment)}
           </div>
         )
       })

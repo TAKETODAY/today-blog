@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import { Empty, message, Pagination, Skeleton } from 'antd';
+import { Empty, message, Skeleton } from 'antd';
 import React from 'react';
 import { commentService } from '../../services';
 import { extractData, isEmpty, isNotEmpty, scrollTo } from '../../utils';
@@ -28,10 +28,10 @@ export default class ArticleComment extends React.Component {
     commentsLoaded: false
   }
 
-  onReply = (user, commentId) => {
+  onReply = (comment) => {
     // console.log("parent 回复用户-> ", user)
     // console.log("parent 回复评论-> ", commentId)
-    this.setState({ replying: user, commentId })
+    this.setState({ replying: comment, commentId: comment.id })
   }
 
   cancelReply = () => {
@@ -105,12 +105,6 @@ export default class ArticleComment extends React.Component {
           {isNotEmpty(comments) &&
             <div align='center' style={{ padding: '20px' }}>
               总共 <b className='red'>{comments.length}</b> 条评论
-              {/* <Pagination */}
-              {/*   total={comments.total} */}
-              {/*   onChange={this.loadComment.bind(this)} */}
-              {/*   current={comments.current} */}
-              {/*   showTotal={n => <>总共 <b className='red'>{n}</b> 条评论</>} */}
-              {/* /> */}
             </div>
           }</>
         }

@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 import React from 'react';
@@ -27,6 +24,7 @@ import { Editor, Image, Login } from 'src/components';
 import { updateUserSession } from "src/redux/actions";
 import { getForward, isEmpty, isNotEmpty } from 'src/utils';
 import { userSessionOptionsMapStateToProps } from "src/redux/action-types";
+import { getGravatarURL } from "../../utils";
 
 class CommentEdit extends React.Component {
 
@@ -77,20 +75,21 @@ class CommentEdit extends React.Component {
     this.props.cancelReply && this.props.cancelReply()
   }
 
-  renderReply(user) {
+  renderReply(comment) {
     return (<>
       <i className='fa fa-reply fa-flip-horizontal'/>
       <div className='comment_user_info' style={{ display: 'inline', marginLeft: '5px' }}>
-        <a href={user.site}>
-          <Image className='comment_avatar' alt={user.name} src={user.avatar} title={user.name}
+        <a href={comment.commenterSite}>
+          <Image className='comment_avatar' alt={comment.commenter}
+                 src={getGravatarURL(comment.email)} title={comment.commenter}
                  style={{ borderRadius: '6px', width: '40px' }}/>
         </a>
         <div className='user_info'>
-          <a href={user.site} target='_blank'>
-            <span className='user_name'>{user.name}</span>
+          <a href={comment.commenterSite} target='_blank'>
+            <span className='user_name'>{comment.commenter}</span>
           </a>
         </div>
-        <div className='user_description'>{user.introduce}</div>
+        <div className='user_description'>{comment.commenterDesc ||comment.user.introduce}</div>
       </div>
       <div style={{ float: 'right', marginRight: '-10px' }}>
         <Button onClick={this.cancelReply} type="primary"> 取消评论</Button>
