@@ -22,7 +22,7 @@ import ArticleList from './ArticleList';
 import Breadcrumb from './Breadcrumb';
 import CategoriesListGroup from './CategoriesListGroup';
 import ArticleComment from './comment/ArticleComment';
-import CommentEdit from './comment/Edit';
+import CommentEdit from './comment/CommentEdit';
 import CommentList from './comment/List';
 import UserComment from './comment/UserComment';
 import Editor from './Editor';
