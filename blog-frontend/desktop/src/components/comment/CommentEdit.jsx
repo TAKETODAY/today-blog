@@ -38,15 +38,16 @@ const CommentEdit = props => {
     props.cancelReply && props.cancelReply()
   }
 
-  const createComment = () => {
+  const createComment = commenter => {
+    saveStorage("comment-metadata", commenter)
+
     const content = editor.markdown()
     if (isEmpty(content)) {
-      message.warning("请输入评论内容")
+      return message.warning("请输入评论内容")
     }
     else {
-      const values = form.getFieldsValue()
       const { commentId, articleId } = props
-      commentService.createComment(commentId ? { commentId, articleId, content, ...values } : { articleId, content, ...values })
+      return commentService.createComment({ commentId, articleId, content, ...commenter })
           .then(_ => {
             editor.value("")
             return message.success("评论成功")
@@ -92,11 +93,6 @@ const CommentEdit = props => {
     return { ...getStorage("comment-metadata") }
   }
 
-
-  const saveCommentMetadata = (v) => {
-    saveStorage("comment-metadata", v)
-  }
-
   //const commenter = commenterInfo()
 
   return (<>
@@ -111,7 +107,7 @@ const CommentEdit = props => {
             setEditor={setEditor} options={{ autofocus: false }}/>
 
     <div className="comment-edit-footer">
-      <Form layout="inline" form={form} initialValues={commenterInfo()} onFinish={saveCommentMetadata}>
+      <Form layout="inline" form={form} initialValues={commenterInfo()} onFinish={createComment}>
         <Form.Item name="email" rules={[{ required: true, message: '请输入邮箱' }]}>
           <Input prefix={<MailOutlined/>} placeholder="邮箱"/>
         </Form.Item>
@@ -123,7 +119,7 @@ const CommentEdit = props => {
         </Form.Item>
         <Form.Item shouldUpdate>
           {() => (
-              <Button type="primary" htmlType="submit" onClick={createComment}>提交评论</Button>
+              <Button type="primary" htmlType="submit">提交评论</Button>
           )}
         </Form.Item>
       </Form>
