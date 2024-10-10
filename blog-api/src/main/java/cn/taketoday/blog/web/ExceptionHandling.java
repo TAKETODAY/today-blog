@@ -32,6 +32,7 @@ import cn.taketoday.http.ResponseEntity;
 import cn.taketoday.http.converter.HttpMessageNotReadableException;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.util.ObjectUtils;
+import cn.taketoday.validation.ObjectError;
 import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.NotFoundHandler;
 import cn.taketoday.web.RequestContext;
@@ -168,6 +169,16 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
   @Override
   protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
           HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+    if (ex.hasErrors()) {
+      ObjectError objectError = ex.getGlobalError();
+      if (objectError == null) {
+        objectError = ex.getFieldError();
+      }
+      if (objectError != null) {
+        String defaultMessage = objectError.getDefaultMessage();
+        return handleExceptionInternal(ex, ErrorMessage.failed(defaultMessage), headers, status, request);
+      }
+    }
     return handleExceptionInternal(ex, illegalArgument, headers, status, request);
   }
 

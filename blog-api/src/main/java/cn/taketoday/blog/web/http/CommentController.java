@@ -130,11 +130,14 @@ class CommentController {
     comment.setCommenter(from.commenter);
     if (StringUtils.hasText(from.commenterSite)) {
       UriComponents uriComponents = UriComponentsBuilder.fromUriString(from.commenterSite).build();
-      UriComponents commenterSite = UriComponentsBuilder.newInstance()
-              .scheme(uriComponents.getScheme() == null ? "http" : uriComponents.getScheme())
-              .host(uriComponents.getHost()).build();
+      String host = uriComponents.getHost();
+      if (StringUtils.hasText(host)) {
+        UriComponents commenterSite = UriComponentsBuilder.newInstance()
+                .scheme(uriComponents.getScheme() == null ? "http" : uriComponents.getScheme())
+                .host(host).build();
 
-      comment.setCommenterSite(commenterSite.toUriString());
+        comment.setCommenterSite(commenterSite.toUriString());
+      }
     }
 
     if (loginInfo.isLoggedIn()) {

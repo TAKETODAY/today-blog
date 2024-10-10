@@ -395,7 +395,10 @@ public class CommentService {
       List<Comment> commentsToUse = query.fetch(Comment.class);
       if (CollectionUtils.isNotEmpty(commentsToUse)) {
         for (Comment comment : commentsToUse) {
-          comment.setUser(userService.getById(comment.getUserId()));
+          Long userId = comment.getUserId();
+          if (userId != null) {
+            comment.setUser(userService.getById(userId));
+          }
         }
       }
       return commentsToUse;
@@ -426,7 +429,7 @@ public class CommentService {
 
   }
 
-  @OrderBy(clause = "id DESC")
+  @OrderBy(clause = "create_at DESC")
   static class QueryByArticleId {
 
     public final Long articleId;
