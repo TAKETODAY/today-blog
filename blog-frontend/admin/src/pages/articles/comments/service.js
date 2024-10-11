@@ -23,15 +23,16 @@ import { request } from 'umi';
 
 export async function queryComments(params) {
   const { pageSize, current, ...rest } = params
+  console.log(arguments)
   return request(`/api/comments?size=${pageSize}&page=${current}`, { method: "GET", params: rest })
-    .then(res => {
-      return {
-        ...res,
-        total: res.total,
-        pageSize: res.size,
-        current: res.current
-      }
-    })
+      .then(res => {
+        return {
+          ...res,
+          total: res.total,
+          pageSize: res.size,
+          current: res.current
+        }
+      })
 }
 
 export async function create(data) {
@@ -40,6 +41,13 @@ export async function create(data) {
 
 export async function update(id, comment) {
   return http.put(`/api/comments/${id}`, comment)
+}
+
+/**
+ * @since 3.2
+ */
+export async function updateStatus(id, status) {
+  return http.put(`/api/comments/${id}?status=${status}`)
 }
 
 export async function deleteComment(comment) {

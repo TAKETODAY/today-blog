@@ -45,13 +45,7 @@ const UpdateForm = props => {
     return (
         <>
           <FormItem name="content" label="评论内容">
-            <Input placeholder="请输入"/>
-          </FormItem>
-          <FormItem name="articleId" label="文章">
-            <Input placeholder="请输入"/>
-          </FormItem>
-          <FormItem name="status" label="状态">
-            <Input placeholder="请输入"/>
+            <Input placeholder="请输入"></Input>
           </FormItem>
         </>
     )
@@ -60,8 +54,8 @@ const UpdateForm = props => {
   const renderFooter = () => {
     return (
         <>
-          <Button onClick={ hideUpdateModal }>取消</Button>
-          <Button type="primary" onClick={ update }>更新</Button>
+          <Button onClick={hideUpdateModal}>取消</Button>
+          <Button type="primary" onClick={update}>更新</Button>
         </>
     )
   }
@@ -69,15 +63,15 @@ const UpdateForm = props => {
   return (
       <Modal
           title="文章分类配置"
-          width={ 800 }
+          width={800}
           destroyOnClose
-          footer={ renderFooter() }
-          open={ updateModalVisible }
-          onCancel={ () => hideUpdateModal() }
-          bodyStyle={ { padding: '32px 40px 48px' } }
+          footer={renderFooter()}
+          open={updateModalVisible}
+          onCancel={() => hideUpdateModal()}
+          bodyStyle={{ padding: '32px 40px 48px' }}
       >
-        <Form { ...formLayout } form={ form } initialValues={ { ...comment } }>
-          { renderContent() }
+        <Form {...formLayout} form={form} initialValues={{ ...comment }}>
+          {renderContent()}
         </Form>
       </Modal>
   )

@@ -167,8 +167,10 @@ create table t_comment
     `email`          varchar(255)               not null comment 'email',
     `commenter`      varchar(255)               not null comment '评论者的名字',
     `commenter_site` varchar(255)     default null comment '评论者的网站地址',
+    `article_title`  varchar(255)     default null comment '文章标题',
     `status`         tinyint unsigned default 0 not null comment '状态（审核，未审核，回收站）',
     `article_id`     bigint unsigned            not null comment '评论文章id',
+
     `parent_id`      bigint unsigned  default null comment '父评论id',
     `user_id`        bigint unsigned  default null comment '评论者id',
 

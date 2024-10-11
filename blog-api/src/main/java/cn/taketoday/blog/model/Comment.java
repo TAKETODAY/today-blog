@@ -55,17 +55,30 @@ public class Comment implements Serializable {
   private Long articleId;
 
   /**
+   * 文章标题
+   *
+   * @since 3.2
+   */
+  private String articleTitle;
+
+  /**
    * 评论者的 邮箱
+   *
+   * @since 3.2
    */
   private String email;
 
   /**
    * 评论者的名字
+   *
+   * @since 3.2
    */
   private String commenter;
 
   /**
    * 评论者的网站地址
+   *
+   * @since 3.2
    */
   @Nullable
   private String commenterSite;

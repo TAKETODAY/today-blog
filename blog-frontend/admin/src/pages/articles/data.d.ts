@@ -56,6 +56,11 @@ export interface CommentItem {
   status: string;
   user: string;
 
+  email: string;
+  commenter: string;
+  commenterSite: string;
+  articleTitle: string;
+
   updateAt: Date;
   createAt: Date;
 }

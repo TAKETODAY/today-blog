@@ -22,13 +22,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, Divider, message, Popconfirm, Popover } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
-import { isEmpty } from "@/utils";
+import { format, isEmpty } from "@/utils";
 
 
 import { ArticleItem, CategoryItem } from "./data.d";
 import { deleteArticle, getCategories, queryArticles, toggleArticleStatus } from "./service";
 import { PlusOutlined } from "@ant-design/icons/lib";
-import moment from "moment";
 import { Link } from "react-router-dom";
 import { ArticleLink } from "@/components/Article";
 import Image from "@/components/Image";
@@ -107,7 +106,7 @@ const renderStatusMenu = (article: ArticleItem, reload: Function) => {
           <a href="#">发布</a>
         </Popconfirm>
         <Divider type="vertical"/>
-        <Popconfirm title="您确定要将定该文章作为草稿吗" placement="topLeft" onConfirm={() => toggleStatus('DRAFT')}>
+        <Popconfirm title="您确定要将该文章作为草稿吗" placement="topLeft" onConfirm={() => toggleStatus('DRAFT')}>
           <a href="#">草稿</a>
         </Popconfirm>
       </>
@@ -202,7 +201,7 @@ export default () => {
       valueType: 'dateTimeRange',
       render: (_, record) => (
           <>
-            {moment(record.createAt).format('lll')}
+            {format(record.createAt, 'lll')}
           </>
       ),
     },
@@ -214,7 +213,7 @@ export default () => {
       valueType: 'dateTimeRange',
       render: (_, record) => (
           <>
-            {moment(record.updateAt).format('lll')}
+            {format(record.updateAt, 'lll')}
           </>
       ),
     },

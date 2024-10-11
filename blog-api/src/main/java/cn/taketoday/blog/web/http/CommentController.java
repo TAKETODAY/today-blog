@@ -18,13 +18,16 @@
 package cn.taketoday.blog.web.http;
 
 import java.util.List;
+import java.util.Objects;
 
 import cn.taketoday.blog.config.CommentConfig;
 import cn.taketoday.blog.log.Logging;
+import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.CommentItem;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
+import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.CommentService;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.StringUtils;
@@ -38,6 +41,7 @@ import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import cn.taketoday.http.HttpStatus;
+import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.persistence.Page;
 import cn.taketoday.web.ResponseStatusException;
@@ -71,9 +75,12 @@ class CommentController {
 
   private final CommentService commentService;
 
-  public CommentController(CommentConfig commentConfig, CommentService commentService) {
+  private final ArticleService articleService;
+
+  public CommentController(CommentConfig commentConfig, CommentService commentService, ArticleService articleService) {
     this.commentConfig = commentConfig;
     this.commentService = commentService;
+    this.articleService = articleService;
   }
 
   static class CommentFrom {
@@ -121,10 +128,13 @@ class CommentController {
   @Logging(title = "用户评论", content = "用户：[#{#from.commenter}] " +
           "评论了文章:[#{@articleService.getById(#from.articleId)?.title}] 回复了:[#{#from.commentId}]")
   public void create(LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
+    Article article = articleService.getById(from.articleId);
+    Assert.notNull(article, "文章不存在");
     Comment comment = new Comment();
     comment.setContent(from.content);
     comment.setParentId(from.commentId);
     comment.setArticleId(from.articleId);
+    comment.setArticleTitle(article.getTitle());
 
     comment.setEmail(from.email);
     comment.setCommenter(from.commenter);
@@ -189,13 +199,25 @@ class CommentController {
     commentService.updateStatusById(status, id);
   }
 
+  /**
+   * 更新评论状态
+   *
+   * @since 3.2
+   */
+  @RequiresBlogger
+  @PUT(path = "/{id}", params = "status")
+  @Logging(title = "更新评论状态", content = "更新评论：[#{#id}]状态为：[#{#status}]")
+  public void updateStatus(@PathVariable Long id, @RequestParam CommentStatus status) {
+    commentService.updateStatusById(status, id);
+  }
+
   @DELETE("/{id}")
   @Logging(title = "删除评论", content = "删除评论：[#{#id}]")
   public Json delete(@RequiresUser LoginInfo loginInfo, @PathVariable Long id) {
     Comment byId = commentService.obtainById(id);
 
     // not blogger
-    if (loginInfo.getBlogger() == null && (loginInfo.getLoginUserId() != byId.getUserId())) {
+    if (!loginInfo.isBloggerLoggedIn() && !Objects.equals(loginInfo.getLoginUserId(), byId.getUserId())) {
       throw ErrorMessageException.failed("权限不足");
     }
 
@@ -236,7 +258,7 @@ class CommentController {
     Comment byId = commentService.obtainById(id);
 
     // not blogger
-    if (!loginInfo.isBloggerLoggedIn() && (loginInfo.getLoginUserId() != byId.getUserId())) {
+    if (!loginInfo.isBloggerLoggedIn() && !Objects.equals(loginInfo.getLoginUserId(), byId.getUserId())) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "权限不足");
     }
 
