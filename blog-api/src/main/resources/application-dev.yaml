@@ -11,6 +11,8 @@ server:
     worker-threads: 8
     acceptor-threads: 1
     logging-level: debug
+  error:
+    include-message: always
 
 datasource:
   username: root
@@ -46,6 +48,7 @@ gitee:
 web:
   mvc:
     log-request-details: true
+
 
 app:
   main:

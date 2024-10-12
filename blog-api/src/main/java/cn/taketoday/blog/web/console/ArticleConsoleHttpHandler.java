@@ -96,9 +96,21 @@ class ArticleConsoleHttpHandler {
   /**
    * 更新状态 API
    */
+  @Deprecated
   @PATCH(path = "/{id}", params = "status")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
+  public void updateStatusDeprecated(@PathVariable Long id, PostStatus status) {
+    articleService.updateStatusById(status, id);
+  }
+
+  /**
+   * 更新状态 API
+   *
+   * @since 3.2
+   */
+  @PUT(path = "/{id}", params = "status")
+  @Logging(title = "更新文章状态", content = "更新文章：《#{@articleService.getById(#id)?.title}》状态为：[#{#status.description}]")
   public void updateStatus(@PathVariable Long id, PostStatus status) {
     articleService.updateStatusById(status, id);
   }

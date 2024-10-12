@@ -22,6 +22,7 @@ import com.aliyun.oss.OSSException;
 
 import java.sql.SQLException;
 
+import cn.taketoday.beans.TypeMismatchException;
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.dao.DataAccessResourceFailureException;
@@ -201,6 +202,12 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
   @Override
   protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("参数读取错误，请检查格式"), headers, status, request);
+  }
+
+  @Nullable
+  @Override
+  protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+    return handleExceptionInternal(ex, ErrorMessage.failed("参数错误，请检查"), headers, status, request);
   }
 
 }
