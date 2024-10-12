@@ -25,7 +25,7 @@ import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
 import { format, isEmpty } from "@/utils";
 
 
-import { ArticleItem, CategoryItem } from "./data.d";
+import { ArticleItem } from "./data.d";
 import { deleteArticle, getCategories, queryArticles, updateStatus } from "./service";
 import { PlusOutlined } from "@ant-design/icons/lib";
 import { Link } from "react-router-dom";
@@ -39,20 +39,13 @@ import Image from "@/components/Image";
  */
 const handleRemove = async (article: ArticleItem) => {
   const hide = message.loading(`正在删除: ${article.title}`)
-  try {
-    await deleteArticle(article)
-    hide()
-    message.success('删除成功，即将刷新', 1)
-    return true
-  }
-  catch (error) {
-    hide()
-    message.error('删除失败，请重试')
-    return false
-  }
+  return deleteArticle(article)
+      .finally(hide)
+      .then(() => message.success('删除成功', 1))
+      .catch(() => message.error('删除失败，请重试'))
 }
 
-const renderStatusMenu = (article: ArticleItem, reload: () => void) => {
+const renderStatusMenu = (article: ArticleItem, reload: () => Promise<any>) => {
 
   const toggleStatus = async (status: string) => {
     return updateStatus(article.id, status)
@@ -107,29 +100,30 @@ const renderStatusMenu = (article: ArticleItem, reload: () => void) => {
 
 export default () => {
   const actionRef = useRef<ActionType>()
-  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [categories, setCategories] = useState({})
 
-  const reload = async () => {
-    await actionRef.current?.reload()
+  const reload = async (): Promise<any> => {
+    return actionRef.current?.reload()
   }
 
   const remove = async (record: ArticleItem) => {
-    await handleRemove(record)
-    await reload()
+    return handleRemove(record)
+        .then(reload)
   }
 
   useEffect(() => {
     getCategories().then(res => {
-      setCategories(res.data)
+      const categoriesEnum = {}
+      res.data.forEach(category => {
+        const { name } = category
+        categoriesEnum[name] = { text: name }
+      })
+
+      setCategories(categoriesEnum)
     })
+
   }, [])
 
-  const categoriesEnum = {}
-
-  categories.forEach(category => {
-    const { name } = category
-    categoriesEnum[name] = { text: name }
-  })
 
   const columns: ProColumns<ArticleItem>[] = [
     {
@@ -151,14 +145,14 @@ export default () => {
       dataIndex: 'cover',
       hideInSearch: true,
       render: (_, article) => (
-          <Image title={article.title} src={article.cover} width={120} original={false}/>
+          article.cover && <Image title={article.title} src={article.cover} width={120} original={false}/>
       ),
     },
     {
       title: '分类',
       width: 100,
       dataIndex: 'category',
-      valueEnum: categoriesEnum,
+      valueEnum: categories,
     },
     {
       title: '内容',
@@ -168,7 +162,7 @@ export default () => {
           <Popover title={article.title} trigger="hover"
                    content={<div style={{ maxWidth: 1000, height: 550, overflowY: "auto" }}
                                  dangerouslySetInnerHTML={{ __html: article.content }}/>}>
-            <span>{article.summary?.substring(0, 70)}...</span>
+            <span>{article.summary?.substring(0, 70)}</span>
           </Popover>
       )
     },
