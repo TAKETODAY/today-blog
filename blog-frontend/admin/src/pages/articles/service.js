@@ -37,8 +37,8 @@ export async function getCategories() {
   return http.get('/api/categories')
 }
 
-export async function toggleArticleStatus(id, status) {
-  return http.patch(`/api/console/articles/${id}?status=${status}`)
+export async function updateStatus(id, status) {
+  return http.put(`/api/console/articles/${id}?status=${status}`)
 }
 
 export async function deleteArticle(article) {

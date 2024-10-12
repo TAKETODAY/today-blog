@@ -26,7 +26,7 @@ import { format, isEmpty } from "@/utils";
 
 
 import { ArticleItem, CategoryItem } from "./data.d";
-import { deleteArticle, getCategories, queryArticles, toggleArticleStatus } from "./service";
+import { deleteArticle, getCategories, queryArticles, updateStatus } from "./service";
 import { PlusOutlined } from "@ant-design/icons/lib";
 import { Link } from "react-router-dom";
 import { ArticleLink } from "@/components/Article";
@@ -52,21 +52,13 @@ const handleRemove = async (article: ArticleItem) => {
   }
 }
 
-const renderStatusMenu = (article: ArticleItem, reload: Function) => {
+const renderStatusMenu = (article: ArticleItem, reload: () => void) => {
+
   const toggleStatus = async (status: string) => {
-    const hide = message.loading(`正在切换状态: ${article.title}`)
-    try {
-      await toggleArticleStatus(article.id, status)
-      hide()
-      message.success('切换状态成功，即将刷新', 1)
-      reload()
-      return true
-    }
-    catch (error) {
-      hide()
-      message.error('切换状态失败，请重试')
-      return false
-    }
+    return updateStatus(article.id, status)
+        .then(reload)
+        .then(() => message.success('切换状态成功，即将刷新', 1))
+        .catch(() => message.error('切换状态失败，请重试'))
   }
 
   const renderPublished = () => {
