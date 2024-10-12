@@ -36,7 +36,7 @@ import cn.taketoday.web.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/options")
-public class OptionController {
+class OptionController {
 
   private final OptionService optionsService;
 

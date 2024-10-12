@@ -27,12 +27,12 @@ import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.CommentItem;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
+import cn.taketoday.blog.model.form.CommentConditionForm;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.CommentService;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.blog.web.HttpResult;
 import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.Pageable;
@@ -177,12 +177,6 @@ class CommentController {
     commentService.persist(comment);
   }
 
-  @RequestLimit
-  @GET("/articles/{id}")
-  public HttpResult get(@PathVariable Long id, Pageable pageable) {
-    return commentService.getByArticleId(id, pageable);
-  }
-
   /**
    * @since 3.2
    */
@@ -245,8 +239,8 @@ class CommentController {
 
   @GET
   @RequiresBlogger
-  public Pagination<Comment> list(Pageable pageable) {
-    return commentService.pagination(pageable);
+  public Pagination<Comment> list(CommentConditionForm form, Pageable pageable) {
+    return commentService.pagination(form, pageable);
   }
 
   /**

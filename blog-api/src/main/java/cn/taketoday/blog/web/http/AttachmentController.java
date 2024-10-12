@@ -49,7 +49,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/api/attachments")
 @RequiresBlogger
-public class AttachmentController {
+class AttachmentController {
 
   private final AttachmentConfig attachmentConfig;
 

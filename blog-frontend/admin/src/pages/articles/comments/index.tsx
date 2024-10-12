@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,11 +12,11 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import { useRef, useState } from 'react';
-import { Divider, message, Popconfirm, Popover, Select, Tag } from 'antd';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Divider, message, Popconfirm, Popover, Tag } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
 
@@ -108,24 +105,27 @@ const renderStatusMenu = (comment: CommentItem, reload: () => void) => {
       </>
   )
 }
+
 export default () => {
   const actionRef = useRef<ActionType>()
   const [updateComment, setUpdateComment] = useState({})
   const [updateModalVisible, setUpdateModalVisible] = useState<boolean>(false)
 
-  const remove = async (record: CommentItem) => {
-    handleRemove(record)
+
+  const remove = useCallback(async (record: CommentItem) => {
+    return handleRemove(record)
         .then(() => actionRef.current?.reload())
-  }
+  }, [])
 
-  const reload = async () => {
+  const reload = useCallback(async () => {
     await actionRef.current?.reload()
-  }
+  }, [])
 
-  const columns: ProColumns<CommentItem>[] = [
+  const columns: ProColumns<CommentItem>[] = useMemo(() => [
     {
       title: '评论内容',
       width: 250,
+      hideInSearch: true,
       render: (_, comment) => (
           <Popover title={`评论：《${comment.articleTitle}》`} trigger="hover"
                    content={<div style={{ maxWidth: 1000, height: 'auto', overflowY: "auto" }}
@@ -135,22 +135,33 @@ export default () => {
       )
     },
     {
+      title: '状态',
+      width: 80,
+      dataIndex: 'status',
+      valueEnum: {
+        "CHECKED": { text: "已审核" },
+        "CHECKING": { text: "未审核" },
+        "RECYCLE": { text: "回收站" }
+      },
+      render: (_, comment: CommentItem) => {
+        const statusDesc = getCommentStatusDesc(comment.status)
+        return <Tag title={statusDesc}>{statusDesc}</Tag>
+      }
+    },
+    {
       title: '昵称',
       width: 120,
       dataIndex: 'commenter',
-      hideInSearch: true,
     },
     {
       title: '邮箱',
       width: 180,
       dataIndex: 'email',
-      hideInSearch: true,
     },
     {
       title: '个人网站',
       width: 150,
       dataIndex: 'commenterSite',
-      hideInSearch: true,
       hideInForm: true
     },
     {
@@ -163,38 +174,6 @@ export default () => {
             <ArticleLink id={comment.articleId}>
               {comment.articleTitle?.length > 15 ? `${comment.articleTitle.substring(0, 15)}...` : comment.articleTitle}
             </ArticleLink>
-        )
-      }
-    },
-    {
-      title: '状态',
-      width: 80,
-      dataIndex: 'status',
-      render: (_, comment: CommentItem) => {
-        const statusDesc = getCommentStatusDesc(comment.status)
-        return <Tag title={statusDesc}>{statusDesc}</Tag>
-      },
-      renderFormItem(schema: { isEditable?: boolean; index?: number; originProps?: any; },
-                     config, form, action) {
-        return (
-            <>
-              <Select placeholder='请选择状态' options={[
-                {
-                  value: 'CHECKED',
-                  label: '已审核',
-                },
-                {
-                  value: 'CHECKING',
-                  label: '未审核',
-                },
-                {
-                  value: 'RECYCLE',
-                  label: '回收站',
-                }
-              ]}
-              >
-              </Select>
-            </>
         )
       }
     },
@@ -227,7 +206,7 @@ export default () => {
           </>
       ),
     },
-  ]
+  ], [])
 
   return (
       <PageContainer>

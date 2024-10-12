@@ -49,7 +49,7 @@ import lombok.CustomLog;
 @RestController
 @RequiresBlogger
 @RequestMapping("/api/logging")
-public class LoggingController {
+class LoggingController {
 
   private final LoggingService loggerService;
 

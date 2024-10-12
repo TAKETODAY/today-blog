@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.CommentStatus;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.core.style.ToStringBuilder;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.persistence.Id;
@@ -131,7 +132,7 @@ public class Comment implements Serializable {
   public String toString() {
     return ToStringBuilder.from(this)
             .append("id", id)
-            .append("content", content)
+            .append("content", StringUtils.truncate(content, 10))
             .append("articleId", articleId)
             .append("parent", parentId)
             .append("status", status)

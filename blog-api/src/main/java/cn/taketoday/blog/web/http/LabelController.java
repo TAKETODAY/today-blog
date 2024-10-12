@@ -46,7 +46,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/tags")
 @RequiredArgsConstructor
-public class LabelController {
+class LabelController {
 
   private final LabelService labelService;
 

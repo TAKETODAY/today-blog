@@ -30,7 +30,7 @@ import javax.imageio.ImageIO;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.config.AttachmentConfig;
-import cn.taketoday.blog.config.ConditionalOnDevelop;
+import cn.taketoday.blog.ConditionalOnDevelop;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.session.WebSession;
@@ -48,7 +48,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @RequestLimit(count = 5, unit = TimeUnit.MINUTES, errorMessage = "一分钟最多请求5次")
-public class PictureController {
+class PictureController {
 
   private static final int IMG_WIDTH = 70;
   private static final int IMG_HEIGHT = 28;

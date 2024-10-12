@@ -27,7 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import cn.taketoday.blog.config.ConditionalOnDevelop;
+import cn.taketoday.blog.ConditionalOnDevelop;
 import cn.taketoday.http.HttpMethod;
 import cn.taketoday.http.MediaType;
 import cn.taketoday.http.ResponseEntity;
@@ -49,7 +49,7 @@ import io.prometheus.client.exporter.common.TextFormat;
 @RestController
 @ConditionalOnDevelop
 @RequestMapping("/api/prometheus")
-public class PrometheusScrapeEndpoint {
+class PrometheusScrapeEndpoint {
 
   private static final MediaType contentType = MediaType.parseMediaType(
           "text/plain;version=0.0.4;charset=utf-8");

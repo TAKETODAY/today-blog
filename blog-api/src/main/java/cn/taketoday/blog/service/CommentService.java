@@ -30,13 +30,11 @@ import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.CommentItem;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
+import cn.taketoday.blog.model.form.CommentConditionForm;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.cache.annotation.CacheConfig;
-import cn.taketoday.jdbc.JdbcConnection;
-import cn.taketoday.jdbc.Query;
-import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.lang.Assert;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.persistence.EntityManager;
@@ -59,13 +57,17 @@ import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
 public class CommentService {
 
   private final BlogConfig blogConfig;
+
   private final UserService userService;
+
   private final MailService mailService;
+
   private final CommentConfig commentConfig;
+
   private final ArticleService articleService;
+
   private final BloggerService bloggerService;
 
-  private final RepositoryManager repository;
   private final EntityManager entityManager;
 
   //  @Cacheable(key = "'ByArticleId_'+#id")
@@ -77,36 +79,6 @@ public class CommentService {
       }
     }
     return commentsToUse;
-  }
-
-  //  @Cacheable(key = "'i'+#id+'p'+#pageNow+'s'+#pageSize")
-  @Deprecated
-  public List<Comment> listByArticleId(long id, Pageable pageable) {
-    List<Comment> commentsToUse = getAllByArticleId(id);
-
-    if (CollectionUtils.isEmpty(commentsToUse)) {
-      return Collections.emptyList();
-    }
-
-    List<Comment> comments = new ArrayList<>();
-    for (Comment comment : commentsToUse) {
-      if (comment.getParentId() == null) {
-        comments.add(comment);
-      }
-    }
-
-    int size = comments.size();
-    int offset = pageable.offset();
-    int toIndex = offset + pageable.pageSize();
-    if (size <= toIndex) {
-      toIndex = size;
-    }
-
-    if (offset >= size) {
-      return Collections.emptyList();
-    }
-    List<Comment> subList = comments.subList(offset, toIndex);
-    return getComments(new ArrayList<>(subList), commentsToUse);
   }
 
   public List<CommentItem> fetchByArticleId(long articleId) {
@@ -140,39 +112,6 @@ public class CommentService {
     }
 
     return getComments(comments, commentsToUse);
-  }
-
-  public Pagination<Comment> getByArticleId(long articleId, Pageable pageable) {
-    try (JdbcConnection connection = repository.open()) {
-      try (Query countQuery = connection.createQuery(
-              "SELECT COUNT(id) FROM t_comment WHERE `status` = ? and article_id=?")) {
-        countQuery.addParameter(CommentStatus.CHECKED);
-        countQuery.addParameter(articleId);
-
-        int totalRecord = countQuery.fetchScalar(int.class);
-        if (totalRecord < 1) {
-          return Pagination.empty();
-        }
-
-//        String sql = """
-//                SELECT * FROM t_comment WHERE `status` = :status and article_id=:articleId
-//                order by create_at DESC LIMIT :offset, :size
-//                """;
-//        int commentPageSize = commentConfig.getListSize();
-//        try (NamedQuery query = repository.createNamedQuery(sql)) {
-//          query.addParameter("offset", pageable.offset(commentPageSize));
-//          query.addParameter("size", pageable.size(commentPageSize));
-//
-//          query.addParameter("articleId", articleId);
-//          query.addParameter("status", CommentStatus.CHECKED);
-//
-//          return Pagination.ok(query.fetch(Comment.class), totalRecord, pageable);
-//        }
-
-        List<Comment> comments = listByArticleId(articleId, pageable);
-        return Pagination.ok(comments, totalRecord, pageable);
-      }
-    }
   }
 
   public static List<Comment> getComments(List<Comment> commentsRoot, List<Comment> child) {
@@ -263,58 +202,21 @@ public class CommentService {
   }
 
   public int count() {
-    try (JdbcConnection connection = repository.open()) {
-      try (Query countQuery = connection.createQuery(
-              "SELECT COUNT(id) FROM t_comment")) {
-        return countQuery.fetchScalar(int.class);
-      }
-    }
+    return entityManager.count(Comment.class).intValue();
   }
 
   @Transactional
-//  @CacheEvict(allEntries = true)
   public void delete(long id) {
     entityManager.delete(Comment.class, id);
   }
 
-  //  @Cacheable(cacheNames = "LatestComments", unless = "#result.isEmpty()")
   public List<Comment> getLatest() {
-    try (JdbcConnection connection = repository.open()) {
-      try (Query countQuery = connection.createQuery(
-              "SELECT * FROM t_comment ORDER BY id DESC LIMIT 5")) {
-        return countQuery.fetch(Comment.class);
-      }
-    }
-  }
-
-  public List<Comment> getByStatus(CommentStatus status, int pageNow, int pageSize) {
-    try (Query query = repository.createQuery(""" 
-            SELECT * FROM t_comment WHERE `status` = ? ORDER BY id DESC LIMIT ?, ?""")) {
-      query.addParameter(status);
-      query.addParameter((pageNow - 1) * pageSize);
-      query.addParameter(pageSize);
-      List<Comment> commentsToUse = query.fetch(Comment.class);
-      if (CollectionUtils.isNotEmpty(commentsToUse)) {
-        for (Comment comment : commentsToUse) {
-          comment.setUser(userService.getById(comment.getUserId()));
-        }
-      }
-      return commentsToUse;
-    }
-  }
-
-  public int countByStatus(CommentStatus status) {
-    try (JdbcConnection connection = repository.open()) {
-      try (Query countQuery = connection.createQuery(
-              "SELECT COUNT(id) FROM t_comment WHERE `status` = ?")) {
-        countQuery.addParameter(status);
-        return countQuery.fetchScalar(int.class);
-      }
-    }
+    return entityManager.find(Comment.class, Queries.forSelect(select -> select.limit(5)
+            .orderBy()
+            .desc("id")));
   }
 
   @Transactional
-//  @CacheEvict(allEntries = true)
   public void updateById(Comment comment) {
     entityManager.updateById(comment);
   }
@@ -327,7 +229,6 @@ public class CommentService {
   /**
    * @return {@link Comment} never be null
    */
-
   public Comment obtainById(long id) {
     Comment comment = getById(id);
     if (comment == null) {
@@ -337,7 +238,6 @@ public class CommentService {
   }
 
   @Transactional
-//  @CacheEvict(allEntries = true)
   public void updateStatusById(CommentStatus status, long id) {
     Comment comment1 = new Comment();
     comment1.setId(id);
@@ -379,32 +279,8 @@ public class CommentService {
   public void closeEmailNotification() {
   }
 
-  public Pagination<Comment> pagination(Pageable pageable) {
-    int count = count();
-    List<Comment> comments = getAll(pageable);
-    return Pagination.ok(comments, count, pageable);
-  }
-
-  private List<Comment> getAll(Pageable pageable) {
-    try (Query query = repository.createQuery(""" 
-            SELECT * FROM t_comment ORDER BY id DESC LIMIT ?, ?""")) {
-      query.addParameter(pageable.offset());
-      query.addParameter(pageable.pageSize());
-      List<Comment> commentsToUse = query.fetch(Comment.class);
-      if (CollectionUtils.isNotEmpty(commentsToUse)) {
-        for (Comment comment : commentsToUse) {
-          Long userId = comment.getUserId();
-          if (userId != null) {
-            comment.setUser(userService.getById(userId));
-          }
-        }
-      }
-      return commentsToUse;
-    }
-  }
-
-  public List<Comment> getByStatus(CommentStatus valueOf, Pageable pageable) {
-    return getByStatus(valueOf, pageable.pageNumber(), pageable.pageSize());
+  public Pagination<Comment> pagination(CommentConditionForm form, Pageable pageable) {
+    return Pagination.from(entityManager.page(Comment.class, form, pageable));
   }
 
   public Page<Comment> getByUser(User userInfo, Pageable pageable) {

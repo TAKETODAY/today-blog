@@ -18,21 +18,19 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import { http } from "@/utils";
-import { request } from 'umi';
+import { extractData, http } from "@/utils";
 
-export async function queryComments(params) {
+export async function queryComments(params, sort) {
   const { pageSize, current, ...rest } = params
-  console.log(arguments)
-  return request(`/api/comments?size=${pageSize}&page=${current}`, { method: "GET", params: rest })
-      .then(res => {
-        return {
-          ...res,
-          total: res.total,
-          pageSize: res.size,
-          current: res.current
-        }
-      })
+  params = { ...rest, sort, size: pageSize, page: current }
+  return http.get('/api/comments', { params }).then(extractData).then(data => {
+    return {
+      ...data,
+      success: true,
+      pageSize: data.size,
+      current: data.current
+    }
+  })
 }
 
 export async function create(data) {

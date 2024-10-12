@@ -15,22 +15,31 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.config;
+package cn.taketoday.blog.model.form;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import cn.taketoday.context.annotation.Profile;
+import cn.taketoday.blog.model.enums.CommentStatus;
+import cn.taketoday.lang.Nullable;
+import cn.taketoday.persistence.Like;
+import cn.taketoday.persistence.OrderBy;
+import lombok.Data;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 3.2.0 2024/5/1 16:09
+ * @since 3.2 2024/10/12 18:31
  */
-@Profile("dev")
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE, ElementType.METHOD })
-public @interface ConditionalOnDevelop {
+@Data
+@OrderBy("id DESC")
+public class CommentConditionForm {
+
+  @Nullable
+  private CommentStatus status;
+
+  @Like
+  private String commenter;
+
+  @Like
+  private String commenterSite;
+
+  private String email;
 
 }
