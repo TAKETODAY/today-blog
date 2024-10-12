@@ -180,8 +180,6 @@ public class CommentService {
     for (Comment comment : commentsRoot) {
       comment.setReplies(getReplies(comment.getId(), child));
     }
-    // 集合倒序，最新的评论在最前面
-    Collections.reverse(commentsRoot);
     return commentsRoot;
   }
 
