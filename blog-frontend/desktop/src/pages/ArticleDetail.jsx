@@ -23,7 +23,7 @@ import { Form, Input, message, Skeleton } from 'antd';
 import React from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import zone from '../assets/images/share/zone.png';
-import { AdminLink, ArticleComment } from 'src/components';
+import { AdminLink, ArticleComment, HttpError } from 'src/components';
 import { articleService } from 'src/services';
 import {
   applySEO,
@@ -120,15 +120,21 @@ class ArticleDetail extends React.Component {
       }
     }).catch(err => {
       const { status } = err.response || { status: 0 }
+
+      const error = {
+        status: err.response ? err.response.status : 500,
+        title: "文章加载失败",
+        subTitle: err.message
+      };
+
+      super.setState({ error })
+
+      message.error(err.response.data.message)
       if (status === 403) {
-        message.error(err.response.data.message)
         this.setState({ needPassword: true })
       }
       else if (status === 404) {
         this.props.history.push("/not-found");
-      }
-      else {
-        this.props.history.push("/internal-server-error");
       }
     })
   }
@@ -194,10 +200,15 @@ class ArticleDetail extends React.Component {
   }
 
   render() {
-    const { article, needPassword } = this.state
+    const { article, needPassword, error } = this.state
     if (needPassword) {
       return this.renderPassword()
     }
+
+    if (error) {
+      return <HttpError {...error}/>
+    }
+
     if (isEmpty(article)) { // loading
       return <Skeleton active/>
     }
