@@ -47,8 +47,24 @@ const handleRemove = async (logging: LoggingItem) => {
     return false
   }
 }
+
 const doRemove = async (id: (number | string)) => {
   await deleteById(id)
+}
+
+function getColor(type): string {
+  switch (type) {
+    case "INFO":
+      return "default";
+    case "WARN":
+      return "warning";
+    case "ERROR":
+      return "error";
+    case "SUCCESS":
+      return "success";
+    default:
+      throw Error();
+  }
 }
 
 export default () => {
@@ -66,12 +82,12 @@ export default () => {
   const columns: ProColumns<LoggingItem>[] = [
     {
       title: '类型',
+      width: 60,
       dataIndex: 'type',
       hideInSearch: true,
       render: (_, record) => (
-          <Tag color={record.type}>{record.type}</Tag>
+          <Tag color={getColor(record.type)}>{record.type}</Tag>
       ),
-      width: 40,
     },
     {
       title: '标题',
@@ -97,7 +113,10 @@ export default () => {
       title: 'IP',
       dataIndex: 'ip',
       hideInSearch: true,
-      width: 200,
+      width: 240,
+      render: (_, record) => (<>
+        {record.ip}/{record.ipCountry}/{record.ipProvince}/{record.ipCity}/{record.ipArea}/{record.ipIsp}
+      </>),
     },
     {
       title: '产生日期',

@@ -22,11 +22,18 @@ export interface LoggingItem {
   id: (number | string);
 
   title: string;
-  ip: string;
+
   user: string;
   content: string;
   type: string;
   result: string;
+
+  ip: string;
+  ipCountry: string;
+  ipProvince: string;
+  ipCity: string;
+  ipArea: string;
+  ipIsp: string;
 
   createAt: Date;
   invokeAt: Date;
