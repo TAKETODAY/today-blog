@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,13 +35,10 @@ import cn.taketoday.core.annotation.MergedAnnotation;
 import cn.taketoday.core.annotation.MergedAnnotations;
 import cn.taketoday.expression.ExpressionException;
 import cn.taketoday.ip2region.IpLocation;
-import cn.taketoday.jdbc.JdbcConnection;
-import cn.taketoday.jdbc.NamedQuery;
-import cn.taketoday.jdbc.Query;
-import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.lang.Constant;
 import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
+import cn.taketoday.transaction.annotation.Transactional;
 import lombok.CustomLog;
 
 /**
@@ -58,13 +52,12 @@ import lombok.CustomLog;
 public class LoggingService {
 
   private final EntityManager entityManager;
-  private final RepositoryManager repositoryManager;
+
   private final LoggingExpressionEvaluator expressionEvaluator;
 
-  public LoggingService(BeanFactory beanFactory, RepositoryManager repositoryManager) {
+  public LoggingService(BeanFactory beanFactory, EntityManager entityManager) {
     this.expressionEvaluator = new LoggingExpressionEvaluator(beanFactory);
-    this.entityManager = repositoryManager.getEntityManager();
-    this.repositoryManager = repositoryManager;
+    this.entityManager = entityManager;
   }
 
   public void persist(Operation operation) {
@@ -89,9 +82,10 @@ public class LoggingService {
   }
 
   protected Operation createErrorOperation() {
-    return new Operation()
-            .setUser("日志系统同步")
-            .setTitle("系统日志同步错误");
+    Operation operation = new Operation();
+    operation.setTitle("系统日志同步错误");
+    operation.setUser("日志系统同步");
+    return operation;
   }
 
   private Operation build(MethodOperation operation) {
@@ -113,10 +107,10 @@ public class LoggingService {
     Object result = operation.returnValue;
     String content = getContent(operation, logger, result);
 
-    entity.setTitle(logger.getString("title"))
-            .setIp(operation.ip)
-            .setContent(content)
-            .setInvokeAt(operation.invokeAt);
+    entity.setTitle(logger.getString("title"));
+    entity.setIp(operation.ip);
+    entity.setContent(content);
+    entity.setInvokeAt(operation.invokeAt);
 
     IpLocation ipLocation = IpSearchers.find(operation.ip);
     if (ipLocation != null) {
@@ -168,9 +162,11 @@ public class LoggingService {
   }
 
   public void afterThrowing(Throwable e, Operation errorOperation) {
-    persist(errorOperation.setIp("127.0.0.1")
-            .setType(LoggingType.ERROR)
-            .setContent("错误信息：" + e.getMessage()));
+    errorOperation.setIp("127.0.0.1");
+    errorOperation.setType(LoggingType.ERROR);
+    errorOperation.setContent("错误信息：" + e.getMessage());
+
+    persist(errorOperation);
   }
 
   /**
@@ -179,31 +175,23 @@ public class LoggingService {
    * @return List
    */
   public List<Operation> getLatest() {
-    try (Query query = repositoryManager.createQuery("SELECT * FROM logging ORDER BY id DESC LIMIT 0, 5")) {
-      return query.fetch(Operation.class);
-    }
+    return entityManager.find(Operation.class, Queries.forSelect(select -> select.limit(5)
+            .orderBy()
+            .desc("id")));
   }
 
-  public int count() {
-    try (Query query = repositoryManager.createQuery("SELECT COUNT(*) FROM logging")) {
-      return query.fetchScalar(int.class);
-    }
-  }
-
-  public void deleteAll() {
-    try (Query query = repositoryManager.createQuery("truncate table logging")) {
-      query.executeUpdate(false);
-    }
+  public void truncateTable() {
+    entityManager.truncate(Operation.class);
   }
 
   public void deleteById(long id) {
     entityManager.delete(Operation.class, id);
   }
 
-  public void deleteByIds(long[] id) {
-    try (var query = repositoryManager.createNamedQuery("delete from logging where id IN (:id)")) {
-      query.addParameter("id", id);
-      query.executeUpdate(false);
+  @Transactional
+  public void deleteByIds(long[] idArray) {
+    for (long id : idArray) {
+      entityManager.delete(Operation.class, id);
     }
   }
 
@@ -213,18 +201,7 @@ public class LoggingService {
   }
 
   public Pagination<Operation> pagination(Pageable pageable) {
-    try (JdbcConnection connection = repositoryManager.open()) {
-      try (Query countQuery = connection.createQuery("SELECT COUNT(*) FROM logging")) {
-        int count = countQuery.fetchScalar(int.class);
-        try (NamedQuery dataQuery = connection.createNamedQuery(
-                "SELECT * FROM logging ORDER BY id DESC LIMIT :pageNow, :pageSize")) {
-          dataQuery.addParameter("pageNow", pageNow(pageable));
-          dataQuery.addParameter("pageSize", pageable.pageSize());
-          List<Operation> all = dataQuery.fetch(Operation.class);
-          return Pagination.ok(all, count, pageable);
-        }
-      }
-    }
+    return Pagination.from(entityManager.page(Operation.class, pageable));
   }
 
   private static int pageNow(Pageable pageable) {

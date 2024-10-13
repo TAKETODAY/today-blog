@@ -66,7 +66,7 @@ class LoggingController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteAll(@RequestParam("ids") long[] ids) {
     if (ObjectUtils.isEmpty(ids)) {
-      loggerService.deleteAll();
+      loggerService.truncateTable();
     }
     else {
       if (log.isDebugEnabled()) {

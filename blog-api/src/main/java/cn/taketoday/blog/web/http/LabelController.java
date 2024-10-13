@@ -58,7 +58,7 @@ class LabelController {
     if (byName != null) {
       throw ErrorMessageException.failed("标签重复");
     }
-    labelService.save(new Label().setName(name));
+    labelService.save(Label.forName(name));
   }
 
   @POST
@@ -74,7 +74,7 @@ class LabelController {
       if (byName != null) {
         return Json.failed("标签重复");
       }
-      labels.add(new Label().setName(label));
+      labels.add(Label.forName(label));
     }
 
     labelService.saveAll(labels);
@@ -91,8 +91,8 @@ class LabelController {
     if (Objects.equals(label.getName(), name)) {
       throw ErrorMessageException.failed("标签名未更改");
     }
-
-    labelService.updateById(label.setName(name));
+    label.setName(name);
+    labelService.updateById(label);
   }
 
   @DELETE("/{id}")

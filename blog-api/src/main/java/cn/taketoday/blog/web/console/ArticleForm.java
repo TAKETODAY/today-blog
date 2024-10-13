@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,8 +68,8 @@ public class ArticleForm {
     article.setCopyright(form.copyright);
     article.setPassword(StringUtils.hasText(form.password) ? form.password : null);
     article.setCover(StringUtils.hasText(form.cover)
-                     ? form.cover
-                     : BlogUtils.getFirstImagePath(form.content)
+            ? form.cover
+            : BlogUtils.getFirstImagePath(form.content)
     );
 
     article.setUri(form.uri);
@@ -89,7 +86,7 @@ public class ArticleForm {
       for (String label : from.labels) {
         Label byName = labelService.getByName(label);
         if (byName == null) {
-          byName = new Label().setName(label);
+          byName = Label.forName(label);
           labelService.save(byName);
         }
         labels.add(byName);

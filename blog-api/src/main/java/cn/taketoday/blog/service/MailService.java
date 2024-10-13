@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 package cn.taketoday.blog.service;
 
@@ -51,11 +48,8 @@ public class MailService {
 
   final Configuration configuration;
 
-  public MailService(
-          Executor executor,
-          BeanFactory beanFactory,
-          LoggingService loggerService,
-          @Nullable Configuration configuration) {
+  public MailService(Executor executor, BeanFactory beanFactory,
+          LoggingService loggerService, @Nullable Configuration configuration) {
     this.executor = executor;
     this.beanFactory = beanFactory;
     this.loggerService = loggerService;
@@ -151,11 +145,11 @@ public class MailService {
       }
       catch (SendMailException e) {
         log.error("can't send mail to: [{}]", to);
+        Operation operation = new Operation();
+        operation.setUser("邮件系统");
+        operation.setTitle("系统邮件发送出错");
 
-        loggerService.afterThrowing(e, new Operation()
-                .setUser("邮件系统")
-                .setTitle("系统邮件发送出错")
-        );
+        loggerService.afterThrowing(e, operation);
       }
     }
   }

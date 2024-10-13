@@ -66,12 +66,12 @@ class PageViewController {
       UserAgent userAgent = UserAgent.parseUserAgentString(ua);
 
       String ip = BlogUtils.remoteAddress(request);
-      pageView.setIp(ip)
-              .setUrl(url)
-              .setOs(userAgent.getOperatingSystem().getName())
-              .setDevice(userAgent.getOperatingSystem().getDeviceType().getName())
-              .setReferer(referer)
-              .setUserAgent(ua);
+      pageView.setIp(ip);
+      pageView.setUrl(url);
+      pageView.setOs(userAgent.getOperatingSystem().getName());
+      pageView.setDevice(userAgent.getOperatingSystem().getDeviceType().getName());
+      pageView.setReferer(referer);
+      pageView.setUserAgent(ua);
 
       IpLocation ipLocation = IpSearchers.find(ip);
       if (ipLocation != null) {

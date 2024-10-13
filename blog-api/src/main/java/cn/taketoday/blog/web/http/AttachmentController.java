@@ -87,7 +87,8 @@ class AttachmentController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "更新附件", content = "更新附件:[#{#attachment.name}] 地址:[#{#attachment.uri}]")
   public void put(@RequestBody Attachment attachment, @PathVariable long id) {
-    attachmentService.updateById(attachment.setId(id));
+    attachment.setId(id);
+    attachmentService.updateById(attachment);
   }
 
   @DELETE("/{id}")

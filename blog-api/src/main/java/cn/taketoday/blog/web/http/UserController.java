@@ -27,7 +27,6 @@ import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.service.AttachmentService;
 import cn.taketoday.blog.service.UserService;
-import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.HashUtils;
 import cn.taketoday.blog.util.MD5;
 import cn.taketoday.blog.util.StringUtils;
@@ -68,9 +67,9 @@ class UserController {
 
   private final UserService userService;
 
-  private final AttachmentService attachmentService;
-
   private final EntityManager entityManager;
+
+  private final AttachmentService attachmentService;
 
   // ------------------------ api
 
@@ -79,15 +78,7 @@ class UserController {
   @RequiresBlogger
   public Pagination<User> get(Pageable pageable) {
     Page<User> page = entityManager.page(User.class, pageable);
-    assertFound(pageable, page.getTotalRows().intValue());
     return Pagination.from(page);
-  }
-
-  @SuppressWarnings("removal")
-  protected void assertFound(Pageable pageable, int rowCount) {
-    if (BlogUtils.notFound(pageable.pageNumber(), BlogUtils.pageCount(rowCount, pageable.pageSize()))) {
-      throw ErrorMessageException.failed("分页不存在");
-    }
   }
 
   @PUT("/{id}")
@@ -174,7 +165,9 @@ class UserController {
     String path = attachment.getUri();
 
     if (!path.equals(loginUser.getAvatar())) { // not equals
-      userService.updateById(new User(loginUser.getId()).setAvatar(path));
+      User user = new User(loginUser.getId());
+      user.setAvatar(path);
+      userService.updateById(user);
       loginUser.setAvatar(path);
     }
     return Json.ok("修改成功", path);
@@ -194,7 +187,9 @@ class UserController {
 
     String path = attachment.getUri();
     if (!path.equals(loginUser.getBackground())) { // not equals
-      userService.updateById(new User(loginUser.getId()).setBackground(path));
+      User user = new User(loginUser.getId());
+      user.setBackground(path);
+      userService.updateById(user);
       loginUser.setBackground(path);
     }
     return Json.ok("修改成功", path);
@@ -279,7 +274,9 @@ class UserController {
       throw ErrorMessageException.failed("密码未更改");
     }
 
-    userService.updateById(new User(userInfo.getId()).setPassword(newPassword));
+    User user = new User(userInfo.getId());
+    user.setPassword(newPassword);
+    userService.updateById(user);
 
     userInfo.setPassword(newPassword);
   }
@@ -307,7 +304,9 @@ class UserController {
     // Check User's Password
     if (HashUtils.getEncodedPassword(form.password).equals(userInfo.getPassword())) {
 
-      userService.updateById(new User(userInfo.getId()).setEmail(email));
+      User user = new User(userInfo.getId());
+      user.setEmail(email);
+      userService.updateById(user);
       userInfo.setEmail(email);
       return Json.ok("邮箱修改成功", userInfo);
     } // Password Incorrect.

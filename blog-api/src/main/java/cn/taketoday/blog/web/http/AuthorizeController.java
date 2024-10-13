@@ -370,16 +370,16 @@ class AuthorizeController extends SessionManagerOperations {
 
     User user = userService.getByEmail(email);
     if (user == null) {
-      user = new User()
-              .setEmail(email)
-              .setStatus(UserStatus.NORMAL)
-              .setId(System.currentTimeMillis())
-              .setSite(oauthUser.blog)
-              .setName(oauthUser.name)
-              .setType(BlogConstant.LOGIN_TYPE_GITHUB)
-              .setIntroduce(oauthUser.bio)
-              .setAvatar(oauthUser.avatar_url)
-              .setBackground("/assets/images/bg/info_back.jpg");
+      user = new User();
+      user.setEmail(email);
+      user.setStatus(UserStatus.NORMAL);
+      user.setId(System.currentTimeMillis());
+      user.setSite(oauthUser.blog);
+      user.setName(oauthUser.name);
+      user.setType(BlogConstant.LOGIN_TYPE_GITHUB);
+      user.setIntroduce(oauthUser.bio);
+      user.setAvatar(oauthUser.avatar_url);
+      user.setBackground("/assets/images/bg/info_back.jpg");
       try {
         userService.register(user);
       }
