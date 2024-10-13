@@ -19,7 +19,7 @@ package cn.taketoday.blog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 import cn.taketoday.blog.util.StringUtils;
@@ -73,9 +73,9 @@ public class CommentItem {
   @Transient
   private List<Comment> replies;
 
-  private LocalDateTime createAt;
+  private Instant createAt;
 
-  private LocalDateTime updateAt;
+  private Instant updateAt;
 
   public void setUser(@Nullable User user) {
     this.user = user;

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -93,9 +93,9 @@ public class Comment implements Serializable {
   @JsonIgnore
   private Long userId;
 
-  private LocalDateTime createAt;
+  private Instant createAt;
 
-  private LocalDateTime updateAt;
+  private Instant updateAt;
 
   @Nullable
   @Transient

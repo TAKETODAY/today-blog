@@ -44,7 +44,7 @@ freemarker:
     url_escaping_charset: UTF-8
 
 jackson:
-  #  time-zone: GMT+8
+  time-zone: UTC
   date-format: 'yyyy-MM-dd HH:mm:ss'
   deserialization:
     # 常用,json中含pojo不存在属性时是否失败报错,默认true

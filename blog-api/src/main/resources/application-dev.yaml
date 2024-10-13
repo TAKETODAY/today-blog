@@ -17,6 +17,7 @@ server:
 datasource:
   username: root
   password: 88888888
+  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
 
   #jdbc.pool.isReadOnly    = false
   #jdbc.pool.idleTimeout   = 600000
