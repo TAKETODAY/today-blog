@@ -19,9 +19,6 @@ package cn.taketoday.blog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,7 +26,6 @@ import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.core.style.ToStringBuilder;
 import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.Id;
 import cn.taketoday.persistence.Table;
 import cn.taketoday.persistence.Transient;
 import lombok.Getter;
@@ -41,13 +37,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Table("t_comment")
-public class Comment implements Serializable {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  @Id
-  private Long id;
+public class Comment extends BasicModel {
 
   private String content;
 
@@ -92,10 +82,6 @@ public class Comment implements Serializable {
   @Nullable
   @JsonIgnore
   private Long userId;
-
-  private Instant createAt;
-
-  private Instant updateAt;
 
   @Nullable
   @Transient

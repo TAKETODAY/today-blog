@@ -17,16 +17,12 @@
 
 package cn.taketoday.blog.model;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Id;
 import cn.taketoday.persistence.Table;
 import cn.taketoday.persistence.Transient;
 import lombok.Getter;
@@ -40,13 +36,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Table("article")
-public class Article implements Serializable {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  @Id
-  private Long id;
+public class Article extends BasicModel {
 
   private String cover;
 
@@ -75,10 +65,6 @@ public class Article implements Serializable {
 
   @Transient
   private Set<Label> labels;
-
-  private Instant createAt;
-
-  private Instant updateAt;
 
   public boolean needPassword() {
     return password != null;
