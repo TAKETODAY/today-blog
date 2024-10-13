@@ -19,7 +19,7 @@ package cn.taketoday.blog.model;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.LoggingType;
@@ -70,8 +70,9 @@ public class Operation implements Serializable {
 
   private LoggingType type;
 
-  private LocalDateTime invokeAt;
-  private LocalDateTime createAt;
+  private Instant invokeAt;
+
+  private Instant createAt;
 
   @Override
   public String toString() {

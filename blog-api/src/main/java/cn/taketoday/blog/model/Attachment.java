@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +12,15 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Id;
 import cn.taketoday.persistence.Table;
 import cn.taketoday.persistence.Transient;
 import lombok.Getter;
@@ -36,12 +29,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Table("attachment")
-public class Attachment implements Serializable {
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  @Id
-  private Long id;
+public class Attachment extends BasicModel {
 
   /** 附件名 */
   private String name;
@@ -60,10 +48,6 @@ public class Attachment implements Serializable {
 
   /** 是否同步 OSS */
   private Boolean sync;
-
-  private LocalDateTime createAt;
-
-  private LocalDateTime updateAt;
 
   @Transient
   public boolean isSynchronizedOSS() {
