@@ -17,7 +17,7 @@
 
 package cn.taketoday.blog.web.console;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
@@ -89,7 +89,7 @@ class ArticleConsoleHttpHandler {
   public void update(@PathVariable("id") Long id, @RequestBody ArticleForm from) {
     Article article = ArticleForm.forArticle(from, labelService);
     article.setId(id);
-    article.setUpdateAt(LocalDateTime.now());
+    article.setUpdateAt(Instant.now());
     articleService.update(article);
   }
 

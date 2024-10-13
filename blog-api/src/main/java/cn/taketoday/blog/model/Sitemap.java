@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +12,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.Objects;
@@ -56,16 +53,16 @@ public class Sitemap implements Serializable {
   }
 
   public static SiteURL newURL(Article article) {
-    LocalDateTime updateAt = article.getUpdateAt();
+    Instant updateAt = article.getUpdateAt();
     if (updateAt == null) {
       updateAt = article.getCreateAt();
       if (updateAt == null) {
-        updateAt = LocalDateTime.now();
+        updateAt = Instant.now();
       }
     }
 
-    String format = formatter.format(updateAt);
-    return newURL(0.9f, "/articles/" + article.getUri(), format, "daily");
+    String lastModify = updateAt.toString();
+    return newURL(0.9f, "/articles/" + article.getUri(), lastModify, "daily");
   }
 
   public static SiteURL newURL(float priority, String location, String lastModify, String changeFreq) {

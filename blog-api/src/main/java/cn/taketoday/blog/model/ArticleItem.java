@@ -17,7 +17,7 @@
 
 package cn.taketoday.blog.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -50,7 +50,7 @@ public class ArticleItem {
   @Transient
   public List<String> tags;
 
-  public LocalDateTime createAt;
+  public Instant createAt;
 
   public ArticleItem() { }
 

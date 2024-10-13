@@ -19,7 +19,7 @@ package cn.taketoday.blog.model;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 
@@ -76,9 +76,9 @@ public class Article implements Serializable {
   @Transient
   private Set<Label> labels;
 
-  private LocalDateTime createAt;
+  private Instant createAt;
 
-  private LocalDateTime updateAt;
+  private Instant updateAt;
 
   public boolean needPassword() {
     return password != null;
