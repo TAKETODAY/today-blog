@@ -88,34 +88,34 @@ const share = {
 function shareQQ(options) {
   options = assign({}, share, options)
   window.open(
-    "http://connect.qq.com/widget/shareqq/index.html?url=" + options.url +
-    "&title=" + options.desc +
-    "&desc=" + options.desc +
-    "&summary=" + options.summary +
-    "&site=" + options.site +
-    "&pics=" + options.image
+      "http://connect.qq.com/widget/shareqq/index.html?url=" + options.url +
+      "&title=" + options.desc +
+      "&desc=" + options.desc +
+      "&summary=" + options.summary +
+      "&site=" + options.site +
+      "&pics=" + options.image
   )
 }
 
 function shareWeiBo(options) {
   options = { ...share, ...options }
   window.open(
-    "http://service.weibo.com/share/share.php?url=" + options.url +
-    "&title=" + options.desc +
-    "&pic=" + options.image +
-    "&searchPic=true"
+      "http://service.weibo.com/share/share.php?url=" + options.url +
+      "&title=" + options.desc +
+      "&pic=" + options.image +
+      "&searchPic=true"
   )
 }
 
 function shareQQZone(options) {
   options = { ...share, ...options }
   window.open(
-    "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=" + options.url +
-    "&title=" + options.desc +
-    "&desc=" + options.desc +
-    "&summary=" + options.summary +
-    "&site=" + options.site +
-    "&pics=" + options.image
+      "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=" + options.url +
+      "&title=" + options.desc +
+      "&desc=" + options.desc +
+      "&summary=" + options.summary +
+      "&site=" + options.site +
+      "&pics=" + options.image
   )
 }
 
@@ -189,8 +189,8 @@ export function getSizeString(value) {
     return "0 Bytes"
   }
   const srcSize = parseFloat(value);
-  const index = Math.floor(Math.log(srcSize) / Math.log(1024));
-  let size = srcSize / Math.pow(1024, index);
+  const index = Math.floor(Math.log(srcSize)/Math.log(1024));
+  let size = srcSize/Math.pow(1024, index);
   size = size.toFixed(2);//保留的小数位数
   return size + unitArr[index];
 }
@@ -202,8 +202,8 @@ export function getSize(value) {
     return "0"
   }
   const srcSize = parseFloat(value);
-  const index = Math.floor(Math.log(srcSize) / Math.log(1024));
-  let size = srcSize / Math.pow(1024, index);
+  const index = Math.floor(Math.log(srcSize)/Math.log(1024));
+  let size = srcSize/Math.pow(1024, index);
   size = size.toFixed(2);//保留的小数位数
   return size
 }
@@ -212,7 +212,7 @@ export function getSizeUnit(value) {
   if (isZero(value)) {
     return "Bytes"
   }
-  const index = Math.floor(Math.log(parseFloat(value)) / Math.log(1024))
+  const index = Math.floor(Math.log(parseFloat(value))/Math.log(1024))
   return unitArr[index]
 }
 
@@ -290,7 +290,7 @@ export function fromNow(time) {
 }
 
 export function toLocalTime(time) {
-  return moment.utc(time).local()
+  return moment(time)
 }
 
 export function getGravatarURL(email, size = "40") {

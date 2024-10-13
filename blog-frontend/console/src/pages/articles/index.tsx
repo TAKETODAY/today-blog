@@ -127,21 +127,21 @@ export default () => {
 
   const columns: ProColumns<ArticleItem>[] = [
     {
-      width: 140,
+      width: 200,
       title: '标题',
       fixed: 'left',
       dataIndex: 'title',
       render: (_, article) => (
           <Popover title="文章标题" content={<span dangerouslySetInnerHTML={{ __html: article.title }}/>}>
             <ArticleLink article={article}>
-              {article.title?.length > 10 ? `${article.title.substring(0, 15)}...` : article.title}
+              {article.title?.length > 15 ? `${article.title.substring(0, 15)}...` : article.title}
             </ArticleLink>
           </Popover>
       )
     },
     {
       title: '封面',
-      width: 120,
+      width: 150,
       dataIndex: 'cover',
       hideInSearch: true,
       render: (_, article) => (
@@ -182,24 +182,24 @@ export default () => {
     {
       title: '发表日期',
       dataIndex: 'createAt',
-      width: 170,
+      width: 220,
       sorter: true,
       valueType: 'dateTimeRange',
       render: (_, record) => (
           <>
-            {format(record.createAt, 'lll')}
+            {format(record.createAt)}
           </>
       ),
     },
     {
-      width: 170,
+      width: 220,
       title: '最后更改',
       sorter: true,
       dataIndex: 'updateAt',
       valueType: 'dateTimeRange',
       render: (_, record) => (
           <>
-            {format(record.updateAt, 'lll')}
+            {format(record.updateAt)}
           </>
       ),
     },

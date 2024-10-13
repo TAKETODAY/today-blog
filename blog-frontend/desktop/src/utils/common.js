@@ -211,7 +211,7 @@ export function fromNow(time) {
 }
 
 export function toLocalTime(time) {
-  return moment.utc(time).local()
+  return moment(time)
 }
 
 export function getGravatarURL(email, size = "40") {
