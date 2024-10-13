@@ -1,9 +1,9 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="dev-admin" type="js.build_tools.npm">
-    <package-json value="$PROJECT_DIR$/blog-frontend/admin/package.json" />
+  <configuration default="false" name="build-console" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/blog-frontend/console/package.json" />
     <command value="run" />
     <scripts>
-      <script value="dev" />
+      <script value="build" />
     </scripts>
     <node-interpreter value="project" />
     <envs />
