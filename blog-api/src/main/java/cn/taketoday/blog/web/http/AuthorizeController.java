@@ -17,62 +17,43 @@
 
 package cn.taketoday.blog.web.http;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.hibernate.validator.constraints.Length;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import cn.taketoday.blog.BlogConstant;
-import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
-import cn.taketoday.blog.model.oauth.Oauth;
 import cn.taketoday.blog.service.AttachmentService;
 import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.service.UserService;
 import cn.taketoday.blog.util.HashUtils;
-import cn.taketoday.blog.util.HttpUtils;
-import cn.taketoday.blog.util.ObjectUtils;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import cn.taketoday.context.properties.bind.Binder;
 import cn.taketoday.core.env.ConfigurableEnvironment;
 import cn.taketoday.http.HttpStatus;
-import cn.taketoday.lang.Nullable;
 import cn.taketoday.session.SessionManager;
 import cn.taketoday.session.SessionManagerOperations;
 import cn.taketoday.session.WebSession;
-import cn.taketoday.util.MultiValueMap;
-import cn.taketoday.web.InternalServerException;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.DELETE;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.PatchMapping;
-import cn.taketoday.web.annotation.PathVariable;
 import cn.taketoday.web.annotation.RequestBody;
 import cn.taketoday.web.annotation.RequestMapping;
-import cn.taketoday.web.annotation.RequestParam;
-import cn.taketoday.web.annotation.ResponseBody;
 import cn.taketoday.web.annotation.ResponseStatus;
 import cn.taketoday.web.annotation.RestController;
-import cn.taketoday.web.annotation.SessionAttribute;
 import cn.taketoday.web.multipart.MultipartFile;
-import cn.taketoday.web.util.UriComponentsBuilder;
 import cn.taketoday.web.util.UriUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -89,26 +70,17 @@ import lombok.CustomLog;
 @RequestMapping("/api/auth")
 class AuthorizeController extends SessionManagerOperations {
 
-  private final Oauth giteeOauth;
-  private final Oauth gitHubOauth;
-
-  private final BlogConfig blogConfig;
   private final UserService userService;
+
   private final BloggerService bloggerService;
+
   private final AttachmentService attachmentService;
 
-  @Nullable
-  private Map<String, OauthMetadata> oauthMetadata;
-
-  public AuthorizeController(SessionManager sessionManager,
-          ConfigurableEnvironment environment, BlogConfig blogConfig, UserService userService,
-          BloggerService bloggerService, AttachmentService attachmentService) {
+  public AuthorizeController(SessionManager sessionManager, ConfigurableEnvironment environment,
+          UserService userService, BloggerService bloggerService, AttachmentService attachmentService) {
     super(sessionManager);
-    this.blogConfig = blogConfig;
     this.userService = userService;
     this.bloggerService = bloggerService;
-    this.giteeOauth = Binder.get(environment).bind("gitee", Oauth.class).get();
-    this.gitHubOauth = Binder.get(environment).bind("github", Oauth.class).get();
     this.attachmentService = attachmentService;
   }
 
@@ -266,58 +238,6 @@ class AuthorizeController extends SessionManagerOperations {
 
   // 第三方
 
-  @GET("/{app}")
-  @ResponseBody(false)
-  public String loginRedirect(@PathVariable String app, String forward, WebSession session) {
-    OauthMetadata metadata = getOauthMetadata(app);
-
-    String state = HashUtils.getRandomHashString(16);
-    session.setAttribute(BlogConstant.KEY_STATE, state);
-
-    return metadata.getRedirect(state, forward);
-  }
-
-  OauthMetadata getOauthMetadata(String app) {
-    if (oauthMetadata == null) {
-      oauthMetadata = new HashMap<>(4);
-      OauthMetadata github = new OauthMetadata();
-      github.oauth = gitHubOauth;
-      github.callback = "/api/auth/github/callback";
-      github.accessTokenUrl = "https://github.com/login/oauth/access_token?client_id=";
-      github.oauthUserFunction = accessTokenInfo -> {
-        MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUriString("https://github.com")
-                .query(accessTokenInfo)
-                .build()
-                .getQueryParams();
-
-        String accessToken = queryParams.getFirst("access_token");
-        HttpURLConnection connection = HttpUtils.getConnection("GET", "https://api.github.com/user");
-        connection.setRequestProperty("Authorization", "token " + accessToken);
-        log.debug("accessToken: [{}]", accessToken);
-        return connection;
-      };
-
-      OauthMetadata gitee = new OauthMetadata();
-      gitee.oauth = giteeOauth;
-      gitee.callback = "/api/auth/gitee/callback";
-      gitee.accessTokenUrl = "https://gitee.com/oauth/token?grant_type=authorization_code&client_id=";
-      gitee.oauthUserFunction = accessTokenInfo -> {
-        ObjectMapper sharedMapper = ObjectUtils.getSharedMapper();
-        JsonNode jsonNode = sharedMapper.readTree(accessTokenInfo);
-        String accessToken = jsonNode.get("access_token").asText();
-        return HttpUtils.getConnection("GET", "https://gitee.com/api/v5/user?access_token=" + accessToken);
-      };
-      oauthMetadata.put("gitee", gitee);
-      oauthMetadata.put("github", github);
-    }
-
-    OauthMetadata metadata = this.oauthMetadata.get(app);
-    if (metadata == null) {
-      throw ErrorMessageException.failed("登录方式不支持");
-    }
-    return metadata;
-  }
-
   public static String redirect(String path) {
     return "redirect:".concat(path);
   }
@@ -339,72 +259,6 @@ class AuthorizeController extends SessionManagerOperations {
     return redirect("/login?forward=" + UriUtils.decode(forward, StandardCharsets.UTF_8) + "&message=" + message);
   }
 
-  @ResponseBody(false)
-  @GET("/{app}/callback")
-  @Logging(title = "第三方登录回调", content = "app:[#{#app}]")
-  public String loginCallback(WebSession session,
-          @PathVariable String app, @Nullable String forward,
-          @RequestParam String code, @RequestParam String state,
-          @SessionAttribute(BlogConstant.KEY_STATE) String stateInSession) //
-  {
-    session.removeAttribute(BlogConstant.KEY_STATE);
-
-    if (!state.equals(stateInSession)) {
-      log.warn("第三方登录非法操作");
-      return redirectLoginError(forward, "非法操作");
-    }
-
-    OauthUser oauthUser;
-    try {
-      oauthUser = getOauthMetadata(app).getOauthObjectDirectly(forward, code);
-    }
-    catch (Exception e) {
-      return redirectLoginError(forward, e.getMessage());
-    }
-
-    String email = oauthUser.email;
-
-    if (StringUtils.isEmpty(email)) {
-      return redirectLoginError(forward, "Email 获取失败,请检 '" + app + "' 查邮箱设置,稍后再重试");
-    }
-
-    User user = userService.getByEmail(email);
-    if (user == null) {
-      user = new User();
-      user.setEmail(email);
-      user.setStatus(UserStatus.NORMAL);
-      user.setId(System.currentTimeMillis());
-      user.setSite(oauthUser.blog);
-      user.setName(oauthUser.name);
-      user.setType(BlogConstant.LOGIN_TYPE_GITHUB);
-      user.setIntroduce(oauthUser.bio);
-      user.setAvatar(oauthUser.avatar_url);
-      user.setBackground("/assets/images/bg/info_back.jpg");
-      try {
-        userService.register(user);
-      }
-      catch (Exception e) {
-        log.error("[{}] 第三方注册失败", email, e);
-        return redirectLoginError(forward, "登录出错，请稍后重试");
-      }
-    }
-
-    UserStatus status = user.getStatus();
-    switch (status) {
-      case NORMAL -> {
-        Blogger.unbind(session);
-        user.bindTo(session);
-        return redirectLogin(forward);
-      }
-      case LOCKED, RECYCLE, INACTIVE -> {
-        return redirectLoginError(forward, status.getDescription());
-      }
-      default -> {
-        return redirectLoginError(forward, "登录出错，请稍后重试");
-      }
-    }
-  }
-
   @FunctionalInterface
   interface OauthUserConnectionFunction {
 
@@ -413,81 +267,6 @@ class AuthorizeController extends SessionManagerOperations {
 
   static String decode(String source) {
     return UriUtils.decode(source, StandardCharsets.UTF_8);
-  }
-
-  class OauthMetadata {
-    Oauth oauth;
-    String callback;
-    String accessTokenUrl;
-
-    OauthUserConnectionFunction oauthUserFunction;
-
-    void appendRedirectUri(@Nullable String forward, StringBuilder url) {
-      url.append("&redirect_uri=")
-              .append(decode(blogConfig.host))
-              .append(decode(StringUtils.prependLeadingSlash(callback)));
-
-      if (StringUtils.isNotEmpty(forward)) {
-        url.append(decode("?forward="))
-                .append(decode(forward));
-      }
-    }
-
-    String getRedirect(String state, @Nullable String forward) {
-
-      StringBuilder redirect = new StringBuilder(128)
-              .append("redirect:")
-              .append(oauth.getRedirect())
-              .append(state);
-
-      appendRedirectUri(forward, redirect);
-      return redirect.toString();
-    }
-
-    String getAccessToken(@Nullable String forward, String code) {
-      StringBuilder url = new StringBuilder(accessTokenUrl);
-      url.append(oauth.getAppId())
-              .append("&client_secret=")
-              .append(oauth.getAppKey())
-              .append("&code=")
-              .append(code);
-
-      appendRedirectUri(forward, url);
-      try {
-        return HttpUtils.getResponse("POST", url.toString());
-      }
-      catch (IOException e) {
-        log.error("第三方接口调用失败", e);
-        throw InternalServerException.failed("第三方接口调用失败", e);
-      }
-    }
-
-    OauthUser getOauthObject(String accessToken) {
-      try {
-        HttpURLConnection userInfoConnection = oauthUserFunction.apply(accessToken);
-        String userInfo = HttpUtils.getResponse(userInfoConnection);
-        log.debug("userInfo: [{}]", userInfo);
-        return ObjectUtils.fromJSON(userInfo, OauthUser.class);
-      }
-      catch (IOException e) {
-        log.error("第三方接口调用失败", e);
-        throw InternalServerException.failed("第三方接口调用失败");
-      }
-    }
-
-    OauthUser getOauthObjectDirectly(@Nullable String forward, String code) {
-      // access_token
-      String accessToken = getAccessToken(forward, code);
-      return getOauthObject(accessToken);
-    }
-  }
-
-  static class OauthUser {
-    public String name;
-    public String blog;
-    public String email;
-    public String bio;
-    public String avatar_url;
   }
 
   //---------------------------------------------------------------------
