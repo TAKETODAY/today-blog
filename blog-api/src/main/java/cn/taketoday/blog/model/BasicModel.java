@@ -22,12 +22,13 @@ import java.io.Serializable;
 import java.time.Instant;
 
 import cn.taketoday.persistence.Id;
+import cn.taketoday.persistence.Transient;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2024/10/13 17:40
  */
-public class BasicModel implements Serializable {
+public abstract class BasicModel implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;
@@ -62,4 +63,10 @@ public class BasicModel implements Serializable {
   public Instant getUpdateAt() {
     return updateAt;
   }
+
+  @Transient
+  public boolean isNew() {
+    return id == null;
+  }
+
 }
