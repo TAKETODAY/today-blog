@@ -19,7 +19,7 @@ import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Button, Checkbox, Form, Input, message, Popconfirm } from 'antd';
 import React from 'react';
 import { userService } from '../services';
-import { getStorage, removeStorage, saveStorage } from '../utils';
+import { getStorage, removeStorage, saveStorage } from 'core';
 import { Link } from "react-router-dom";
 import { Image } from './'
 import { userSessionMapStateToProps } from "../redux/action-types";

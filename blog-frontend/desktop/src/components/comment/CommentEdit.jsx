@@ -25,7 +25,7 @@ import { commentService } from 'src/services';
 import { Editor, Image } from 'src/components';
 import { updateUserSession } from "src/redux/actions";
 import { userSessionOptionsMapStateToProps } from "src/redux/action-types";
-import { getGravatarURL, getStorage, isEmpty, saveStorage } from "../../utils";
+import { getGravatarURL, getStorage, isEmpty, saveStorage } from "core";
 
 
 const CommentEdit = props => {

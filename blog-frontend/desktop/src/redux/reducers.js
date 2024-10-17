@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux'; // 利用combineReducers 合并reducers
-import { isEmpty } from '../utils';
+import { isEmpty } from 'core';
 import {
   APP_INIT,
   UPDATE_CATEGORIES,

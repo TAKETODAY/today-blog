@@ -18,7 +18,7 @@
 import { Tooltip } from 'antd';
 import React from 'react';
 
-import { format, fromNow, getGravatarURL, isEmpty, scrollTo } from '../../utils';
+import { format, fromNow, getGravatarURL, isEmpty, scrollTo } from 'core';
 import { Image } from '../index';
 
 

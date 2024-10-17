@@ -1,0 +1,14 @@
+{
+  "name": "today-blog-frontend",
+  "description": "TODAY BLOG FRONTEND",
+  "author": "海子 Yang <taketoday@foxmail.com>",
+  "license": "GPL v3",
+  "type": "module",
+  "scripts": {
+  },
+  "dependencies": {
+    "core": "workspace:./common"
+  },
+  "devDependencies": {
+  }
+}

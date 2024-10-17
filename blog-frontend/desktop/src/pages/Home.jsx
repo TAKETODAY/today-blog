@@ -21,12 +21,12 @@
 import { Pagination } from 'antd';
 import React from 'react';
 import ArticleList from '../components/ArticleList';
-import { applySEO, extractData, scrollTop, setTitle } from '../utils';
+import { applySEO, extractData, scrollTop } from 'core';
 import { connect } from "react-redux";
 import { navigationsMapStateToProps } from "../redux/action-types";
 import { updateNavigations } from "../redux/actions";
 import { articleService } from '../services';
-
+import { setTitle } from "../utils/common"
 
 class Home extends React.Component {
 
@@ -48,17 +48,17 @@ class Home extends React.Component {
 
     super.setState({ articles })
     articleService.fetchHomeArticles(page, size)
-      .then(extractData)
-      .then(articles => {
-        super.setState({ articles });
-      })
-      .catch(error => {
-        const err = {
-          status: error.response ? error.response.status : 500,
-          subTitle: error.message
-        };
-        super.setState({ error: err })
-      })
+        .then(extractData)
+        .then(articles => {
+          super.setState({ articles });
+        })
+        .catch(error => {
+          const err = {
+            status: error.response ? error.response.status : 500,
+            subTitle: error.message
+          };
+          super.setState({ error: err })
+        })
   }
 
   componentDidMount() {
@@ -85,13 +85,13 @@ class Home extends React.Component {
         <ArticleList articles={articles.data} error={error} title="最新文章"/>
         <div align='center' style={{ padding: '20px' }}>
           <Pagination
-            showQuickJumper
-            showSizeChanger
-            total={articles.total}
-            onChange={this.updateArticles.bind(this)}
-            onShowSizeChange={this.updateArticles.bind(this)}
-            current={articles.current}
-            showTotal={n => <><b className='red'>{n}</b>篇文章</>}
+              showQuickJumper
+              showSizeChanger
+              total={articles.total}
+              onChange={this.updateArticles.bind(this)}
+              onShowSizeChange={this.updateArticles.bind(this)}
+              current={articles.current}
+              showTotal={n => <><b className='red'>{n}</b>篇文章</>}
           />
         </div>
       </div>
@@ -100,5 +100,5 @@ class Home extends React.Component {
 }
 
 export default connect(
-  navigationsMapStateToProps, { updateNavigations }
+    navigationsMapStateToProps, { updateNavigations }
 )(Home)

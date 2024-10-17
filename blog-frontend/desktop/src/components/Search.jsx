@@ -25,7 +25,7 @@ import { Link, withRouter } from "react-router-dom";
 import debounce from 'lodash/debounce';
 
 import { articleService } from 'src/services';
-import { extractData, isEmpty } from 'src/utils';
+import { extractData, isEmpty } from 'core';
 
 class SearchComponent extends React.Component {
 

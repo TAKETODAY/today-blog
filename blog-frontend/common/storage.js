@@ -1,6 +1,4 @@
 import { message } from 'antd';
-import { updateUserSession } from '../redux/actions';
-import { store } from '../redux/store';
 
 function saveSession(key, obj) {
   sessionStorage.setItem(key, JSON.stringify(obj));
@@ -42,7 +40,7 @@ function removeStorage(key) {
 }
 
 function unauthorized() {
-  store.dispatch(updateUserSession(null))
+  //store.dispatch(updateUserSession(null))
 }
 
 export {

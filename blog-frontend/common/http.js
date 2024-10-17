@@ -1,8 +1,7 @@
 import http from 'axios';
 import NProgress from 'nprogress';
-import { unauthorized } from "./storage";
 import { handleHttpError } from './error-handler';
-import { currentTimeMillis } from "@/utils/common";
+import { currentTimeMillis } from "./common";
 
 // export default
 NProgress.configure({

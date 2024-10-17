@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from "react-router-dom";
-import { arrayNotEquals } from '../utils';
+import { arrayNotEquals } from 'core';
 import { connect } from "react-redux";
 import { navigationsMapStateToProps } from "../redux/action-types";
 

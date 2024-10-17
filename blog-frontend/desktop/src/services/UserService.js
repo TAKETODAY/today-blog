@@ -1,4 +1,4 @@
-import { http, currentTimeMillis } from 'src/utils';
+import { http, currentTimeMillis } from 'core';
 import { store } from 'src/redux/store';
 import { updateUserSession } from 'src/redux/actions';
 

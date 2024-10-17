@@ -25,7 +25,8 @@ import { articleService } from "../services";
 import ArticleList from '../components/ArticleList';
 import { updateNavigations } from "../redux/actions";
 import { navigationsMapStateToProps } from "../redux/action-types";
-import { applySEO, extractData, isNotEmpty, scrollTop, setTitle } from '../utils';
+import { applySEO, extractData, isNotEmpty, scrollTop } from 'core';
+import { setTitle } from "../utils/common"
 
 class LabelsDetail extends React.Component {
 
@@ -77,13 +78,13 @@ class LabelsDetail extends React.Component {
     scrollTop()
     this.updateNavigations({ name: tag, url: window.location })
     articleService.getArticlesByTag(tag, page, size)
-      .then(extractData)
-      .then(articles => {
-        super.setState({ articles });
-        const title = `关于标签 '${tag}' 的文章`
-        setTitle(title)
-        applySEO(undefined, title)
-      })
+        .then(extractData)
+        .then(articles => {
+          super.setState({ articles });
+          const title = `关于标签 '${tag}' 的文章`
+          setTitle(title)
+          applySEO(undefined, title)
+        })
   }
 
   render() {
@@ -96,20 +97,20 @@ class LabelsDetail extends React.Component {
           <ArticleList articles={articles.data}/>
         </div>
         {isNotEmpty(articles.data) &&
-          <div align='center' style={{ padding: '20px' }}>
-            <Pagination
-              showQuickJumper
-              showSizeChanger
-              total={articles.total}
-              onChange={(page, size) => {
-                this.loadArticles(tagsId, page, size)
-              }}
-              onShowSizeChange={(page, size) => {
-                this.loadArticles(tagsId, page, size)
-              }}
-              current={articles.current}
-            />
-          </div>
+            <div align='center' style={{ padding: '20px' }}>
+              <Pagination
+                  showQuickJumper
+                  showSizeChanger
+                  total={articles.total}
+                  onChange={(page, size) => {
+                    this.loadArticles(tagsId, page, size)
+                  }}
+                  onShowSizeChange={(page, size) => {
+                    this.loadArticles(tagsId, page, size)
+                  }}
+                  current={articles.current}
+              />
+            </div>
         }
       </div>
     </>);
@@ -117,5 +118,5 @@ class LabelsDetail extends React.Component {
 }
 
 export default connect(
-  navigationsMapStateToProps, { updateNavigations }
+    navigationsMapStateToProps, { updateNavigations }
 )(LabelsDetail)

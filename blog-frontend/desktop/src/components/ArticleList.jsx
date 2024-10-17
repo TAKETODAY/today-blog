@@ -22,7 +22,7 @@ import { Empty, Skeleton } from 'antd';
 import React from 'react';
 import { Link, withRouter } from "react-router-dom";
 
-import { arrayNotEquals, getRandLabel, isNotEmpty } from '../utils';
+import { arrayNotEquals, getRandLabel, isNotEmpty } from 'core';
 import { Image } from './';
 import { connect } from "react-redux";
 import { userSessionMapStateToProps } from "../redux/action-types";

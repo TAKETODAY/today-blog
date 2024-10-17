@@ -22,7 +22,7 @@ import { Button, Checkbox, Form, Input, message } from 'antd';
 import React from 'react';
 import { ImageCropper } from '../';
 import { userService } from '../../services';
-import { scrollTop } from '../../utils';
+import { scrollTop } from 'core';
 import { connect } from "react-redux";
 import { userSessionOptionsMapStateToProps } from "../../redux/action-types";
 import { updateUserSession } from "../../redux/actions";

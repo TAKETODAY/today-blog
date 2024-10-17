@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 import ListGroup from '../components/ListGroup';
-import { arrayNotEquals } from '../utils';
+import { arrayNotEquals } from 'core';
 
 const categoriesItemFunc = (category, idx) => {
   return (

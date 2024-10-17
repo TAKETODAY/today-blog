@@ -18,7 +18,7 @@
 import { Empty, message, Skeleton } from 'antd';
 import React from 'react';
 import { commentService } from '../../services';
-import { extractData, isEmpty, isNotEmpty, scrollTo } from '../../utils';
+import { extractData, isEmpty, isNotEmpty, scrollTo } from 'core';
 import { CommentEdit, CommentList } from '..';
 
 export default class ArticleComment extends React.Component {

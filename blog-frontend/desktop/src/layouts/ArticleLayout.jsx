@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Breadcrumb, CategoriesListGroup, LabelsListGroup, PopularListGroup } from '../components';
 import { Affix, Col, Row } from 'antd'
 import { connect } from "react-redux";
-import { http, startNProgress, stopNProgress } from "../utils";
+import { http, startNProgress, stopNProgress } from "core";
 
 export default class ArticleLayout extends React.Component {
 

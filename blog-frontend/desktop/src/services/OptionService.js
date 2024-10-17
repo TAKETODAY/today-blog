@@ -1,4 +1,4 @@
-import { http, getCacheable } from '../utils';
+import { http, getCacheable } from 'core';
 
 export default class OptionService {
 

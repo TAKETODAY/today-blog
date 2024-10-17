@@ -34,15 +34,16 @@ import {
   isNotEmpty,
   logging,
   scrollTop,
-  setTitle,
   shareQQZone
-} from 'src/utils';
+} from 'core';
+
+import { setTitle } from "../utils/common"
 import { connect } from "react-redux";
 import { navigationsUserSessionMapStateToProps } from "src/redux/action-types";
 import { updateNavigations } from "src/redux/actions";
 import { store } from "src/redux/store";
-import lazyload from "src/utils/lazyload";
-import { http, startNProgress, stopNProgress } from "../utils";
+import lazyload from "core/lazyload";
+import { http, startNProgress, stopNProgress } from "core";
 
 const passwordRules = [
   { required: true, message: '请输入访问密码!' }

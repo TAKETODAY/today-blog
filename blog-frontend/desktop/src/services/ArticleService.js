@@ -18,7 +18,7 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import { getCacheable, http } from '../utils';
+import { getCacheable, http } from 'core';
 
 export default class ArticleService {
 

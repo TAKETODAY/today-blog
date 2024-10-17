@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import { http } from '../utils';
+import { http } from 'core';
 
 export default class CommentService {
 

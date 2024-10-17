@@ -11,7 +11,7 @@ import App from './App';
 import './assets/css/main.css';
 import { store } from './redux/store';
 //import * as serviceWorker from './serviceWorker';
-import initApplication from 'src/utils/init-app'
+import initApplication from './init-app'
 
 initApplication.forEach(init => {
   init(store)

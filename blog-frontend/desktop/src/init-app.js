@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -15,10 +15,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import { getCacheable, http } from "./http";
+import { getCacheable, http } from "core";
 import {
   updateCategories,
   updateHttpErrorMessage,
@@ -26,9 +26,9 @@ import {
   updateOptions,
   updatePopularArticles,
   updateUserSession
-} from "../redux/actions";
-import { articleService } from "../services";
-import { applySEO, setDefaultSEODescription, setDefaultSEOKeywords } from "./common";
+} from "./redux/actions";
+import { articleService } from "./services";
+import { applySEO, setDefaultSEODescription, setDefaultSEOKeywords } from "core";
 
 
 function getError(err) {
@@ -88,8 +88,8 @@ const initStore = (store) => {
 
 const consoleLog = (options) => {
   console.log(`%cTODAY BLOG%c\n代码是我心中的一首诗\n\n${options['site.copyright']}\n`,
-    "font-size:96px;text-shadow: 1px 1px 1px rgba(0,0,0,.2);",
-    "font-size:12px;color:rgba(0,0,0,.38);")
+      "font-size:96px;text-shadow: 1px 1px 1px rgba(0,0,0,.2);",
+      "font-size:12px;color:rgba(0,0,0,.38);")
 }
 
 export default [

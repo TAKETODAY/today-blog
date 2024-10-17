@@ -31,7 +31,7 @@ require('codemirror/mode/gfm/gfm.js');
 require('codemirror/mode/xml/xml.js');
 
 const CodeMirror = require('codemirror');
-const { getSession, saveSession, getStorage, saveStorage } = require('../../utils');
+const { getSession, saveSession, getStorage, saveStorage } = require("core");
 const CodeMirrorSpellChecker = require('codemirror-spell-checker');
 
 // Some variables

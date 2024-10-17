@@ -18,7 +18,7 @@
 import { Button, Empty, message, Pagination, Popconfirm, Skeleton, Table, Tag, Tooltip } from 'antd';
 import React from 'react';
 import { commentService } from '../../services';
-import { format, fromNow, isNotEmpty } from '../../utils';
+import { format, fromNow, isNotEmpty } from 'core';
 import { connect } from "react-redux";
 import { optionsMapStateToProps } from "../../redux/action-types";
 import { updateUserSession } from "../../redux/actions";
