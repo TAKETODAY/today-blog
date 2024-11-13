@@ -131,6 +131,8 @@ create table page_view
     `id`             bigint unsigned auto_increment
         primary key,
     `url`            tinytext                           not null,
+    `host`           varchar(255)                       not null comment 'request host',
+    `path`           varchar(255)                       not null comment 'request path',
     `user`           varchar(255)                       null,
     `referer`        varchar(1024)                      null,
     `ip`             varchar(255)                       null,
