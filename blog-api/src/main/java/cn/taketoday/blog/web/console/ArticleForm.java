@@ -87,7 +87,7 @@ public class ArticleForm {
         Label byName = labelService.getByName(label);
         if (byName == null) {
           byName = Label.forName(label);
-          labelService.save(byName);
+          labelService.persist(byName);
         }
         labels.add(byName);
       }

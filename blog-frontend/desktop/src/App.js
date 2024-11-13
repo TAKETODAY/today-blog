@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,26 +12,46 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import React from 'react';
-import { Redirect, Route, Switch } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
+
 import { Footer, Header } from './components';
+import { http } from 'core';
 import { Layout } from 'antd';
 import { ArticleLayout, SearchLayout } from './layouts';
 import './App.css';
-import {
-  ArticleDetail, CategoriesDetail, ErrorPage, Home,
-  LabelsDetail, Login, Search, UserInfo, UserSettings
-} from 'src/pages';
+import { ArticleDetail, CategoriesDetail, ErrorPage, Home, LabelsDetail, Login, Search, UserInfo, UserSettings } from 'src/pages';
 
 const { Content } = Layout;
 
-export default class App extends React.Component {
+export default function () {
+  let location = useLocation();
+  const [previousLocation, setPreviousLocation] = useState(null);
 
-  render() {
-    return (<>
+  useEffect(() => {
+    // 在 effect 中更新 previousLocation
+    setPreviousLocation(prevLocation => {
+      // 只有在 location 发生变化时才更新 previousLocation
+      if (prevLocation !== location) {
+        return location;
+      }
+      return prevLocation;
+    });
+
+    const referer = previousLocation ? (window.location.origin + previousLocation.pathname) : ''
+    const id = setTimeout(() => {
+      http.post(`/api/pv?referer=${referer}`)
+    }, 1500)
+
+    return () => clearTimeout(id);
+    //eslint-disable-next-line
+  }, [location]);
+
+  return (
+    <>
       <Layout>
         <Header/>
         <Content>
@@ -77,6 +94,7 @@ export default class App extends React.Component {
         </Content>
         <Footer/>
       </Layout>
-    </>)
-  }
+    </>
+  );
 }
+

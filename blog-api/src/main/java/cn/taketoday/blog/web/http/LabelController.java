@@ -58,7 +58,7 @@ class LabelController {
     if (byName != null) {
       throw ErrorMessageException.failed("标签重复");
     }
-    labelService.save(Label.forName(name));
+    labelService.persist(Label.forName(name));
   }
 
   @POST
@@ -77,14 +77,14 @@ class LabelController {
       labels.add(Label.forName(label));
     }
 
-    labelService.saveAll(labels);
+    labelService.persist(labels);
     return Json.ok("创建成功");
   }
 
   @PUT("/{id}")
   @RequiresBlogger
   @Logging(title = "标签更新", content = "update:[#{#id}] with name:[#{#name}]")
-  public void put(@RequestParam(required = true) String name, @PathVariable int id) {
+  public void put(@RequestParam String name, @PathVariable int id) {
     Label label = labelService.getById(id);
     ErrorMessageException.notNull(label, "标签不存在");
 

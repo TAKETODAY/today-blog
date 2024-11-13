@@ -11,3 +11,7 @@ alter table t_comment
     add article_title  varchar(255) default null comment '文章标题',
     change comment_id parent_id bigint unsigned default null comment '父评论id'
 ;
+
+alter table t_page_view
+    add host varchar(255) not null comment 'request host' after url,
+    add path varchar(255) not null comment 'request path' after host;

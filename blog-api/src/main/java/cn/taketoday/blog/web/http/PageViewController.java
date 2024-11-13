@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.web.http;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import cn.taketoday.blog.model.PageView;
@@ -28,12 +30,14 @@ import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpHeaders;
 import cn.taketoday.ip2region.IpLocation;
+import cn.taketoday.lang.Nullable;
 import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.web.RequestContext;
 import cn.taketoday.web.annotation.GET;
 import cn.taketoday.web.annotation.POST;
 import cn.taketoday.web.annotation.RequestMapping;
 import cn.taketoday.web.annotation.RestController;
+import cn.taketoday.web.util.UriUtils;
 import eu.bitwalker.useragentutils.Browser;
 import eu.bitwalker.useragentutils.UserAgent;
 import eu.bitwalker.useragentutils.Version;
@@ -51,26 +55,32 @@ class PageViewController {
   private final EntityManager entityManager;
 
   @POST
-  public void create(String referer, final RequestContext request, LoginInfo loginInfo) {
+  public void create(@Nullable String referer, RequestContext request, LoginInfo loginInfo) {
     if (!loginInfo.isBloggerLoggedIn()) {
-      HttpHeaders requestHeaders = request.requestHeaders();
+      HttpHeaders requestHeaders = request.getHeaders();
 
       String url = requestHeaders.getFirst(HttpHeaders.REFERER);
       if (StringUtils.isEmpty(url)) {
         return;
       }
+      URI uri = URI.create(url);
+      String host = uri.getHost();
+      String path = uri.getPath();
 
       PageView pageView = new PageView();
+
+      pageView.setHost(host);
+      pageView.setPath(path);
 
       String ua = requestHeaders.getFirst(HttpHeaders.USER_AGENT);
       UserAgent userAgent = UserAgent.parseUserAgentString(ua);
 
       String ip = BlogUtils.remoteAddress(request);
       pageView.setIp(ip);
-      pageView.setUrl(url);
+      pageView.setUrl(UriUtils.decode(url, StandardCharsets.UTF_8));
       pageView.setOs(userAgent.getOperatingSystem().getName());
       pageView.setDevice(userAgent.getOperatingSystem().getDeviceType().getName());
-      pageView.setReferer(referer);
+      pageView.setReferer(StringUtils.hasText(referer) ? UriUtils.decode(referer, StandardCharsets.UTF_8) : null);
       pageView.setUserAgent(ua);
 
       IpLocation ipLocation = IpSearchers.find(ip);

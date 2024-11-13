@@ -43,9 +43,7 @@ import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.cache.annotation.CacheConfig;
 import cn.taketoday.cache.annotation.CacheEvict;
 import cn.taketoday.cache.annotation.Cacheable;
-import cn.taketoday.jdbc.AbstractQuery;
 import cn.taketoday.jdbc.JdbcConnection;
-import cn.taketoday.jdbc.NamedQuery;
 import cn.taketoday.jdbc.Query;
 import cn.taketoday.jdbc.RepositoryManager;
 import cn.taketoday.lang.Assert;
@@ -53,8 +51,8 @@ import cn.taketoday.lang.Nullable;
 import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.persistence.EntityMetadata;
 import cn.taketoday.persistence.EntityRef;
-import cn.taketoday.persistence.Id;
 import cn.taketoday.persistence.Order;
+import cn.taketoday.persistence.OrderBy;
 import cn.taketoday.persistence.SimpleSelectQueryStatement;
 import cn.taketoday.persistence.Transient;
 import cn.taketoday.persistence.sql.OrderByClause;
@@ -86,7 +84,9 @@ public class ArticleService implements InitializingBean {
   private final CategoryService categoryService;
 
   private final Rss rss = new Rss();
+
   private final Atom atom = new Atom();
+
   private final Sitemap sitemap = new Sitemap();
 
   /**
@@ -101,7 +101,7 @@ public class ArticleService implements InitializingBean {
     Assert.notNull(article.getId(), "文章ID不能为空");
     Article oldArticle = obtainById(article.getId());
 
-    repository.getEntityManager().updateById(article);
+    entityManager.updateById(article);
 
     // update category
     if (!Objects.equals(article.getCategory(), oldArticle.getCategory())) {
@@ -138,7 +138,7 @@ public class ArticleService implements InitializingBean {
         labelService.removeArticleLabels(newArticle.getId());
       }
       if (CollectionUtils.isNotEmpty(newLabels)) {
-        labelService.saveArticleLabels(newLabels, newArticle.getId());
+        labelService.persistArticleTags(newLabels, newArticle.getId());
       }
     }
   }
@@ -219,60 +219,20 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'home-'+#pageable.pageNumber()+'-'+#pageable.pageSize()")
   public Pagination<ArticleItem> getHomeArticles(Pageable pageable) {
-    try (JdbcConnection connection = repository.open()) {
-      try (Query countQuery = connection.createQuery(
-              "SELECT COUNT(id) FROM article WHERE `status` = ?")) {
-        countQuery.addParameter(PostStatus.PUBLISHED);
-        int count = countQuery.fetchScalar(int.class);
-        if (count < 1) {
-          return Pagination.empty();
-        }
-
-        String sql = """
-                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-                FROM article WHERE `status` = :status
-                order by create_at DESC LIMIT :offset, :pageSize
-                """;
-        try (NamedQuery query = repository.createNamedQuery(sql)) {
-          query.addParameter("offset", pageable.offset());
-          query.addParameter("status", PostStatus.PUBLISHED);
-          query.addParameter("pageSize", pageable.pageSize());
-
-          return fetchArticleItems(pageable, count, query);
-        }
-      }
-    }
-  }
-
-  private Pagination<ArticleItem> fetchArticleItems(Pageable pageable, int count, AbstractQuery query) {
-    List<ArticleItem> items = applyTags(query.fetch(ArticleItem.class));
-    return Pagination.ok(items, count, pageable);
+    return entityManager.page(ArticleItem.class, new ArticleStatus(PostStatus.PUBLISHED), pageable)
+            .peek(this::applyTags)
+            .map(Pagination::from);
   }
 
   /**
    * 搜索文章
    */
   public Pagination<ArticleItem> search(String q, Pageable pageable) {
-    try (JdbcConnection connection = repository.open()) {
-      try (NamedQuery countQuery = connection.createNamedQuery(
-              "select count(*) from article WHERE `title` like :q OR `content` like :q")) {
-        countQuery.addParameter("q", "%" + q + "%");
-        int count = countQuery.fetchScalar(int.class);
-        if (count < 1) {
-          return Pagination.empty();
-        }
-        try (NamedQuery dataQuery = connection.createNamedQuery("""
-                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-                FROM article WHERE `title` LIKE :q OR `content` LIKE :q
-                ORDER BY create_at DESC LIMIT :offset, :size""")) {
-
-          dataQuery.addParameter("q", "%" + q + "%");
-          dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("size", pageable.pageSize());
-          return fetchArticleItems(pageable, count, dataQuery);
-        }
-      }
-    }
+    ArticleConditionForm form = new ArticleConditionForm();
+    form.setQ(q);
+    return entityManager.page(ArticleItem.class, form, pageable)
+            .peek(this::applyTags)
+            .map(Pagination::from);
   }
 
   public Pagination<Article> search(ArticleConditionForm from, Pageable pageable) {
@@ -313,7 +273,8 @@ public class ArticleService implements InitializingBean {
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
           dataQuery.addParameter("offset", pageable.offset());
           dataQuery.addParameter("size", pageable.pageSize());
-          return fetchArticleItems(pageable, count, dataQuery);
+          List<ArticleItem> items = applyTags(dataQuery.fetch(ArticleItem.class));
+          return Pagination.ok(items, count, pageable);
         }
       }
     }
@@ -429,22 +390,22 @@ public class ArticleService implements InitializingBean {
   @Transactional
   @CacheEvict(allEntries = true)
   public void deleteById(long id) {
-    repository.getEntityManager().delete(Article.class, id);
+    entityManager.delete(Article.class, id);
     // 更新文章标签数量
     categoryService.updateArticleCount();
     refreshFeedArticles();
   }
 
-  @Transactional
   @CacheEvict(allEntries = true)
   public void updateStatusById(PostStatus status, long id) {
     Assert.notNull(status, "status is required");
     Article findById = obtainById(id);
 
-    repository.executeWithoutResult(status_ -> {
-      entityManager.update(new ArticleStatus(id, status));
+    repository.executeWithoutResult(txStatus -> {
+      entityManager.updateById(new ArticleStatus(status), id);
       categoryService.updateArticleCount(findById.getCategory());
     });
+
     refreshFeedArticles();
   }
 
@@ -455,11 +416,11 @@ public class ArticleService implements InitializingBean {
   public void saveArticle(Article article) {
     // save
     // TODO 保存策略
-    repository.getEntityManager().persist(article);
+    entityManager.persist(article);
     // save labels
     Set<Label> labels = article.getLabels();
     if (CollectionUtils.isNotEmpty(labels)) {
-      labelService.saveArticleLabels(labels, article.getId());
+      labelService.persistArticleTags(labels, article.getId());
     }
 
     // update category
@@ -558,16 +519,13 @@ public class ArticleService implements InitializingBean {
     return ret;
   }
 
+  @OrderBy("create_at DESC")
   @EntityRef(Article.class)
   static class ArticleStatus {
 
-    @Id
-    public final long id;
-
     public final PostStatus status;
 
-    ArticleStatus(long id, PostStatus status) {
-      this.id = id;
+    ArticleStatus(PostStatus status) {
       this.status = status;
     }
   }

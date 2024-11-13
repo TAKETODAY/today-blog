@@ -19,6 +19,7 @@ package cn.taketoday.blog.web.console;
 
 import java.time.Instant;
 
+import cn.taketoday.blog.event.ArticleUpdateEvent;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.enums.PostStatus;
@@ -28,6 +29,7 @@ import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
+import cn.taketoday.context.ApplicationEventPublisher;
 import cn.taketoday.http.HttpStatus;
 import cn.taketoday.util.StringUtils;
 import cn.taketoday.web.annotation.DELETE;
@@ -60,6 +62,8 @@ class ArticleConsoleHttpHandler {
 
   private final ArticleService articleService;
 
+  private final ApplicationEventPublisher eventPublisher;
+
   /**
    * 创建文章 API
    */
@@ -86,11 +90,13 @@ class ArticleConsoleHttpHandler {
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "更新文章", content = "更新文章: [#{#from.title}]")
-  public void update(@PathVariable("id") Long id, @RequestBody ArticleForm from) {
+  public void update(@PathVariable("id") long id, @RequestBody ArticleForm from) {
     Article article = ArticleForm.forArticle(from, labelService);
     article.setId(id);
     article.setUpdateAt(Instant.now());
     articleService.update(article);
+
+    eventPublisher.publishEvent(new ArticleUpdateEvent(this, id));
   }
 
   /**

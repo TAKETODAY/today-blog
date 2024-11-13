@@ -47,14 +47,16 @@ import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
  * @since 2018-09-16 21:11
  */
 @Service
-@CacheConfig(cacheNames = "labels"/*, expire = 1, timeUnit = TimeUnit.MINUTES*/)
+@CacheConfig(cacheNames = "labels")
 public class LabelService {
 
   private final EntityManager entityManager;
 
+  private final ArticleLabelMappingFunction mappingFunction = new ArticleLabelMappingFunction();
+
   private final Cache<Long, Set<Label>> articleLabelsCache = Caffeine.newBuilder()
           .maximumSize(100)
-          .expireAfterWrite(25, TimeUnit.SECONDS)
+          .expireAfterWrite(1, TimeUnit.HOURS)
           .build();
 
   public LabelService(EntityManager entityManager) {
@@ -80,13 +82,13 @@ public class LabelService {
 
   @Transactional
   @CacheEvict(allEntries = true)
-  public void save(Label label) {
+  public void persist(Label label) {
     entityManager.persist(label);
   }
 
   @Transactional
   @CacheEvict(allEntries = true)
-  public void saveAll(Collection<Label> labels) {
+  public void persist(Collection<Label> labels) {
     entityManager.persist(labels);
   }
 
@@ -98,6 +100,36 @@ public class LabelService {
 
   public int count() {
     return getAllLabels().size();
+  }
+
+  public Set<Label> getByArticleId(long id) {
+    return articleLabelsCache.get(id, mappingFunction);
+  }
+
+  public Set<String> getAllLabelsNames() {
+    return getAllLabels()
+            .stream()
+            .map(Label::getName)
+            .collect(Collectors.toSet());
+  }
+
+  @CacheEvict(allEntries = true)
+  public void persistArticleTags(Set<Label> labels, long articleId) {
+    entityManager.persist(labels.stream().map(label -> ArticleLabel.of(label.getId(), articleId)));
+    articleLabelsCache.invalidate(articleId);
+  }
+
+  @Transactional
+  @CacheEvict(allEntries = true)
+  public void updateById(Label label) {
+    entityManager.updateById(label);
+  }
+
+  @Transactional
+  @CacheEvict(allEntries = true)
+  public void removeArticleLabels(long articleId) {
+    entityManager.delete(ArticleLabel.forArticle(articleId));
+    articleLabelsCache.invalidate(articleId);
   }
 
   final class ArticleLabelMappingFunction implements Function<Long, Set<Label>> {
@@ -118,37 +150,6 @@ public class LabelService {
     TagQuery(Long articleId) {
       this.articleId = articleId;
     }
-  }
-
-  final ArticleLabelMappingFunction mappingFunction = new ArticleLabelMappingFunction();
-
-  public Set<Label> getByArticleId(long id) {
-    return articleLabelsCache.get(id, mappingFunction);
-  }
-
-  public Set<String> getAllLabelsNames() {
-    return getAllLabels()
-            .stream()
-            .map(Label::getName)
-            .collect(Collectors.toSet());
-  }
-
-  @CacheEvict(allEntries = true)
-  public void saveArticleLabels(Set<Label> labels, long articleId) {
-    entityManager.persist(labels.stream().map(label -> ArticleLabel.of(label.getId(), articleId)));
-  }
-
-  @Transactional
-  @CacheEvict(allEntries = true)
-  public void updateById(Label label) {
-    entityManager.updateById(label);
-  }
-
-  @Transactional
-  @CacheEvict(allEntries = true)
-  public void removeArticleLabels(long articleId) {
-    entityManager.delete(ArticleLabel.forArticle(articleId));
-    articleLabelsCache.invalidate(articleId);
   }
 
 }

@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 import { LockOutlined } from '@ant-design/icons';
@@ -43,7 +40,6 @@ import { navigationsUserSessionMapStateToProps } from "src/redux/action-types";
 import { updateNavigations } from "src/redux/actions";
 import { store } from "src/redux/store";
 import lazyload from "core/lazyload";
-import { http, startNProgress, stopNProgress } from "core";
 
 const passwordRules = [
   { required: true, message: '请输入访问密码!' }
@@ -86,7 +82,6 @@ class ArticleDetail extends React.Component {
 
   componentDidMount() {
     this.loadArticle(this.props.match.params.articleId)
-    this.updatePageView()
   }
 
   loadArticle(articleId, key = null) {
@@ -149,27 +144,11 @@ class ArticleDetail extends React.Component {
     }
   }
 
-  updatePageView() {
-    setTimeout(() => {
-      startNProgress()
-      http.post("/api/pv?referer=" + encodeURIComponent(location.href))
-          .then(stopNProgress)
-    }, 1500)
-  }
-
   componentDidUpdate(prevProps) {
-    console.log(prevProps.location, this.props.location)
-    const locationChanged =
-        this.props.location !== prevProps.location;
 
-    if (locationChanged) {
-      console.log("路由发生了变化")
-      this.updatePageView()
-    }
   }
 
   updateNavigations() {
-
     const navigations = [
       { name: '全部博客', url: '/' },
       { name: this.state.article.category, url: `/categories/${this.state.article.category}` },

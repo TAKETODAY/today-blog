@@ -36,6 +36,16 @@ public class PageView {
 
   private String url;
 
+  /**
+   * @since 3.2
+   */
+  private String host;
+
+  /**
+   * @since 3.2
+   */
+  private String path;
+
   private String user;
 
   private String os;
