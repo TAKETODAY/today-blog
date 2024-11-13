@@ -25,13 +25,13 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.core.style.ToStringBuilder;
 import cn.taketoday.persistence.EntityRef;
 import cn.taketoday.persistence.Transient;
-import lombok.Data;
 
 /**
+ * 文章列表项
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2023/3/8 22:36
  */
-@Data
 @EntityRef(Article.class)
 public class ArticleItem {
 
