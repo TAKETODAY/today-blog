@@ -10,7 +10,7 @@ export async function queryLogging(params, sort) {
   }).then(res => {
     return {
       ...res,
-      total: res.all,
+      total: res.total,
       pageSize: res.size,
       current: res.current
     }
