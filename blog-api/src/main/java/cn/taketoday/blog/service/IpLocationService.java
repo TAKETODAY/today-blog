@@ -17,6 +17,9 @@
 
 package cn.taketoday.blog.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 
 import cn.taketoday.blog.model.IpLocation;
@@ -39,6 +42,8 @@ import lombok.Data;
  */
 @Component
 public class IpLocationService {
+
+  private static final Logger log = LoggerFactory.getLogger(IpLocationService.class);
 
   // https://webapi-pc.meitu.com/common/ip_location?ip=
   private final RestClient restClient = RestClient.builder().defaultStatusHandler(new ResponseErrorHandler() {
@@ -70,6 +75,9 @@ public class IpLocationService {
           return new IpLocation(bodyData.nation, bodyData.province, bodyData.city, null, bodyData.isp);
         }
       }
+    }
+    else {
+      log.warn("IP lookup failed: [{}]", response.getStatusCode());
     }
     return null;
   }

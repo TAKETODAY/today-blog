@@ -121,7 +121,6 @@ INSERT INTO `option` (name, value) VALUES ('site.max.list.size', '100');
 INSERT INTO `option` (name, value) VALUES ('site.name', 'TODAY BLOG');
 INSERT INTO `option` (name, value) VALUES ('site.otherFooter', '');
 INSERT INTO `option` (name, value) VALUES ('site.subTitle', '代码是我心中的一首诗');
-INSERT INTO `option` (name, value) VALUES ('site.upload', '/data/docs');
 INSERT INTO `option` (name, value) VALUES ('site.version', 'v3.1');
 
 -- @formatter:on
