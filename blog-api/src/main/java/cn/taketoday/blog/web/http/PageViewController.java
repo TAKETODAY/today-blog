@@ -21,15 +21,15 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.blog.model.PageView;
 import cn.taketoday.blog.model.User;
+import cn.taketoday.blog.service.IpLocationService;
 import cn.taketoday.blog.util.BlogUtils;
-import cn.taketoday.blog.util.IpSearchers;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.http.HttpHeaders;
-import cn.taketoday.ip2region.IpLocation;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.web.RequestContext;
@@ -53,6 +53,8 @@ import lombok.RequiredArgsConstructor;
 class PageViewController {
 
   private final EntityManager entityManager;
+
+  private final IpLocationService ipLocationService;
 
   @POST
   public void create(@Nullable String referer, RequestContext request, LoginInfo loginInfo) {
@@ -83,7 +85,7 @@ class PageViewController {
       pageView.setReferer(StringUtils.hasText(referer) ? UriUtils.decode(referer, StandardCharsets.UTF_8) : null);
       pageView.setUserAgent(ua);
 
-      IpLocation ipLocation = IpSearchers.find(ip);
+      IpLocation ipLocation = ipLocationService.lookup(ip);
       if (ipLocation != null) {
         pageView.setIpCountry(ipLocation.getCountry());
         pageView.setIpProvince(ipLocation.getProvince());

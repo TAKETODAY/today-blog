@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.util;
@@ -43,10 +40,10 @@ import javax.imageio.ImageIO;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ConfigBinding;
+import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.format.support.ApplicationConversionService;
 import cn.taketoday.http.HttpHeaders;
-import cn.taketoday.ip2region.IpLocation;
 import cn.taketoday.lang.Nullable;
 import cn.taketoday.ui.Model;
 import cn.taketoday.util.DataSize;
@@ -58,11 +55,11 @@ import static java.util.regex.Pattern.compile;
 
 public abstract class BlogUtils {
   private static final List<String> IP_HEADERS = List.of(
+          "X-Forwarded-For",     // X-Forwarded-For：Squid 服务代理
           "X-Real-IP",           // X-Real-IP：nginx服务代理
           "Proxy-Client-IP",     // Proxy-Client-IP：apache 服务代理
           "WL-Proxy-Client-IP",  // WL-Proxy-Client-IP：weblogic 服务代理
-          "HTTP_CLIENT_IP",      // HTTP_CLIENT_IP：有些代理服务器
-          "X-Forwarded-For"      // X-Forwarded-For：Squid 服务代理
+          "HTTP_CLIENT_IP"      // HTTP_CLIENT_IP：有些代理服务器
   );
 
   public static String remoteAddress(RequestContext request) {

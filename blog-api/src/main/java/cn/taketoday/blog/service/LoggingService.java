@@ -23,10 +23,10 @@ import java.util.List;
 import cn.taketoday.beans.factory.BeanFactory;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.log.MethodOperation;
+import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.blog.model.Operation;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.LoggingType;
-import cn.taketoday.blog.util.IpSearchers;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.Pageable;
@@ -34,7 +34,6 @@ import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.core.annotation.MergedAnnotation;
 import cn.taketoday.core.annotation.MergedAnnotations;
 import cn.taketoday.expression.ExpressionException;
-import cn.taketoday.ip2region.IpLocation;
 import cn.taketoday.lang.Constant;
 import cn.taketoday.persistence.EntityManager;
 import cn.taketoday.stereotype.Service;
@@ -55,9 +54,12 @@ public class LoggingService {
 
   private final LoggingExpressionEvaluator expressionEvaluator;
 
-  public LoggingService(BeanFactory beanFactory, EntityManager entityManager) {
+  private final IpLocationService ipLocationService;
+
+  public LoggingService(BeanFactory beanFactory, EntityManager entityManager, IpLocationService ipLocationService) {
     this.expressionEvaluator = new LoggingExpressionEvaluator(beanFactory);
     this.entityManager = entityManager;
+    this.ipLocationService = ipLocationService;
   }
 
   public void persist(Operation operation) {
@@ -112,7 +114,7 @@ public class LoggingService {
     entity.setContent(content);
     entity.setInvokeAt(operation.invokeAt);
 
-    IpLocation ipLocation = IpSearchers.find(operation.ip);
+    IpLocation ipLocation = ipLocationService.lookup(operation.ip);
     if (ipLocation != null) {
       entity.setIpCountry(ipLocation.getCountry());
       entity.setIpProvince(ipLocation.getProvince());
