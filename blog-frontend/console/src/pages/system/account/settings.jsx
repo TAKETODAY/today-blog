@@ -1,9 +1,26 @@
+/*
+ * Copyright 2017 - 2024 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
 import { Alert, Button, Form, Input, message, Spin, Tabs } from 'antd';
 import React, { useState } from 'react';
 import ImageCropper from './cropper/ImageCropper';
 import UserService from "./service"
-import { useModel } from "@@/plugin-model/useModel"
 import { extractData, handleValidationError, showHttpErrorMessageVoid } from "@/utils"
+import { useOptions, useUserSession } from "@/components/hooks";
 
 const FormItem = Form.Item
 const { TabPane } = Tabs;
@@ -49,14 +66,14 @@ const InfoSettings = ({ updating, userSession, setUpdating, setUserSession }) =>
   }
 
   return (<>
-    <Form name="infoForm" layout="vertical" initialValues={ { ...userSession } } onFinish={ update }>
-      <FormItem name="name" label="姓名或昵称" rules={ nameRules }>
-        <Input maxLength="24" placeholder="请输入姓名或昵称" />
+    <Form name="infoForm" layout="vertical" initialValues={{ ...userSession }} onFinish={update}>
+      <FormItem name="name" label="姓名或昵称" rules={nameRules}>
+        <Input maxLength="24" placeholder="请输入姓名或昵称"/>
       </FormItem>
       <FormItem name="introduce" label="自我描述">
-        <Input maxLength="64" placeholder="请输入自我描述" />
+        <Input maxLength="64" placeholder="请输入自我描述"/>
       </FormItem>
-      <Button loading={ updating } type="primary" htmlType="submit">保存修改</Button>
+      <Button loading={updating} type="primary" htmlType="submit">保存修改</Button>
     </Form>
   </>)
 }
@@ -75,19 +92,19 @@ const EmailSettings = ({ updating, userSession, setUpdating, setUserSession }) =
   }
   return (
     <>
-      <Form name="emailForm" layout="vertical" initialValues={ { ...userSession } } onFinish={ update }>
-        <FormItem name="password" label="当前账号密码" rules={ passwordRules }>
-          <Input.Password maxLength="24" placeholder="请输入当前账号密码" />
+      <Form name="emailForm" layout="vertical" initialValues={{ ...userSession }} onFinish={update}>
+        <FormItem name="password" label="当前账号密码" rules={passwordRules}>
+          <Input.Password maxLength="24" placeholder="请输入当前账号密码"/>
         </FormItem>
 
-        <FormItem name="mobilePhone" label="新手机号" rules={ mobilePhoneRules }>
-          <Input maxLength="11" placeholder="请输入新手机号" />
+        <FormItem name="mobilePhone" label="新手机号" rules={mobilePhoneRules}>
+          <Input maxLength="11" placeholder="请输入新手机号"/>
         </FormItem>
 
-        <FormItem name="email" label="新邮箱" rules={ emailRules }>
-          <Input maxLength="48" placeholder="请输入新邮箱" />
+        <FormItem name="email" label="新邮箱" rules={emailRules}>
+          <Input maxLength="48" placeholder="请输入新邮箱"/>
         </FormItem>
-        <Button loading={ updating } type="primary" htmlType="submit" title="保存修改">保存修改</Button>
+        <Button loading={updating} type="primary" htmlType="submit" title="保存修改">保存修改</Button>
       </Form>
     </>
   )
@@ -115,17 +132,17 @@ const PasswordSettings = ({ updating, setUpdating }) => {
   }
   return (
     <>
-      <Form name="passwordForm" layout="vertical" onFinish={ update }>
-        <FormItem name="oldPassword" label="原密码" rules={ passwordRules }>
-          <Input.Password maxLength="48" placeholder="请输入当前账号密码" />
+      <Form name="passwordForm" layout="vertical" onFinish={update}>
+        <FormItem name="oldPassword" label="原密码" rules={passwordRules}>
+          <Input.Password maxLength="48" placeholder="请输入当前账号密码"/>
         </FormItem>
-        <FormItem name="newPassword" label="新密码" rules={ newPasswordRules }>
-          <Input.Password maxLength="48" placeholder="请输入新密码" />
+        <FormItem name="newPassword" label="新密码" rules={newPasswordRules}>
+          <Input.Password maxLength="48" placeholder="请输入新密码"/>
         </FormItem>
-        <FormItem name="confirmNewPassword" label="确认新密码" rules={ newPasswordRules }>
-          <Input.Password maxLength="48" placeholder="请重复输入新密码" />
+        <FormItem name="confirmNewPassword" label="确认新密码" rules={newPasswordRules}>
+          <Input.Password maxLength="48" placeholder="请重复输入新密码"/>
         </FormItem>
-        <Button loading={ updating } type="primary" htmlType="submit">保存修改</Button>
+        <Button loading={updating} type="primary" htmlType="submit">保存修改</Button>
       </Form>
     </>
   )
@@ -155,51 +172,45 @@ const AvatarSettings = ({ updating, setUpdating, userSession, setUserSession }) 
 
   return (
     <>
-      <Alert message="禁止使用任何涉嫌非法或者敏感图片作为头像" type="warning" style={ { marginBottom: 15 } } />
+      <Alert message="禁止使用任何涉嫌非法或者敏感图片作为头像" type="warning" style={{ marginBottom: 15 }}/>
       <ImageCropper preview=".avatar"
-                    updating={ updating }
-                    src={ userSession.avatar }
-                    onSubmit={ updateAvatar }
-                    onFileSelected={ onFileSelected }
-                    aspectRatio={ 1 }>
-        <div className="img-preview avatar preview-lg" />
-        <div className="img-preview avatar preview-md" />
-        <div className="img-preview avatar preview-sm" />
-        <div className="img-preview avatar preview-xs" />
+                    updating={updating}
+                    src={userSession.avatar}
+                    onSubmit={updateAvatar}
+                    onFileSelected={onFileSelected}
+                    aspectRatio={1}>
+        <div className="img-preview avatar preview-lg"/>
+        <div className="img-preview avatar preview-md"/>
+        <div className="img-preview avatar preview-sm"/>
+        <div className="img-preview avatar preview-xs"/>
       </ImageCropper>
     </>
   )
 }
 
 export default props => {
-  const { initialState, setInitialState } = useModel("@@initialState")
-  const { currentUser: userSession, options } = initialState;
-
+  const [options] = useOptions()
+  const [userSession, setUserSession] = useUserSession()
   const [updating, setUpdating] = useState(false)
-
-  const setUserSession = async currentUser => {
-    await setInitialState({ ...initialState, currentUser })
-  }
-
   const newProps = { ...props, userSession, options, setUserSession, updating, setUpdating }
 
   return (<>
-    <Spin spinning={ updating }>
+    <Spin spinning={updating}>
       <Tabs type="line">
         <TabPane tab="资料修改" key="1">
-          <InfoSettings { ...newProps } />
+          <InfoSettings {...newProps} />
         </TabPane>
 
         <TabPane tab="邮箱 / 手机号修改" key="2">
-          <EmailSettings { ...newProps } />
+          <EmailSettings {...newProps} />
         </TabPane>
 
         <TabPane tab="密码修改" key="3">
-          <PasswordSettings { ...newProps } />
+          <PasswordSettings {...newProps} />
         </TabPane>
 
         <TabPane tab="头像修改" key="4">
-          <AvatarSettings { ...newProps } />
+          <AvatarSettings {...newProps} />
         </TabPane>
       </Tabs>
     </Spin>

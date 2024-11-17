@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,40 +12,20 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { store } from 'src/redux/store';
 import { updateUserSession } from "../../redux/actions";
 
-export default function useAuthModel() {
-  const [user, setUser] = useState(null)
-
-  const signin = useCallback((account, password) => {
-    // signin implementation
-    // setUser(user from signin API)
-  }, [])
-
-  const signout = useCallback(() => {
-    // signout implementation
-    // setUser(null)
-  }, [])
-
-  return {
-    user,
-    signin,
-    signout
-  }
-}
 
 export function useUserSession() {
-  const state = store.getState();
-  const { session } = state['user'];
+  const { session } = store.getState()['user'];
 
-  const setUserSession = user => {
+  const setUserSession = useCallback(user => {
     store.dispatch(updateUserSession(user))
-  }
+  }, [])
 
   return [session, setUserSession]
 }

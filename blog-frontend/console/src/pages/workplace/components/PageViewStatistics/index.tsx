@@ -28,11 +28,6 @@ export default () => {
   </>;
 };
 
-const defaultData = {
-  ip: [],
-  uv: [],
-  pv: []
-}
 
 type StatisticsProps = {
   name: {
@@ -58,9 +53,7 @@ type StatisticsProps = {
 // }
 
 const Statistics: React.FC<StatisticsProps> = (props) => {
-
-  const [data, setData] = useState(defaultData);
-  const [xAxisData, setXAxisData] = useState([]);
+  const [options, setOptions] = useState({});
 
   useEffect(() => {
     const ip: any[] = []
@@ -78,80 +71,82 @@ const Statistics: React.FC<StatisticsProps> = (props) => {
         pv.push(value.pv)
       }
 
-      // @ts-ignore
-      setData({ ip, uv, pv })
+      const pvData = { ip, uv, pv }
 
-      // @ts-ignore
-      setXAxisData(Array.from(Object.keys(data)))
+      const xAxisData = Array.from(Object.keys(data))
+
+      // ip, pv, uv
+
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross',
+            label: {
+              backgroundColor: '#283b56'
+            }
+          }
+        },
+        legend: {
+          data: ['PV', 'UV', 'IP']
+        },
+        toolbox: {
+          show: true,
+          feature: {
+            dataView: { readOnly: false },
+            restore: {},
+            saveAsImage: {}
+          }
+        },
+        dataZoom: [{}, {
+          type: 'inside'
+        }],
+        xAxis: [ // x轴刻度
+          {
+            type: 'category',
+            boundaryGap: true,
+            data: xAxisData,
+            name: props.name.x
+          },
+        ],
+        yAxis: [
+          {
+            type: 'value',
+            scale: true,
+            name: props.name.y,
+            // max: 30,
+            // min: 0,
+            // boundaryGap: [0.2, 0.2]
+          },
+        ],
+        series: [
+          {
+            name: 'PV',
+            type: 'line',
+            data: pvData.pv,
+          },
+          {
+            name: 'UV',
+            type: 'line',
+            data: pvData.uv
+          },
+          {
+            name: 'IP',
+            type: 'line',
+            data: pvData.ip
+          }
+        ],
+      };
+      setOptions(option)
+      return () => {
+
+      }
     })
 
   }, [])
 
-  // ip, pv, uv
-
-  const option = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'cross',
-        label: {
-          backgroundColor: '#283b56'
-        }
-      }
-    },
-    legend: {
-      data: ['PV', 'UV', 'IP']
-    },
-    toolbox: {
-      show: true,
-      feature: {
-        dataView: { readOnly: false },
-        restore: {},
-        saveAsImage: {}
-      }
-    },
-    dataZoom: [{}, {
-      type: 'inside'
-    }],
-    xAxis: [ // x轴刻度
-      {
-        type: 'category',
-        boundaryGap: true,
-        data: xAxisData,
-        name: props.name.x
-      },
-    ],
-    yAxis: [
-      {
-        type: 'value',
-        scale: true,
-        name: props.name.y,
-        // max: 30,
-        // min: 0,
-        // boundaryGap: [0.2, 0.2]
-      },
-    ],
-    series: [
-      {
-        name: 'PV',
-        type: 'line',
-        data: data.pv,
-      },
-      {
-        name: 'UV',
-        type: 'line',
-        data: data.uv
-      },
-      {
-        name: 'IP',
-        type: 'line',
-        data: data.ip
-      }
-    ],
-  };
-
   return <>
-    <ReactEcharts option={option} style={{ height: 400 }}/>
+    <ReactEcharts option={options} style={{ height: 400 }}/>
   </>
 }
 

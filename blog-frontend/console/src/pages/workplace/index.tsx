@@ -27,8 +27,8 @@ import styles from './style.less';
 import { DashboardComment, DashboardLog, DashboardStatistics } from './data.d';
 import { getCommentStatusDesc, isEmpty } from "@/utils";
 import Statistics from "@/pages/workplace/components/Statistics";
-import { useModel } from "@@/plugin-model/useModel";
 import Image from "@/components/Image";
+import { useUserSession } from "@/components/hooks";
 
 const links: EditableLink[] = [
   {
@@ -65,8 +65,7 @@ interface WorkplaceProps {
 }
 
 const PageHeaderContent: React.FC<{}> = () => {
-  const { initialState } = useModel("@@initialState")
-  const { currentUser } = initialState;
+  const [currentUser] = useUserSession()
   if (isEmpty(currentUser)) {
     return <Skeleton avatar paragraph={{ rows: 1 }} active/>;
   }
@@ -113,6 +112,7 @@ const loggingColumns = [
   {
     title: '事件',
     key: 'title',
+    width: 120,
     render: (log: DashboardLog) => {
       return <Tag title={log.title}>{log.title}</Tag>
     }
@@ -127,6 +127,7 @@ const loggingColumns = [
     title: 'IP地址',
     dataIndex: 'ip',
     key: 'ip',
+    width: 120,
   },
   {
     title: '时间',
@@ -155,9 +156,9 @@ const commentColumns = [
   },
   {
     title: '时间',
-    width: 180,
+    width: 240,
     render: (comment: DashboardComment) => {
-      return moment(comment.createAt).format("lll")
+      return moment(comment.createAt).format("llll")
     }
   },
 ]
@@ -199,13 +200,13 @@ const Workplace = (props: WorkplaceProps) => {
                           title={
                             <div className={styles.cardTitle}>
                               <Avatar size="small" src={article.cover}/>
-                              <a target='_blank' href={`/articles/${article.id}`}>{article.title}</a>
+                              <a target='_blank' href={`/articles/${article.uri}`}>{article.title}</a>
                             </div>
                           }
                           description={article.summary}
                       />
                       <div className={styles.projectItemContent}>
-                        <a target='_blank' href={`/articles/${article.id}`}>浏览</a>
+                        <a target='_blank' href={`/articles/${article.uri}`}>浏览</a>
                         <span className={styles.datetime} title={moment(article.updateAt).format("lll")}>
                             {moment(article.updateAt).fromNow()}
                           </span>
@@ -221,7 +222,7 @@ const Workplace = (props: WorkplaceProps) => {
                   loading={loading}
             >
               <Table scroll={{ x: 600, y: 600 }}
-                  columns={loggingColumns} rowKey='id' dataSource={statistics?.logs} pagination={false}/>
+                     columns={loggingColumns} rowKey='id' dataSource={statistics?.logs} pagination={false}/>
             </Card>
           </Col>
           <Col xl={8} lg={24} md={24} sm={24} xs={24}>

@@ -24,11 +24,13 @@ import { Layout } from 'antd';
 import { ArticleLayout, SearchLayout } from './layouts';
 import './App.css';
 import { ArticleDetail, CategoriesDetail, ErrorPage, Home, LabelsDetail, Login, Search, UserInfo, UserSettings } from 'src/pages';
+import { useUserSession } from "./components/hooks";
 
 const { Content } = Layout;
 
-export default function () {
-  let location = useLocation();
+export default () => {
+  const location = useLocation();
+  const [userSession] = useUserSession();
   const [previousLocation, setPreviousLocation] = useState(null);
 
   useEffect(() => {
@@ -36,19 +38,20 @@ export default function () {
     setPreviousLocation(prevLocation => {
       // 只有在 location 发生变化时才更新 previousLocation
       if (prevLocation !== location) {
-        return location;
+        return location
       }
-      return prevLocation;
-    });
+      return prevLocation
+    })
 
-    const referer = previousLocation ? (window.location.origin + previousLocation.pathname) : ''
-    const id = setTimeout(() => {
-      http.post(`/api/pv?referer=${referer}`)
-    }, 1500)
-
-    return () => clearTimeout(id);
+    if (!userSession) {
+      const referer = previousLocation ? (window.location.origin + previousLocation.pathname) : ''
+      const id = setTimeout(() => {
+        http.post(`/api/pv?referer=${referer}`)
+      }, 3000)
+      return () => clearTimeout(id)
+    }
     //eslint-disable-next-line
-  }, [location]);
+  }, [location])
 
   return (
     <>

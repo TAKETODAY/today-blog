@@ -53,6 +53,7 @@ interface DashboardArticle {
   content: string
   copyright: string
   id: number
+  uri: string
   cover: string
   updateAt: string
   createAt: string

@@ -1,10 +1,10 @@
 import { useModel } from "@@/plugin-model/useModel"
 
 
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 export default function useAuthModel() {
-  const [user, setUser] = useState(null)
+  const [user] = useState(null)
 
   const signin = useCallback((account, password) => {
     // signin implementation
@@ -23,13 +23,13 @@ export default function useAuthModel() {
   }
 }
 
-export function useUserSession() {
+export function useUserSession(): [API.CurrentUser, (currentUser: API.CurrentUser) => Promise<void>] {
   const { initialState, setInitialState } = useModel("@@initialState")
   const { currentUser: userSession } = initialState;
 
-  const setUserSession = async currentUser => {
-    await setInitialState({ ...initialState, currentUser })
-  }
+  const setUserSession = useCallback(async currentUser => {
+    return setInitialState({ ...initialState, currentUser })
+  }, [initialState])
 
   return [userSession, setUserSession]
 }
