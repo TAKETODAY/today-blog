@@ -44,7 +44,9 @@ export default () => {
     })
 
     if (!userSession) {
-      const referer = previousLocation ? (window.location.origin + previousLocation.pathname) : ''
+      const referer = previousLocation ?
+          (window.location.origin + previousLocation.pathname + previousLocation.search) : ''
+
       const id = setTimeout(() => {
         http.post(`/api/pv?referer=${referer}`)
       }, 3000)
