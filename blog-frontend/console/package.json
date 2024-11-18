@@ -81,7 +81,8 @@
     "react-helmet-async": "^1.0.4",
     "umi": "^3.5.36",
     "umi-request": "^1.0.8",
-    "umi-serve": "^1.9.10"
+    "umi-serve": "^1.9.10",
+    "ahooks": "^3.8.1"
   },
   "devDependencies": {
     "@ant-design/pro-cli": "^3.0.1",
