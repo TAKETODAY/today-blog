@@ -18,9 +18,9 @@
 package cn.taketoday.blog.model.form;
 
 import cn.taketoday.blog.model.enums.CommentStatus;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.Like;
-import cn.taketoday.persistence.OrderBy;
+import infra.lang.Nullable;
+import infra.persistence.Like;
+import infra.persistence.OrderBy;
 import lombok.Data;
 
 /**

@@ -22,7 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cn.taketoday.context.annotation.Profile;
+import infra.context.annotation.Profile;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

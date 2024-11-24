@@ -23,7 +23,7 @@ package cn.taketoday.blog.web;
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.lang.Nullable;
+import infra.lang.Nullable;
 import lombok.Data;
 
 /**

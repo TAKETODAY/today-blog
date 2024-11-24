@@ -23,17 +23,15 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 import cn.taketoday.blog.model.IpLocation;
-import cn.taketoday.http.client.ClientHttpResponse;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.stereotype.Component;
-import cn.taketoday.web.annotation.RequestParam;
-import cn.taketoday.web.client.ClientResponse;
-import cn.taketoday.web.client.ResponseErrorHandler;
-import cn.taketoday.web.client.RestClient;
-import cn.taketoday.web.client.support.RestClientAdapter;
-import cn.taketoday.web.service.annotation.GetExchange;
-import cn.taketoday.web.service.annotation.HttpExchange;
-import cn.taketoday.web.service.invoker.HttpServiceProxyFactory;
+import infra.lang.Nullable;
+import infra.stereotype.Component;
+import infra.web.annotation.RequestParam;
+import infra.web.client.ClientResponse;
+import infra.web.client.RestClient;
+import infra.web.client.support.RestClientAdapter;
+import infra.web.service.annotation.GetExchange;
+import infra.web.service.annotation.HttpExchange;
+import infra.web.service.invoker.HttpServiceProxyFactory;
 import lombok.Data;
 
 /**
@@ -46,19 +44,7 @@ public class IpLocationService {
   private static final Logger log = LoggerFactory.getLogger(IpLocationService.class);
 
   // https://webapi-pc.meitu.com/common/ip_location?ip=
-  private final RestClient restClient = RestClient.builder().defaultStatusHandler(new ResponseErrorHandler() {
-
-    @Override
-    public boolean hasError(ClientHttpResponse response) {
-      return response.getStatusCode().isError();
-    }
-
-    @Override
-    public void handleError(ClientHttpResponse response) {
-
-    }
-
-  }).build();
+  private final RestClient restClient = RestClient.builder().ignoreStatus().build();
 
   private final Client client = HttpServiceProxyFactory.forAdapter(RestClientAdapter.create(restClient))
           .createClient(Client.class);

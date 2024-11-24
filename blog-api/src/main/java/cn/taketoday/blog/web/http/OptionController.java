@@ -22,13 +22,13 @@ import java.util.Map;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.service.OptionService;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.web.annotation.GET;
-import cn.taketoday.web.annotation.PUT;
-import cn.taketoday.web.annotation.RequestBody;
-import cn.taketoday.web.annotation.RequestMapping;
-import cn.taketoday.web.annotation.ResponseStatus;
-import cn.taketoday.web.annotation.RestController;
+import infra.http.HttpStatus;
+import infra.web.annotation.GET;
+import infra.web.annotation.PUT;
+import infra.web.annotation.RequestBody;
+import infra.web.annotation.RequestMapping;
+import infra.web.annotation.ResponseStatus;
+import infra.web.annotation.RestController;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

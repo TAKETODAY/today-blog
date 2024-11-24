@@ -27,8 +27,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
 
-import cn.taketoday.lang.Constant;
-import cn.taketoday.web.annotation.Interceptor;
+import infra.lang.Constant;
+import infra.web.annotation.Interceptor;
 
 /**
  * 默认值：一秒钟请求一次

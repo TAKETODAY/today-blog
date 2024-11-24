@@ -22,9 +22,9 @@ import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.common.auth.DefaultCredentialProvider;
 import com.aliyun.oss.common.auth.DefaultCredentials;
 
-import cn.taketoday.context.properties.ConfigurationProperties;
-import cn.taketoday.context.properties.NestedConfigurationProperty;
-import cn.taketoday.stereotype.Component;
+import infra.context.properties.ConfigurationProperties;
+import infra.context.properties.NestedConfigurationProperty;
+import infra.stereotype.Component;
 
 /**
  * Config for OSS

@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +19,9 @@ package cn.taketoday.blog.model;
 
 import java.util.Objects;
 
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Id;
-import cn.taketoday.persistence.Table;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Id;
+import infra.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 

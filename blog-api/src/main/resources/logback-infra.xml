@@ -19,7 +19,7 @@
   <!--  <appender name="METRICS" class="io.prometheus.client.logback.InstrumentedAppender" />-->
 
   <infra-profile name="dev">
-    <include resource="cn/taketoday/framework/logging/logback/console-appender.xml" />
+    <include resource="infra/logging/logback/console-appender.xml" />
 
     <!--
     value="%red(%d{yyyy-MM-dd HH:mm:ss.SSS}) %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} - %blue([%16.16t]) %cyan(%-40.40logger{40}) %4.4L - %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
@@ -34,7 +34,7 @@
   </infra-profile>
 
   <infra-profile name="prod">
-    <include resource="cn/taketoday/framework/logging/logback/file-appender.xml" />
+    <include resource="infra/logging/logback/file-appender.xml" />
 
     <root level="INFO">
       <appender-ref ref="FILE" />

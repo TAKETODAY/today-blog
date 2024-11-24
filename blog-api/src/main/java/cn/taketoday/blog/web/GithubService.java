@@ -21,8 +21,8 @@
 package cn.taketoday.blog.web;
 
 import cn.taketoday.blog.model.User;
-import cn.taketoday.web.annotation.PathVariable;
-import cn.taketoday.web.service.annotation.GetExchange;
+import infra.web.annotation.PathVariable;
+import infra.web.service.annotation.GetExchange;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

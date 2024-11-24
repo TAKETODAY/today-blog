@@ -17,8 +17,8 @@
 
 package cn.taketoday.blog;
 
-import cn.taketoday.framework.Application;
-import cn.taketoday.framework.InfraApplication;
+import infra.app.Application;
+import infra.app.InfraApplication;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

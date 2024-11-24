@@ -22,9 +22,9 @@ import java.util.Set;
 
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Table;
-import cn.taketoday.persistence.Transient;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Table;
+import infra.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -21,8 +21,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 
-import cn.taketoday.persistence.Id;
-import cn.taketoday.persistence.Transient;
+import infra.persistence.Id;
+import infra.persistence.Transient;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

@@ -19,12 +19,12 @@ package cn.taketoday.blog.web;
 
 import java.util.function.Supplier;
 
-import cn.taketoday.core.NoStackTraceRuntimeException;
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.http.HttpStatusCode;
-import cn.taketoday.lang.Assert;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.web.HttpStatusProvider;
+import infra.core.NoStackTraceRuntimeException;
+import infra.http.HttpStatus;
+import infra.http.HttpStatusCode;
+import infra.lang.Assert;
+import infra.lang.Nullable;
+import infra.web.HttpStatusProvider;
 
 /**
  * No StackTrace Exception

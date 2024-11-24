@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.interceptor;
@@ -35,21 +32,21 @@ import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.web.ErrorMessage;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.http.MediaType;
-import cn.taketoday.http.ResponseEntity;
-import cn.taketoday.lang.Assert;
-import cn.taketoday.lang.Constant;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.session.SessionHandlerInterceptor;
-import cn.taketoday.session.SessionManager;
-import cn.taketoday.stereotype.Component;
-import cn.taketoday.util.ConcurrentReferenceHashMap;
-import cn.taketoday.util.MapCache;
-import cn.taketoday.web.HandlerInterceptor;
-import cn.taketoday.web.InterceptorChain;
-import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.handler.method.HandlerMethod;
+import infra.http.HttpStatus;
+import infra.http.MediaType;
+import infra.http.ResponseEntity;
+import infra.lang.Assert;
+import infra.lang.Constant;
+import infra.lang.Nullable;
+import infra.session.SessionHandlerInterceptor;
+import infra.session.SessionManager;
+import infra.stereotype.Component;
+import infra.util.ConcurrentReferenceHashMap;
+import infra.util.MapCache;
+import infra.web.HandlerInterceptor;
+import infra.web.InterceptorChain;
+import infra.web.RequestContext;
+import infra.web.handler.method.HandlerMethod;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

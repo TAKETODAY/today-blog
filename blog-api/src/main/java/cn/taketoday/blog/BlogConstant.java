@@ -17,7 +17,7 @@
 
 package cn.taketoday.blog;
 
-import cn.taketoday.lang.VersionExtractor;
+import infra.lang.VersionExtractor;
 
 /**
  * 时间:2018,1,6 2018 1 16
@@ -25,7 +25,7 @@ import cn.taketoday.lang.VersionExtractor;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:09 s
  */
-public interface BlogConstant extends cn.taketoday.lang.Constant {
+public interface BlogConstant extends infra.lang.Constant {
   String applicationName = "today-blog-api";
 
   String version = VersionExtractor.forClass(BlogConstant.class);

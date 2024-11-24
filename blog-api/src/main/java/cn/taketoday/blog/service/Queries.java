@@ -20,10 +20,10 @@ package cn.taketoday.blog.service;
 import java.sql.PreparedStatement;
 import java.util.function.Consumer;
 
-import cn.taketoday.persistence.EntityMetadata;
-import cn.taketoday.persistence.QueryStatement;
-import cn.taketoday.persistence.SimpleSelectQueryStatement;
-import cn.taketoday.persistence.sql.SimpleSelect;
+import infra.persistence.EntityMetadata;
+import infra.persistence.QueryStatement;
+import infra.persistence.SimpleSelectQueryStatement;
+import infra.persistence.sql.SimpleSelect;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

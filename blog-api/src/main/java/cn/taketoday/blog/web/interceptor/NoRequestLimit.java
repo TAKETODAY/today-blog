@@ -26,7 +26,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cn.taketoday.web.annotation.Interceptor;
+import infra.web.annotation.Interceptor;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

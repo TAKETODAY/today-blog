@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,10 +26,10 @@ import java.util.Map;
 import cn.taketoday.blog.model.enums.StatisticsField;
 import cn.taketoday.blog.model.form.PageViewStatistics;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.jdbc.core.JdbcOperations;
-import cn.taketoday.jdbc.core.PreparedStatementCallback;
-import cn.taketoday.stereotype.Service;
-import cn.taketoday.web.InternalServerException;
+import infra.jdbc.core.JdbcOperations;
+import infra.jdbc.core.PreparedStatementCallback;
+import infra.stereotype.Service;
+import infra.web.InternalServerException;
 import lombok.RequiredArgsConstructor;
 
 /**

@@ -33,10 +33,10 @@ import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.ConditionalOnDevelop;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
-import cn.taketoday.session.WebSession;
-import cn.taketoday.web.annotation.GET;
-import cn.taketoday.web.annotation.RequestMapping;
-import cn.taketoday.web.annotation.RestController;
+import infra.session.WebSession;
+import infra.web.annotation.GET;
+import infra.web.annotation.RequestMapping;
+import infra.web.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 /**

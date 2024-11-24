@@ -20,7 +20,7 @@ package cn.taketoday.blog.web;
 import java.util.function.Function;
 
 import cn.taketoday.blog.BlogConstant;
-import cn.taketoday.core.style.ToStringBuilder;
+import infra.core.style.ToStringBuilder;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

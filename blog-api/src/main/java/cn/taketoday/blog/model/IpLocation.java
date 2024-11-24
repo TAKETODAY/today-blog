@@ -19,9 +19,9 @@ package cn.taketoday.blog.model;
 
 import java.util.Objects;
 
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.lang.Descriptive;
-import cn.taketoday.lang.Nullable;
+import infra.core.style.ToStringBuilder;
+import infra.lang.Descriptive;
+import infra.lang.Nullable;
 
 /**
  * Ip 地理位置

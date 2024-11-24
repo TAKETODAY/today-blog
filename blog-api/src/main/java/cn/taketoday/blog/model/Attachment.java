@@ -20,9 +20,9 @@ package cn.taketoday.blog.model;
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Table;
-import cn.taketoday.persistence.Transient;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Table;
+import infra.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 

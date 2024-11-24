@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Objects;
 
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.EntityRef;
-import cn.taketoday.persistence.Transient;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.EntityRef;
+import infra.persistence.Transient;
 
 /**
  * 文章列表项

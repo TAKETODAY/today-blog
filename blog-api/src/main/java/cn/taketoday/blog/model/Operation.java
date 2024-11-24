@@ -23,10 +23,10 @@ import java.time.Instant;
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.LoggingType;
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Id;
-import cn.taketoday.persistence.OrderBy;
-import cn.taketoday.persistence.Table;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Id;
+import infra.persistence.OrderBy;
+import infra.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 

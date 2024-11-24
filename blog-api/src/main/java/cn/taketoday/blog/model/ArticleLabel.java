@@ -17,7 +17,7 @@
 
 package cn.taketoday.blog.model;
 
-import cn.taketoday.persistence.Table;
+import infra.persistence.Table;
 import lombok.Data;
 
 /**

@@ -30,17 +30,17 @@ import java.util.stream.Collectors;
 
 import cn.taketoday.blog.model.ArticleLabel;
 import cn.taketoday.blog.model.Label;
-import cn.taketoday.cache.annotation.CacheConfig;
-import cn.taketoday.cache.annotation.CacheEvict;
-import cn.taketoday.cache.annotation.Cacheable;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.EntityManager;
-import cn.taketoday.persistence.EntityRef;
-import cn.taketoday.persistence.Where;
-import cn.taketoday.stereotype.Service;
-import cn.taketoday.transaction.annotation.Transactional;
+import infra.cache.annotation.CacheConfig;
+import infra.cache.annotation.CacheEvict;
+import infra.cache.annotation.Cacheable;
+import infra.lang.Nullable;
+import infra.persistence.EntityManager;
+import infra.persistence.EntityRef;
+import infra.persistence.Where;
+import infra.stereotype.Service;
+import infra.transaction.annotation.Transactional;
 
-import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
+import static infra.persistence.QueryCondition.isEqualsTo;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

@@ -19,8 +19,8 @@ package cn.taketoday.blog.config;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ConfigBinding;
-import cn.taketoday.context.properties.ConfigurationProperties;
-import cn.taketoday.stereotype.Component;
+import infra.context.properties.ConfigurationProperties;
+import infra.stereotype.Component;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

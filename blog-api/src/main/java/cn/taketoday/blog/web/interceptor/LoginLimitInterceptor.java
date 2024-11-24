@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.interceptor;
@@ -23,11 +20,11 @@ package cn.taketoday.blog.web.interceptor;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.web.ErrorMessage;
 import cn.taketoday.blog.web.Json;
-import cn.taketoday.session.SessionHandlerInterceptor;
-import cn.taketoday.session.SessionManager;
-import cn.taketoday.session.WebSession;
-import cn.taketoday.web.InterceptorChain;
-import cn.taketoday.web.RequestContext;
+import infra.session.SessionHandlerInterceptor;
+import infra.session.SessionManager;
+import infra.session.WebSession;
+import infra.web.InterceptorChain;
+import infra.web.RequestContext;
 
 /**
  * @author TODAY 2021/8/8 12:37

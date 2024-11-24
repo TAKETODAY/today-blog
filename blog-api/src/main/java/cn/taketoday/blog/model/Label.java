@@ -21,8 +21,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Id;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,8 +1,6 @@
 /*
  * Copyright 2017 - 2024 the original author or authors.
  *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -22,8 +20,8 @@ package cn.taketoday.blog.config;
 import java.io.File;
 
 import cn.taketoday.blog.model.Attachment;
-import cn.taketoday.context.properties.ConfigurationProperties;
-import cn.taketoday.stereotype.Component;
+import infra.context.properties.ConfigurationProperties;
+import infra.stereotype.Component;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

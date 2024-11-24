@@ -22,7 +22,7 @@ import com.aliyun.oss.OSSClient;
 import java.io.File;
 
 import cn.taketoday.blog.config.OssConfig;
-import cn.taketoday.stereotype.Singleton;
+import infra.stereotype.Singleton;
 
 /**
  * @author TODAY 2021/3/31 21:37

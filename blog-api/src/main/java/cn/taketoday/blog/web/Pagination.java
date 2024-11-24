@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Page;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Page;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
