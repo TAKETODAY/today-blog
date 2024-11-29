@@ -33,18 +33,6 @@ aliyun:
   oss:
     enabled: false
 
-######################################## github login
-github:
-  app-id:
-  app-key:
-  callback: ${site.host}/api/auth/github/callback
-  redirect: https://github.com/login/oauth/authorize?client_id=${github.appId}&scope=user:email&state=
-
-gitee:
-  app-id:
-  app-key:
-  callback: ${site.host}/api/auth/gitee/callback
-  redirect: https://gitee.com/oauth/authorize?client_id=${gitee.appId}&response_type=code&state=
 
 web:
   mvc:

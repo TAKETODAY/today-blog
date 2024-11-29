@@ -15,10 +15,10 @@ server:
       max-age: 1d
       same-site: lax
     persistent: true
-  multipart:
-    max-file-size: 20MB
-    max-request-size: 100MB
-    file-size-threshold: 512MB
+  netty:
+    multipart:
+      max-field-size: 100MB
+      field-size-threshold: 10MB
 
 infra:
   output:
