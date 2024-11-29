@@ -29,6 +29,9 @@ import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
+import eu.bitwalker.useragentutils.Browser;
+import eu.bitwalker.useragentutils.UserAgent;
+import eu.bitwalker.useragentutils.Version;
 import infra.http.HttpHeaders;
 import infra.lang.Nullable;
 import infra.persistence.EntityManager;
@@ -38,9 +41,6 @@ import infra.web.annotation.POST;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
 import infra.web.util.UriUtils;
-import eu.bitwalker.useragentutils.Browser;
-import eu.bitwalker.useragentutils.UserAgent;
-import eu.bitwalker.useragentutils.Version;
 import lombok.RequiredArgsConstructor;
 
 /**
