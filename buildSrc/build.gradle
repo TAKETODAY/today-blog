@@ -26,13 +26,21 @@ repositories {
 }
 
 
+Properties properties = new Properties()
+
+try (def reader = new FileReader(file("../gradle.properties"))) {
+  properties.load(reader)
+}
+
+def infraVersion = properties['infraVersion']
+
 dependencies {
   implementation 'org.yaml:snakeyaml:1.33'
   implementation "me.champeau.gradle:japicmp-gradle-plugin:0.4.1"
   implementation "org.gradle:test-retry-gradle-plugin:1.4.1"
   implementation "org.apache.maven:maven-artifact:3.6.3"
-  implementation 'cn.taketoday:today-core:5.0.0-Draft.1-SNAPSHOT'
-  implementation 'cn.taketoday:infra-gradle-plugin:5.0.0-Draft.1-SNAPSHOT'
+  implementation "cn.taketoday:today-core:$infraVersion"
+  implementation "cn.taketoday:infra-gradle-plugin:$infraVersion"
 }
 
 gradlePlugin {
