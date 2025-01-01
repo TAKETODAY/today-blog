@@ -62,7 +62,7 @@ class CategoriesController {
     if (StringUtils.isBlank(category.getName())) {
       throw ErrorMessageException.failed("分类名不能为空");
     }
-    if (category.getOrder() <= 0) {
+    if (category.getOrder() == null) {
       category.setOrder(Category.DEFAULT_ORDER);
     }
     if (StringUtils.isBlank(category.getDescription())) {
