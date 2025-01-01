@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
@@ -65,6 +67,7 @@ public abstract class BasicModel implements Serializable {
   }
 
   @Transient
+  @JsonIgnore
   public boolean isNew() {
     return id == null;
   }
