@@ -101,7 +101,7 @@ public class Pagination<T> implements ListableHttpResult<T> {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("current", current)
             .append("pages", pages)
             .append("total", total)

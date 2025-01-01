@@ -59,7 +59,7 @@ public class Item implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("image", image)
             .append("title", title)

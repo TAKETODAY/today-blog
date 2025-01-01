@@ -171,7 +171,7 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("q", q)
             .append("category", category)
             .append("status", status)

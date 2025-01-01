@@ -116,7 +116,7 @@ public class Comment extends BasicModel {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("content", StringUtils.truncate(content, 10))
             .append("articleId", articleId)

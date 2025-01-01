@@ -72,7 +72,7 @@ public class Article extends BasicModel {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("cover", cover)
             .append("title", title)

@@ -88,7 +88,7 @@ public class IpLocation implements Descriptive {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("country", country)
             .append("province", province)
             .append("city", city)

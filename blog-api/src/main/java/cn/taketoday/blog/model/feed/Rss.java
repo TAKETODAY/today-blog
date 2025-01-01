@@ -47,7 +47,7 @@ public class Rss implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("lastBuildDate", lastBuildDate)
             .append("items", items)
             .toString();

@@ -48,7 +48,7 @@ public class Label implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("name", name)
             .toString();

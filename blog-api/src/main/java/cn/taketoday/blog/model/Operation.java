@@ -76,7 +76,7 @@ public class Operation implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("title", title)
             .append("content", content)

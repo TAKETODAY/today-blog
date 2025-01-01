@@ -138,7 +138,7 @@ final class LazyPageable implements Pageable, Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("size", size)
             .append("current", current)
             .toString();

@@ -121,7 +121,7 @@ public final class Json implements HttpResult {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("data", data)
             .append("message", message)
             .append("success", success)

@@ -47,7 +47,7 @@ public class Category {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("order", order)
             .append("name", name)
             .append("articleCount", articleCount)

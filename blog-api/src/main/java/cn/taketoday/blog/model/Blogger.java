@@ -64,7 +64,7 @@ public class Blogger implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("age", age)
             .append("sex", sex)

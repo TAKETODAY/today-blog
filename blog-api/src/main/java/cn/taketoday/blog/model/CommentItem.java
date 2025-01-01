@@ -106,7 +106,7 @@ public class CommentItem {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("content", StringUtils.truncate(content, 10))
             .append("parent", parentId)

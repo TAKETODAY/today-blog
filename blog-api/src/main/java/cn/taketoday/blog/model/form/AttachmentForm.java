@@ -58,7 +58,7 @@ public class AttachmentForm {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("fileType", fileType)
             .append("name", name)
             .toString();

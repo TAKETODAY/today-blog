@@ -78,7 +78,7 @@ public class Attachment extends BasicModel {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("name", name)
             .append("uri", uri)
