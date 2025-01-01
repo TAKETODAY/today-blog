@@ -14,7 +14,6 @@ server:
       secure: true
       max-age: 1d
       same-site: lax
-    persistent: true
   netty:
     multipart:
       max-field-size: 100MB
