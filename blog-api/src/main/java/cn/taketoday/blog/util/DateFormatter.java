@@ -18,8 +18,14 @@
 package cn.taketoday.blog.util;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalQueries;
 import java.util.List;
 
 /**
@@ -38,10 +44,22 @@ public abstract class DateFormatter {
     DateTimeParseException exception = null;
     for (DateTimeFormatter formatter : formatters) {
       try {
-        return formatter.parse(text, Instant::from);
+        TemporalAccessor accessor = formatter.parse(text);
+        ZoneId zoneId = accessor.query(TemporalQueries.zoneId());
+        LocalDate date = accessor.query(TemporalQueries.localDate());
+        LocalTime time = accessor.query(TemporalQueries.localTime());
+        if (zoneId == null) {
+          zoneId = ZoneId.systemDefault();
+        }
+        return ZonedDateTime.of(date, time, zoneId).toInstant();
       }
       catch (DateTimeParseException e) {
-        exception = e;
+        if (exception == null) {
+          exception = e;
+        }
+        else {
+          exception.addSuppressed(e);
+        }
       }
     }
     if (exception != null) {

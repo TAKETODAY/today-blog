@@ -30,8 +30,8 @@ class DateFormatterTests {
   @Test
   void parse() {
     Instant parse = DateFormatter.parse("2025-01-01 22:41:07");
-
     System.out.println(parse);
+    System.out.println(Instant.now());
   }
 
 }
