@@ -28,6 +28,7 @@ import infra.stereotype.Component;
 import infra.web.annotation.RequestParam;
 import infra.web.client.ClientResponse;
 import infra.web.client.RestClient;
+import infra.web.client.RestClientException;
 import infra.web.client.support.RestClientAdapter;
 import infra.web.service.annotation.GetExchange;
 import infra.web.service.annotation.HttpExchange;
@@ -51,19 +52,24 @@ public class IpLocationService {
 
   @Nullable
   public IpLocation lookup(String ip) {
-    var response = client.ipLocation(ip);
-    if (response.getStatusCode().is2xxSuccessful()) {
-      Body body = response.bodyTo(Body.class);
-      if (body != null) {
-        BodyData bodyData = body.data.get(ip);
-        if (bodyData != null) {
-          // todo area
-          return new IpLocation(bodyData.nation, bodyData.province, bodyData.city, null, bodyData.isp);
+    try {
+      var response = client.ipLocation(ip);
+      if (response.getStatusCode().is2xxSuccessful()) {
+        Body body = response.bodyTo(Body.class);
+        if (body != null) {
+          BodyData bodyData = body.data.get(ip);
+          if (bodyData != null) {
+            // todo area
+            return new IpLocation(bodyData.nation, bodyData.province, bodyData.city, null, bodyData.isp);
+          }
         }
       }
+      else {
+        log.warn("IP lookup failed: [{}]", response.getStatusCode());
+      }
     }
-    else {
-      log.warn("IP lookup failed: [{}]", response.getStatusCode());
+    catch (RestClientException e) {
+      log.error("IP lookup failed", e);
     }
     return null;
   }
