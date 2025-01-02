@@ -55,8 +55,6 @@ import infra.persistence.Order;
 import infra.persistence.OrderBy;
 import infra.persistence.SimpleSelectQueryStatement;
 import infra.persistence.Transient;
-import infra.persistence.sql.OrderByClause;
-import infra.persistence.sql.OrderBySource;
 import infra.persistence.sql.SimpleSelect;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
@@ -295,8 +293,7 @@ public class ArticleService implements InitializingBean {
    * 刷新订阅文章
    */
   public void refreshFeedArticles() {
-    int limit = blogConfig.articleFeedListSize;
-    List<Article> feedArticles = entityManager.find(Article.class, new FeedArticles(limit));
+    var feedArticles = entityManager.find(Article.class, new FeedArticles(blogConfig.articleFeedListSize));
     applyLabels(feedArticles);
 
     buildAtom(feedArticles);
@@ -530,7 +527,7 @@ public class ArticleService implements InitializingBean {
     }
   }
 
-  static class FeedArticles extends SimpleSelectQueryStatement implements OrderBySource {
+  static class FeedArticles extends SimpleSelectQueryStatement {
 
     @Transient
     public final int limit;
@@ -540,14 +537,10 @@ public class ArticleService implements InitializingBean {
     }
 
     @Override
-    public OrderByClause orderByClause() {
-      return OrderByClause.mutable().desc("id");
-    }
-
-    @Override
     protected void renderInternal(EntityMetadata metadata, SimpleSelect select) {
       select.addRestriction("status");
       select.limit(limit);
+      select.orderBy("id", Order.DESC);
     }
 
     @Override
