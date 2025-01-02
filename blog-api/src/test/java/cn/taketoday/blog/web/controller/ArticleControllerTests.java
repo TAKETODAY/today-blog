@@ -79,6 +79,17 @@ class ArticleControllerTests {
   }
 
   @Test
+  void uri() {
+    String uri = "2024-year-end-summary&g_f=2000000392";
+    int idx = uri.indexOf("&");
+    if (idx > -1) {
+      uri = uri.substring(0, idx);
+    }
+
+    assertThat(uri).isEqualTo("2024-year-end-summary");
+  }
+
+  @Test
   @Transactional
   public void detail() throws Exception {
     ArticleForm form = new ArticleForm();

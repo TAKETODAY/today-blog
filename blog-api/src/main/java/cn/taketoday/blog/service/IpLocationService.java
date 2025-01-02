@@ -69,7 +69,7 @@ public class IpLocationService {
       }
     }
     catch (RestClientException e) {
-      log.error("IP lookup failed", e);
+      log.error("IP lookup failed: [{}]", e.getMessage());
     }
     return null;
   }

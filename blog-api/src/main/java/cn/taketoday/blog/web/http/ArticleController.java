@@ -176,6 +176,10 @@ class ArticleController {
    */
   @GET("/{uri}")
   public Article detail(@Nullable String key, @PathVariable String uri, LoginInfo loginInfo) {
+    int idx = uri.indexOf("&");
+    if (idx > -1) {
+      uri = uri.substring(0, idx);
+    }
     Article article = articleService.getByURI(uri);
     if (article == null) {
       try {
