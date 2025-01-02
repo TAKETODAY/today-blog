@@ -36,6 +36,7 @@ import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
 import infra.http.HttpStatus;
+import infra.lang.NonNull;
 import infra.lang.Nullable;
 import infra.web.annotation.GET;
 import infra.web.annotation.Interceptor;
@@ -176,10 +177,7 @@ class ArticleController {
    */
   @GET("/{uri}")
   public Article detail(@Nullable String key, @PathVariable String uri, LoginInfo loginInfo) {
-    int idx = uri.indexOf("&");
-    if (idx > -1) {
-      uri = uri.substring(0, idx);
-    }
+    uri = processURI(uri);
     Article article = articleService.getByURI(uri);
     if (article == null) {
       try {
@@ -210,6 +208,15 @@ class ArticleController {
     // 重置
     article.setPassword(null);
     return article;
+  }
+
+  @NonNull
+  private static String processURI(String uri) {
+    int idx = uri.indexOf("&");
+    if (idx > -1) {
+      uri = uri.substring(0, idx);
+    }
+    return uri;
   }
 
 }
