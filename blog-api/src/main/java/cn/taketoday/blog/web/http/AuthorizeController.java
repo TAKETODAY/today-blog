@@ -39,7 +39,6 @@ import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import infra.core.env.ConfigurableEnvironment;
 import infra.http.HttpStatus;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
@@ -76,8 +75,8 @@ class AuthorizeController extends SessionManagerOperations {
 
   private final AttachmentService attachmentService;
 
-  public AuthorizeController(SessionManager sessionManager, ConfigurableEnvironment environment,
-          UserService userService, BloggerService bloggerService, AttachmentService attachmentService) {
+  public AuthorizeController(SessionManager sessionManager, UserService userService,
+          BloggerService bloggerService, AttachmentService attachmentService) {
     super(sessionManager);
     this.userService = userService;
     this.bloggerService = bloggerService;
