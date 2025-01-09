@@ -56,6 +56,7 @@ import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RequestParam;
 import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestController;
+import infra.web.util.UriBuilder;
 import infra.web.util.UriComponents;
 import infra.web.util.UriComponentsBuilder;
 import jakarta.validation.Valid;
@@ -139,11 +140,11 @@ class CommentController {
     comment.setEmail(from.email);
     comment.setCommenter(from.commenter);
     if (StringUtils.hasText(from.commenterSite)) {
-      UriComponents uriComponents = UriComponentsBuilder.fromUriString(from.commenterSite).build();
+      UriComponents uriComponents = UriComponentsBuilder.forURIString(from.commenterSite).build();
       String host = uriComponents.getHost();
       if (StringUtils.hasText(host)) {
-        UriComponents commenterSite = UriComponentsBuilder.newInstance()
-                .scheme(uriComponents.getScheme() == null ? "http" : uriComponents.getScheme())
+        UriComponents commenterSite = UriBuilder.forUriComponents()
+                .scheme(uriComponents.getScheme() == null ? "https" : uriComponents.getScheme())
                 .host(host).build();
 
         comment.setCommenterSite(commenterSite.toUriString());
