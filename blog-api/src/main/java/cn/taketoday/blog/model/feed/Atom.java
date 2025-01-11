@@ -1,6 +1,5 @@
 /*
- * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2018, b3log.org & hacpai.com
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 package cn.taketoday.blog.model.feed;
 
@@ -38,7 +37,11 @@ public class Atom implements Serializable {
 
   private long updated;
 
-  private LinkedList<Entry> entries = new LinkedList<>();
+  private final LinkedList<Entry> entries = new LinkedList<>();
+
+  public void clear() {
+    entries.clear();
+  }
 
   public void addEntry(final Entry entry) {
     entries.add(entry);

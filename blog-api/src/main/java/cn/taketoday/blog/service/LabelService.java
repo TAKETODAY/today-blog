@@ -114,7 +114,7 @@ public class LabelService {
   }
 
   @CacheEvict(allEntries = true)
-  public void persistArticleTags(Set<Label> labels, long articleId) {
+  public void persistArticleLabels(Set<Label> labels, long articleId) {
     entityManager.persist(labels.stream().map(label -> ArticleLabel.of(label.getId(), articleId)));
     articleLabelsCache.invalidate(articleId);
   }

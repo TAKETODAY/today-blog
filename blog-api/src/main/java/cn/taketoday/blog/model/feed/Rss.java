@@ -39,7 +39,11 @@ public class Rss implements Serializable {
 
   private long lastBuildDate;
 
-  private LinkedList<Item> items = new LinkedList<>();
+  private final LinkedList<Item> items = new LinkedList<>();
+
+  public void clear() {
+    items.clear();
+  }
 
   public void addItem(Item item) {
     items.add(item);
@@ -66,4 +70,5 @@ public class Rss implements Serializable {
   public int hashCode() {
     return Objects.hash(lastBuildDate, items);
   }
+
 }

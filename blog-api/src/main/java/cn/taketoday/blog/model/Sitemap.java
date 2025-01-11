@@ -44,6 +44,10 @@ public class Sitemap implements Serializable {
 
   private final LinkedList<SiteURL> urls = new LinkedList<>();
 
+  public void clear() {
+    urls.clear();
+  }
+
   public void addArticle(Article article) {
     addUrl(newURL(article));
   }

@@ -136,7 +136,7 @@ public class ArticleService implements InitializingBean {
         labelService.removeArticleLabels(newArticle.getId());
       }
       if (CollectionUtils.isNotEmpty(newLabels)) {
-        labelService.persistArticleTags(newLabels, newArticle.getId());
+        labelService.persistArticleLabels(newLabels, newArticle.getId());
       }
     }
   }
@@ -311,7 +311,7 @@ public class ArticleService implements InitializingBean {
    */
   protected void buildAtom(List<Article> feedArticles) {
     log.debug("Build Atom ");
-    atom.getEntries().clear();
+    atom.clear();
 
     for (Article article : feedArticles) {
       if (article.needPassword()) {
@@ -344,9 +344,8 @@ public class ArticleService implements InitializingBean {
    * Rss
    */
   protected void buildRss(List<Article> feedArticles) {
-
     log.debug("Build Rss");
-    rss.getItems().clear();
+    rss.clear();
 
     for (Article article : feedArticles) {
       if (article.needPassword()) {
@@ -375,7 +374,7 @@ public class ArticleService implements InitializingBean {
 
   protected void buildSitemap() {
     log.debug("Build Sitemap");
-    sitemap.getUrls().clear();
+    sitemap.clear();
 
     for (Article article : entityManager.find(Article.class, Map.of("create_at", Order.DESC))) {
       if (article.getStatus() == PostStatus.PUBLISHED) {
@@ -417,7 +416,7 @@ public class ArticleService implements InitializingBean {
     // save labels
     Set<Label> labels = article.getLabels();
     if (CollectionUtils.isNotEmpty(labels)) {
-      labelService.persistArticleTags(labels, article.getId());
+      labelService.persistArticleLabels(labels, article.getId());
     }
 
     // update category

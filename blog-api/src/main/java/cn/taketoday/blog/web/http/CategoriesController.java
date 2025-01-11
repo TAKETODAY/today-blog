@@ -72,7 +72,7 @@ class CategoriesController {
       throw ErrorMessageException.failed("分类重复");
     }
 
-    categoryService.save(category);
+    categoryService.persist(category);
   }
 
   /**
