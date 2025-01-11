@@ -29,7 +29,7 @@ import infra.lang.Nullable;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.session.WebSession;
-import infra.stereotype.Singleton;
+import infra.stereotype.Component;
 import infra.web.RequestContext;
 import infra.web.bind.resolver.ParameterResolvingStrategy;
 import infra.web.handler.method.ResolvableMethodParameter;
@@ -53,9 +53,8 @@ import infra.web.handler.method.ResolvableMethodParameter;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-07-25 00:56
  */
-@Singleton
-public class LoginInfoParameterResolver
-        extends SessionManagerOperations implements ParameterResolvingStrategy {
+@Component
+public class LoginInfoParameterResolver extends SessionManagerOperations implements ParameterResolvingStrategy {
 
   public LoginInfoParameterResolver(SessionManager sessionManager) {
     super(sessionManager);
