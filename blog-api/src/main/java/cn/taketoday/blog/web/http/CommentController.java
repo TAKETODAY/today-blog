@@ -41,7 +41,6 @@ import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.http.HttpStatus;
-import infra.lang.Assert;
 import infra.lang.Nullable;
 import infra.persistence.Page;
 import infra.web.ResponseStatusException;
@@ -129,8 +128,8 @@ class CommentController {
   @Logging(title = "用户评论", content = "用户：[#{#from.commenter}] " +
           "评论了文章:[#{@articleService.getById(#from.articleId)?.title}] 回复了:[#{#from.commentId}]")
   public void create(LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
-    Article article = articleService.getById(from.articleId);
-    Assert.notNull(article, "文章不存在");
+    Article article = articleService.obtainById(from.articleId);
+
     Comment comment = new Comment();
     comment.setContent(from.content);
     comment.setParentId(from.commentId);

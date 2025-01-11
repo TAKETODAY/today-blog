@@ -185,7 +185,7 @@ public class ArticleService implements InitializingBean {
   /**
    * @return {@link Article} never be null
    */
-  protected Article obtainById(long id) {
+  public Article obtainById(long id) {
     Article byId = getById(id);
     if (byId == null) {
       throw ErrorMessageException.failed("该文章不存在或已删除不能操作");
