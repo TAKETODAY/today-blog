@@ -56,14 +56,14 @@ public class IpLocation implements Descriptive {
     this.isp = defaultValue(isp);
   }
 
-  static String defaultValue(@Nullable String area) {
-    if (area == null || "0".equals(area)) {
+  static String defaultValue(@Nullable String val) {
+    if (val == null || "UNKNOWN".equals(val) || "0".equals(val)) {
       return UNKNOWN;
     }
-    else if ("内网IP".equals(area)) {
+    else if ("内网IP".equals(val)) {
       return LAN;
     }
-    return area;
+    return val;
   }
 
   public String getCountry() {
@@ -78,6 +78,7 @@ public class IpLocation implements Descriptive {
     return city;
   }
 
+  @Nullable
   public String getArea() {
     return area;
   }

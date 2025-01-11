@@ -21,8 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import cn.taketoday.blog.model.IpLocation;
+import cn.taketoday.ip2region.IpSearcher;
 import infra.lang.Nullable;
 import infra.stereotype.Component;
 import infra.web.annotation.RequestParam;
@@ -44,6 +46,10 @@ public class IpLocationService {
 
   private static final Logger log = LoggerFactory.getLogger(IpLocationService.class);
 
+  private static final Pattern ipv4Pattern = Pattern.compile("^([0-9]{1,3}\\.){3}[0-9]{1,3}$");
+
+  private static final IpSearcher ipv4Searcher = IpSearcher.forDefaultResourceLocation();
+
   // https://webapi-pc.meitu.com/common/ip_location?ip=
   private final RestClient restClient = RestClient.builder().ignoreStatus().build();
 
@@ -52,6 +58,14 @@ public class IpLocationService {
 
   @Nullable
   public IpLocation lookup(String ip) {
+    if (isValidIPv4(ip)) {
+      var ipLocation = ipv4Searcher.find(ip);
+      if (ipLocation != null) {
+        return new IpLocation(ipLocation.getCountry(), ipLocation.getProvince(),
+                ipLocation.getCity(), ipLocation.getArea(), ipLocation.getIsp());
+      }
+    }
+
     try {
       var response = client.ipLocation(ip);
       if (response.getStatusCode().is2xxSuccessful()) {
@@ -72,6 +86,21 @@ public class IpLocationService {
       log.error("IP lookup failed: [{}]", e.getMessage());
     }
     return null;
+  }
+
+  static boolean isValidIPv4(String ip) {
+    if (!ipv4Pattern.matcher(ip).matches()) {
+      return false;
+    }
+
+    String[] parts = ip.split("\\.");
+    for (String part : parts) {
+      int number = Integer.parseInt(part);
+      if (number < 0 || number > 255) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @HttpExchange(url = "https://webapi-pc.meitu.com")
