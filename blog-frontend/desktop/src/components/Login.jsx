@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,20 +47,13 @@ class Login extends React.PureComponent {
     const remember = fromData['remember']
     delete fromData['remember'] // delete remember value from the form-data
     userService.login(fromData).then(res => {
-      const result = res.data
-      if (result.success) { // 登陆成功
-        if (remember) { // 记住邮箱
-          saveStorage("lastLogin", fromData["email"])
-        }
-        else {
-          removeStorage("lastLogin")
-        }
-        message.success(result.message)
-        this.props.updateUserSession(result.data)
+      if (remember) { // 记住邮箱
+        saveStorage("lastLogin", fromData["email"])
       }
       else {
-        message.error(result.message)
+        removeStorage("lastLogin")
       }
+      this.props.updateUserSession(res.data)
     }).catch(res => {
       message.error(res.message)
     })

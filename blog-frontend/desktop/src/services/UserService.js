@@ -27,7 +27,7 @@ export default class UserService {
 
   login = (fromData) => {
     // console.log(fromData)
-    return http.post('/api/auth', fromData)
+    return http.post('/api/auth?v2', fromData)
   }
 
   logout() {
