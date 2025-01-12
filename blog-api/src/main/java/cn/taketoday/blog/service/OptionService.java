@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,30 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
+
 package cn.taketoday.blog.service;
 
-import org.slf4j.LoggerFactory;
-
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 import cn.taketoday.blog.BlogConstant;
-import cn.taketoday.blog.config.BlogConfig;
-import cn.taketoday.blog.config.CommentConfig;
+import cn.taketoday.blog.ConfigBinding;
 import cn.taketoday.blog.model.Option;
-import cn.taketoday.blog.util.BlogUtils;
-import freemarker.template.Configuration;
-import freemarker.template.TemplateModelException;
+import cn.taketoday.blog.util.StringUtils;
+import infra.beans.BeanMetadata;
+import infra.beans.BeanProperty;
 import infra.beans.factory.BeanFactory;
 import infra.core.env.ConfigurableEnvironment;
-import infra.core.env.MapPropertySource;
-import infra.core.env.PropertySources;
+import infra.core.env.EnumerablePropertySource;
+import infra.lang.Nullable;
+import infra.lang.Unmodifiable;
 import infra.persistence.EntityManager;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import infra.util.CollectionUtils;
-import infra.web.InternalServerException;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -46,91 +45,155 @@ import infra.web.InternalServerException;
 @Service
 public class OptionService {
 
-  private final BlogConfig blogConfig;
-
   private final BeanFactory beanFactory;
-
-  private final CommentConfig commentConfig;
-
-  private final CommentService commentService;
 
   private final EntityManager entityManager;
 
-  private final ConcurrentHashMap<String, String> optionsMap = new ConcurrentHashMap<>();
+  private final ConfigurableEnvironment environment;
 
-  public OptionService(BlogConfig blogConfig, CommentService commentService,
-          ConfigurableEnvironment environment, BeanFactory beanFactory, CommentConfig commentConfig, EntityManager entityManager) {
-    this.blogConfig = blogConfig;
+  private final OptionsPropertySource optionsPropertySource = new OptionsPropertySource("optionsMap", this);
+
+  public OptionService(BeanFactory beanFactory, EntityManager entityManager, ConfigurableEnvironment environment) {
     this.beanFactory = beanFactory;
-    this.commentService = commentService;
-    this.commentConfig = commentConfig;
     this.entityManager = entityManager;
-
-    for (Option option : entityManager.find(Option.class)) {
-      optionsMap.put(option.getName(), option.getValue());
-    }
-
-    resolveBinding(optionsMap);
-
-    PropertySources propertySources = environment.getPropertySources();
-    propertySources.addLast(new MapPropertySource("optionsMap", (Map) optionsMap));
+    this.environment = environment;
+    environment.getPropertySources().addLast(optionsPropertySource);
+    optionsPropertySource.updateCache();
   }
 
-  public void saveOptions(Map<String, String> optionsMap) {
-    if (CollectionUtils.isNotEmpty(optionsMap)) {
-      optionsMap.forEach(this::saveOption);
-    }
+  /**
+   * @since 3.2
+   */
+  public void persist(Option value) {
+    entityManager.persist(value);
   }
 
-  public void saveOption(String key, String value) {
-    entityManager.persist(new Option(key, value));
-    optionsMap.put(key, value);
+  /**
+   * @since 3.2
+   */
+  public void persist(List<Option> value) {
+    entityManager.persist(value);
   }
 
+  @Unmodifiable
   public Map<String, String> getOptionsMap() {
-    return this.optionsMap;
+    return Collections.unmodifiableMap(optionsPropertySource.optionsMap);
   }
 
-  public void update(String key, String value) {
-    String oldValue = optionsMap.get(key);
-    if (oldValue == null && value != null) {
-      saveOption(key, value);
-    }
-    else if (!Objects.equals(oldValue, value)) {
-      entityManager.updateById(new Option(key, value));
-      optionsMap.put(key, value);
-    }
+  @Unmodifiable
+  public Map<String, String> publicOptions() {
+    return Collections.unmodifiableMap(optionsPropertySource.publicOptionsMap);
+  }
+
+  public void update(String key, @Nullable String value) {
+    String oldValue = optionsPropertySource.getProperty(key);
+  }
+
+  /**
+   * @since 3.2
+   */
+  public void update(Option option) {
+    entityManager.updateById(option);
   }
 
   @Transactional
   public void update(Map<String, String> optionsMap) {
     if (CollectionUtils.isNotEmpty(optionsMap)) {
-
       optionsMap.forEach(this::update);
-      resolveBinding(optionsMap);
-
-      try {
-        beanFactory.getBean(Configuration.class)
-                .setSharedVariable(BlogConstant.CDN, blogConfig.cdn);
-      }
-      catch (TemplateModelException e) {
-        throw InternalServerException.failed("cdn 更新失败", e);
-      }
+      optionsPropertySource.updateCache();
     }
   }
 
-  void resolveBinding(Map<String, String> optionsMap) {
-    try {
-      BlogUtils.resolveBinding(blogConfig, optionsMap);
-      BlogUtils.resolveBinding(commentConfig, optionsMap);
+  /**
+   * @since 3.2
+   */
+  @Transactional
+  public void update(List<Option> options) {
+    options.forEach(entityManager::updateById);
+    optionsPropertySource.updateCache();
+  }
 
-      if (!commentConfig.isSendMail()) {
-        commentService.closeEmailNotification(); // TODO 将邮件分开
+  // ------------------------------------------------------------------------
+  // Implementation EnumerablePropertySource
+  // ------------------------------------------------------------------------
+
+  private final static class OptionsPropertySource extends EnumerablePropertySource<OptionService> {
+
+    private final HashMap<String, String> optionsMap = new HashMap<>();
+
+    private final HashMap<String, String> publicOptionsMap = new HashMap<>();
+
+    public OptionsPropertySource(String name, OptionService source) {
+      super(name, source);
+    }
+
+    public synchronized void updateCache() {
+      optionsMap.clear();
+      publicOptionsMap.clear();
+      List<Option> options = source.entityManager.find(Option.class);
+      for (Option option : options) {
+        optionsMap.put(option.getName(), option.getValue());
+        if (option.getOpen()) {
+          publicOptionsMap.put(option.getName(), option.getValue());
+        }
+      }
+
+      List<Object> configBindingBeans = source.beanFactory.getAnnotatedBeans(ConfigBinding.class);
+      for (Object configBindingBean : configBindingBeans) {
+        resolveBinding(configBindingBean);
       }
     }
-    catch (RuntimeException e) {
-      LoggerFactory.getLogger(OptionService.class).error("When resolve binding options", e);
-      throw InternalServerException.failed(null, e);
+
+    @Nullable
+    @Override
+    public synchronized String getProperty(String name) {
+      return optionsMap.get(name);
+    }
+
+    @Override
+    public synchronized boolean containsProperty(String name) {
+      return optionsMap.containsKey(name);
+    }
+
+    @Override
+    public synchronized String[] getPropertyNames() {
+      return StringUtils.toStringArray(optionsMap.keySet());
+    }
+
+    private void resolveBinding(Object bean) {
+      Class<?> beanClass = bean.getClass();
+      String prefix = getPrefix(beanClass);
+      var conversionService = source.environment.getConversionService();
+      for (BeanProperty property : BeanMetadata.forClass(beanClass)) {
+        String key = getKey(prefix, property);
+        String value = getProperty(key);
+        if (value != null) {
+          property.setValue(bean, value, conversionService);
+        }
+      }
+    }
+
+    private static String getPrefix(Class<?> beanClass) {
+      ConfigBinding annotation = beanClass.getAnnotation(ConfigBinding.class);
+      if (annotation != null) {
+        return annotation.value();
+      }
+      return BlogConstant.BLANK;
+    }
+
+    private static String getKey(String prefix, BeanProperty field) {
+      ConfigBinding bindingOnField = field.getAnnotation(ConfigBinding.class);
+      if (bindingOnField != null) {
+        if (bindingOnField.combine()) {
+          return prefix + bindingOnField.value();
+        }
+        else {
+          return bindingOnField.value();
+        }
+      }
+      else {
+        return prefix + field.getName();
+      }
     }
   }
 

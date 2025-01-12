@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +21,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+import infra.persistence.Column;
 import infra.persistence.Id;
 import infra.persistence.Table;
 import lombok.Getter;
@@ -46,7 +44,14 @@ public class Option implements Serializable {
 
   private String value;
 
-  public Option() { }
+  @Column("public")
+  private Boolean open;
+
+  private String description;
+
+  public Option() {
+
+  }
 
   public Option(String name, String value) {
     this.name = name;
@@ -60,6 +65,7 @@ public class Option implements Serializable {
     if (!(o instanceof final Option option))
       return false;
     return Objects.equals(name, option.name)
+            && Objects.equals(open, option.open)
             && Objects.equals(value, option.value);
   }
 

@@ -16,6 +16,11 @@ alter table t_page_view
     add host varchar(255) not null comment 'request host' after url,
     add path varchar(255) not null comment 'request path' after host;
 
+
+alter table t_option
+    add public      bit  not null default true comment 'public',
+    add description text null comment 'description';
+
 # @formatter:off
 update t_page_view set ip_area = '*' where ip_area = 'UNKNOWN';
 update t_page_view set ip_city = '*' where ip_city = 'UNKNOWN';
@@ -28,4 +33,3 @@ update logging set ip_city = '*' where ip_city = 'UNKNOWN';
 update logging set ip_isp = '*' where ip_isp = 'UNKNOWN';
 update logging set ip_province = '*' where ip_province = 'UNKNOWN';
 update logging set ip_country = '*' where ip_country = 'UNKNOWN';
-

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,10 +26,13 @@ import infra.core.style.ToStringBuilder;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-17 17:46
  */
+@Deprecated
 public final class Json implements HttpResult {
 
   private Object data;
+
   private String message;
+
   private boolean success;
 
   public Object getData() {

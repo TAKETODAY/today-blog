@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import infra.lang.Constant;
+
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-10 16:59
@@ -32,10 +34,11 @@ public @interface ConfigBinding {
   /**
    * binding key
    */
-  String value() default BlogConstant.BLANK;
+  String value() default Constant.BLANK;
 
   /**
-   * Splice key on class
+   * combine key on class
    */
-  boolean splice() default true;
+  boolean combine() default true;
+
 }

@@ -19,19 +19,12 @@ package cn.taketoday.blog.event;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 3.2 2024/11/12 17:55
+ * @since 3.2 2025/1/12 15:51
  */
-public class ArticleUpdateEvent extends BlogEvent {
+public class OptionUpdateEvent extends BlogEvent {
 
-  private final long articleId;
-
-  public ArticleUpdateEvent(Object source, long articleId) {
+  public OptionUpdateEvent(Object source) {
     super(source);
-    this.articleId = articleId;
-  }
-
-  public long getArticleId() {
-    return articleId;
   }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,14 +24,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,15 +37,12 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
 import cn.taketoday.blog.BlogConstant;
-import cn.taketoday.blog.ConfigBinding;
 import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.blog.web.Pageable;
-import infra.format.support.ApplicationConversionService;
 import infra.http.HttpHeaders;
 import infra.lang.Nullable;
 import infra.ui.Model;
 import infra.util.DataSize;
-import infra.util.ReflectionUtils;
 import infra.web.RequestContext;
 
 import static java.util.regex.Pattern.compile;
@@ -89,45 +84,6 @@ public abstract class BlogUtils {
 
   private static boolean isIP(String ipAddresses) {
     return StringUtils.hasText(ipAddresses) && !IpLocation.UNKNOWN.equalsIgnoreCase(ipAddresses);
-  }
-
-  // -------------------------------
-
-  public static void resolveBinding(Object bean, Map<String, String> optionsMap) {
-    Class<?> beanClass = bean.getClass();
-
-    ConfigBinding annotation = beanClass.getAnnotation(ConfigBinding.class);
-    String prefix;
-    if (annotation != null) {
-      prefix = annotation.value();
-    }
-    else {
-      prefix = BlogConstant.BLANK;
-    }
-
-    for (Field field : ReflectionUtils.getDeclaredFields(beanClass)) {
-      ConfigBinding bindingOnField = field.getAnnotation(ConfigBinding.class);
-      String key;
-      if (bindingOnField != null) {
-        if (bindingOnField.splice()) {
-          key = prefix + bindingOnField.value();
-        }
-        else {
-          key = bindingOnField.value();
-        }
-      }
-      else {
-        key = prefix + field.getName();
-      }
-
-      String source = optionsMap.get(key);
-      if (source != null) {
-        Object converted = ApplicationConversionService.getSharedInstance().convert(source, field.getType());
-        if (converted != null) {
-          ReflectionUtils.setField(ReflectionUtils.makeAccessible(field), bean, converted);
-        }
-      }
-    }
   }
 
   // ----------------------------xss

@@ -15,15 +15,16 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.http;
+package cn.taketoday.blog.web.console;
 
-import java.util.Map;
+import java.util.List;
 
 import cn.taketoday.blog.log.Logging;
+import cn.taketoday.blog.model.Option;
 import cn.taketoday.blog.service.OptionService;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.http.HttpStatus;
-import infra.web.annotation.GET;
+import infra.web.annotation.POST;
 import infra.web.annotation.PUT;
 import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
@@ -32,29 +33,29 @@ import infra.web.annotation.RestController;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2020-04-11 10:57
+ * @since 3.2 2025/1/11 22:09
  */
+@RequiresBlogger
 @RestController
-@RequestMapping("/api/options")
-class OptionController {
+@RequestMapping("/api/console/options")
+class OptionConsoleHttpHandler {
 
   private final OptionService optionsService;
 
-  public OptionController(OptionService optionsService) {
+  public OptionConsoleHttpHandler(OptionService optionsService) {
     this.optionsService = optionsService;
   }
 
-  @GET
-  public Map<String, String> publicOptions() {
-    return optionsService.publicOptions();
+  @POST
+  @Logging(title = "创建系统变量")
+  public void create(@RequestBody List<Option> options) {
+    optionsService.persist(options);
   }
 
-  @Deprecated(forRemoval = true)
   @PUT
   @Logging(title = "更新系统变量")
-  @RequiresBlogger
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void put(@RequestBody Map<String, String> options) {
+  public void update(@RequestBody List<Option> options) {
     optionsService.update(options);
   }
 
