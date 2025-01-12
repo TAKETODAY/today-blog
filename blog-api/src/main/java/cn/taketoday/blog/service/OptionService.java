@@ -135,7 +135,7 @@ public class OptionService {
       List<Option> options = source.entityManager.find(Option.class);
       for (Option option : options) {
         optionsMap.put(option.getName(), option.getValue());
-        if (option.getOpen()) {
+        if (Boolean.TRUE.equals(option.getOpen())) {
           publicOptionsMap.put(option.getName(), option.getValue());
         }
       }
