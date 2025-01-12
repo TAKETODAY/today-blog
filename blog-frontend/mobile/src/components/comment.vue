@@ -1,8 +1,5 @@
 <!--
-  - Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
-  - Copyright © TODAY & 2017 - 2023 All Rights Reserved.
-  -
-  - DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+  - Copyright 2017 - 2025 the original author or authors.
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
   - GNU General Public License for more details.
   -
   - You should have received a copy of the GNU General Public License
-  - along with this program.  If not, see [http://www.gnu.org/licenses/]
+  - along with this program. If not, see [https://www.gnu.org/licenses/]
   -->
 
 <template>
@@ -42,7 +39,7 @@
           <div class="name">
             <a :href="comment.user.site" target="_blank">{{ comment.user.name }}</a>
           </div>
-          <div class="date">{{ moment(comment.id).fromNow() }}</div>
+          <div class="date">{{ moment(comment.createAt).fromNow() }}</div>
         </div>
       </div>
       <div class="content" v-html="comment.content"></div>
@@ -59,7 +56,7 @@
             <span v-html="reply.content"></span>
           </div>
           <div class="reply-bottom">
-            <span>{{ moment(reply.id).fromNow() }}</span>
+            <span>{{ moment(reply.createAt).fromNow() }}</span>
             <span class="reply-text" @click="showCommentInput(comment, reply)">
               <i class="iconfont icon-comment"></i>
               <span>回复</span>

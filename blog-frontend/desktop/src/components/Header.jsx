@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -153,11 +153,11 @@ class NavHeader extends React.Component {
               }
             </Menu.Item>
 
-            {window.shouldGotoMobile &&
+{/*    TODO        {window.shouldGotoMobile &&
               <Menu.Item key="isMobile">
                 <a href={window.mobilePath}><i className="fa fa-mobile"/> 跳转到移动版本</a>
               </Menu.Item>
-            }
+            } */}
           </Menu>
         </div>
       </Header>
