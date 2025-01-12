@@ -58,7 +58,7 @@ public class OptionService {
     this.entityManager = entityManager;
     this.environment = environment;
     environment.getPropertySources().addLast(optionsPropertySource);
-    optionsPropertySource.updateCache();
+    updateCache();
   }
 
   /**
@@ -85,10 +85,6 @@ public class OptionService {
     return Collections.unmodifiableMap(optionsPropertySource.publicOptionsMap);
   }
 
-  public void update(String key, @Nullable String value) {
-    String oldValue = optionsPropertySource.getProperty(key);
-  }
-
   /**
    * @since 3.2
    */
@@ -99,8 +95,10 @@ public class OptionService {
   @Transactional
   public void update(Map<String, String> optionsMap) {
     if (CollectionUtils.isNotEmpty(optionsMap)) {
-      optionsMap.forEach(this::update);
-      optionsPropertySource.updateCache();
+      for (Map.Entry<String, String> entry : optionsMap.entrySet()) {
+        update(new Option(entry.getKey(), entry.getValue()));
+      }
+      updateCache();
     }
   }
 
@@ -110,6 +108,10 @@ public class OptionService {
   @Transactional
   public void update(List<Option> options) {
     options.forEach(entityManager::updateById);
+    updateCache();
+  }
+
+  private void updateCache() {
     optionsPropertySource.updateCache();
   }
 
