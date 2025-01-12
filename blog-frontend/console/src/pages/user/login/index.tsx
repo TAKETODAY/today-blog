@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 import { LockOutlined, UserOutlined, } from '@ant-design/icons';
@@ -78,10 +75,8 @@ const Login: React.FC = () => {
       // 登录
       const { remember } = values
       delete values['remember'] // delete remember value from the form-data
-      const ret = await login({ ...values });
-      const { data } = ret
-      if (data.success) {
-        const user = data.data
+      login({ ...values }).then(res => {
+        const user = res.data;
         if (user?.blogger) {
           message.success('登录成功！');
           setUserInfo(user)
@@ -93,15 +88,16 @@ const Login: React.FC = () => {
             removeStorage("lastLogin")
           }
 
-          goto();
+          goto()
         }
-        return;
-      }
-      else {
-        // 如果失败去设置用户错误信息
-        setUserLoginState(ret);
-        message.error(data.message);
-      }
+      }).catch(e => {
+        // 展示错误信息
+        setUserLoginState({
+          success: false,
+          message: e.message
+        });
+        message.error(e.message);
+      })
     }
     catch (error) {
       mergeValidationError(error)
