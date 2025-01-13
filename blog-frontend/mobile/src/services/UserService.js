@@ -77,7 +77,4 @@ export default class UserService {
     return http.get(`/api/comments/users?page=${ page }`)
   }
 
-  getById(id) {
-    return http.get(`/api/users/${ id }`)
-  }
 }
