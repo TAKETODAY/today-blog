@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
@@ -64,7 +63,7 @@ class LabelController {
   @POST
   @RequiresBlogger
   @Logging(title = "批量保存标签", content = "names: #{Arrays.toString(#name)}")
-  public Json post(@RequestParam(required = true) String[] name) {
+  public void post(@RequestParam String[] name) {
     Set<Label> labels = new HashSet<>(name.length);
     for (String label : name) {
       if (StringUtils.isEmpty(label)) {
@@ -72,13 +71,12 @@ class LabelController {
       }
       Label byName = labelService.getByName(label);
       if (byName != null) {
-        return Json.failed("标签重复");
+        throw ErrorMessageException.failed("标签重复");
       }
       labels.add(Label.forName(label));
     }
 
     labelService.persist(labels);
-    return Json.ok("创建成功");
   }
 
   @PUT("/{id}")

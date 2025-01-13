@@ -36,7 +36,6 @@ import cn.taketoday.blog.service.UserService;
 import cn.taketoday.blog.util.HashUtils;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.beans.support.BeanProperties;
@@ -103,68 +102,6 @@ class AuthorizeController extends SessionManagerOperations {
 
     @NotEmpty(message = "密码不能为空")
     public String password;
-  }
-
-  /**
-   * <pre> {@code
-   * {
-   *   "success": false,
-   *   "message": "登录失败",
-   *   "data": {
-   *
-   *   }
-   * }
-   * } </pre>
-   */
-  @POST
-  @Deprecated
-  @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
-  @Logging(title = "登录", content = "邮箱:[#{#user.email}]登录")
-  public Json login(@Valid @RequestBody UserFrom user, RequestContext request) {
-    User loginUser = userService.getByEmail(user.email);
-    if (loginUser == null) {
-      return Json.failed(user.email + " 账号不存在!", user.email);
-    }
-
-    String passwd = HashUtils.getEncodedPassword(user.password);
-    if (!Objects.equals(loginUser.getPassword(), passwd)) {
-      return Json.failed("密码错误!", user.email);
-    }
-
-    // check user state
-    UserStatus status = loginUser.getStatus();
-    // log.info("Check state: [{}]", status);
-    switch (status) {
-      case NORMAL -> { }
-      case LOCKED, RECYCLE, INACTIVE -> {
-        return Json.failed(status.getDescription(), user.email);
-      }
-      default -> {
-        return Json.failed("系统错误", user.email);
-      }
-    }
-
-    WebSession session = getSession(request);
-    // login success
-    loginUser.bindTo(session);
-
-    // is blogger ?
-    Blogger blogger = bloggerService.getBlogger();
-    // 是对应邮箱 判断密码
-
-    if (Objects.equals(loginUser.getEmail(), blogger.getEmail())) {
-      if (!Objects.equals(loginUser.getPassword(), blogger.getPasswd())) {
-        blogger = bloggerService.fetchBlogger();
-        if (Objects.equals(loginUser.getPassword(), blogger.getPasswd())) {
-          applyBlogger(session, loginUser, blogger);
-        }
-      }
-      else {
-        applyBlogger(session, loginUser, blogger);
-      }
-    }
-
-    return Json.ok("登录成功", loginUser);
   }
 
   private void applyBlogger(WebSession session, User loginUser, Blogger blogger) {

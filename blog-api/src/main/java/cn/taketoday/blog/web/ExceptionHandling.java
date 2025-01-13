@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ import infra.http.HttpStatusCode;
 import infra.http.ResponseEntity;
 import infra.http.converter.HttpMessageNotReadableException;
 import infra.lang.Nullable;
-import infra.util.ObjectUtils;
 import infra.validation.ObjectError;
 import infra.web.InternalServerException;
 import infra.web.NotFoundHandler;
@@ -62,6 +61,7 @@ import lombok.CustomLog;
 public class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFoundHandler {
 
   private static final ErrorMessage illegalArgument = ErrorMessage.failed("参数错误");
+
   private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
 
   static final Counter requests = Counter.build()
@@ -132,13 +132,9 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
 
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   @ExceptionHandler(NullPointerException.class)
-  public Json nullPointer(NullPointerException exception) {
+  public ErrorMessage nullPointer(NullPointerException exception) {
     log.error("Null Pointer occurred", exception);
-    StackTraceElement[] stackTrace = exception.getStackTrace();
-    if (ObjectUtils.isNotEmpty(stackTrace)) {
-      return Json.failed("空指针", stackTrace[0]);
-    }
-    return Json.failed("空指针", "暂无堆栈信息");
+    return internalServerError;
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)

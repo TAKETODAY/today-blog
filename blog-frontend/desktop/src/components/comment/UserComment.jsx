@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,39 +42,34 @@ class UserComment extends React.Component {
   loadComment = (page = 1, size = 10) => {
     this.setState({ loaded: false })
     commentService.getByUser(page, size)
-        .then(res => {
-          this.setState({ comments: res.data, loaded: true })
-        })
-        .catch(err => {
-          const { status } = err.response || { status: 0 }
-          message.error(err.response.data.message)
-          if (status === 401) {
-            this.props.updateUserSession(null)
-          }
-          else if (status === 404) {
-            this.props.history.push("/not-found");
-          }
+      .then(res => {
+        this.setState({ comments: res.data, loaded: true })
+      })
+      .catch(err => {
+        const { status } = err.response || { status: 0 }
+        message.error(err.response.data.message)
+        if (status === 401) {
+          this.props.updateUserSession(null)
+        }
+        else if (status === 404) {
+          this.props.history.push("/not-found");
+        }
 
-        })
+      })
   }
 
   deleteComment = (id) => {
 
-    commentService.deleteComment(id).then(res => {
-      if (res.data.success === true) {
-        message.success(res.data.message)
-        this.loadComment(this.state.comments.current, this.state.comments.size)
-      }
-      else {
-        message.error(res.data.message)
-      }
+    commentService.deleteComment(id).then(_ => {
+      message.success("删除成功")
+      this.loadComment(this.state.comments.current, this.state.comments.size)
     }).catch(err => {
       const { status } = err.response || { status: 0 }
       if (status === 401) {
         this.props.updateUserSession(null)
       }
       else {
-        message.error(err.response.data.message)
+        message.error(err.message)
       }
     })
   }
@@ -98,18 +93,18 @@ class UserComment extends React.Component {
     const { loaded, comments } = this.state;
     if (loaded === false) {
       return (
-          <div className="shadow-box">
-            <div className="data-list-title"><em>正在加载</em> 我的评论</div>
-            <Skeleton active/>
-          </div>
+        <div className="shadow-box">
+          <div className="data-list-title"><em>正在加载</em> 我的评论</div>
+          <Skeleton active/>
+        </div>
       )
     }
     if (!comments) {
       return (
-          <div className="shadow-box">
-            <div className="data-list-title">我的评论</div>
-            <Empty/>
-          </div>
+        <div className="shadow-box">
+          <div className="data-list-title">我的评论</div>
+          <Empty/>
+        </div>
       )
     }
 
@@ -162,10 +157,10 @@ class UserComment extends React.Component {
           <Table dataSource={comments.data} columns={columns} pagination={false} rowKey="id"/>
         </div>
         {isNotEmpty(comments.data) &&
-            <div align='center' style={{ padding: '20px' }}>
-              <Pagination total={comments.total} onChange={this.loadComment.bind(this)}
-                          current={comments.current} showTotal={n => <>总共 <b className='red'>{n}</b> 条评论</>}/>
-            </div>
+          <div align='center' style={{ padding: '20px' }}>
+            <Pagination total={comments.total} onChange={this.loadComment.bind(this)}
+                        current={comments.current} showTotal={n => <>总共 <b className='red'>{n}</b> 条评论</>}/>
+          </div>
         }
       </div>
     </>)
@@ -173,5 +168,5 @@ class UserComment extends React.Component {
 }
 
 export default connect(
-    optionsMapStateToProps, { updateUserSession }
+  optionsMapStateToProps, { updateUserSession }
 )(UserComment)

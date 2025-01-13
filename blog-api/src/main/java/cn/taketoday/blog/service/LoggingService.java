@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ import cn.taketoday.blog.model.Operation;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.LoggingType;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import infra.beans.factory.BeanFactory;
@@ -130,10 +129,6 @@ public class LoggingService {
       entity.setType(LoggingType.SUCCESS);
     }
 
-    // no exception occurred
-    if (operation.returnValue instanceof Json json) {
-      entity.setType(json.isSuccess() ? LoggingType.SUCCESS : LoggingType.ERROR);
-    }
     return entity;
   }
 

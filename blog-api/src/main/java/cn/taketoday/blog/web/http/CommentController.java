@@ -33,7 +33,6 @@ import cn.taketoday.blog.service.CommentService;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
@@ -207,7 +206,7 @@ class CommentController {
 
   @DELETE("/{id}")
   @Logging(title = "删除评论", content = "删除评论：[#{#id}]")
-  public Json delete(@RequiresUser LoginInfo loginInfo, @PathVariable Long id) {
+  public void delete(@RequiresUser LoginInfo loginInfo, @PathVariable Long id) {
     Comment byId = commentService.obtainById(id);
 
     // not blogger
@@ -216,7 +215,6 @@ class CommentController {
     }
 
     commentService.delete(id);
-    return Json.ok("删除成功");
   }
 
   // -----------------------------
@@ -248,7 +246,7 @@ class CommentController {
    */
   @PUT("/{id}")
   @Logging(title = "更新评论", content = "更新评论：[#{#id}]")
-  public Json put(@RequiresUser LoginInfo loginInfo, @PathVariable Long id, @RequestBody Comment comment) {
+  public void put(@RequiresUser LoginInfo loginInfo, @PathVariable Long id, @RequestBody Comment comment) {
     Comment byId = commentService.obtainById(id);
 
     // not blogger
@@ -258,7 +256,6 @@ class CommentController {
 
     comment.setId(id);
     commentService.updateById(comment);
-    return Json.ok("更新成功");
   }
 
 }
