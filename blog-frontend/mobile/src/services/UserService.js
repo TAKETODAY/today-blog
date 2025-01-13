@@ -54,23 +54,23 @@ export default class UserService {
   }
 
   updateAvatar(data) {
-    return http.post('/api/users/settings/avatar', data)
+    return http.put('/api/auth?avatar', data)
   }
 
   updateBackground(data) {
-    return http.post('/api/users/settings/background', data)
+    return http.put('/api/auth?background', data)
   }
 
   updateInfo(id, data) {
-    return http.put(`/api/users/${ id }`, data)
+    return http.put(`/api/auth`, data)
   }
 
   updateEmail(data) {
-    return http.put('/api/users/settings/email', data)
+    return http.put('/api/auth?email-mobile-phone', data)
   }
 
   updatePassword(data) {
-    return http.put('/api/users/settings/password', data)
+    return http.put('/api/auth?password', data)
   }
 
   getUserComments(page) {

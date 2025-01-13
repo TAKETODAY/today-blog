@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,9 @@ import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Json;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
+import infra.beans.support.BeanProperties;
 import infra.http.HttpStatus;
+import infra.lang.Nullable;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.session.WebSession;
@@ -47,7 +49,7 @@ import infra.web.RequestContext;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
-import infra.web.annotation.PatchMapping;
+import infra.web.annotation.PUT;
 import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.ResponseStatus;
@@ -115,6 +117,7 @@ class AuthorizeController extends SessionManagerOperations {
    * } </pre>
    */
   @POST
+  @Deprecated
   @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
   @Logging(title = "登录", content = "邮箱:[#{#user.email}]登录")
   public Json login(@Valid @RequestBody UserFrom user, RequestContext request) {
@@ -273,11 +276,16 @@ class AuthorizeController extends SessionManagerOperations {
   //---------------------------------------------------------------------
 
   public static class InfoForm {
-    @NotBlank(message = "用户名不能为空")
+    @NotBlank(message = "请输入姓名或昵称")
     public String name;
 
-    @Length(max = 1000, message = "介绍最多1000个字符")
+    @Nullable
+    public String site;
+
+    @Length(max = 256, message = "介绍最多256个字符")
     public String introduce;
+
+    public boolean notification = false;
   }
 
   /**
@@ -286,7 +294,7 @@ class AuthorizeController extends SessionManagerOperations {
    * @param loginUser 登录用户
    * @param form 表单
    */
-  @PatchMapping
+  @PUT
   @RequestLimit(count = 2, unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次用户信息")
   public User userInfo(@RequiresUser User loginUser, @RequestBody @Valid InfoForm form) {
     // 要判断不一致才更新
@@ -303,11 +311,18 @@ class AuthorizeController extends SessionManagerOperations {
     user.setName(form.name);
     user.setIntroduce(form.introduce);
 
+    if (!Objects.equals(form.site, loginUser.getSite())) {
+      user.setSite(form.site);
+    }
+
+    if (form.notification != loginUser.getNotification()) {
+      user.setNotification(form.notification);
+    }
+
     userService.updateById(user);
 
     // update to session
-    loginUser.setName(form.name);
-    loginUser.setIntroduce(form.introduce);
+    BeanProperties.copy(user, loginUser);
     return loginUser;
   }
 
@@ -328,7 +343,7 @@ class AuthorizeController extends SessionManagerOperations {
    * @param loginUser 登录用户
    * @param form 表单
    */
-  @PatchMapping(params = "password")
+  @PUT(params = "password")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次密码")
   public void changePassword(@RequiresUser User loginUser, @RequestBody @Valid ChangePasswordForm form) {
@@ -378,7 +393,7 @@ class AuthorizeController extends SessionManagerOperations {
   /**
    * Change User's Email
    */
-  @PatchMapping(params = "email-mobile-phone")
+  @PUT(params = "email-mobile-phone")
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次邮箱或手机")
   public User changeEmailAndMobilePhone(@RequiresUser User loginUser, @Valid @RequestBody UserEmailForm form) {
     if (Objects.equals(loginUser.getEmail(), form.email)) {
@@ -408,8 +423,9 @@ class AuthorizeController extends SessionManagerOperations {
   /**
    * change image
    */
-  @PatchMapping(params = "avatar")
+  @PUT(params = "avatar")
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改1次头像")
+  @Logging(title = "用户保存头像", content = "上传:[#{#avatar.getOriginalFilename()}] 邮箱:[#{#loginUser.email}]")
   public User changeAvatar(@RequiresUser User loginUser, MultipartFile avatar) {
     String originalFilename = avatar.getOriginalFilename();
     String randomHashString = HashUtils.getRandomHashString(16);
@@ -424,6 +440,28 @@ class AuthorizeController extends SessionManagerOperations {
     userService.updateById(user);
     loginUser.setAvatar(uri);
 
+    return loginUser;
+  }
+
+  /**
+   * Change background image
+   *
+   * @param loginUser login user
+   */
+  @PUT(params = "background")
+  @Logging(title = "用户修改背景", content =
+          "文件名: [#{#background.getOriginalFilename()}] 邮箱:[#{#loginUser.email}]")
+  public User changeBackground(User loginUser, MultipartFile background) {
+    Attachment attachment = attachmentService.upload(
+            background, StringUtils.getRandomImageName(background.getOriginalFilename()));
+
+    String path = attachment.getUri();
+    if (!path.equals(loginUser.getBackground())) { // not equals
+      User user = new User(loginUser.getId());
+      user.setBackground(path);
+      userService.updateById(user);
+      loginUser.setBackground(path);
+    }
     return loginUser;
   }
 
