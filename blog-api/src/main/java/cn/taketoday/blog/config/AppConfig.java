@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,6 @@ import infra.web.config.ResourceHandlerRegistry;
 import infra.web.config.ViewControllerRegistry;
 import infra.web.config.WebMvcConfigurer;
 import infra.web.view.ModelAndView;
-import io.prometheus.client.CollectorRegistry;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -68,7 +67,9 @@ import lombok.RequiredArgsConstructor;
 public class AppConfig implements WebMvcConfigurer {
 
   private final OptionService optionService;
+
   private final BloggerService bloggerService;
+
   private final ArticleService articleService;
 
   @Component
@@ -119,13 +120,6 @@ public class AppConfig implements WebMvcConfigurer {
     );
   }
 
-  // 异常
-
-//  @Component
-//  public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-//    return builder.build();
-//  }
-
   // 日志
   @Component
   @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -143,22 +137,6 @@ public class AppConfig implements WebMvcConfigurer {
     var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
     return new DefaultPointcutAdvisor(pointcut, loggingInterceptor);
   }
-
-  @Component
-  static CollectorRegistry collectorRegistry() {
-    return CollectorRegistry.defaultRegistry;
-  }
-
-//  @Component
-//  @ConditionalOnProperty("jackson.date-format")
-//  static Jackson2ObjectMapperBuilderCustomizer customizeLocalDateTimeFormat(@Value("${jackson.date-format}") String dateFormat) {
-//    return builder -> {
-//      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
-//
-//      builder.serializerByType(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
-//      builder.deserializerByType(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
-//    };
-//  }
 
 }
 

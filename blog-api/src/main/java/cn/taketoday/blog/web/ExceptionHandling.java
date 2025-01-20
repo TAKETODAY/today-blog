@@ -47,7 +47,6 @@ import infra.web.bind.resolver.ParameterConversionException;
 import infra.web.handler.ResponseEntityExceptionHandler;
 import infra.web.handler.SimpleNotFoundHandler;
 import infra.web.multipart.MaxUploadSizeExceededException;
-import io.prometheus.client.Counter;
 import lombok.CustomLog;
 
 /**
@@ -64,17 +63,9 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
 
   private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
 
-  static final Counter requests = Counter.build()
-          .name("requests_not_found")
-          .labelNames("uri")
-          .help("Total Not Found requests.").register();
-
   @Nullable
   @Override
   public Object handleNotFound(RequestContext request) {
-    requests.labels(request.getRequestURI())
-            .inc();
-
     request.setStatus(HttpStatus.NOT_FOUND);
 
     SimpleNotFoundHandler.logNotFound(request);

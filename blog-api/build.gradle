@@ -45,9 +45,6 @@ dependencies {
   implementation 'jakarta.activation:jakarta.activation-api'
   implementation 'com.sun.mail:jakarta.mail'
   implementation 'com.github.ben-manes.caffeine:caffeine'
-  implementation 'io.prometheus:simpleclient'
-  implementation 'io.prometheus:simpleclient_common'
-  implementation 'io.prometheus:simpleclient_logback'
 
   annotationProcessor "cn.taketoday:infra-configuration-processor"
   annotationProcessor "cn.taketoday:infra-annotation-config-processor"
