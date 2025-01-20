@@ -26,32 +26,14 @@ import infra.lang.VersionExtractor;
  * @since 2018-09-16 21:09 s
  */
 public interface BlogConstant extends infra.lang.Constant {
-  String applicationName = "today-blog-api";
 
   String version = VersionExtractor.forClass(BlogConstant.class);
 
   // default font
   String DEFAULT_FONT = "Verdana";
-  int BUFFER_SIZE = 8 * 1024;
 
   String PARAMETER_SIZE = "size";
   String PARAMETER_CURRENT = "page";
-
-  String OPERATION_OK = "ok";
-  String OPERATION_FAILED = "操作失败";
-
-  String SITE_ICP = "site.icp";
-  String SITE_CDN = "site.cdn";
-  String SITE_NAME = "site.name";
-  String SITE_HOST = "site.host";
-  String SITE_KEYWORDS = "site.keywords";
-  String SITE_COPYRIGHT = "site.copyright";
-  String SITE_DESCRIPTION = "site.description";
-  String SITE_LIST_SIZE = "site.listSize";
-  String SITE_MAX_PAGE_SIZE = "site.maxPageSize";
-  String SITE_COMMENT_LIST_SIZE = "comment.list.size";
-  String SITE_ARTICLE_FEED_LIST_SIZE = "article.feed.list.size";
-  String SITE_COMMENT_CONTENT_LENGTH = "comment.content.length";
 
   String LOGIN_TYPE_QQ = "qq";
   String LOGIN_TYPE_SITE = "site";
@@ -61,12 +43,8 @@ public interface BlogConstant extends infra.lang.Constant {
 
   String HTML_TAG = "<[^>]+>";
 
-  // Session
-  /** 验证码 */
-  String RAND_CODE = "randCode";
-
-  /** 默认列表大小 */
   int DEFAULT_LIST_SIZE = 10;
+
   int DEFAULT_MAX_PAGE_SIZE = 100;
 
 }

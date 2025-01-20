@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import cn.taketoday.blog.BlogConstant;
-
 /**
  * @author TODAY 2020/12/22 17:36
  */
 public abstract class StreamUtils extends infra.util.StreamUtils {
 
   public static void transferTo(final InputStream source, final OutputStream out) throws IOException {
-    transferTo(source, out, BlogConstant.BUFFER_SIZE);
+    transferTo(source, out, 8 * 1024);
   }
 
   public static void transferTo(final InputStream source, final OutputStream out, int bufferSize) throws IOException {
