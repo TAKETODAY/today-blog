@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
  */
 
 package cn.taketoday.blog.web.interceptor;
-
-import java.time.Clock;
 
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
@@ -39,8 +37,6 @@ import infra.web.resource.ResourceHttpRequestHandler;
  * @since 2018-09-16 21:38
  */
 public class BloggerInterceptor extends SessionHandlerInterceptor {
-
-  private final Clock clock = Clock.systemUTC();
 
   private final SessionRepository repository;
 
