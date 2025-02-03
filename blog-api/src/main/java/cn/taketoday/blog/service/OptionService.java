@@ -24,11 +24,13 @@ import java.util.Map;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ConfigBinding;
+import cn.taketoday.blog.event.OptionsUpdateEvent;
 import cn.taketoday.blog.model.Option;
 import cn.taketoday.blog.util.StringUtils;
 import infra.beans.BeanMetadata;
 import infra.beans.BeanProperty;
 import infra.beans.factory.BeanFactory;
+import infra.context.ApplicationEventPublisher;
 import infra.core.env.ConfigurableEnvironment;
 import infra.core.env.EnumerablePropertySource;
 import infra.lang.Nullable;
@@ -51,14 +53,18 @@ public class OptionService {
 
   private final ConfigurableEnvironment environment;
 
+  private final ApplicationEventPublisher eventPublisher;
+
   private final OptionsPropertySource optionsPropertySource = new OptionsPropertySource("optionsMap", this);
 
-  public OptionService(BeanFactory beanFactory, EntityManager entityManager, ConfigurableEnvironment environment) {
+  public OptionService(BeanFactory beanFactory, EntityManager entityManager,
+          ConfigurableEnvironment environment, ApplicationEventPublisher eventPublisher) {
     this.beanFactory = beanFactory;
     this.entityManager = entityManager;
     this.environment = environment;
+    this.eventPublisher = eventPublisher;
     environment.getPropertySources().addLast(optionsPropertySource);
-    updateCache();
+    onUpdate();
   }
 
   /**
@@ -98,7 +104,7 @@ public class OptionService {
       for (Map.Entry<String, String> entry : optionsMap.entrySet()) {
         update(new Option(entry.getKey(), entry.getValue()));
       }
-      updateCache();
+      onUpdate();
     }
   }
 
@@ -108,11 +114,12 @@ public class OptionService {
   @Transactional
   public void update(List<Option> options) {
     options.forEach(entityManager::updateById);
-    updateCache();
+    onUpdate();
   }
 
-  private void updateCache() {
+  private void onUpdate() {
     optionsPropertySource.updateCache();
+    eventPublisher.publishEvent(new OptionsUpdateEvent(this));
   }
 
   // ------------------------------------------------------------------------
