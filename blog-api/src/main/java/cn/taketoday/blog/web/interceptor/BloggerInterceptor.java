@@ -36,7 +36,7 @@ import infra.web.resource.ResourceHttpRequestHandler;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:38
  */
-public class BloggerInterceptor extends SessionHandlerInterceptor {
+final class BloggerInterceptor extends SessionHandlerInterceptor {
 
   private final SessionRepository repository;
 

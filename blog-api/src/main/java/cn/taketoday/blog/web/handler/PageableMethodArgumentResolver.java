@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.web.Pageable;
 import infra.lang.Assert;
 import infra.lang.Nullable;
-import infra.stereotype.Singleton;
+import infra.stereotype.Component;
 import infra.web.RequestContext;
 import infra.web.bind.resolver.ParameterResolvingStrategy;
 import infra.web.handler.method.ResolvableMethodParameter;
@@ -32,7 +32,7 @@ import infra.web.handler.method.ResolvableMethodParameter;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-07-25 01:12
  */
-@Singleton
+@Component
 public class PageableMethodArgumentResolver implements ParameterResolvingStrategy {
 
   private final BlogConfig blogConfig;

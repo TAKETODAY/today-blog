@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,16 +22,17 @@ import com.aliyun.oss.OSSClient;
 import java.io.File;
 
 import cn.taketoday.blog.config.OssConfig;
-import infra.stereotype.Singleton;
+import infra.stereotype.Component;
 
 /**
  * @author TODAY 2021/3/31 21:37
  * @since 3.0
  */
-@Singleton
+@Component
 public class OssOperations {
 
   private final OssConfig config;
+
   private volatile OSSClient ossClient;
 
   public OssOperations(OssConfig config) {

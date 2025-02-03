@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import infra.web.resource.ResourceHttpRequestHandler;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-30 20:36
  */
-public class LoginInterceptor extends SessionHandlerInterceptor {
+final class LoginInterceptor extends SessionHandlerInterceptor {
 
   // Authorization
 

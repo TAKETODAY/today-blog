@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import infra.lang.Nullable;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.session.WebSession;
-import infra.stereotype.Singleton;
+import infra.stereotype.Component;
 import infra.web.RequestContext;
 import infra.web.RequestContextHolder;
 
@@ -39,7 +39,7 @@ import infra.web.RequestContextHolder;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/8/12 21:47
  */
-@Singleton
+@Component
 public class UserSessionResolver extends SessionManagerOperations {
 
   public UserSessionResolver(SessionManager sessionManager) {

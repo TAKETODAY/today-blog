@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ import infra.web.handler.method.ResolvableMethodParameter;
  * @since 2019-07-25 00:56
  */
 @Component
-public class LoginInfoParameterResolver extends SessionManagerOperations implements ParameterResolvingStrategy {
+class LoginInfoParameterResolver extends SessionManagerOperations implements ParameterResolvingStrategy {
 
   public LoginInfoParameterResolver(SessionManager sessionManager) {
     super(sessionManager);
