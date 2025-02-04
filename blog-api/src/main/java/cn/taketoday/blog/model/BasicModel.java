@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,13 +24,13 @@ import java.io.Serializable;
 import java.time.Instant;
 
 import infra.persistence.Id;
-import infra.persistence.Transient;
+import infra.persistence.NewEntityIndicator;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2024/10/13 17:40
  */
-public abstract class BasicModel implements Serializable {
+public abstract class BasicModel implements Serializable, NewEntityIndicator {
 
   @Serial
   private static final long serialVersionUID = 1L;
@@ -66,8 +66,8 @@ public abstract class BasicModel implements Serializable {
     return updateAt;
   }
 
-  @Transient
   @JsonIgnore
+  @Override
   public boolean isNew() {
     return id == null;
   }
