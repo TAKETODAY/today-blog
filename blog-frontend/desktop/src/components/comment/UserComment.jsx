@@ -80,7 +80,7 @@ class UserComment extends React.Component {
     // RECYCLE(2, "回收站");
     switch (comment.status) {
       case 'CHECKED':
-        return <a target="_blank" href={`/articles/${comment.articleId}`}>{comment.articleId}</a>
+        return <a target="_blank" href={`/articles/${comment.articleId}`}>{comment.articleTitle}</a>
       case 'RECYCLE':
         return <Tag className="btn btn-primary btn-xs">已经丢入垃圾桶</Tag>
       case 'CHECKING':
