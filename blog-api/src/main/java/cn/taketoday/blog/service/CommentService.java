@@ -142,8 +142,10 @@ public class CommentService {
   }
 
   @Transactional
-  public void persist(Comment comment) {
+  public void create(Comment comment) {
     entityManager.persist(comment);
+
+
 
     //sendMail(comment);
   }

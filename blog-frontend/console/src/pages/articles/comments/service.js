@@ -23,7 +23,7 @@ import { extractData, http } from "@/utils";
 export async function queryComments(params, sort) {
   const { pageSize, current, ...rest } = params
   params = { ...rest, sort, size: pageSize, page: current }
-  return http.get('/api/comments', { params }).then(extractData).then(data => {
+  return http.get('/api/console/comments', { params }).then(extractData).then(data => {
     return {
       ...data,
       success: true,
@@ -38,7 +38,7 @@ export async function create(data) {
 }
 
 export async function update(id, comment) {
-  return http.put(`/api/comments/${id}`, comment)
+  return http.put(`/api/console/comments/${id}`, comment)
 }
 
 /**

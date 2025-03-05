@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 
 import cn.taketoday.blog.config.CommentConfig;
+import cn.taketoday.blog.event.CommentCreatedEvent;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Comment;
@@ -39,6 +40,7 @@ import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
+import infra.context.ApplicationEventPublisher;
 import infra.http.HttpStatus;
 import infra.lang.Nullable;
 import infra.persistence.Page;
@@ -76,10 +78,14 @@ class CommentController {
 
   private final ArticleService articleService;
 
-  public CommentController(CommentConfig commentConfig, CommentService commentService, ArticleService articleService) {
+  private final ApplicationEventPublisher eventPublisher;
+
+  public CommentController(CommentConfig commentConfig, CommentService commentService,
+          ArticleService articleService, ApplicationEventPublisher eventPublisher) {
     this.commentConfig = commentConfig;
     this.commentService = commentService;
     this.articleService = articleService;
+    this.eventPublisher = eventPublisher;
   }
 
   static class CommentFrom {
@@ -172,8 +178,8 @@ class CommentController {
 
     // comment.setContent(BlogUtils.stripXss(comment.getContent()));
 
-    // save
-    commentService.persist(comment);
+    commentService.create(comment);
+    eventPublisher.publishEvent(new CommentCreatedEvent(this, comment));
   }
 
   /**
@@ -219,6 +225,9 @@ class CommentController {
 
   // -----------------------------
 
+  /**
+   * 获取用户自己的评论
+   */
   @GET("/users")
   public Pagination<Comment> getByUser(User userInfo, Pageable pageable) {
     Page<Comment> byUser = commentService.getByUser(userInfo, pageable);
@@ -235,6 +244,7 @@ class CommentController {
 
   // 分页
 
+  @Deprecated(forRemoval = true)
   @GET
   @RequiresBlogger
   public Pagination<Comment> list(CommentConditionForm form, Pageable pageable) {
@@ -244,9 +254,10 @@ class CommentController {
   /**
    * 更新评论
    */
+  @Deprecated
   @PUT("/{id}")
   @Logging(title = "更新评论", content = "更新评论：[#{#id}]")
-  public void put(@RequiresUser LoginInfo loginInfo, @PathVariable Long id, @RequestBody Comment comment) {
+  public void update(@RequiresUser LoginInfo loginInfo, @PathVariable Long id, @RequestBody Comment comment) {
     Comment byId = commentService.obtainById(id);
 
     // not blogger

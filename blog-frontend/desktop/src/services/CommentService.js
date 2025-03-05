@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,9 @@ import { http } from 'core';
 
 export default class CommentService {
 
-  getComments(articleId, page) {
-    return http.get(`/api/comments/articles/${articleId}${page ? '?page=' + page : ''}`)
-  }
-
   fetchComments(articleId, page) {
     return http.get(`/api/comments?articleId=${articleId}`)
   }
-
 
   createComment(data) {
     return http.post('/api/comments', data)
