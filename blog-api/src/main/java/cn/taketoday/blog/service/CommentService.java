@@ -45,8 +45,6 @@ import infra.transaction.annotation.Transactional;
 import infra.util.CollectionUtils;
 import lombok.RequiredArgsConstructor;
 
-import static infra.persistence.QueryCondition.isEqualsTo;
-
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-30 14:36
@@ -72,7 +70,7 @@ public class CommentService {
 
   //  @Cacheable(key = "'ByArticleId_'+#id")
   public List<Comment> getAllByArticleId(long id) {
-    List<Comment> commentsToUse = entityManager.find(Comment.class, isEqualsTo("article_id", id));
+    List<Comment> commentsToUse = entityManager.find(Comment.class, Map.of("article_id", id));
     if (CollectionUtils.isNotEmpty(commentsToUse)) {
       for (Comment comment : commentsToUse) {
         comment.setUser(userService.getById(comment.getUserId()));
@@ -144,8 +142,6 @@ public class CommentService {
   @Transactional
   public void create(Comment comment) {
     entityManager.persist(comment);
-
-
 
     //sendMail(comment);
   }

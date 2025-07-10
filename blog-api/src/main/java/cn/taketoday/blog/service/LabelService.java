@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -39,8 +40,6 @@ import infra.persistence.EntityRef;
 import infra.persistence.Where;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
-
-import static infra.persistence.QueryCondition.isEqualsTo;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -71,7 +70,7 @@ public class LabelService {
   @Nullable
   @Cacheable(key = "'ByName'+#name")
   public Label getByName(String name) {
-    return entityManager.findFirst(Label.class, isEqualsTo("name", name));
+    return entityManager.findFirst(Label.class, Map.of("name", name));
   }
 
   @Nullable

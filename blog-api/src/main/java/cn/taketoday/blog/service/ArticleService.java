@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,8 +62,6 @@ import infra.util.CollectionUtils;
 import infra.web.InternalServerException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
-
-import static infra.persistence.QueryCondition.isEqualsTo;
 
 @Service
 @CustomLog
@@ -253,7 +251,7 @@ public class ArticleService implements InitializingBean {
 
         countQuery.addParameter("name", label);
         countQuery.addParameter("status", PostStatus.PUBLISHED);
-        int count = countQuery.fetchScalar(int.class);
+        int count = countQuery.scalar(int.class);
         if (count < 1) {
           return Pagination.empty();
         }
@@ -433,7 +431,7 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'countBy_'+#status")
   public int countByStatus(PostStatus status) {
-    return entityManager.count(Article.class, isEqualsTo("status", status)).intValue();
+    return entityManager.count(Article.class, Map.of("status", status)).intValue();
   }
 
   /***

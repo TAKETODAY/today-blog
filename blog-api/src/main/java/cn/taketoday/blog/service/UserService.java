@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.service;
 
+import java.util.Map;
+
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.web.ErrorMessageException;
@@ -30,8 +32,6 @@ import infra.persistence.EntityRef;
 import infra.persistence.Id;
 import infra.stereotype.Service;
 import infra.web.ResponseStatusException;
-
-import static infra.persistence.QueryCondition.isEqualsTo;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -68,7 +68,7 @@ public class UserService {
   @Nullable
   @Cacheable(key = "'email_'+#email")
   public User getByEmail(String email) {
-    return entityManager.findUnique(User.class, isEqualsTo("email", email));
+    return entityManager.findUnique(User.class, Map.of("email", email));
   }
 
   public void register(User user) {
