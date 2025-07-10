@@ -22,25 +22,15 @@ plugins {
 repositories {
   mavenLocal()
   mavenCentral()
+  maven { url = "https://central.sonatype.com/repository/maven-snapshots/" }
   gradlePluginPortal()
 }
 
 
-Properties properties = new Properties()
-
-try (def reader = new FileReader(file("../gradle.properties"))) {
-  properties.load(reader)
-}
-
-def infraVersion = properties['infraVersion']
-
 dependencies {
-  implementation 'org.yaml:snakeyaml:2.0'
-  implementation "me.champeau.gradle:japicmp-gradle-plugin:0.4.1"
-  implementation "org.gradle:test-retry-gradle-plugin:1.4.1"
-  implementation "org.apache.maven:maven-artifact:3.6.3"
-  implementation "cn.taketoday:today-core:$infraVersion"
-  implementation "cn.taketoday:infra-gradle-plugin:$infraVersion"
+  implementation(platform("cn.taketoday:infra-bom:$infraVersion"))
+  implementation "cn.taketoday:today-core"
+  implementation "cn.taketoday:infra-gradle-plugin"
 }
 
 gradlePlugin {

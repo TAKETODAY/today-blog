@@ -30,14 +30,12 @@ import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
-import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2025/3/5 22:29
  */
-@CustomLog
 @RequiresBlogger
 @RestController
 @RequiredArgsConstructor
