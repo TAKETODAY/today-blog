@@ -62,12 +62,6 @@ class LoginInfoParameterResolver extends SessionManagerOperations implements Par
 
   @Override
   public boolean supportsParameter(ResolvableMethodParameter parameter) {
-    if (parameter.is(Optional.class)) {
-      var nested = parameter.nested();
-      return nested.is(User.class)
-              || nested.is(Blogger.class);
-    }
-
     return parameter.is(User.class)
             || parameter.is(Blogger.class)
             || parameter.is(LoginInfo.class);
@@ -77,15 +71,6 @@ class LoginInfoParameterResolver extends SessionManagerOperations implements Par
   public Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
     WebSession session = getSession(context, false);
     if (session != null) {
-      if (parameter.is(Optional.class)) {
-        // Optional<User>
-        if (parameter.nested().is(User.class)) {
-          return Optional.ofNullable(User.find(session));
-        }
-        // Optional<Blogger>
-        return Optional.ofNullable(Blogger.find(context));
-      }
-
       if (parameter.is(User.class)) {
         return getAttribute(parameter, session, User::find);
       }

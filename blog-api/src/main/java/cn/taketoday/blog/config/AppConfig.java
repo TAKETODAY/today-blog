@@ -46,9 +46,9 @@ import infra.jdbc.RepositoryManager;
 import infra.persistence.EntityManager;
 import infra.session.config.EnableWebSession;
 import infra.stereotype.Component;
-import infra.web.config.ResourceHandlerRegistry;
-import infra.web.config.ViewControllerRegistry;
-import infra.web.config.WebMvcConfigurer;
+import infra.web.config.annotation.ResourceHandlerRegistry;
+import infra.web.config.annotation.ViewControllerRegistry;
+import infra.web.config.annotation.WebMvcConfigurer;
 import infra.web.view.ModelAndView;
 import lombok.RequiredArgsConstructor;
 
