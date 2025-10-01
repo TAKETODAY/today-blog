@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.web.interceptor;
 
+import org.jspecify.annotations.Nullable;
+
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
@@ -24,10 +26,10 @@ import cn.taketoday.blog.web.ErrorMessage;
 import infra.http.HttpStatus;
 import infra.http.MediaType;
 import infra.http.ResponseEntity;
-import infra.session.SessionHandlerInterceptor;
-import infra.session.SessionManager;
+import infra.session.SessionManagerOperations;
 import infra.session.SessionRepository;
 import infra.session.WebSession;
+import infra.web.HandlerInterceptor;
 import infra.web.InterceptorChain;
 import infra.web.RequestContext;
 import infra.web.resource.ResourceHttpRequestHandler;
@@ -36,18 +38,21 @@ import infra.web.resource.ResourceHttpRequestHandler;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:38
  */
-final class BloggerInterceptor extends SessionHandlerInterceptor {
+final class BloggerInterceptor implements HandlerInterceptor {
 
   private final SessionRepository repository;
 
-  public BloggerInterceptor(SessionManager sessionManager, SessionRepository repository) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  BloggerInterceptor(SessionRepository repository, SessionManagerOperations sessionManagerOperations) {
     this.repository = repository;
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
+  @Nullable
   @Override
   public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
-    WebSession session = getSession(request, false);
+    WebSession session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       if (User.isPresent(session)) {
         if (Blogger.isPresent(session)) {

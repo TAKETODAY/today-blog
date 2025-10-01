@@ -33,7 +33,7 @@ import infra.beans.factory.BeanFactory;
 import infra.context.ApplicationEventPublisher;
 import infra.core.env.ConfigurableEnvironment;
 import infra.core.env.EnumerablePropertySource;
-import infra.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import infra.lang.Unmodifiable;
 import infra.persistence.EntityManager;
 import infra.stereotype.Service;

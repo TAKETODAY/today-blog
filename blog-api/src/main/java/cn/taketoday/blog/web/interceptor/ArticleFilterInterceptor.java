@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.web.interceptor;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 
 import cn.taketoday.blog.event.ArticleUpdateEvent;
@@ -26,19 +28,20 @@ import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.web.ListableHttpResult;
 import infra.context.ApplicationListener;
-import infra.lang.Nullable;
-import infra.session.SessionHandlerInterceptor;
-import infra.session.SessionManager;
+import infra.session.SessionManagerOperations;
 import infra.util.CollectionUtils;
 import infra.util.MapCache;
+import infra.web.HandlerInterceptor;
 import infra.web.RequestContext;
 
 /**
  * @author TODAY 2021/1/10 22:45
  */
-public class ArticleFilterInterceptor extends SessionHandlerInterceptor implements ApplicationListener<ArticleUpdateEvent> {
+public class ArticleFilterInterceptor implements HandlerInterceptor, ApplicationListener<ArticleUpdateEvent> {
 
   private final ArticleService articleService;
+
+  private final SessionManagerOperations sessionManagerOperations;
 
   private final MapCache<Long, Boolean, ArticleItem> passwordCache = new MapCache<>() {
 
@@ -49,9 +52,9 @@ public class ArticleFilterInterceptor extends SessionHandlerInterceptor implemen
     }
   };
 
-  public ArticleFilterInterceptor(SessionManager sessionManager, ArticleService articleService) {
-    super(sessionManager);
+  public ArticleFilterInterceptor(ArticleService articleService, SessionManagerOperations sessionManagerOperations) {
     this.articleService = articleService;
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   @Override
@@ -64,7 +67,7 @@ public class ArticleFilterInterceptor extends SessionHandlerInterceptor implemen
   @SuppressWarnings("unchecked")
   public void afterProcess(RequestContext context, Object handler, @Nullable Object result) {
     if (result instanceof ListableHttpResult<?> pagination
-            && !Blogger.isPresent(getSession(context, false))) {
+            && !Blogger.isPresent(sessionManagerOperations.getSession(context, false))) {
 
       // 过滤
       List<?> objects = pagination.getData();

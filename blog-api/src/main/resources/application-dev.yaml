@@ -39,6 +39,10 @@ web:
   mvc:
     log-request-details: true
 
+infra:
+  task:
+    execution:
+      thread-name-prefix: app-pool-
 
 app:
   main:

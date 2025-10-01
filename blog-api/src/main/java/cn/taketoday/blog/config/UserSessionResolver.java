@@ -17,12 +17,12 @@
 
 package cn.taketoday.blog.config;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Optional;
 
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
-import infra.lang.Nullable;
-import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.session.WebSession;
 import infra.stereotype.Component;
@@ -40,10 +40,12 @@ import infra.web.RequestContextHolder;
  * @since 4.0 2022/8/12 21:47
  */
 @Component
-public class UserSessionResolver extends SessionManagerOperations {
+public class UserSessionResolver {
 
-  public UserSessionResolver(SessionManager sessionManager) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  public UserSessionResolver(SessionManagerOperations sessionManagerOperations) {
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   /**
@@ -59,7 +61,7 @@ public class UserSessionResolver extends SessionManagerOperations {
    */
   @Nullable
   public User getLoginUser(RequestContext request) {
-    WebSession session = getSession(request, false);
+    WebSession session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       return User.find(session);
     }
@@ -79,7 +81,7 @@ public class UserSessionResolver extends SessionManagerOperations {
    */
   @Nullable
   public Blogger getLoggedInBlogger(RequestContext request) {
-    WebSession session = getSession(request, false);
+    WebSession session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       return Blogger.find(session);
     }

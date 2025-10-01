@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import java.util.Objects;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.util.StringUtils;
 import infra.core.style.ToStringBuilder;
-import infra.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import infra.persistence.Table;
 import infra.persistence.Transient;
 import lombok.Getter;

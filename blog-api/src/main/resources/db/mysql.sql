@@ -177,3 +177,21 @@ create table t_comment
     `create_at`      datetime         default CURRENT_TIMESTAMP comment '创建时间',
     `update_at`      datetime on update CURRENT_TIMESTAMP comment '更新时间'
 );
+
+create table t_mail
+(
+    id         bigint unsigned not null auto_increment primary key,
+
+    content    text            not null comment '邮件内容',
+
+    `to`       varchar(255)    not null comment '发送给',
+    subject    varchar(255)    not null comment '主题',
+
+
+    sent_at    datetime        not null comment '发送时间',
+
+    create_at  datetime default CURRENT_TIMESTAMP comment '创建时间',
+    update_at  datetime on update CURRENT_TIMESTAMP comment '更新时间'
+);
+
+

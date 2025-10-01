@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
  */
 
 package cn.taketoday.blog.web.http;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
@@ -36,8 +38,6 @@ import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
 import infra.http.HttpStatus;
-import infra.lang.NonNull;
-import infra.lang.Nullable;
 import infra.web.annotation.GET;
 import infra.web.annotation.Interceptor;
 import infra.web.annotation.PATCH;
@@ -210,7 +210,6 @@ class ArticleController {
     return article;
   }
 
-  @NonNull
   private static String processURI(String uri) {
     int idx = uri.indexOf("&");
     if (idx > -1) {

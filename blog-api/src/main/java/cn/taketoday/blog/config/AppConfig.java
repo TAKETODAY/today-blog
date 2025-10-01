@@ -39,11 +39,14 @@ import infra.beans.factory.config.BeanDefinition;
 import infra.cache.annotation.EnableCaching;
 import infra.cache.support.CaffeineCacheManager;
 import infra.context.annotation.Configuration;
+import infra.context.annotation.Primary;
 import infra.context.annotation.Role;
 import infra.core.Ordered;
 import infra.core.annotation.Order;
 import infra.jdbc.RepositoryManager;
 import infra.persistence.EntityManager;
+import infra.session.SessionManager;
+import infra.session.SessionManagerOperations;
 import infra.session.config.EnableWebSession;
 import infra.stereotype.Component;
 import infra.web.config.annotation.ResourceHandlerRegistry;
@@ -72,6 +75,12 @@ public class AppConfig implements WebMvcConfigurer {
 
   private final ArticleService articleService;
 
+  @Primary
+  @Component
+  public static SessionManagerOperations sessionManagerOperations(SessionManager sessionManager) {
+    return new SessionManagerOperations(sessionManager);
+  }
+
   @Component
   static RepositoryManager repositoryManager(DataSource dataSource) {
     return new RepositoryManager(dataSource);
@@ -85,7 +94,8 @@ public class AppConfig implements WebMvcConfigurer {
   @Component
   static CaffeineCacheManager caffeineCacheManager() {
     return new CaffeineCacheManager(Caffeine.newBuilder()
-            .expireAfterWrite(10, TimeUnit.SECONDS)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .expireAfterAccess(10, TimeUnit.SECONDS)
             .maximumSize(100));
   }
 

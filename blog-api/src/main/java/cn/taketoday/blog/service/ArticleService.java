@@ -47,7 +47,7 @@ import infra.jdbc.JdbcConnection;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
 import infra.lang.Assert;
-import infra.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import infra.persistence.EntityManager;
 import infra.persistence.EntityMetadata;
 import infra.persistence.EntityRef;

@@ -15,7 +15,31 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-@NullMarked
-package cn.taketoday.blog.web.interceptor;
+package cn.taketoday.blog.model;
 
-import org.jspecify.annotations.NullMarked;
+import java.time.Instant;
+
+import infra.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 邮件发送记录
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 3.2 2025/3/5 22:19
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+@Table("t_mail")
+public class Mail extends BasicModel {
+
+  private String to;
+
+  private String subject;
+
+  private String content;
+
+  private Instant sentAt;
+
+}

@@ -18,6 +18,7 @@
 package cn.taketoday.blog.web.http;
 
 import org.hibernate.validator.constraints.Length;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -40,7 +41,6 @@ import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.beans.support.BeanProperties;
 import infra.http.HttpStatus;
-import infra.lang.Nullable;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.session.WebSession;
@@ -68,7 +68,7 @@ import lombok.CustomLog;
 @CustomLog
 @RestController
 @RequestMapping("/api/auth")
-class AuthorizeController extends SessionManagerOperations {
+class AuthorizeController {
 
   private final UserService userService;
 
@@ -76,12 +76,14 @@ class AuthorizeController extends SessionManagerOperations {
 
   private final AttachmentService attachmentService;
 
+  private final SessionManagerOperations sessionManagerOperations;
+
   public AuthorizeController(SessionManager sessionManager, UserService userService,
-          BloggerService bloggerService, AttachmentService attachmentService) {
-    super(sessionManager);
+          BloggerService bloggerService, AttachmentService attachmentService, SessionManagerOperations sessionManagerOperations) {
     this.userService = userService;
     this.bloggerService = bloggerService;
     this.attachmentService = attachmentService;
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   @GET
@@ -148,7 +150,7 @@ class AuthorizeController extends SessionManagerOperations {
       default -> throw ErrorMessageException.failed("系统错误");
     }
 
-    WebSession session = getSession(request);
+    WebSession session = sessionManagerOperations.getSession(request);
     // login success
     loginUser.bindTo(session);
 

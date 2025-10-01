@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.web.handler;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -25,8 +27,6 @@ import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import infra.lang.Nullable;
-import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.session.WebSession;
 import infra.stereotype.Component;
@@ -54,10 +54,12 @@ import infra.web.handler.method.ResolvableMethodParameter;
  * @since 2019-07-25 00:56
  */
 @Component
-class LoginInfoParameterResolver extends SessionManagerOperations implements ParameterResolvingStrategy {
+class LoginInfoParameterResolver implements ParameterResolvingStrategy {
 
-  public LoginInfoParameterResolver(SessionManager sessionManager) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  LoginInfoParameterResolver(SessionManagerOperations sessionManagerOperations) {
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   @Override
@@ -69,7 +71,7 @@ class LoginInfoParameterResolver extends SessionManagerOperations implements Par
 
   @Override
   public Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
-    WebSession session = getSession(context, false);
+    WebSession session = sessionManagerOperations.getSession(context, false);
     if (session != null) {
       if (parameter.is(User.class)) {
         return getAttribute(parameter, session, User::find);

@@ -19,8 +19,8 @@ package cn.taketoday.blog.web.interceptor;
 
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.User;
-import infra.session.SessionHandlerInterceptor;
-import infra.session.SessionManager;
+import infra.session.SessionManagerOperations;
+import infra.web.HandlerInterceptor;
 import infra.web.RequestContext;
 import infra.web.resource.ResourceHttpRequestHandler;
 
@@ -28,17 +28,19 @@ import infra.web.resource.ResourceHttpRequestHandler;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-30 20:36
  */
-final class LoginInterceptor extends SessionHandlerInterceptor {
+final class LoginInterceptor implements HandlerInterceptor {
 
   // Authorization
 
-  public LoginInterceptor(SessionManager sessionManager) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  LoginInterceptor(SessionManagerOperations sessionManagerOperations) {
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   @Override
   public boolean beforeProcess(RequestContext request, Object handler) throws Throwable {
-    if (User.isPresent(getSession(request, false))) {
+    if (User.isPresent(sessionManagerOperations.getSession(request, false))) {
       return true;
     }
 

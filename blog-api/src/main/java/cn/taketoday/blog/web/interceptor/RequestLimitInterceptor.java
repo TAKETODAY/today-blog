@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
  */
 
 package cn.taketoday.blog.web.interceptor;
+
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.time.Clock;
@@ -37,9 +39,7 @@ import infra.http.MediaType;
 import infra.http.ResponseEntity;
 import infra.lang.Assert;
 import infra.lang.Constant;
-import infra.lang.Nullable;
-import infra.session.SessionHandlerInterceptor;
-import infra.session.SessionManager;
+import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
 import infra.util.ConcurrentReferenceHashMap;
 import infra.util.MapCache;
@@ -53,7 +53,7 @@ import infra.web.handler.method.HandlerMethod;
  * @since 4.0 2022/8/11 10:22
  */
 @Component
-final class RequestLimitInterceptor extends SessionHandlerInterceptor implements HandlerInterceptor {
+final class RequestLimitInterceptor implements HandlerInterceptor {
 
   static final MapCache<HandlerMethod, RequestLimit, Object> requestLimitConfigCache = new MapCache<>(
           new ConcurrentReferenceHashMap<>(128), RequestLimitInterceptor::findRequestLimit);
@@ -68,8 +68,10 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
 
   private final ConcurrentHashMap<RequestKey, RequestLimitEntry> requestLimitCache = new ConcurrentHashMap<>();
 
-  public RequestLimitInterceptor(SessionManager sessionManager) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  RequestLimitInterceptor(SessionManagerOperations sessionManagerOperations) {
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   public void setDefaultErrorMessage(String defaultErrorMessage) {
@@ -88,9 +90,10 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
     this.maxCacheSize = maxCacheSize;
   }
 
+  @Nullable
   @Override
   public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
-    if (!Blogger.isPresent(getSession(request, false))) {
+    if (!Blogger.isPresent(sessionManagerOperations.getSession(request, false))) {
       // 非博主，进行限流
       HandlerMethod handlerMethod = HandlerMethod.unwrap(chain.getHandler());
       if (handlerMethod != null) {
@@ -155,7 +158,6 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
     expiredChecker.removeExpired(clock.instant());
   }
 
-  @Nullable
   private static RequestLimit findRequestLimit(HandlerMethod handlerMethod) {
     if (handlerMethod.hasMethodAnnotation(RequestLimit.class)) {
       return handlerMethod.getMethodAnnotation(RequestLimit.class);

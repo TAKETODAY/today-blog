@@ -31,7 +31,7 @@ import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
 import infra.http.ResponseEntity;
 import infra.http.converter.HttpMessageNotReadableException;
-import infra.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import infra.validation.ObjectError;
 import infra.web.InternalServerException;
 import infra.web.NotFoundHandler;

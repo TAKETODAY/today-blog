@@ -28,7 +28,7 @@ import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.util.HashUtils;
 import infra.core.AttributeAccessor;
 import infra.core.style.ToStringBuilder;
-import infra.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import infra.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;

@@ -22,7 +22,7 @@ import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.web.Pageable;
 import infra.lang.Assert;
-import infra.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import infra.stereotype.Component;
 import infra.web.RequestContext;
 import infra.web.bind.resolver.ParameterResolvingStrategy;
