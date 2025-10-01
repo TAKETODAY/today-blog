@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.model.form;
 
+import org.jspecify.annotations.Nullable;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -30,7 +32,6 @@ import cn.taketoday.blog.util.StringUtils;
 import infra.core.Pair;
 import infra.core.style.ToStringBuilder;
 import infra.format.annotation.DateTimeFormat;
-import org.jspecify.annotations.Nullable;
 import infra.logging.LogMessage;
 import infra.persistence.ConditionStatement;
 import infra.persistence.DebugDescriptive;
@@ -63,13 +64,11 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
   @Nullable
   private Map<String, OrderBy> sort;
 
-  @Nullable
   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private LocalDateTime[] createAt;
+  private LocalDateTime @Nullable [] createAt;
 
-  @Nullable
   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private LocalDateTime[] updateAt;
+  private LocalDateTime @Nullable [] updateAt;
 
   @Override
   public void renderWhereClause(EntityMetadata metadata, List<Restriction> restrictions) {
