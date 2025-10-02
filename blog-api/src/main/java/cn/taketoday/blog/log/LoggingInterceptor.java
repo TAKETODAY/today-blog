@@ -19,6 +19,7 @@ package cn.taketoday.blog.log;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
@@ -27,7 +28,6 @@ import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.service.LoggingService;
 import infra.beans.factory.ObjectProvider;
-import org.jspecify.annotations.Nullable;
 import infra.util.function.SingletonSupplier;
 import infra.web.RequestContext;
 import infra.web.RequestContextHolder;
@@ -41,7 +41,9 @@ import static cn.taketoday.blog.util.BlogUtils.remoteAddress;
 public class LoggingInterceptor implements MethodInterceptor {
 
   private final SingletonSupplier<Executor> executor;
+
   private final SingletonSupplier<LoggingService> loggingService;
+
   private final SingletonSupplier<UserSessionResolver> sessionResolver;
 
   public LoggingInterceptor(Supplier<Executor> executor,
@@ -51,6 +53,7 @@ public class LoggingInterceptor implements MethodInterceptor {
     this.sessionResolver = SingletonSupplier.from(sessionResolver);
   }
 
+  @Nullable
   @Override
   public Object invoke(MethodInvocation invocation) throws Throwable {
     Object result = null;

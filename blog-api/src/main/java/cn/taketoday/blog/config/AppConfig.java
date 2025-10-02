@@ -134,10 +134,8 @@ public class AppConfig implements WebMvcConfigurer {
   @Component
   @Order(Ordered.HIGHEST_PRECEDENCE)
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  static LoggingInterceptor loggingInterceptor(
-          ObjectProvider<Executor> executor,
-          ObjectProvider<LoggingService> loggerService,
-          ObjectProvider<UserSessionResolver> sessionResolver) {
+  static LoggingInterceptor loggingInterceptor(ObjectProvider<Executor> executor,
+          ObjectProvider<LoggingService> loggerService, ObjectProvider<UserSessionResolver> sessionResolver) {
     return new LoggingInterceptor(executor, loggerService, sessionResolver);
   }
 

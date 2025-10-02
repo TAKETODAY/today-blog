@@ -17,11 +17,11 @@
 package cn.taketoday.blog.log;
 
 import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 
 import cn.taketoday.blog.model.User;
-import org.jspecify.annotations.Nullable;
 
 /**
  * 记录 方法执行的上下文
@@ -33,14 +33,13 @@ public class MethodOperation {
 
   public final Instant invokeAt = Instant.now();
 
-  @Nullable
-  public final User loginUser;
-
   public final String ip;
 
-  public final Object returnValue;
+  public final @Nullable User loginUser;
 
-  public final Throwable throwable;
+  public final @Nullable Object returnValue;
+
+  public final @Nullable Throwable throwable;
 
   public final MethodInvocation invocation;
 

@@ -19,13 +19,14 @@ package cn.taketoday.blog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.util.StringUtils;
 import infra.core.style.ToStringBuilder;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.Table;
 import infra.persistence.Transient;
 import lombok.Getter;
