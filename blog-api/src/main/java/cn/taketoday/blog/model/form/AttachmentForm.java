@@ -17,11 +17,12 @@
 
 package cn.taketoday.blog.model.form;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
 import infra.core.style.ToStringBuilder;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.Like;
 import infra.persistence.OrderBy;
 import lombok.Getter;

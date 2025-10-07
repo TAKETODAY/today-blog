@@ -19,12 +19,13 @@ package cn.taketoday.blog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.jspecify.annotations.Nullable;
+
 import java.time.Instant;
 import java.util.List;
 
 import cn.taketoday.blog.util.StringUtils;
 import infra.core.style.ToStringBuilder;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.Transient;
 import lombok.Data;
 

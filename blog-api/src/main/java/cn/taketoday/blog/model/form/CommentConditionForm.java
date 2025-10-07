@@ -17,8 +17,9 @@
 
 package cn.taketoday.blog.model.form;
 
-import cn.taketoday.blog.model.enums.CommentStatus;
 import org.jspecify.annotations.Nullable;
+
+import cn.taketoday.blog.model.enums.CommentStatus;
 import infra.persistence.Like;
 import infra.persistence.OrderBy;
 import lombok.Data;

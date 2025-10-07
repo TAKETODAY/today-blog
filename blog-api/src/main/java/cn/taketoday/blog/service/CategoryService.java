@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +28,6 @@ import infra.context.event.EventListener;
 import infra.jdbc.NamedQuery;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.EntityManager;
 import infra.persistence.Order;
 import infra.stereotype.Service;

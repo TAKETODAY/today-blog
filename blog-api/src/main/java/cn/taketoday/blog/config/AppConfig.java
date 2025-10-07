@@ -47,7 +47,7 @@ import infra.jdbc.RepositoryManager;
 import infra.persistence.EntityManager;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
-import infra.session.config.EnableWebSession;
+import infra.session.config.EnableSession;
 import infra.stereotype.Component;
 import infra.web.config.annotation.ResourceHandlerRegistry;
 import infra.web.config.annotation.ViewControllerRegistry;
@@ -62,7 +62,7 @@ import lombok.RequiredArgsConstructor;
  * @since 2019-05-26 17:28
  */
 @EnableCaching
-@EnableWebSession
+@EnableSession
 @RequiredArgsConstructor
 @DisableAllDependencyInjection
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)

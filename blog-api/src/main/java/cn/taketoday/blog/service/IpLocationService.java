@@ -17,6 +17,7 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,6 @@ import java.util.regex.Pattern;
 
 import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.ip2region.IpSearcher;
-import org.jspecify.annotations.Nullable;
 import infra.stereotype.Component;
 import infra.web.annotation.RequestParam;
 import infra.web.client.ClientResponse;

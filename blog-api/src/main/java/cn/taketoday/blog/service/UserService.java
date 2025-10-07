@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Map;
 
 import cn.taketoday.blog.model.User;
@@ -26,7 +28,6 @@ import infra.cache.annotation.CacheConfig;
 import infra.cache.annotation.CacheEvict;
 import infra.cache.annotation.Cacheable;
 import infra.http.HttpStatus;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.EntityManager;
 import infra.persistence.EntityRef;
 import infra.persistence.Id;

@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
@@ -47,7 +49,6 @@ import infra.jdbc.JdbcConnection;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
 import infra.lang.Assert;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.EntityManager;
 import infra.persistence.EntityMetadata;
 import infra.persistence.EntityRef;

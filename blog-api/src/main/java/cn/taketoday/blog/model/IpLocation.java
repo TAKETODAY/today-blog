@@ -17,11 +17,12 @@
 
 package cn.taketoday.blog.model;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 import infra.core.style.ToStringBuilder;
 import infra.lang.Descriptive;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Ip 地理位置

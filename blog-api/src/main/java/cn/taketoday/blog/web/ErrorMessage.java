@@ -17,8 +17,9 @@
 
 package cn.taketoday.blog.web;
 
-import infra.core.style.ToStringBuilder;
 import org.jspecify.annotations.Nullable;
+
+import infra.core.style.ToStringBuilder;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

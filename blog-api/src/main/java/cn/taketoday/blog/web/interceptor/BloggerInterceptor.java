@@ -26,9 +26,9 @@ import cn.taketoday.blog.web.ErrorMessage;
 import infra.http.HttpStatus;
 import infra.http.MediaType;
 import infra.http.ResponseEntity;
+import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.session.SessionRepository;
-import infra.session.WebSession;
 import infra.web.HandlerInterceptor;
 import infra.web.InterceptorChain;
 import infra.web.RequestContext;
@@ -52,7 +52,7 @@ final class BloggerInterceptor implements HandlerInterceptor {
   @Nullable
   @Override
   public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
-    WebSession session = sessionManagerOperations.getSession(request, false);
+    Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       if (User.isPresent(session)) {
         if (Blogger.isPresent(session)) {

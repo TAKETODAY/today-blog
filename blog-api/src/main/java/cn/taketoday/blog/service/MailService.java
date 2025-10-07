@@ -16,6 +16,8 @@
  */
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -29,7 +31,6 @@ import cn.taketoday.blog.util.StringUtils;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import infra.beans.factory.BeanFactory;
-import org.jspecify.annotations.Nullable;
 import infra.stereotype.Service;
 import infra.web.InternalServerException;
 import lombok.CustomLog;

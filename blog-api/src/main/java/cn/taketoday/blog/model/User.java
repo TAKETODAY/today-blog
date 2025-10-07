@@ -19,6 +19,8 @@ package cn.taketoday.blog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
@@ -28,7 +30,6 @@ import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.util.HashUtils;
 import infra.core.AttributeAccessor;
 import infra.core.style.ToStringBuilder;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;

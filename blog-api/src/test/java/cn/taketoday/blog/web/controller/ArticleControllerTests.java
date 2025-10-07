@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ import infra.session.SessionEventDispatcher;
 import infra.session.SessionIdGenerator;
 import infra.session.SessionIdResolver;
 import infra.session.SessionRepository;
-import infra.session.WebSession;
+import infra.session.Session;
 import infra.test.web.mock.MockMvc;
 import infra.test.web.mock.client.MockMvcWebTestClient;
 import infra.test.web.mock.setup.MockMvcBuilders;
@@ -157,16 +157,16 @@ class ArticleControllerTests {
     public SessionRepository sessionRepository(SessionEventDispatcher eventDispatcher, SessionIdGenerator idGenerator) {
       return new InMemorySessionRepository(eventDispatcher, idGenerator) {
         @Override
-        public WebSession createSession(String id) {
-          WebSession session = super.createSession(id);
+        public Session createSession(String id) {
+          Session session = super.createSession(id);
           new Blogger().bindTo(session);
           new User().bindTo(session);
           return session;
         }
 
         @Override
-        public WebSession retrieveSession(String id) {
-          WebSession session = super.retrieveSession(id);
+        public Session retrieveSession(String id) {
+          Session session = super.retrieveSession(id);
           if (session == null) {
             session = createSession(id);
             session.start();

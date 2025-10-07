@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,7 +38,6 @@ import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import infra.cache.annotation.CacheConfig;
 import infra.lang.Assert;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.EntityManager;
 import infra.persistence.OrderBy;
 import infra.persistence.Page;

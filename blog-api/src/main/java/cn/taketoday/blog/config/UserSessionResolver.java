@@ -23,8 +23,8 @@ import java.util.Optional;
 
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
+import infra.session.Session;
 import infra.session.SessionManagerOperations;
-import infra.session.WebSession;
 import infra.stereotype.Component;
 import infra.web.RequestContext;
 import infra.web.RequestContextHolder;
@@ -61,7 +61,7 @@ public class UserSessionResolver {
    */
   @Nullable
   public User getLoginUser(RequestContext request) {
-    WebSession session = sessionManagerOperations.getSession(request, false);
+    Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       return User.find(session);
     }
@@ -81,7 +81,7 @@ public class UserSessionResolver {
    */
   @Nullable
   public Blogger getLoggedInBlogger(RequestContext request) {
-    WebSession session = sessionManagerOperations.getSession(request, false);
+    Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       return Blogger.find(session);
     }

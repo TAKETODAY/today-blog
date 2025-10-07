@@ -17,13 +17,14 @@
 
 package cn.taketoday.blog.web;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.function.Supplier;
 
 import infra.core.NoStackTraceRuntimeException;
 import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
 import infra.lang.Assert;
-import org.jspecify.annotations.Nullable;
 import infra.web.HttpStatusProvider;
 
 /**

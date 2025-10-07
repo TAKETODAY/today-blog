@@ -20,6 +20,8 @@ package cn.taketoday.blog.service;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -34,7 +36,6 @@ import cn.taketoday.blog.model.Label;
 import infra.cache.annotation.CacheConfig;
 import infra.cache.annotation.CacheEvict;
 import infra.cache.annotation.Cacheable;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.EntityManager;
 import infra.persistence.EntityRef;
 import infra.persistence.Where;

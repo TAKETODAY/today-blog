@@ -41,9 +41,9 @@ import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.beans.support.BeanProperties;
 import infra.http.HttpStatus;
+import infra.session.Session;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
-import infra.session.WebSession;
 import infra.web.RequestContext;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
@@ -92,7 +92,7 @@ class AuthorizeController {
   }
 
   @DELETE
-  public void logout(WebSession session) {
+  public void logout(Session session) {
     session.invalidate();
   }
 
@@ -106,7 +106,7 @@ class AuthorizeController {
     public String password;
   }
 
-  private void applyBlogger(WebSession session, User loginUser, Blogger blogger) {
+  private void applyBlogger(Session session, User loginUser, Blogger blogger) {
     blogger.bindTo(session);
     loginUser.setBlogger(true);
   }
@@ -150,7 +150,7 @@ class AuthorizeController {
       default -> throw ErrorMessageException.failed("系统错误");
     }
 
-    WebSession session = sessionManagerOperations.getSession(request);
+    Session session = sessionManagerOperations.getSession(request);
     // login success
     loginUser.bindTo(session);
 

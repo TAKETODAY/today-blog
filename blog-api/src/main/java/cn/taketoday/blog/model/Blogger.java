@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.model;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
@@ -24,7 +26,6 @@ import java.util.Objects;
 import cn.taketoday.blog.UnauthorizedException;
 import infra.core.AttributeAccessor;
 import infra.core.style.ToStringBuilder;
-import org.jspecify.annotations.Nullable;
 import infra.persistence.Id;
 import infra.persistence.Table;
 import lombok.Getter;

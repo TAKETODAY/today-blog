@@ -27,8 +27,8 @@ import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
+import infra.session.Session;
 import infra.session.SessionManagerOperations;
-import infra.session.WebSession;
 import infra.stereotype.Component;
 import infra.web.RequestContext;
 import infra.web.bind.resolver.ParameterResolvingStrategy;
@@ -71,7 +71,7 @@ class LoginInfoParameterResolver implements ParameterResolvingStrategy {
 
   @Override
   public Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
-    WebSession session = sessionManagerOperations.getSession(context, false);
+    Session session = sessionManagerOperations.getSession(context, false);
     if (session != null) {
       if (parameter.is(User.class)) {
         return getAttribute(parameter, session, User::find);
@@ -119,7 +119,7 @@ class LoginInfoParameterResolver implements ParameterResolvingStrategy {
 
   @Nullable
   private static <T> T getAttribute(ResolvableMethodParameter parameter,
-          WebSession session, Function<WebSession, T> finder) {
+          Session session, Function<Session, T> finder) {
     T attribute = finder.apply(session);
     if (attribute != null) {
       return attribute;

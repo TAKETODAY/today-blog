@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.web.handler;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
@@ -28,7 +30,6 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import infra.core.style.ToStringBuilder;
-import org.jspecify.annotations.Nullable;
 import infra.web.RequestContext;
 
 /**
