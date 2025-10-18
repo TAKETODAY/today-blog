@@ -44,7 +44,6 @@ import infra.web.annotation.RestControllerAdvice;
 import infra.web.bind.MethodArgumentNotValidException;
 import infra.web.bind.MissingRequestParameterException;
 import infra.web.bind.NotMultipartRequestException;
-import infra.web.bind.resolver.ParameterConversionException;
 import infra.web.handler.ResponseEntityExceptionHandler;
 import infra.web.handler.SimpleNotFoundHandler;
 import infra.web.multipart.MaxUploadSizeExceededException;
@@ -127,12 +126,6 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
   public ErrorMessage nullPointer(NullPointerException exception) {
     log.error("Null Pointer occurred", exception);
     return internalServerError;
-  }
-
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler(ParameterConversionException.class)
-  public ErrorMessage conversion() {
-    return ErrorMessage.failed("参数转换失败");
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
