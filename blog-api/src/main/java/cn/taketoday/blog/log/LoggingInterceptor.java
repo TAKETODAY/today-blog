@@ -48,9 +48,9 @@ public class LoggingInterceptor implements MethodInterceptor {
 
   public LoggingInterceptor(Supplier<Executor> executor,
           Supplier<LoggingService> loggingService, ObjectProvider<UserSessionResolver> sessionResolver) {
-    this.executor = SingletonSupplier.from(executor);
-    this.loggingService = SingletonSupplier.from(loggingService);
-    this.sessionResolver = SingletonSupplier.from(sessionResolver);
+    this.executor = SingletonSupplier.of(executor);
+    this.loggingService = SingletonSupplier.of(loggingService);
+    this.sessionResolver = SingletonSupplier.of(sessionResolver);
   }
 
   @Nullable
