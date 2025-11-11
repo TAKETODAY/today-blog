@@ -61,9 +61,9 @@ import static org.hamcrest.Matchers.equalTo;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2023/4/12 17:19
  */
-@Import(ArticleControllerTests.SessionConfig.class)
+@Import(ArticleHttpHandlerTests.SessionConfig.class)
 @InfraTest(classes = BlogApplication.class)
-class ArticleControllerTests {
+class ArticleHttpHandlerTests {
   static final ObjectMapper objectMapper = Jackson2ObjectMapperBuilder.json().build();
 
   MockMvc mockMvc;

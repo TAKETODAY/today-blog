@@ -31,6 +31,9 @@ import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.service.OptionService;
+import cn.taketoday.blog.util.BCryptPasswordEncoder;
+import cn.taketoday.blog.util.BCryptPasswordEncoder.BCryptVersion;
+import cn.taketoday.blog.util.PasswordEncoder;
 import infra.aop.support.DefaultPointcutAdvisor;
 import infra.aop.support.annotation.AnnotationMatchingPointcut;
 import infra.beans.factory.ObjectProvider;
@@ -49,7 +52,6 @@ import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.session.config.EnableSession;
 import infra.stereotype.Component;
-import infra.web.config.annotation.ResourceHandlerRegistry;
 import infra.web.config.annotation.ViewControllerRegistry;
 import infra.web.config.annotation.WebMvcConfigurer;
 import infra.web.view.ModelAndView;
@@ -67,7 +69,7 @@ import lombok.RequiredArgsConstructor;
 @DisableAllDependencyInjection
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @Configuration(proxyBeanMethods = false)
-public class AppConfig implements WebMvcConfigurer {
+class AppConfig implements WebMvcConfigurer {
 
   private final OptionService optionService;
 
@@ -79,6 +81,11 @@ public class AppConfig implements WebMvcConfigurer {
   @Component
   public static SessionManagerOperations sessionManagerOperations(SessionManager sessionManager) {
     return new SessionManagerOperations(sessionManager);
+  }
+
+  @Component
+  static PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder(BCryptVersion.$2A);
   }
 
   @Component
@@ -97,12 +104,6 @@ public class AppConfig implements WebMvcConfigurer {
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .expireAfterAccess(10, TimeUnit.SECONDS)
             .maximumSize(100));
-  }
-
-  @Override
-  public void addResourceHandlers(ResourceHandlerRegistry registry) {
-//    registry.addResourceHandler("/upload/**")
-//            .addResourceLocations("file:/Users/today/website/data/docs/upload/");
   }
 
   @Override

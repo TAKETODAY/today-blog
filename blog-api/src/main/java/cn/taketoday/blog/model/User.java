@@ -27,7 +27,6 @@ import java.util.Objects;
 
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.enums.UserStatus;
-import cn.taketoday.blog.util.HashUtils;
 import infra.core.AttributeAccessor;
 import infra.core.style.ToStringBuilder;
 import infra.persistence.Transient;
@@ -47,10 +46,11 @@ public class User implements Serializable {
 
   public static final String AttributeKey = "userInfo";
 
-  private static final String DEFAULT_PASSWORD = HashUtils.getEncodedPassword("https://taketoday.cn");
+  private static final String DEFAULT_PASSWORD = "$2a$10$2FOYgUohsSb6oQeLo7s6vOAl6set5A2REF68u5xfhiw8J7cuxXmLa";
 
-  /** id register time */
+  /** id */
   private Long id;
+
   /** state */
   private UserStatus status;
   /** name */
@@ -61,14 +61,18 @@ public class User implements Serializable {
   private String site;
   /** type */
   private String type;
+
   /** passwd */
   @JsonIgnore
   private String password;
+
   /** avatar */
   private String avatar;
+
   /** description */
   private String introduce;
-  /** back ground **/
+
+  /** background **/
   private String background;
 
   /** email notification */
@@ -79,7 +83,6 @@ public class User implements Serializable {
   private boolean blogger;
 
   public User() {
-
   }
 
   public User(Long id) {

@@ -18,11 +18,9 @@
 package cn.taketoday.blog.web.http;
 
 import org.hibernate.validator.constraints.Length;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -35,6 +33,7 @@ import cn.taketoday.blog.service.AttachmentService;
 import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.service.UserService;
 import cn.taketoday.blog.util.HashUtils;
+import cn.taketoday.blog.util.PasswordEncoder;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
@@ -54,7 +53,6 @@ import infra.web.annotation.RequestMapping;
 import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestController;
 import infra.web.multipart.MultipartFile;
-import infra.web.util.UriUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -68,22 +66,26 @@ import lombok.CustomLog;
 @CustomLog
 @RestController
 @RequestMapping("/api/auth")
-class AuthorizeController {
+class AuthHttpHandler {
 
   private final UserService userService;
 
   private final BloggerService bloggerService;
 
+  private final PasswordEncoder passwordEncoder;
+
   private final AttachmentService attachmentService;
 
   private final SessionManagerOperations sessionManagerOperations;
 
-  public AuthorizeController(SessionManager sessionManager, UserService userService,
-          BloggerService bloggerService, AttachmentService attachmentService, SessionManagerOperations sessionManagerOperations) {
+  public AuthHttpHandler(SessionManager sessionManager, UserService userService,
+          BloggerService bloggerService, AttachmentService attachmentService,
+          SessionManagerOperations sessionManagerOperations, PasswordEncoder passwordEncoder) {
     this.userService = userService;
     this.bloggerService = bloggerService;
     this.attachmentService = attachmentService;
     this.sessionManagerOperations = sessionManagerOperations;
+    this.passwordEncoder = passwordEncoder;
   }
 
   @GET
@@ -96,6 +98,7 @@ class AuthorizeController {
     session.invalidate();
   }
 
+  @NullUnmarked
   static class UserFrom {
 
     @NotEmpty(message = "邮箱不能为空")
@@ -112,7 +115,7 @@ class AuthorizeController {
   }
 
   /**
-   * 登录 v2
+   * 登录
    * <pre> {@code
    * {
    *   "id": 1544107262149,
@@ -129,15 +132,14 @@ class AuthorizeController {
    */
   @POST(params = "v2")
   @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
-  @Logging(title = "登录", content = "邮箱:[#{#user.email}]登录")
-  public User loginV2(@Valid @RequestBody UserFrom user, RequestContext request) {
-    User loginUser = userService.getByEmail(user.email);
+  @Logging(title = "登录", content = "邮箱:[#{#from.email}]登录")
+  public User loginV2(@Valid @RequestBody UserFrom from, RequestContext request) {
+    User loginUser = userService.getByEmail(from.email);
     if (loginUser == null) {
-      throw ErrorMessageException.failed(user.email + " 账号不存在!");
+      throw ErrorMessageException.failed(from.email + " 账号不存在!");
     }
 
-    String passwd = HashUtils.getEncodedPassword(user.password);
-    if (!Objects.equals(loginUser.getPassword(), passwd)) {
+    if (!passwordEncoder.matches(from.password, loginUser.getPassword())) {
       throw ErrorMessageException.failed("密码错误!");
     }
 
@@ -159,9 +161,9 @@ class AuthorizeController {
     // 是对应邮箱 判断密码
 
     if (Objects.equals(loginUser.getEmail(), blogger.getEmail())) {
-      if (!Objects.equals(loginUser.getPassword(), blogger.getPasswd())) {
+      if (!passwordEncoder.matches(from.password, blogger.getPasswd())) {
         blogger = bloggerService.fetchBlogger();
-        if (Objects.equals(loginUser.getPassword(), blogger.getPasswd())) {
+        if (passwordEncoder.matches(from.password, blogger.getPasswd())) {
           applyBlogger(session, loginUser, blogger);
         }
       }
@@ -171,43 +173,6 @@ class AuthorizeController {
     }
 
     return loginUser;
-  }
-
-  //---------------------------------------------------------------------
-  // 修改当前用户的信息
-  //---------------------------------------------------------------------
-
-  // 第三方
-
-  public static String redirect(String path) {
-    return "redirect:".concat(path);
-  }
-
-  static String redirectLogin(String forward) {
-    if (StringUtils.isEmpty(forward)) {
-      return redirect("/login");
-    }
-    return redirect(forward);
-  }
-
-  static String redirectLoginError(String forward, String message) {
-    if (StringUtils.isNotEmpty(message)) {
-      message = UriUtils.decode(message, StandardCharsets.UTF_8);
-    }
-    if (StringUtils.isEmpty(forward)) {
-      return redirect("/login?message=" + message);
-    }
-    return redirect("/login?forward=" + UriUtils.decode(forward, StandardCharsets.UTF_8) + "&message=" + message);
-  }
-
-  @FunctionalInterface
-  interface OauthUserConnectionFunction {
-
-    HttpURLConnection apply(String accessToken) throws IOException;
-  }
-
-  static String decode(String source) {
-    return UriUtils.decode(source, StandardCharsets.UTF_8);
   }
 
   //---------------------------------------------------------------------
@@ -235,7 +200,7 @@ class AuthorizeController {
    */
   @PUT
   @RequestLimit(count = 2, unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次用户信息")
-  public User userInfo(@RequiresUser User loginUser, @RequestBody @Valid InfoForm form) {
+  public User updateUserInfo(@RequiresUser User loginUser, @RequestBody @Valid InfoForm form) {
     // 要判断不一致才更新
     if (Objects.equals(form.name, loginUser.getName())
             && Objects.equals(form.introduce, loginUser.getIntroduce())) {
@@ -296,13 +261,12 @@ class AuthorizeController {
     ErrorMessageException.notNull(byId, "要修改密码的用户不存在");
 
     // 校验旧密码
-    String oldPassword = HashUtils.getEncodedPassword(form.oldPassword);
-    if (!Objects.equals(oldPassword, byId.getPassword())) {
+    if (!passwordEncoder.matches(form.oldPassword, byId.getPassword())) {
       throw ErrorMessageException.failed("原密码错误");
     }
 
     // 重新生成
-    String newPassword = HashUtils.getEncodedPassword(form.newPassword);
+    String newPassword = passwordEncoder.encode(form.newPassword);
 
     // 更新数据库
     User user = new User();
@@ -317,6 +281,7 @@ class AuthorizeController {
     userService.updateById(user);
   }
 
+  @NullUnmarked
   public static class UserEmailForm {
 
     @NotEmpty(message = "请输入新邮箱")
@@ -340,8 +305,7 @@ class AuthorizeController {
     }
 
     // Check User's Password
-    String encodedPassword = HashUtils.getEncodedPassword(form.password);
-    if (encodedPassword.equals(loginUser.getPassword())) {
+    if (passwordEncoder.matches(form.password, loginUser.getPassword())) {
       // 更新数据库
       User user = new User();
       user.setEmail(form.email);

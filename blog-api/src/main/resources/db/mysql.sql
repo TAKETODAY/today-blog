@@ -40,7 +40,7 @@ create table category
 
 create table article
 (
-    `id`        int unsigned auto_increment primary key,
+    `id`        bigint unsigned auto_increment primary key,
     `title`     varchar(255) default not null comment '标题',
     `content`   longtext     default not null comment '文章内容',
     `summary`   text         default not null comment '摘要',
@@ -126,8 +126,7 @@ INSERT INTO `option` (name, value) VALUES ('site.version', 'v3.1');
 
 create table page_view
 (
-    `id`             bigint unsigned auto_increment
-        primary key,
+    `id`             bigint unsigned auto_increment primary key,
     `url`            tinytext                           not null,
     `host`           varchar(255)                       not null comment 'request host',
     `path`           varchar(255)                       not null comment 'request path',
@@ -146,18 +145,20 @@ create table page_view
 
 create table user
 (
-    `id`           bigint                                                  not null comment '注册时间戳',
-    `name`         varchar(255) default '无名氏'                           null comment '姓名，昵称',
-    `email`        varchar(64)                                             not null comment '邮箱',
-    `introduce`    varchar(255) default '暂无'                             null comment '描述',
-    `site`         varchar(255)                                            null comment '个人网站',
-    `password`     varchar(64)  default '8E33AE4E09847AB123435A358CD5CF2D' not null comment '密码默认密码：https://taketoday.cn MD5：8E33AE4E09847AB123435A358CD5CF2D',
-    `type`         varchar(255)                                            null comment '类型:qq,github,site,master',
-    `avatar`       text                                                    null comment '头像',
-    `background`   varchar(255) default '/assets/images/bg/info_back.jpg'  null comment '背景',
-    `status`       int          default 0                                  not null comment '状态:(0:正常,1:未激活,2:账号被锁,3:账号删除)',
-    `notification` bit          default b'1'                               null,
-    primary key (id, email)
+    `id`           bigint unsigned auto_increment primary key,
+    `name`         varchar(255) default '无名氏'                                                       null comment '姓名，昵称',
+    `email`        varchar(64)                                                                         not null comment '邮箱',
+    `introduce`    varchar(255) default '暂无'                                                         null comment '描述',
+    `site`         varchar(255)                                                                        null comment '个人网站',
+    `password`     varchar(255) default '$2a$10$2FOYgUohsSb6oQeLo7s6vOAl6set5A2REF68u5xfhiw8J7cuxXmLa' not null,
+    `type`         varchar(255)                                                                        null comment '类型:qq,github,site,master',
+    `avatar`       text                                                                                null comment '头像',
+    `background`   varchar(255) default '/assets/images/bg/info_back.jpg'                              null comment '背景',
+    `status`       int          default 0                                                              not null comment '状态:(0:正常,1:未激活,2:账号被锁,3:账号删除)',
+    `notification` bit          default b'1'                                                           null,
+
+    constraint email_idx
+        unique (email)
 );
 
 create table t_comment
@@ -180,18 +181,18 @@ create table t_comment
 
 create table t_mail
 (
-    id         bigint unsigned not null auto_increment primary key,
+    id        bigint unsigned not null auto_increment primary key,
 
-    content    text            not null comment '邮件内容',
+    content   text            not null comment '邮件内容',
 
-    `to`       varchar(255)    not null comment '发送给',
-    subject    varchar(255)    not null comment '主题',
+    `to`      varchar(255)    not null comment '发送给',
+    subject   varchar(255)    not null comment '主题',
 
 
-    sent_at    datetime        not null comment '发送时间',
+    sent_at   datetime        not null comment '发送时间',
 
-    create_at  datetime default CURRENT_TIMESTAMP comment '创建时间',
-    update_at  datetime on update CURRENT_TIMESTAMP comment '更新时间'
+    create_at datetime default CURRENT_TIMESTAMP comment '创建时间',
+    update_at datetime on update CURRENT_TIMESTAMP comment '更新时间'
 );
 
 
