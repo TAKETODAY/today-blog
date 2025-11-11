@@ -71,7 +71,7 @@ import jakarta.validation.constraints.NotNull;
  */
 @RestController
 @RequestMapping("/api/comments")
-class CommentController {
+class CommentHttpHandler {
 
   private final CommentConfig commentConfig;
 
@@ -81,7 +81,7 @@ class CommentController {
 
   private final ApplicationEventPublisher eventPublisher;
 
-  public CommentController(CommentConfig commentConfig, CommentService commentService,
+  public CommentHttpHandler(CommentConfig commentConfig, CommentService commentService,
           ArticleService articleService, ApplicationEventPublisher eventPublisher) {
     this.commentConfig = commentConfig;
     this.commentService = commentService;

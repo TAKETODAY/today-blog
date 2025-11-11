@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ import lombok.RequiredArgsConstructor;
 @RequiresBlogger
 @RequiredArgsConstructor
 @RequestMapping("/api/statistics")
-class StatisticsController {
+class StatisticsHttpHandler {
 
   private final BlogConfig blogConfig;
 
@@ -82,7 +82,9 @@ class StatisticsController {
     public int attachmentCount;
 
     public List<Operation> logs;
+
     public List<Article> articles;
+
     public List<Comment> comments;
   }
 

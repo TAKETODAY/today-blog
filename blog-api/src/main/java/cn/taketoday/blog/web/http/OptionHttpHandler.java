@@ -36,11 +36,11 @@ import infra.web.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/options")
-class OptionController {
+class OptionHttpHandler {
 
   private final OptionService optionsService;
 
-  public OptionController(OptionService optionsService) {
+  public OptionHttpHandler(OptionService optionsService) {
     this.optionsService = optionsService;
   }
 

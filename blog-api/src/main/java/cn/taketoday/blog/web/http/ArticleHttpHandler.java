@@ -60,7 +60,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Interceptor(ArticleFilterInterceptor.class)
 @RequestMapping("/api/articles")
-class ArticleController {
+class ArticleHttpHandler {
 
   private final LabelService labelService;
 

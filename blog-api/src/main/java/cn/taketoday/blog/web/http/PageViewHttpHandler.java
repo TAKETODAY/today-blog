@@ -51,7 +51,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/pv")
-class PageViewController {
+class PageViewHttpHandler {
 
   private final EntityManager entityManager;
 

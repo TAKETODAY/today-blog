@@ -70,7 +70,7 @@ class LoginInfoParameterResolver implements ParameterResolvingStrategy {
   }
 
   @Override
-  public Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
+  public @Nullable Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
     Session session = sessionManagerOperations.getSession(context, false);
     if (session != null) {
       if (parameter.is(User.class)) {
@@ -117,9 +117,8 @@ class LoginInfoParameterResolver implements ParameterResolvingStrategy {
     return new LoginInfo();
   }
 
-  @Nullable
-  private static <T> T getAttribute(ResolvableMethodParameter parameter,
-          Session session, Function<Session, T> finder) {
+  private static <T> @Nullable T getAttribute(ResolvableMethodParameter parameter,
+          Session session, Function<Session, @Nullable T> finder) {
     T attribute = finder.apply(session);
     if (attribute != null) {
       return attribute;
