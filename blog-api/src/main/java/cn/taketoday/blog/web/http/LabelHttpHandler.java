@@ -109,7 +109,9 @@ class LabelHttpHandler {
 
   @GET("/{name}")
   public Label name(@PathVariable String name) {
-    return labelService.getByName(name);
+    Label label = labelService.getByName(name);
+    ErrorMessageException.notNull(label, "标签不存在");
+    return label;
   }
 
 }

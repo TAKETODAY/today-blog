@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import cn.taketoday.blog.model.ArticleLabel;
@@ -51,8 +50,6 @@ import infra.transaction.annotation.Transactional;
 public class LabelService {
 
   private final EntityManager entityManager;
-
-  private final ArticleLabelMappingFunction mappingFunction = new ArticleLabelMappingFunction();
 
   private final Cache<Long, Set<Label>> articleLabelsCache = Caffeine.newBuilder()
           .maximumSize(100)
@@ -103,7 +100,7 @@ public class LabelService {
   }
 
   public Set<Label> getByArticleId(long id) {
-    return articleLabelsCache.get(id, mappingFunction);
+    return articleLabelsCache.get(id, articleId -> new LinkedHashSet<>(entityManager.find(Label.class, new TagQuery(articleId))));
   }
 
   public Set<String> getAllLabelsNames() {
@@ -130,15 +127,6 @@ public class LabelService {
   public void removeArticleLabels(long articleId) {
     entityManager.delete(ArticleLabel.forArticle(articleId));
     articleLabelsCache.invalidate(articleId);
-  }
-
-  final class ArticleLabelMappingFunction implements Function<Long, Set<Label>> {
-
-    @Override
-    public Set<Label> apply(Long articleId) {
-      return new LinkedHashSet<>(entityManager.find(Label.class, new TagQuery(articleId)));
-    }
-
   }
 
   @EntityRef(Label.class)
