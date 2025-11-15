@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
 import cn.taketoday.blog.model.Blogger;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
@@ -32,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BloggerService {
 
-  private volatile Blogger blogger;
+  private volatile @Nullable Blogger blogger;
 
   private final EntityManager entityManager;
 
@@ -54,7 +56,7 @@ public class BloggerService {
     getBlogger().setPasswd(password);
   }
 
-  public void setBlogger(Blogger blogger) {
+  public void setBlogger(@Nullable Blogger blogger) {
     this.blogger = blogger;
   }
 

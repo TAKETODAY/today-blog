@@ -43,6 +43,7 @@ import infra.expression.spel.support.StandardTypeLocator;
  * @since 4.0 2022/3/26 20:45
  */
 class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
+
   static final ParserContext parserContext = ParserContext.TEMPLATE_EXPRESSION;
 
   /**

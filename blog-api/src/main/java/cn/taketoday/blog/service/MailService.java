@@ -31,6 +31,7 @@ import cn.taketoday.blog.util.StringUtils;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import infra.beans.factory.BeanFactory;
+import infra.core.task.TaskExecutor;
 import infra.stereotype.Service;
 import infra.web.InternalServerException;
 import lombok.CustomLog;
@@ -44,12 +45,14 @@ import lombok.CustomLog;
 public class MailService {
 
   private final Executor executor;
+
   private final BeanFactory beanFactory;
+
   private final LoggingService loggerService;
 
   final Configuration configuration;
 
-  public MailService(Executor executor, BeanFactory beanFactory,
+  public MailService(TaskExecutor executor, BeanFactory beanFactory,
           LoggingService loggerService, @Nullable Configuration configuration) {
     this.executor = executor;
     this.beanFactory = beanFactory;
