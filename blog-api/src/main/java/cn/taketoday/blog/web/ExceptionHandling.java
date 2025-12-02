@@ -43,10 +43,10 @@ import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestControllerAdvice;
 import infra.web.bind.MethodArgumentNotValidException;
 import infra.web.bind.MissingRequestParameterException;
-import infra.web.bind.NotMultipartRequestException;
 import infra.web.handler.ResponseEntityExceptionHandler;
 import infra.web.handler.SimpleNotFoundHandler;
 import infra.web.multipart.MaxUploadSizeExceededException;
+import infra.web.multipart.NotMultipartRequestException;
 import lombok.CustomLog;
 
 /**
