@@ -36,7 +36,7 @@ import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestController;
-import infra.web.multipart.MultipartFile;
+import infra.web.multipart.Part;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
@@ -66,7 +66,7 @@ class AttachmentHttpHandler {
   @POST
   @ResponseStatus(HttpStatus.CREATED)
   @Logging(title = "上传附件", content = "文件名: [#{#file.originalFilename}]")
-  public UploadReturnValue upload(MultipartFile file) {
+  public UploadReturnValue upload(Part file) {
     Attachment attachment = attachmentService.upload(file, null);
     String uri = attachment.getUri();
     return new UploadReturnValue(uri, attachmentConfig.getRemoteURL(uri));

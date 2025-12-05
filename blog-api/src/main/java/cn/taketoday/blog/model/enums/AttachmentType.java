@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import cn.taketoday.blog.model.Attachment;
 import infra.http.MediaType;
 import infra.http.MediaTypeFactory;
 import infra.lang.Enumerable;
-import infra.web.multipart.MultipartFile;
+import infra.web.multipart.Part;
 
 /**
  * 附件类型
@@ -74,10 +74,10 @@ public enum AttachmentType implements Enumerable<String> {
     return from(file.getName());
   }
 
-  public static AttachmentType from(MultipartFile file) {
-    String contentType = file.getContentType();
+  public static AttachmentType from(Part file) {
+    MediaType contentType = file.getContentType();
     if (contentType != null) {
-      AttachmentType fileType = from(MediaType.valueOf(contentType));
+      AttachmentType fileType = from(contentType);
       if (fileType == AttachmentType.OTHER) { // 检测文件名
         fileType = from(file.getOriginalFilename());
       }

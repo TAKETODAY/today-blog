@@ -42,7 +42,7 @@ import infra.persistence.Page;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import infra.web.InternalServerException;
-import infra.web.multipart.MultipartFile;
+import infra.web.multipart.Part;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -135,7 +135,7 @@ public class AttachmentService {
     return attachment;
   }
 
-  public Attachment upload(MultipartFile file, @Nullable String suffix) {
+  public Attachment upload(Part file, @Nullable String suffix) {
     if (ossOperations.isOssEnabled()) {
       return attachOssUpload(file, suffix);
     }
@@ -148,7 +148,7 @@ public class AttachmentService {
    * @param file file
    * @return Map
    */
-  public Attachment attachLocalUpload(MultipartFile file, @Nullable String suffix) {
+  public Attachment attachLocalUpload(Part file, @Nullable String suffix) {
     String fileName = getName(file, suffix);
     String uploadUri = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
 
@@ -164,13 +164,13 @@ public class AttachmentService {
     }
   }
 
-  private File saveFile(MultipartFile file, String uploadUrl) throws IOException {
+  private File saveFile(Part file, String uploadUrl) throws IOException {
     File dest = attachmentConfig.getLocalFile(uploadUrl);
     file.transferTo(dest);
     return dest;
   }
 
-  public Attachment attachOssUpload(MultipartFile file, @Nullable String suffix) {
+  public Attachment attachOssUpload(Part file, @Nullable String suffix) {
     String fileName = getName(file, suffix);
     String uploadUri = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
 
@@ -193,7 +193,7 @@ public class AttachmentService {
     }
   }
 
-  private String getName(MultipartFile file, @Nullable String suffix) {
+  private String getName(Part file, @Nullable String suffix) {
     if (StringUtils.isNotEmpty(suffix)) {
       return suffix;
     }

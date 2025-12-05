@@ -52,7 +52,7 @@ import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestController;
-import infra.web.multipart.MultipartFile;
+import infra.web.multipart.Part;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -329,7 +329,7 @@ class AuthHttpHandler {
   @PUT(params = "avatar")
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改1次头像")
   @Logging(title = "用户保存头像", content = "上传:[#{#avatar.getOriginalFilename()}] 邮箱:[#{#loginUser.email}]")
-  public User changeAvatar(@RequiresUser User loginUser, MultipartFile avatar) {
+  public User changeAvatar(@RequiresUser User loginUser, Part avatar) {
     String originalFilename = avatar.getOriginalFilename();
     String randomHashString = HashUtils.getRandomHashString(16);
 
@@ -354,7 +354,7 @@ class AuthHttpHandler {
   @PUT(params = "background")
   @Logging(title = "用户修改背景", content =
           "文件名: [#{#background.getOriginalFilename()}] 邮箱:[#{#loginUser.email}]")
-  public User changeBackground(User loginUser, MultipartFile background) {
+  public User changeBackground(User loginUser, Part background) {
     Attachment attachment = attachmentService.upload(
             background, StringUtils.getRandomImageName(background.getOriginalFilename()));
 

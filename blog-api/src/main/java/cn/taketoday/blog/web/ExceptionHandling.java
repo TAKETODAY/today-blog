@@ -25,7 +25,6 @@ import org.jspecify.annotations.Nullable;
 import java.sql.SQLException;
 
 import cn.taketoday.blog.UnauthorizedException;
-import cn.taketoday.blog.util.BlogUtils;
 import infra.beans.TypeMismatchException;
 import infra.dao.DataAccessResourceFailureException;
 import infra.http.HttpHeaders;
@@ -45,7 +44,7 @@ import infra.web.bind.MethodArgumentNotValidException;
 import infra.web.bind.MissingRequestParameterException;
 import infra.web.handler.ResponseEntityExceptionHandler;
 import infra.web.handler.SimpleNotFoundHandler;
-import infra.web.multipart.MaxUploadSizeExceededException;
+import infra.web.multipart.MultipartException;
 import infra.web.multipart.NotMultipartRequestException;
 import lombok.CustomLog;
 
@@ -171,12 +170,9 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
     return handleExceptionInternal(ex, ErrorMessage.failed("缺少参数'" + ex.getParameterName() + "'"), headers, status, request);
   }
 
-  @Nullable
   @Override
-  protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
-          MaxUploadSizeExceededException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
-    String formattedSize = BlogUtils.formatSize(ex.getMaxUploadSize());
-    return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制: '" + formattedSize + "'"), headers, status, request);
+  protected @Nullable ResponseEntity<Object> handleMultipartException(MultipartException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+    return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制"), headers, status, request);
   }
 
   @Nullable
