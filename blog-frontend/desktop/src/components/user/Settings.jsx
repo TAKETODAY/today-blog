@@ -39,16 +39,6 @@ function handleError(err) {
   message.error(err.message)
 }
 
-function handleResult(props, res) {
-  if (res.data.success === true) {
-    message.success(res.data.message)
-    props.updateUserSession(res.data.data)
-  }
-  else {
-    message.error(res.data.message)
-  }
-}
-
 function InfoSettings(props) {
   const update = useCallback((data) => {
     userService.updateInfo(data).then(res => {
@@ -112,17 +102,9 @@ function EmailSettings(props) {
 
 function PasswordSettings(props) {
   const update = (data) => {
-    userService
-      .updatePassword(data)
-      .then(res => {
-        if (res.data.success === true) {
-          message.success(res.data.message)
-        }
-        else {
-          message.error(res.data.message)
-        }
-      })
-      .catch(handleError)
+    userService.updatePassword(data).then(res => {
+      message.success("修改成功")
+    }).catch(handleError)
   }
   return (
     <div className="shadow-box" id="password">

@@ -18,7 +18,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { InfoRight, UserDescription } from '../components';
-import { Affix, Anchor, Col, Row } from 'antd'
+import { Affix, Alert, Anchor, Col, Row } from 'antd'
 
 const AnchorLink = Anchor.Link;
 
@@ -36,9 +36,12 @@ export default props => {
       <Row>
         <Col xs={24} md={18} lg={24}>
           {userSession.defaultPassword &&
-            <div className="alert alert-info" role="alert">提示：当前使用默认密码:'taketoday.cn' 请尽快
-              <Link to="/user/settings#password" className="alert-link">修改密码</Link>
-            </div>
+            <Alert message="修改密码提示" type="warning" showIcon closable style={{ marginBottom: 10 }}
+                   description="当前使用默认密码:'taketoday.cn' 请尽快修改密码"
+                   action={
+                     <Link to="/user/settings#password" className="alert-link">修改密码</Link>
+                   }
+            />
           }
           <UserDescription userSession={userSession}/>
           {/* <UserNav /> */}

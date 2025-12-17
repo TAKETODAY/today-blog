@@ -29,3 +29,6 @@
 /logs
 /resources
 /buildSrc/build
+
+yarn.lock
+pnpm-lock.yaml
