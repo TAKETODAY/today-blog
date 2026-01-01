@@ -32,7 +32,7 @@ import infra.persistence.EntityManager;
 import infra.persistence.EntityRef;
 import infra.persistence.Id;
 import infra.stereotype.Service;
-import infra.web.ResponseStatusException;
+import infra.web.server.ResponseStatusException;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

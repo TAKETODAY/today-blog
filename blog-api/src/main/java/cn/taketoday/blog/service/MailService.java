@@ -33,7 +33,7 @@ import freemarker.template.Template;
 import infra.beans.factory.BeanFactory;
 import infra.core.task.TaskExecutor;
 import infra.stereotype.Service;
-import infra.web.InternalServerException;
+import infra.web.server.InternalServerException;
 import lombok.CustomLog;
 
 /**

@@ -60,7 +60,7 @@ import infra.persistence.sql.SimpleSelect;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import infra.util.CollectionUtils;
-import infra.web.InternalServerException;
+import infra.web.server.InternalServerException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 

@@ -33,10 +33,8 @@ import infra.http.HttpStatusCode;
 import infra.http.ResponseEntity;
 import infra.http.converter.HttpMessageNotReadableException;
 import infra.validation.ObjectError;
-import infra.web.InternalServerException;
 import infra.web.NotFoundHandler;
 import infra.web.RequestContext;
-import infra.web.ResponseStatusException;
 import infra.web.annotation.ExceptionHandler;
 import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestControllerAdvice;
@@ -46,6 +44,8 @@ import infra.web.handler.ResponseEntityExceptionHandler;
 import infra.web.handler.SimpleNotFoundHandler;
 import infra.web.multipart.MultipartException;
 import infra.web.multipart.NotMultipartRequestException;
+import infra.web.server.InternalServerException;
+import infra.web.server.ResponseStatusException;
 import lombok.CustomLog;
 
 /**

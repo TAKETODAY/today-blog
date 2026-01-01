@@ -41,8 +41,8 @@ import infra.persistence.EntityManager;
 import infra.persistence.Page;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
-import infra.web.InternalServerException;
 import infra.web.multipart.Part;
+import infra.web.server.InternalServerException;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -103,9 +103,8 @@ public class AttachmentService {
    * @param attachId attachId
    * @return 旧附件
    */
-  @Nullable
   @Transactional
-  public Attachment removeById(long attachId) {
+  public @Nullable Attachment removeById(long attachId) {
     Attachment attachment = getById(attachId);
     if (attachment == null) {
       return null;
