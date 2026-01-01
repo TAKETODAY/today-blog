@@ -55,7 +55,7 @@ logging:
   level:
     netty: info
     nettyLogging: info
-    web: info
+    web: debug
     sql: info
   pattern:
     dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'
