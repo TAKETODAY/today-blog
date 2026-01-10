@@ -17,8 +17,6 @@
 
 package cn.taketoday.blog.web.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,20 +31,22 @@ import infra.context.annotation.Bean;
 import infra.context.annotation.Configuration;
 import infra.context.annotation.Import;
 import infra.http.MediaType;
-import infra.http.converter.json.Jackson2ObjectMapperBuilder;
 import infra.session.HeaderSessionIdResolver;
 import infra.session.InMemorySessionRepository;
+import infra.session.Session;
 import infra.session.SessionEventDispatcher;
 import infra.session.SessionIdGenerator;
 import infra.session.SessionIdResolver;
 import infra.session.SessionRepository;
-import infra.session.Session;
 import infra.test.web.mock.MockMvc;
 import infra.test.web.mock.client.MockMvcWebTestClient;
 import infra.test.web.mock.setup.MockMvcBuilders;
 import infra.test.web.reactive.server.WebTestClient;
 import infra.transaction.annotation.Isolation;
 import infra.transaction.annotation.Transactional;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import static infra.test.web.mock.request.MockMvcRequestBuilders.get;
 import static infra.test.web.mock.request.MockMvcRequestBuilders.post;
@@ -64,7 +64,12 @@ import static org.hamcrest.Matchers.equalTo;
 @Import(ArticleHttpHandlerTests.SessionConfig.class)
 @InfraTest(classes = BlogApplication.class)
 class ArticleHttpHandlerTests {
-  static final ObjectMapper objectMapper = Jackson2ObjectMapperBuilder.json().build();
+
+  private static final JsonMapper objectMapper = JsonMapper.builder()
+          .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+          .build();
 
   MockMvc mockMvc;
 
