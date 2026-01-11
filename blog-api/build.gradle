@@ -11,12 +11,12 @@ apply plugin: 'cn.taketoday.blog.optional-dependencies'
 dependencies {
 
   implementation 'cn.taketoday:ip2region-java:1.0-SNAPSHOT'
-  implementation 'cn.taketoday:today-starter-netty'
-  implementation 'cn.taketoday:today-starter-webmvc'
-  implementation 'cn.taketoday:today-starter-json'
-  implementation 'cn.taketoday:today-starter-validation'
-  implementation 'cn.taketoday:today-starter-jdbc'
-  implementation 'cn.taketoday:today-starter-freemarker'
+  implementation 'cn.taketoday:infra-starter-netty'
+  implementation 'cn.taketoday:infra-starter-webmvc'
+  implementation 'cn.taketoday:infra-starter-json'
+  implementation 'cn.taketoday:infra-starter-validation'
+  implementation 'cn.taketoday:infra-starter-jdbc'
+  implementation 'cn.taketoday:infra-starter-freemarker'
   implementation 'eu.bitwalker:UserAgentUtils:1.21'
   implementation 'com.mysql:mysql-connector-j'
   implementation 'com.aliyun.oss:aliyun-sdk-oss:3.16.0'
@@ -33,7 +33,7 @@ dependencies {
   annotationProcessor "cn.taketoday:infra-configuration-processor"
   annotationProcessor "cn.taketoday:infra-annotation-config-processor"
 
-  testImplementation 'cn.taketoday:today-starter-test'
+  testImplementation 'cn.taketoday:infra-starter-test'
   testImplementation 'io.projectreactor:reactor-test'
 
   testImplementation("org.junit.jupiter:junit-jupiter-api")

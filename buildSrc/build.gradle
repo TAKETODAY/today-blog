@@ -29,7 +29,7 @@ repositories {
 
 dependencies {
   implementation(platform("cn.taketoday:infra-bom:$infraVersion"))
-  implementation "cn.taketoday:today-core"
+  implementation "cn.taketoday:infra-core"
   implementation "cn.taketoday:infra-gradle-plugin"
 }
 
