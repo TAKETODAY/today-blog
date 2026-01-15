@@ -11,11 +11,12 @@ apply plugin: 'cn.taketoday.blog.optional-dependencies'
 dependencies {
 
   implementation 'cn.taketoday:ip2region-java:1.0-SNAPSHOT'
-  implementation 'cn.taketoday:infra-starter-netty'
+  implementation 'cn.taketoday:infra-starter-netty-server'
   implementation 'cn.taketoday:infra-starter-webmvc'
   implementation 'cn.taketoday:infra-starter-json'
   implementation 'cn.taketoday:infra-starter-validation'
   implementation 'cn.taketoday:infra-starter-jdbc'
+  implementation 'cn.taketoday:infra-starter-mail'
   implementation 'cn.taketoday:infra-starter-freemarker'
   implementation 'eu.bitwalker:UserAgentUtils:1.21'
   implementation 'com.mysql:mysql-connector-j'

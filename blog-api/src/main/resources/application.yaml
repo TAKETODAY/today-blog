@@ -14,10 +14,6 @@ server:
       secure: true
       max-age: 1d
       same-site: lax
-  netty:
-    multipart:
-      max-field-size: 100MB
-      field-size-threshold: 10MB
 
 infra:
   output:
@@ -49,7 +45,6 @@ jackson:
     # 常用,json中含pojo不存在属性时是否失败报错,默认true
     FAIL_ON_UNKNOWN_PROPERTIES: false
   serialization:
-    WRITE_DATES_AS_TIMESTAMPS: false # 返回的java.util.date转换成timestamp
     FAIL_ON_EMPTY_BEANS: false # 对象为空时是否报错，默认true
 
 
@@ -62,23 +57,13 @@ aliyun:
     secretAccessKey:
 
 mail:
-  debug: false
-  from:
-    userName:
-  nickName:
-  password:
-  smtp:
-    auth: true
-    host: smtp.qq.com
-    port: 465
-    socketFactory:
-      class: javax.net.ssl.SSLSocketFactory
-    ssl:
-      enable: true
-    timeout: 25000
-  transport:
-    protocol: smtp
-  userName:
+  username: 1
+  password: 1
+  protocol: smtp
+  host: smtp.qq.com
+  port: 465
+  ssl:
+    enabled: true
 
 site:
   subTitle: 代码是我心中的一首诗
