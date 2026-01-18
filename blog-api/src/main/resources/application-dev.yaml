@@ -11,9 +11,7 @@ server:
   netty:
     worker-threads: 8
     acceptor-threads: 1
-    logging-level: debug
-  error:
-    include-message: always
+    max-connection: 10240000
   use-virtual-thread-service-executor: true
 
 datasource:
@@ -37,6 +35,8 @@ aliyun:
 
 
 web:
+  error:
+    include-message: always
   mvc:
     log-request-details: true
 
