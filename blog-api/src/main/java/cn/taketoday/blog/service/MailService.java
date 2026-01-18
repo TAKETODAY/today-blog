@@ -106,7 +106,6 @@ public class MailService {
    * @param templateName 模板路径
    * @param attachSrc 附件路径
    */
-
   public void sendAttachMail(String to, String subject, Map<String, Object> dataModel, String templateName, String attachSrc) {
     try (StringWriter result = new StringWriter()) {
       Template template = getTemplate(templateName);
@@ -128,9 +127,10 @@ public class MailService {
     final String to;
     final String subject;
     final String content;
-    final String file;
 
-    public MailSenderRunnable(String to, String subject, String content, String file) {
+    final @Nullable String file;
+
+    public MailSenderRunnable(String to, String subject, String content, @Nullable String file) {
       this.to = to;
       this.file = file;
       this.content = content;
