@@ -22,7 +22,7 @@ dependencies {
   implementation 'cn.taketoday:infra-starter-freemarker'
   implementation 'eu.bitwalker:UserAgentUtils:1.21'
   implementation 'com.mysql:mysql-connector-j'
-  implementation 'com.aliyun.oss:aliyun-sdk-oss:3.16.0'
+  implementation 'com.aliyun.oss:aliyun-sdk-oss:3.18.4'
 
   compileOnly 'org.projectlombok:lombok'
   annotationProcessor 'org.projectlombok:lombok'
