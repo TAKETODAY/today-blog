@@ -25,15 +25,17 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import cn.taketoday.blog.model.Operation;
-import cn.taketoday.blog.util.MailSender;
-import cn.taketoday.blog.util.SendMailException;
 import cn.taketoday.blog.util.StringUtils;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import infra.beans.factory.BeanFactory;
 import infra.core.task.TaskExecutor;
+import infra.mail.javamail.JavaMailSender;
+import infra.mail.javamail.MimeMessageHelper;
+import infra.mail.javamail.MimeMessagePreparator;
 import infra.stereotype.Service;
 import infra.web.server.InternalServerException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.CustomLog;
 
 /**
@@ -117,11 +119,11 @@ public class MailService {
     }
   }
 
-  MailSender getEmailSender() {
-    return beanFactory.getBean(MailSender.class);
+  JavaMailSender getEmailSender() {
+    return beanFactory.getBean(JavaMailSender.class);
   }
 
-  class MailSenderRunnable implements Runnable {
+  class MailSenderRunnable implements Runnable, MimeMessagePreparator {
 
     final String to;
     final String subject;
@@ -136,18 +138,26 @@ public class MailService {
     }
 
     @Override
+    public void prepare(MimeMessage message) throws Exception {
+      MimeMessageHelper helper = new MimeMessageHelper(message, true);
+      helper.setTo(to);
+      helper.setSubject(subject);
+      helper.setText(content, true);
+
+      if (StringUtils.isNotEmpty(file)) {
+        File fileObj = new File(file);
+        helper.addAttachment(fileObj.getName(), fileObj);
+      }
+    }
+
+    @Override
     public void run() {
       try {
         log.info("send mail: [{}]", to);
-        MailSender mailSender = getEmailSender().subject(subject).to(to).html(content);
-
-        if (StringUtils.isNotEmpty(file)) {
-          mailSender.attach(new File(file));
-        }
-
-        mailSender.send();
+        JavaMailSender mailSender = getEmailSender();
+        mailSender.send(this);
       }
-      catch (SendMailException e) {
+      catch (Exception e) {
         log.error("can't send mail to: [{}]", to);
         Operation operation = new Operation();
         operation.setUser("邮件系统");
@@ -156,6 +166,7 @@ public class MailService {
         loggerService.afterThrowing(e, operation);
       }
     }
+
   }
 
 }

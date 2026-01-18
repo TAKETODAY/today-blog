@@ -64,6 +64,13 @@ mail:
   port: 465
   ssl:
     enabled: true
+  properties:
+    mail:
+      smtp:
+        auth: true
+        connectionTimeout: 5000
+        writeTimeout: 5000
+        timeout: 3000
 
 site:
   subTitle: 代码是我心中的一首诗

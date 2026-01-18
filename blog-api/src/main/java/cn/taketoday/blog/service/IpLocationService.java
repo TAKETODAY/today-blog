@@ -26,15 +26,15 @@ import java.util.regex.Pattern;
 
 import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.ip2region.IpSearcher;
+import infra.http.service.annotation.GetExchange;
+import infra.http.service.annotation.HttpExchange;
+import infra.http.service.invoker.HttpServiceProxyFactory;
+import infra.http.service.support.RestClientAdapter;
 import infra.stereotype.Component;
 import infra.web.annotation.RequestParam;
 import infra.web.client.ClientResponse;
 import infra.web.client.RestClient;
 import infra.web.client.RestClientException;
-import infra.web.client.support.RestClientAdapter;
-import infra.web.service.annotation.GetExchange;
-import infra.web.service.annotation.HttpExchange;
-import infra.web.service.invoker.HttpServiceProxyFactory;
 import lombok.Data;
 
 /**
@@ -56,8 +56,7 @@ public class IpLocationService {
   private final Client client = HttpServiceProxyFactory.forAdapter(RestClientAdapter.create(restClient))
           .createClient(Client.class);
 
-  @Nullable
-  public IpLocation lookup(String ip) {
+  public @Nullable IpLocation lookup(String ip) {
     if (isValidIPv4(ip)) {
       var ipLocation = ipv4Searcher.find(ip);
       if (ipLocation != null) {
