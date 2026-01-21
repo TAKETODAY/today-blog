@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,19 @@ package cn.taketoday.blog.web;
 import java.util.List;
 
 /**
+ * Interface for HTTP result that contains a list of data items.
+ *
+ * @param <T> the type of data items in the list
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-08-05 12:34
  */
 public interface ListableHttpResult<T> extends HttpResult {
 
+  /**
+   * Gets the list of data items.
+   *
+   * @return the list of data items
+   */
   List<T> getData();
 
 }

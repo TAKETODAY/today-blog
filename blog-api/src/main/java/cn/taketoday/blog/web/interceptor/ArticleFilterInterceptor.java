@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ public class ArticleFilterInterceptor implements HandlerInterceptor, Application
 
   @Override
   @SuppressWarnings("unchecked")
-  public void afterProcess(RequestContext context, Object handler, @Nullable Object result) {
+  public void postProcessing(RequestContext context, Object handler, @Nullable Object result) {
     if (result instanceof ListableHttpResult<?> pagination
             && !Blogger.isPresent(sessionManagerOperations.getSession(context, false))) {
 
