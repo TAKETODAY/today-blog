@@ -9,8 +9,7 @@ apply plugin: 'cn.taketoday.blog.optional-dependencies'
 //apply plugin: 'org.graalvm.buildtools.native'
 
 dependencies {
-
-  implementation 'cn.taketoday:ip2region-java:1.0-SNAPSHOT'
+  implementation 'cn.taketoday:infra-starter-application'
   implementation 'cn.taketoday:infra-starter-netty-server'
   implementation 'cn.taketoday:infra-starter-webmvc'
   implementation 'cn.taketoday:infra-starter-json'
@@ -20,9 +19,12 @@ dependencies {
   implementation 'cn.taketoday:infra-starter-jdbc'
   implementation 'cn.taketoday:infra-starter-mail'
   implementation 'cn.taketoday:infra-starter-freemarker'
+
   implementation 'eu.bitwalker:UserAgentUtils:1.21'
   implementation 'com.mysql:mysql-connector-j'
-  implementation ('com.aliyun.oss:aliyun-sdk-oss:3.18.4' ){
+  implementation 'cn.taketoday:ip2region-java:1.0-SNAPSHOT'
+  
+  implementation('com.aliyun.oss:aliyun-sdk-oss:3.18.4') {
     exclude group: "javax.xml.bind"
     exclude group: "jakarta.xml.bind"
     exclude group: "org.glassfish.jaxb"
@@ -34,11 +36,11 @@ dependencies {
 
   implementation 'ch.qos.logback:logback-classic'
   implementation 'com.github.ben-manes.caffeine:caffeine'
-  implementation("io.netty:netty-transport-native-kqueue") {
-    artifact {
-      classifier = 'osx-aarch_64'
-    }
-  }
+//  implementation("io.netty:netty-transport-native-kqueue") {
+//    artifact {
+//      classifier = 'osx-aarch_64'
+//    }
+//  }
 //
 //  implementation('io.netty:netty-transport-native-epoll') {
 //    artifact {
