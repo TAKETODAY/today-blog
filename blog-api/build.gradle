@@ -19,6 +19,8 @@ dependencies {
   implementation 'cn.taketoday:infra-starter-jdbc'
   implementation 'cn.taketoday:infra-starter-mail'
   implementation 'cn.taketoday:infra-starter-freemarker'
+  implementation 'cn.taketoday:infra-starter-flyway'
+  implementation 'org.flywaydb:flyway-mysql'
 
   implementation 'eu.bitwalker:UserAgentUtils:1.21'
   implementation 'com.mysql:mysql-connector-j'

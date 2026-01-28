@@ -14,6 +14,24 @@ server:
       secure: true
       max-age: 1d
       same-site: lax
+  netty:
+    worker-threads: 8
+    acceptor-threads: 1
+    leak-detection: disabled
+    connection-timeout: 10s
+    auto-ack-ping-frame: true
+    auto-ack-settings-frame: true
+    http2-graceful-shutdown-timeout: 29s
+    auto-read: ${server.http2.enabled}
+
+  use-virtual-thread-service-executor: true
+
+  http2:
+    enabled: false
+    initial-settings:
+      max-header-list-size: 1024
+      push-enabled: false
+      connect-protocol-enabled: false
 
 infra:
   output:

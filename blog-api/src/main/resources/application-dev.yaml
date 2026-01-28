@@ -12,18 +12,26 @@ server:
     worker-threads: 8
     acceptor-threads: 1
     max-connection: 10240000
+    leak-detection: paranoid
+    connection-timeout: 30s
+    auto-ack-ping-frame: true
+    auto-ack-settings-frame: true
+    http2-graceful-shutdown-timeout: 29s
+    auto-read: ${server.http2.enabled}
+
   use-virtual-thread-service-executor: true
+
+  http2:
+    enabled: false
+    initial-settings:
+      max-header-list-size: 1024
+      push-enabled: false
+      connect-protocol-enabled: false
 
 datasource:
   username: root
   password: 88888888
   url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
-
-  #jdbc.pool.isReadOnly    = false
-  #jdbc.pool.idleTimeout   = 600000
-  #jdbc.username           = ${jdbc.userName}
-  #jdbc.driverClassName    = ${jdbc.driver}
-  #jdbc.pool.connectionTimeout = 30000
 
 site:
   #aliyun.oss.enable=false
@@ -59,3 +67,10 @@ logging:
     sql: info
   pattern:
     dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'
+
+flyway:
+  baseline-version: 3.2.0
+  baseline-on-migrate: true
+  baseline-description: baseline
+  sql-migration-prefix: v
+  table: schema_history
