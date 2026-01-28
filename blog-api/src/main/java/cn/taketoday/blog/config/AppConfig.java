@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
-import javax.sql.DataSource;
-
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.log.LoggingInterceptor;
 import cn.taketoday.blog.service.ArticleService;
@@ -46,7 +44,9 @@ import infra.context.annotation.Primary;
 import infra.context.annotation.Role;
 import infra.core.Ordered;
 import infra.core.annotation.Order;
+import infra.flyway.config.FlywayMigrationStrategy;
 import infra.jdbc.RepositoryManager;
+import infra.persistence.DefaultEntityManager;
 import infra.persistence.EntityManager;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
@@ -89,13 +89,18 @@ class AppConfig implements WebMvcConfigurer {
   }
 
   @Component
-  static RepositoryManager repositoryManager(DataSource dataSource) {
-    return new RepositoryManager(dataSource);
+  static EntityManager entityManager(RepositoryManager repositoryManager) {
+    return new DefaultEntityManager(repositoryManager);
   }
 
   @Component
-  static EntityManager entityManager(RepositoryManager repositoryManager) {
-    return repositoryManager.getEntityManager();
+  static FlywayMigrationStrategy flywayMigrationStrategy() {
+    return flyway -> {
+      flyway.repair();
+      flyway.baseline();
+      flyway.migrate();
+      flyway.info();
+    };
   }
 
   @Component
