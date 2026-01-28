@@ -99,7 +99,6 @@ class AppConfig implements WebMvcConfigurer {
       flyway.repair();
       flyway.baseline();
       flyway.migrate();
-      flyway.info();
     };
   }
 
