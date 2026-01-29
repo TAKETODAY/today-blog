@@ -12,6 +12,7 @@ dependencies {
   implementation 'cn.taketoday:infra-starter-application'
   implementation 'cn.taketoday:infra-starter-netty-server'
   implementation 'cn.taketoday:infra-starter-webmvc'
+  implementation 'cn.taketoday:infra-starter-persistence'
   implementation 'cn.taketoday:infra-starter-json'
   implementation 'cn.taketoday:infra-starter-restclient'
   implementation 'cn.taketoday:infra-starter-http-service'

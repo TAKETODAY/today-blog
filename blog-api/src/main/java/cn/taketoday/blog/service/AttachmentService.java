@@ -36,11 +36,11 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
-import infra.jdbc.RepositoryManager;
 import infra.persistence.EntityManager;
 import infra.persistence.Page;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
+import infra.transaction.support.TransactionOperations;
 import infra.web.multipart.Part;
 import infra.web.server.InternalServerException;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +61,7 @@ public class AttachmentService {
 
   private final AttachmentConfig attachmentConfig;
 
-  private final RepositoryManager repositoryManager;
+  private final TransactionOperations txOperations;
 
   /**
    * 新增附件信息
@@ -176,7 +176,7 @@ public class AttachmentService {
     try {
       File destFile = saveFile(file, uploadUri);
       Attachment attachment = createAttachment(fileName, uploadUri, destFile);
-      repositoryManager.executeWithoutResult(status -> {
+      txOperations.executeWithoutResult(status -> {
         attachment.setSync(true);
         persist(attachment);
 

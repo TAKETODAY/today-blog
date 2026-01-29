@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,6 +59,7 @@ import infra.persistence.Transient;
 import infra.persistence.sql.SimpleSelect;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
+import infra.transaction.support.TransactionOperations;
 import infra.util.CollectionUtils;
 import infra.web.server.InternalServerException;
 import lombok.CustomLog;
@@ -77,6 +78,8 @@ public class ArticleService implements InitializingBean {
   private final EntityManager entityManager;
 
   private final RepositoryManager repository;
+
+  private final TransactionOperations txOperations;
 
   private final CategoryService categoryService;
 
@@ -396,7 +399,7 @@ public class ArticleService implements InitializingBean {
     Assert.notNull(status, "status is required");
     Article findById = obtainById(id);
 
-    repository.executeWithoutResult(txStatus -> {
+    txOperations.executeWithoutResult(txStatus -> {
       entityManager.updateById(new ArticleStatus(status), id);
       categoryService.updateArticleCount(findById.getCategory());
     });
