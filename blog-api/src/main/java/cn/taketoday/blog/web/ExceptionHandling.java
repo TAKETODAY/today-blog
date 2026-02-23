@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,9 +42,9 @@ import infra.web.bind.MethodArgumentNotValidException;
 import infra.web.bind.MissingRequestParameterException;
 import infra.web.handler.ResponseEntityExceptionHandler;
 import infra.web.handler.SimpleNotFoundHandler;
-import infra.web.multipart.MultipartException;
-import infra.web.multipart.NotMultipartRequestException;
 import infra.web.server.InternalServerException;
+import infra.web.server.MultipartException;
+import infra.web.server.NotMultipartRequestException;
 import infra.web.server.ResponseStatusException;
 import lombok.CustomLog;
 
@@ -56,7 +56,7 @@ import lombok.CustomLog;
  */
 @CustomLog
 @RestControllerAdvice
-public class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFoundHandler {
+class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFoundHandler {
 
   private static final ErrorMessage illegalArgument = ErrorMessage.failed("参数错误");
 
@@ -146,9 +146,8 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
     return ErrorMessage.failed("数据库连接出错");
   }
 
-  @Nullable
   @Override
-  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+  protected @Nullable ResponseEntity<@Nullable Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
           HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     if (ex.hasErrors()) {
       ObjectError objectError = ex.getGlobalError();
@@ -163,27 +162,24 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
     return handleExceptionInternal(ex, illegalArgument, headers, status, request);
   }
 
-  @Nullable
   @Override
-  protected ResponseEntity<Object> handleMissingRequestParameter(
+  protected @Nullable ResponseEntity<@Nullable Object> handleMissingRequestParameter(
           MissingRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("缺少参数'" + ex.getParameterName() + "'"), headers, status, request);
   }
 
   @Override
-  protected @Nullable ResponseEntity<Object> handleMultipartException(MultipartException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleMultipartException(MultipartException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制"), headers, status, request);
   }
 
-  @Nullable
   @Override
-  protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("参数读取错误，请检查格式"), headers, status, request);
   }
 
-  @Nullable
   @Override
-  protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("参数错误，请检查"), headers, status, request);
   }
 

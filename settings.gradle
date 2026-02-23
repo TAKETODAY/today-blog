@@ -25,3 +25,5 @@ pluginManagement {
 
 rootProject.name = 'today-blog'
 include 'blog-api'
+
+include 'tests'
