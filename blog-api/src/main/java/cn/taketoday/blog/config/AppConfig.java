@@ -45,9 +45,6 @@ import infra.context.annotation.Role;
 import infra.core.Ordered;
 import infra.core.annotation.Order;
 import infra.flyway.config.FlywayMigrationStrategy;
-import infra.jdbc.RepositoryManager;
-import infra.persistence.DefaultEntityManager;
-import infra.persistence.EntityManager;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.session.config.EnableSession;
@@ -86,11 +83,6 @@ class AppConfig implements WebMvcConfigurer {
   @Component
   static PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder(BCryptVersion.$2A);
-  }
-
-  @Component
-  static EntityManager entityManager(RepositoryManager repositoryManager) {
-    return new DefaultEntityManager(repositoryManager);
   }
 
   @Component
