@@ -96,15 +96,13 @@ site:
 
 datasource:
   name: 'blog-datasource'
-  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
-  type: com.zaxxer.hikari.HikariDataSource
-  username: root
-  password: 88888888
-  driver-class-name: com.mysql.cj.jdbc.Driver
-  hikari:
-    maximum-pool-size: 20
-    max-lifetime: 120000
-    connection-test-query: 'select 1'
+
+flyway:
+  baseline-version: 3.1.0
+  baseline-on-migrate: true
+  baseline-description: baseline
+  sql-migration-prefix: v
+  table: schema_history
 
 logging:
   file:
