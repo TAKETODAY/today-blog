@@ -1,7 +1,3 @@
-create database if not exists `today`;
-
-use `today`;
-
 create table attachment
 (
     `id`        bigint auto_increment primary key,
@@ -9,7 +5,7 @@ create table attachment
     `uri`       mediumtext   default null comment 'URI地址',
     `location`  mediumtext   default null comment '附件本地地址',
     `size`      bigint       default 0 comment '文件大小',
-    `sync`      bit          default b'0' comment '',
+    `sync`      bit          default false comment '同步状态',
     `file_type` varchar(255) default null comment '附件类型',
 
     `create_at` datetime     default CURRENT_TIMESTAMP comment '创建时间',
@@ -41,26 +37,26 @@ create table category
 create table article
 (
     `id`        bigint unsigned auto_increment primary key,
-    `title`     varchar(255) default not null comment '标题',
-    `content`   longtext     default not null comment '文章内容',
-    `summary`   text         default not null comment '摘要',
-    `cover`     text         default null comment '文章封面',
+    `title`     varchar(255)                           not null comment '标题',
+    `content`   longtext     default null comment '文章内容',
+    `summary`   text         default null comment '摘要',
+    `cover`     text                                   null comment '文章封面',
     `category`  varchar(255) default '未分类' comment '分类名',
-    `uri`       varchar(255) default not null comment '文章URI访问地址',
+    `uri`       varchar(255)                           not null comment '文章URI访问地址',
     `pv`        int          default 0 comment '点击量',
     `status`    tinyint      default 0 comment '状态',
     `markdown`  longtext     default null comment 'markdown',
-    `password`  varchar(255) default default           null null comment '密码',
+    `password`  varchar(255) default null              null comment '密码',
     `copyright` text         default null comment '版权',
 
     `create_at` datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
     `update_at` datetime     default CURRENT_TIMESTAMP not null comment '更新时间',
 
-    constraint uri_idx unique (uri),
-    constraint Article_Category
-        foreign key (category) references category (name)
-            on update cascade on delete set null
+    constraint uri_idx unique (uri)
 );
+
+create fulltext index idx_article_content
+    on article (content);
 
 create table label
 (
@@ -70,9 +66,9 @@ create table label
 
 create table article_label
 (
-    `labelId`   int not null comment '主键',
-    `articleId` int not null comment '文章id',
-    primary key (labelId, articleId)
+    label_id   int not null comment '主键',
+    article_id int not null comment '文章id',
+    primary key (label_id, article_id)
 );
 
 create table logging
@@ -95,53 +91,65 @@ create table logging
 
 );
 
-create table `option`
+create table t_option
 (
-    `name`  varchar(255) not null primary key,
-    `value` text         null
+    name        varchar(255) not null primary key,
+    value       text         null,
+    `public`    bit          not null default true comment 'public',
+    description text         null comment 'description'
 );
 
 # @formatter:off
-INSERT INTO `option` (name, value) VALUES ('article.feed.list.size', '10');
-INSERT INTO `option` (name, value) VALUES ('comment.check', 'true');
-INSERT INTO `option` (name, value) VALUES ('comment.content.length', '10240');
-INSERT INTO `option` (name, value) VALUES ('comment.list.size', '10');
-INSERT INTO `option` (name, value) VALUES ('comment.placeholder', '赶快评论一个吧！');
-INSERT INTO `option` (name, value) VALUES ('comment.send.mail', 'false');
-INSERT INTO `option` (name, value) VALUES ('mail.enable', 'true');
-INSERT INTO `option` (name, value) VALUES ('site.cdn', 'https://cdn.taketoday.cn');
-INSERT INTO `option` (name, value) VALUES ('site.copyright', 'Copyright © TODAY & 2017 - 2023 All Rights Reserved.');
-INSERT INTO `option` (name, value) VALUES ('site.description', '');
-INSERT INTO `option` (name, value) VALUES ('site.host', 'https://taketoday.cn');
-INSERT INTO `option` (name, value) VALUES ('site.icp', '');
-INSERT INTO `option` (name, value) VALUES ('site.keywords', '电子，编程，Java，分享，STM32，51单片机，ARM，海子杨，开源项目.');
-INSERT INTO `option` (name, value) VALUES ('site.list.size', '8');
-INSERT INTO `option` (name, value) VALUES ('site.max.list.size', '100');
-INSERT INTO `option` (name, value) VALUES ('site.name', 'TODAY BLOG');
-INSERT INTO `option` (name, value) VALUES ('site.otherFooter', '');
-INSERT INTO `option` (name, value) VALUES ('site.subTitle', '代码是我心中的一首诗');
-INSERT INTO `option` (name, value) VALUES ('site.version', 'v3.1');
+INSERT INTO t_option (name, value) VALUES ('article.feed.list.size', '10');
+INSERT INTO t_option (name, value) VALUES ('comment.check', 'true');
+INSERT INTO t_option (name, value) VALUES ('comment.content.length', '10240');
+INSERT INTO t_option (name, value) VALUES ('comment.list.size', '10');
+INSERT INTO t_option (name, value) VALUES ('comment.placeholder', '赶快评论一个吧！');
+INSERT INTO t_option (name, value) VALUES ('comment.send.mail', 'false');
+INSERT INTO t_option (name, value) VALUES ('mail.enable', 'true');
+INSERT INTO t_option (name, value) VALUES ('site.cdn', 'https://cdn.taketoday.cn');
+INSERT INTO t_option (name, value) VALUES ('site.copyright', 'Copyright © TODAY & 2017 - 2026 All Rights Reserved.');
+INSERT INTO t_option (name, value) VALUES ('site.description', '');
+INSERT INTO t_option (name, value) VALUES ('site.host', 'https://taketoday.cn');
+INSERT INTO t_option (name, value) VALUES ('site.icp', '');
+INSERT INTO t_option (name, value) VALUES ('site.keywords', '电子，编程，Java，分享，STM32，51单片机，ARM，海子杨，开源项目.');
+INSERT INTO t_option (name, value) VALUES ('site.list.size', '8');
+INSERT INTO t_option (name, value) VALUES ('site.max.list.size', '100');
+INSERT INTO t_option (name, value) VALUES ('site.name', 'TODAY BLOG');
+INSERT INTO t_option (name, value) VALUES ('site.otherFooter', '');
+INSERT INTO t_option (name, value) VALUES ('site.subTitle', '代码是我心中的一首诗');
+INSERT INTO t_option (name, value) VALUES ('site.version', 'v3.1');
 
 -- @formatter:on
 
-create table page_view
+create table t_page_view
 (
-    `id`             bigint unsigned auto_increment primary key,
-    `url`            tinytext                           not null,
-    `host`           varchar(255)                       not null comment 'request host',
-    `path`           varchar(255)                       not null comment 'request path',
-    `user`           varchar(255)                       null,
-    `referer`        varchar(1024)                      null,
-    `ip`             varchar(255)                       null,
-    `user_agent`     text                               null,
-    `browser`        varchar(255)                       null,
-    `device`         varchar(255)                       null,
-    `os`             varchar(255)                       null,
-    `browserVersion` varchar(32)                        null,
-    `create_at`      datetime default CURRENT_TIMESTAMP null
-)
-    engine = MyISAM
-    collate = utf8mb4_bin;
+    id              bigint unsigned auto_increment primary key,
+
+    url             text                                   not null,
+    host            varchar(255)                           not null comment 'request host',
+    path            varchar(255)                           not null comment 'request path',
+
+    `user`          varchar(255) default null comment '登陆用户 email',
+
+    referer         varchar(1024),
+    user_agent      text         default null,
+
+    os              varchar(255) default null,
+    device          varchar(255) default null,
+
+    browser         varchar(255) default null,
+    browser_version varchar(32)  default null,
+
+    ip              varchar(255) default null,
+    ip_country      varchar(64)  default '*' comment 'IP国家',
+    ip_province     varchar(64)  default '*' comment 'IP省份',
+    ip_city         varchar(64)  default '*' comment 'IP城市',
+    ip_area         varchar(64)  default '*' comment 'IP区县',
+    ip_isp          varchar(64)  default '*' comment 'ISP',
+
+    create_at       datetime     default CURRENT_TIMESTAMP not null
+) comment 'page view stat';
 
 create table user
 (
