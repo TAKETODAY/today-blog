@@ -95,7 +95,7 @@ public class ArticleService implements InitializingBean {
    * @param article article instance
    */
   @Transactional
-  @CacheEvict(key = "'ById_'+#article.id")
+  @CacheEvict(allEntries = true)
   public void update(Article article) {
     Assert.notNull(article, "文章不能为空");
     Assert.notNull(article.getId(), "文章ID不能为空");

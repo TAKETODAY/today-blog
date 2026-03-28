@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
  */
 
 package cn.taketoday.blog.web;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +51,7 @@ public class Pagination<T> implements ListableHttpResult<T> {
   // --------------------------
   private final List<T> data;
 
+  @JsonCreator
   public Pagination(int pages, int total, int size, int current, List<T> data) {
     this.pages = pages;
     this.total = total;

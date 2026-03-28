@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ public class Article extends BasicModel {
             .append("title", title)
             .append("pv", pv)
             .append("status", status)
-            .append("summary", StringUtils.truncate(summary, 10))
+            .append("summary", summary != null ? StringUtils.truncate(summary, 10) : null)
             .append("password", password)
             .append("createAt", createAt)
             .append("updateAt", updateAt)
