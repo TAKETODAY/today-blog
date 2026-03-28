@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,20 +41,36 @@ public class ArticleForm {
   public String createAt;
 
   public String category;
+
   public String copyright;
+
   public Set<String> labels;
 
   public String cover;
+
   public String title;
+
   public PostStatus status;
+
   public String summary;
+
   public String content;
+
   public String markdown;
+
   public String password;
 
   public String uri;
 
   public static Article forArticle(ArticleForm form, LabelService labelService) {
+    if (StringUtils.isBlank(form.title)) {
+      throw new IllegalArgumentException("Article title is required");
+    }
+
+    if (StringUtils.isBlank(form.uri)) {
+      throw new IllegalArgumentException("Article URI is required");
+    }
+
     Set<Label> labels = getLabels(form, labelService);
 
     Article article = new Article();
