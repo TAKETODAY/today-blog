@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -159,8 +159,8 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
   }
 
   private static RequestLimit findRequestLimit(HandlerMethod handlerMethod) {
-    if (handlerMethod.hasMethodAnnotation(RequestLimit.class)) {
-      return handlerMethod.getMethodAnnotation(RequestLimit.class);
+    if (handlerMethod.isAnnotationPresent(RequestLimit.class)) {
+      return handlerMethod.getAnnotation(RequestLimit.class);
     }
     return handlerMethod.getBeanType().getAnnotation(RequestLimit.class);
   }
