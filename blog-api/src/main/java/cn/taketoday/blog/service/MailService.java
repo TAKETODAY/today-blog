@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import cn.taketoday.blog.model.Operation;
 import cn.taketoday.blog.util.StringUtils;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -50,15 +49,11 @@ public class MailService {
 
   private final BeanFactory beanFactory;
 
-  private final LoggingService loggerService;
-
   final Configuration configuration;
 
-  public MailService(TaskExecutor executor, BeanFactory beanFactory,
-          LoggingService loggerService, @Nullable Configuration configuration) {
+  public MailService(TaskExecutor executor, BeanFactory beanFactory, @Nullable Configuration configuration) {
     this.executor = executor;
     this.beanFactory = beanFactory;
-    this.loggerService = loggerService;
     this.configuration = configuration == null ? new Configuration(Configuration.VERSION_2_3_31) : configuration;
   }
 
@@ -159,11 +154,12 @@ public class MailService {
       }
       catch (Exception e) {
         log.error("can't send mail to: [{}]", to);
-        Operation operation = new Operation();
-        operation.setUser("邮件系统");
-        operation.setTitle("系统邮件发送出错");
+        // todo 处理错误
+//        Operation operation = new Operation();
+//        operation.setUser("邮件系统");
+//        operation.setTitle("系统邮件发送出错");
 
-        loggerService.afterThrowing(e, operation);
+//        loggerService.afterThrowing(e, operation);
       }
     }
 

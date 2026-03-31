@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,35 +24,48 @@ import java.time.Instant;
 import cn.taketoday.blog.model.User;
 
 /**
- * 记录 方法执行的上下文
+ * 记录方法执行的上下文信息。
+ * <p>
+ * 该类用于封装方法调用时的关键数据，包括调用时间、客户端 IP 地址、
+ * 方法调用对象以及当前登录的用户信息。
+ * </p>
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-04 10:26
  */
-public class MethodOperation {
+class MethodOperation {
 
+  /**
+   * 方法被调用的时间点。
+   */
   public final Instant invokeAt = Instant.now();
 
+  /**
+   * 发起请求的客户端 IP 地址。
+   */
   public final String ip;
 
-  public final @Nullable User loginUser;
-
-  public final @Nullable Object returnValue;
-
-  public final @Nullable Throwable throwable;
-
+  /**
+   * AOP 方法调用对象，包含目标方法及其参数等信息。
+   */
   public final MethodInvocation invocation;
 
-  public final boolean afterThrowing;
+  /**
+   * 当前登录的用户信息，如果未登录则为 {@code null}。
+   */
+  public final @Nullable User loginUser;
 
-  public MethodOperation(String ip, @Nullable Object returnValue, MethodInvocation invocation,
-          @Nullable User loginUser, @Nullable Throwable throwable) {
+  /**
+   * 构造一个新的方法操作记录。
+   *
+   * @param ip 客户端 IP 地址
+   * @param invocation AOP 方法调用对象
+   * @param loginUser 当前登录用户，可为 {@code null}
+   */
+  public MethodOperation(String ip, MethodInvocation invocation, @Nullable User loginUser) {
     this.ip = ip;
     this.loginUser = loginUser;
-    this.returnValue = returnValue;
-    this.throwable = throwable;
     this.invocation = invocation;
-    this.afterThrowing = throwable != null;
   }
 
 }

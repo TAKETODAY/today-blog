@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,6 @@ import javax.imageio.ImageIO;
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.blog.web.Pageable;
-import infra.http.HttpHeaders;
 import infra.ui.Model;
 import infra.util.DataSize;
 import infra.web.RequestContext;
@@ -58,7 +57,7 @@ public abstract class BlogUtils {
   );
 
   public static String remoteAddress(RequestContext request) {
-    String ipAddresses = getIpAddresses(request.requestHeaders());
+    String ipAddresses = getIpAddresses(request);
 
     //有些网络通过多层代理，那么获取到的ip就会有多个，一般都是通过逗号（,）分割开来，并且第一个ip为客户端的真实IP
     if (StringUtils.isNotEmpty(ipAddresses)) {
@@ -72,10 +71,9 @@ public abstract class BlogUtils {
     return request.getRemoteAddress();
   }
 
-  @Nullable
-  private static String getIpAddresses(HttpHeaders requestHeaders) {
+  private static @Nullable String getIpAddresses(RequestContext request) {
     for (String ipHeader : IP_HEADERS) {
-      String ipAddresses = requestHeaders.getFirst(ipHeader);
+      String ipAddresses = request.getHeader(ipHeader);
       if (isIP(ipAddresses)) {
         return ipAddresses;
       }
@@ -89,23 +87,15 @@ public abstract class BlogUtils {
 
   // ----------------------------xss
 
-  private static final Set<Pattern> XSS_PATTERNS = new HashSet<Pattern>(7, 1.0f);
-
-  static {
-    XSS_PATTERNS.add(compile("<(no)?script[^>]*>.*?</(no)?script>", Pattern.CASE_INSENSITIVE));
-    XSS_PATTERNS.add(compile("(javascript:|vbscript:|view-source:)*", Pattern.CASE_INSENSITIVE));
-    XSS_PATTERNS.add(compile("eval\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-    XSS_PATTERNS.add(compile("expression\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-    XSS_PATTERNS.add(compile("<(\"[^\"]*\"|\'[^\']*\'|[^\'\">])*>",
-            Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-
-    XSS_PATTERNS.add(compile("(window\\.location|window\\.|\\.location|document\\.cookie|document\\.|alert\\(.*?\\)|window\\.open\\()*",
-            Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-
-    XSS_PATTERNS.add(compile(
-            "<+\\s*\\w*\\s*(oncontrolselect|oncopy|oncut|ondataavailable|ondatasetchanged|ondatasetcomplete|ondblclick|ondeactivate|ondrag|ondragend|ondragenter|ondragleave|ondragover|ondragstart|ondrop|onerror=|onerroupdate|onfilterchange|onfinish|onfocus|onfocusin|onfocusout|onhelp|onkeydown|onkeypress|onkeyup|onlayoutcomplete|onload|onlosecapture|onmousedown|onmouseenter|onmouseleave|onmousemove|onmousout|onmouseover|onmouseup|onmousewheel|onmove|onmoveend|onmovestart|onabort|onactivate|onafterprint|onafterupdate|onbefore|onbeforeactivate|onbeforecopy|onbeforecut|onbeforedeactivate|onbeforeeditocus|onbeforepaste|onbeforeprint|onbeforeunload|onbeforeupdate|onblur|onbounce|oncellchange|onchange|onclick|oncontextmenu|onpaste|onpropertychange|onreadystatechange|onreset|onresize|onresizend|onresizestart|onrowenter|onrowexit|onrowsdelete|onrowsinserted|onscroll|onselect|onselectionchange|onselectstart|onstart|onstop|onsubmit|onunload)+\\s*=+",
-            Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-  }
+  private static final Set<Pattern> XSS_PATTERNS = Set.of(
+          compile("<(no)?script[^>]*>.*?</(no)?script>", Pattern.CASE_INSENSITIVE),
+          compile("(javascript:|vbscript:|view-source:)*", Pattern.CASE_INSENSITIVE),
+          compile("eval\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
+          compile("expression\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
+          compile("<(\"[^\"]*\"|\'[^\']*\'|[^\'\">])*>", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
+          compile("(window\\.location|window\\.|\\.location|document\\.cookie|document\\.|alert\\(.*?\\)|window\\.open\\()*", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
+          compile("<+\\s*\\w*\\s*(oncontrolselect|oncopy|oncut|ondataavailable|ondatasetchanged|ondatasetcomplete|ondblclick|ondeactivate|ondrag|ondragend|ondragenter|ondragleave|ondragover|ondragstart|ondrop|onerror=|onerroupdate|onfilterchange|onfinish|onfocus|onfocusin|onfocusout|onhelp|onkeydown|onkeypress|onkeyup|onlayoutcomplete|onload|onlosecapture|onmousedown|onmouseenter|onmouseleave|onmousemove|onmousout|onmouseover|onmouseup|onmousewheel|onmove|onmoveend|onmovestart|onabort|onactivate|onafterprint|onafterupdate|onbefore|onbeforeactivate|onbeforecopy|onbeforecut|onbeforedeactivate|onbeforeeditocus|onbeforepaste|onbeforeprint|onbeforeunload|onbeforeupdate|onblur|onbounce|oncellchange|onchange|onclick|oncontextmenu|onpaste|onpropertychange|onreadystatechange|onreset|onresize|onresizend|onresizestart|onrowenter|onrowexit|onrowsdelete|onrowsinserted|onscroll|onselect|onselectionchange|onselectstart|onstart|onstop|onsubmit|onunload)+\\s*=+",
+                  Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
 
   /**
    *
@@ -123,14 +113,11 @@ public abstract class BlogUtils {
     return value;
   }
 
-  /**
-   *
-   */
   public static String stripAllXss(String value) {
-    if (StringUtils.isEmpty(value)) {
+    if (StringUtils.isBlank(value)) {
       return value;
     }
-    return stripXss(value).replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    return stripXss(value).replace("<", "&lt;").replace(">", "&gt;");
   }
 
   // --------------------------
@@ -203,7 +190,7 @@ public abstract class BlogUtils {
     // 处理数据
     for (int i = 0; i < buf.length; ++i) {
       if (buf[i] < 0) {
-        buf[i] += 256;
+        buf[i] += (byte) 256;
       }
     }
     try (OutputStream out = new FileOutputStream(path)) {

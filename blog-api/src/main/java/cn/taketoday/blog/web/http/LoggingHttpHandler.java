@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cn.taketoday.blog.model.Operation;
+import cn.taketoday.blog.model.OperationLogging;
 import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.util.CSVUtils;
 import cn.taketoday.blog.web.Pageable;
@@ -58,7 +58,7 @@ class LoggingHttpHandler {
   }
 
   @GET
-  public Pagination<Operation> get(final Pageable pageable) {
+  public Pagination<OperationLogging> get(final Pageable pageable) {
     return loggerService.pagination(pageable);
   }
 
@@ -84,11 +84,11 @@ class LoggingHttpHandler {
 
   @GET(path = "/export.csv", produces = "text/csv; charset=UTF-8")
   public StringBuilder export(/*ModelAndView modelAndView*/) {
-    final List<Operation> all = loggerService.getAll();
+    final List<OperationLogging> all = loggerService.getAll();
 
     List<Map<String, Object>> data = new ArrayList<>(all.size());
 
-    for (Operation operation : all) {
+    for (OperationLogging operation : all) {
       Map<String, Object> map = new HashMap<>();
       map.put("id", operation.getId());
       map.put("date", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(operation.getId()));

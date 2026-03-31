@@ -19,31 +19,28 @@ package cn.taketoday.blog.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+import org.aopalliance.aop.Advice;
+
 import java.util.Map;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.log.Logging;
-import cn.taketoday.blog.log.LoggingInterceptor;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.BloggerService;
-import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.service.OptionService;
 import cn.taketoday.blog.util.BCryptPasswordEncoder;
 import cn.taketoday.blog.util.BCryptPasswordEncoder.BCryptVersion;
 import cn.taketoday.blog.util.PasswordEncoder;
 import infra.aop.support.DefaultPointcutAdvisor;
 import infra.aop.support.annotation.AnnotationMatchingPointcut;
-import infra.beans.factory.ObjectProvider;
 import infra.beans.factory.annotation.DisableAllDependencyInjection;
+import infra.beans.factory.annotation.Qualifier;
 import infra.beans.factory.config.BeanDefinition;
 import infra.cache.annotation.EnableCaching;
 import infra.cache.support.CaffeineCacheManager;
 import infra.context.annotation.Configuration;
 import infra.context.annotation.Primary;
 import infra.context.annotation.Role;
-import infra.core.Ordered;
-import infra.core.annotation.Order;
 import infra.flyway.config.FlywayMigrationStrategy;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
@@ -128,19 +125,12 @@ class AppConfig implements WebMvcConfigurer {
   }
 
   // 日志
-  @Component
-  @Order(Ordered.HIGHEST_PRECEDENCE)
-  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  static LoggingInterceptor loggingInterceptor(ObjectProvider<Executor> executor,
-          ObjectProvider<LoggingService> loggerService, ObjectProvider<UserSessionResolver> sessionResolver) {
-    return new LoggingInterceptor(executor, loggerService, sessionResolver);
-  }
 
   @Component
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  static DefaultPointcutAdvisor pointcutAdvisor(LoggingInterceptor loggingInterceptor) {
+  static DefaultPointcutAdvisor pointcutAdvisor(@Qualifier("loggingInterceptor") Advice advice) {
     var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
-    return new DefaultPointcutAdvisor(pointcut, loggingInterceptor);
+    return new DefaultPointcutAdvisor(pointcut, advice);
   }
 
 }

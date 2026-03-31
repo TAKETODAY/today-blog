@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import java.util.Map;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Comment;
-import cn.taketoday.blog.model.Operation;
+import cn.taketoday.blog.model.OperationLogging;
 import cn.taketoday.blog.model.enums.StatisticsField;
 import cn.taketoday.blog.model.form.PageViewStatistics;
 import cn.taketoday.blog.service.ArticleService;
@@ -81,7 +81,7 @@ class StatisticsHttpHandler {
     public int commentCount;
     public int attachmentCount;
 
-    public List<Operation> logs;
+    public List<OperationLogging> logs;
 
     public List<Article> articles;
 

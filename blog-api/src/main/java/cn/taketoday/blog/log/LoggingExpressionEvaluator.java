@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,15 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.service;
+package cn.taketoday.blog.log;
 
 import org.aopalliance.intercept.MethodInvocation;
 import org.jspecify.annotations.Nullable;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import cn.taketoday.blog.log.MethodOperation;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.model.enums.UserStatus;
@@ -52,7 +50,9 @@ class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
   public static final String RESULT_VARIABLE = "result";
 
   private final Map<ExpressionKey, Expression> conditionCache = new ConcurrentHashMap<>(64);
+
   private final StandardTypeLocator typeLocator = new StandardTypeLocator();
+
   private final BeanFactoryResolver beanResolver;
 
   public LoggingExpressionEvaluator(BeanFactory beanFactory) {
@@ -73,9 +73,7 @@ class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
    */
   public String content(String expression, MethodOperation operation, @Nullable Object result) {
     MethodInvocation invocation = operation.invocation;
-    var root = new LoggingRootObject(
-            operation, invocation.getMethod(), invocation.getArguments(),
-            invocation.getThis(), invocation.getThis().getClass(), result);
+    var root = new LoggingRootObject(operation, invocation.getMethod(), invocation.getArguments(), invocation.getThis(), result);
 
     var evaluationContext = new MethodBasedEvaluationContext(
             root, invocation.getMethod(), invocation.getArguments(), parameterNameDiscoverer);
@@ -88,38 +86,4 @@ class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
             .getValue(evaluationContext, String.class);
   }
 
-  public record LoggingRootObject(
-          MethodOperation operation, Method method, Object[] args,
-          Object target, Class<?> targetClass, @Nullable Object result) {
-
-    public Method getMethod() {
-      return this.method;
-    }
-
-    public String getMethodName() {
-      return this.method.getName();
-    }
-
-    public Object[] getArgs() {
-      return this.args;
-    }
-
-    public Object getTarget() {
-      return this.target;
-    }
-
-    public Class<?> getTargetClass() {
-      return this.targetClass;
-    }
-
-    public MethodOperation getOperation() {
-      return operation;
-    }
-
-    @Nullable
-    public Object getResult() {
-      return result;
-    }
-
-  }
 }

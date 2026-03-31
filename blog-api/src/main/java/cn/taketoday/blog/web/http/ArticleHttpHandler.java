@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.LabelService;
-import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.web.ArticlePasswordException;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.LoginInfo;
@@ -48,6 +47,8 @@ import infra.web.annotation.RequestParam;
 import infra.web.annotation.RestController;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
+
+import static cn.taketoday.blog.util.BlogUtils.stripAllXss;
 
 /**
  * 公共页面文章接口
@@ -93,7 +94,7 @@ class ArticleHttpHandler {
    */
   @GET(params = "q")
   public Pagination<ArticleItem> search(@RequestParam String q, Pageable pageable) {
-    return articleService.search(BlogUtils.stripAllXss(q), pageable);
+    return articleService.search(stripAllXss(q), pageable);
   }
 
   /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ import lombok.Setter;
 @Getter
 @OrderBy("id DESC")
 @Table("logging")
-public class Operation implements Serializable {
+public class OperationLogging implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;
@@ -97,7 +97,7 @@ public class Operation implements Serializable {
   public boolean equals(Object o) {
     if (this == o)
       return true;
-    if (!(o instanceof Operation operation))
+    if (!(o instanceof OperationLogging operation))
       return false;
     return Objects.equals(id, operation.id)
             && type == operation.type

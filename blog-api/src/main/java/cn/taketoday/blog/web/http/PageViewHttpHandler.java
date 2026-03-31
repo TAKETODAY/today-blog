@@ -62,9 +62,8 @@ class PageViewHttpHandler {
   @RequestLimit(count = 5)
   public void create(@Nullable String referer, RequestContext request, LoginInfo loginInfo) {
     if (!loginInfo.isBloggerLoggedIn()) {
-      HttpHeaders requestHeaders = request.getHeaders();
 
-      String url = requestHeaders.getFirst(HttpHeaders.REFERER);
+      String url = request.getHeader(HttpHeaders.REFERER);
       if (StringUtils.isEmpty(url)) {
         return;
       }
@@ -77,7 +76,7 @@ class PageViewHttpHandler {
       pageView.setHost(host);
       pageView.setPath(path);
 
-      String ua = requestHeaders.getFirst(HttpHeaders.USER_AGENT);
+      String ua = request.getHeader(HttpHeaders.USER_AGENT);
       UserAgent userAgent = UserAgent.parseUserAgentString(ua);
 
       String ip = BlogUtils.remoteAddress(request);
