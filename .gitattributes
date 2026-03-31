@@ -15,3 +15,5 @@
 *.vsd   binary
 *.class   binary
 *.clazz   binary
+*.eot     binary
+*.ttf     binary
