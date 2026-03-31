@@ -59,7 +59,7 @@ class PageViewHttpHandler {
   private final IpLocationService ipLocationService;
 
   @POST
-  @RequestLimit
+  @RequestLimit(count = 5)
   public void create(@Nullable String referer, RequestContext request, LoginInfo loginInfo) {
     if (!loginInfo.isBloggerLoggedIn()) {
       HttpHeaders requestHeaders = request.getHeaders();
