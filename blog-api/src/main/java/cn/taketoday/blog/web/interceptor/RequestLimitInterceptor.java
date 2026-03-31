@@ -23,7 +23,6 @@ import java.lang.reflect.Method;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +40,6 @@ import infra.lang.Assert;
 import infra.lang.Constant;
 import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
-import infra.util.ConcurrentReferenceHashMap;
 import infra.util.MapCache;
 import infra.web.HandlerInterceptor;
 import infra.web.InterceptorChain;
@@ -55,14 +53,14 @@ import infra.web.handler.method.HandlerMethod;
 @Component
 final class RequestLimitInterceptor implements HandlerInterceptor {
 
-  static final MapCache<HandlerMethod, RequestLimit, Object> requestLimitConfigCache = new MapCache<>(
-          new ConcurrentReferenceHashMap<>(128), RequestLimitInterceptor::findRequestLimit);
+  static final MapCache<HandlerMethod, @Nullable RequestLimit, Object> requestLimitConfigCache = new MapCache<>(
+          new ConcurrentHashMap<>(128), RequestLimitInterceptor::findRequestLimit);
 
   private int maxCacheSize = 1024;
 
   private String defaultErrorMessage = "操作频繁";
 
-  private Clock clock = Clock.system(ZoneId.of("GMT"));
+  private Clock clock = Clock.systemUTC();
 
   private final ExpiredChecker expiredChecker = new ExpiredChecker();
 
@@ -90,9 +88,8 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
     this.maxCacheSize = maxCacheSize;
   }
 
-  @Nullable
   @Override
-  public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
+  public @Nullable Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
     if (!Blogger.isPresent(sessionManagerOperations.getSession(request, false))) {
       // 非博主，进行限流
       HandlerMethod handlerMethod = HandlerMethod.unwrap(chain.getHandler());
@@ -159,8 +156,9 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
   }
 
   private static RequestLimit findRequestLimit(HandlerMethod handlerMethod) {
-    if (handlerMethod.isAnnotationPresent(RequestLimit.class)) {
-      return handlerMethod.getAnnotation(RequestLimit.class);
+    RequestLimit annotation = handlerMethod.getAnnotation(RequestLimit.class);
+    if (annotation != null) {
+      return annotation;
     }
     return handlerMethod.getBeanType().getAnnotation(RequestLimit.class);
   }

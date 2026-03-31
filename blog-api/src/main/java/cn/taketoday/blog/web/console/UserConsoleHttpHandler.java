@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
  */
 
 package cn.taketoday.blog.web.console;
+
+import org.jspecify.annotations.NullUnmarked;
 
 import java.util.Objects;
 
@@ -42,7 +44,6 @@ import infra.web.annotation.RestController;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -122,17 +123,17 @@ class UserConsoleHttpHandler {
     }
   }
 
-  @Setter
+  @NullUnmarked
   public static class UserSettingsForm {
 
     @NotEmpty(message = "请输入姓名或昵称")
-    private String name;
+    public String name;
 
-    private String site;
+    public String site;
 
-    private String introduce = "暂无介绍";
+    public String introduce = "暂无介绍";
 
-    private boolean notification = false;
+    public boolean notification = false;
   }
 
 }

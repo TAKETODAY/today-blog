@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import cn.taketoday.blog.service.IpLocationService;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.LoginInfo;
+import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import eu.bitwalker.useragentutils.Browser;
 import eu.bitwalker.useragentutils.UserAgent;
@@ -58,6 +59,7 @@ class PageViewHttpHandler {
   private final IpLocationService ipLocationService;
 
   @POST
+  @RequestLimit
   public void create(@Nullable String referer, RequestContext request, LoginInfo loginInfo) {
     if (!loginInfo.isBloggerLoggedIn()) {
       HttpHeaders requestHeaders = request.getHeaders();
