@@ -69,9 +69,6 @@ class UserConsoleHttpHandler {
     return Pagination.from(page);
   }
 
-  /**
-   * save article
-   */
   @POST
   @Logging(title = "创建用户", content = "user: [#{#user.name}]")
   public void create(@RequestBody User user) {

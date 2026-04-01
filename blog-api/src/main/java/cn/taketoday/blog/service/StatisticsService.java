@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
  */
 
 package cn.taketoday.blog.service;
+
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.time.LocalDate;
@@ -68,7 +70,7 @@ public class StatisticsService {
     }
   }
 
-  public Map<String, PageViewStatistics> analyzePageView(LocalDate from, LocalDate to) {
+  public Map<String, PageViewStatistics> analyzePageView(@Nullable LocalDate from, @Nullable LocalDate to) {
     boolean hasPeriod = hasPeriod(from, to);
     String sql;
     if (hasPeriod) {
@@ -109,7 +111,7 @@ public class StatisticsService {
     }
   }
 
-  public static boolean hasPeriod(LocalDate from, LocalDate to) {
+  public static boolean hasPeriod(@Nullable LocalDate from, @Nullable LocalDate to) {
     if (from != null && to != null) {
       //检查时间是否合法
       if (to.isBefore(from)) {

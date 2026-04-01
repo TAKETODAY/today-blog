@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -179,6 +179,7 @@ class AuthHttpHandler {
   // 修改当前用户的信息
   //---------------------------------------------------------------------
 
+  @NullUnmarked
   public static class InfoForm {
     @NotBlank(message = "请输入姓名或昵称")
     public String name;
