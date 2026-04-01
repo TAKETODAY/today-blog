@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,6 +93,13 @@ public class OptionService {
   }
 
   /**
+   * @since 3.3
+   */
+  public List<Option> options() {
+    return listOptions();
+  }
+
+  /**
    * @since 3.2
    */
   public void update(Option option) {
@@ -118,6 +125,10 @@ public class OptionService {
     onUpdate();
   }
 
+  private List<Option> listOptions() {
+    return entityManager.find(Option.class);
+  }
+
   private void onUpdate() {
     optionsPropertySource.updateCache();
     eventPublisher.publishEvent(new OptionsUpdateEvent(this));
@@ -140,7 +151,7 @@ public class OptionService {
     public synchronized void updateCache() {
       optionsMap.clear();
       publicOptionsMap.clear();
-      List<Option> options = source.entityManager.find(Option.class);
+      List<Option> options = source.listOptions();
       for (Option option : options) {
         optionsMap.put(option.getName(), option.getValue());
         if (Boolean.TRUE.equals(option.getOpen())) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,16 @@ package cn.taketoday.blog.web.http;
 
 import java.util.Map;
 
-import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.service.OptionService;
-import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import infra.http.HttpStatus;
 import infra.web.annotation.GET;
-import infra.web.annotation.PUT;
-import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
-import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestController;
 
 /**
+ * 博客选项 HTTP 处理器。
+ * <p>
+ * 提供与博客系统配置选项相关的公开接口。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2020-04-11 10:57
  */
@@ -44,18 +42,14 @@ class OptionHttpHandler {
     this.optionsService = optionsService;
   }
 
+  /**
+   * 获取公开的选项列表。
+   *
+   * @return 包含公开选项的键值对映射
+   */
   @GET
   public Map<String, String> publicOptions() {
     return optionsService.publicOptions();
-  }
-
-  @Deprecated(forRemoval = true)
-  @PUT
-  @Logging(title = "更新系统变量")
-  @RequiresBlogger
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void put(@RequestBody Map<String, String> options) {
-    optionsService.update(options);
   }
 
 }
