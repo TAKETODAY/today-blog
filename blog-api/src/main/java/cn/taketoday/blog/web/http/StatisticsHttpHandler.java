@@ -17,6 +17,9 @@
 
 package cn.taketoday.blog.web.http;
 
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +78,7 @@ class StatisticsHttpHandler {
     return statistics;
   }
 
+  @NullUnmarked
   class DashboardStatistics {
     public final long lastStartup = blogConfig.startupTimeMillis;
     public int articleCount;
@@ -97,7 +101,7 @@ class StatisticsHttpHandler {
 
   @GET("/pv")
   @DateTimeFormat(pattern = "yyyy-MM-dd")
-  public Map<String, PageViewStatistics> statistics(LocalDate from, LocalDate to) {
+  public Map<String, PageViewStatistics> statistics(@Nullable LocalDate from, @Nullable LocalDate to) {
     return statisticsService.analyzePageView(from, to);
   }
 
