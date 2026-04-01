@@ -1,3 +1,5 @@
+import java.util.function.Predicate
+
 description = "today-blog API"
 
 apply plugin: "application"
@@ -21,6 +23,7 @@ dependencies {
   implementation 'cn.taketoday:infra-starter-mail'
   implementation 'cn.taketoday:infra-starter-freemarker'
   implementation 'cn.taketoday:infra-starter-flyway'
+  implementation 'cn.taketoday:infra-starter-logging'
   implementation 'org.flywaydb:flyway-mysql'
 
   implementation 'eu.bitwalker:UserAgentUtils:1.21'
@@ -37,7 +40,6 @@ dependencies {
   compileOnly 'org.projectlombok:lombok'
   annotationProcessor 'org.projectlombok:lombok'
 
-  implementation 'ch.qos.logback:logback-classic'
   implementation 'com.github.ben-manes.caffeine:caffeine'
 //  implementation("io.netty:netty-transport-native-kqueue") {
 //    artifact {
@@ -51,10 +53,14 @@ dependencies {
 //    }
 //  }
 
+  implementation "cn.taketoday:infra-core-aot"
+
   annotationProcessor "cn.taketoday:infra-configuration-processor"
   annotationProcessor "cn.taketoday:infra-annotation-config-processor"
 
   testImplementation 'cn.taketoday:infra-starter-test'
+  testImplementation 'cn.taketoday:infra-starter-webmvc-test'
+  testImplementation 'cn.taketoday:infra-mariadb4j'
 
   testImplementation 'org.projectlombok:lombok'
   testAnnotationProcessor("org.projectlombok:lombok")
@@ -110,3 +116,73 @@ distributions {
     }
   }
 }
+
+//graalvmNative {
+//  binaries {
+//    main {
+//      imageName = 'application'
+//      mainClass = 'org.test.Main'
+//      debug = true
+//      verbose = true
+//      fallback = true
+//      sharedLibrary = false
+//      quickBuild = false
+//      richOutput = false
+//
+//      systemProperties = [name1: 'value1', name2: 'value2']
+//      configurationFileDirectories.from(file('src/my-config'))
+//      excludeConfig.put("org.example.test:artifact:version", ["^/META-INF/native-image/.*", "^/config/.*"])
+//      excludeConfig.put(file("path/to/artifact.jar"), List.of("^/META-INF/native-image/.*", "^/config/.*"))
+//
+//      // Advanced options
+//      buildArgs.add('--link-at-build-time')
+//      jvmArgs.add('flag')
+//
+//      // Runtime options
+//      runtimeArgs.add('--help')
+//
+//      useFatJar = true
+//    }
+//  }
+//
+//  agent {
+//    defaultMode = "standard"
+//    enabled = true
+//
+//    modes {
+//      standard {
+//      }
+//      conditional {
+//        userCodeFilterPath = "path-to-filter.json"
+//        extraFilterPath = "path-to-another-filter.json" // Optional
+//      }
+//      direct {
+//        options.add("config-output-dir={output_dir}")
+//        options.add("experimental-configuration-with-origins")
+//      }
+//    }
+//
+//    callerFilterFiles.from("filter.json")
+//    accessFilterFiles.from("filter.json")
+//    builtinCallerFilter = true
+//    builtinHeuristicFilter = true
+//    enableExperimentalPredefinedClasses = false
+//    enableExperimentalUnsafeAllocationTracing = false
+//    trackReflectionMetadata = true
+//
+//    metadataCopy {
+//      inputTaskNames.add("test")
+//      outputDirectories.add("META-INF/native-image/<groupId>/<artifactId>/")
+//      mergeWithExisting = true
+//    }
+//
+//    tasksToInstrumentPredicate = new Predicate<Task>() {
+//
+//      @Override
+//      boolean test(Task task) {
+//        return true
+//      }
+//    }
+//
+//  }
+//}
