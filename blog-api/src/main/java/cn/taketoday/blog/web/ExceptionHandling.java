@@ -25,6 +25,7 @@ import org.jspecify.annotations.Nullable;
 import java.sql.SQLException;
 
 import cn.taketoday.blog.UnauthorizedException;
+import cn.taketoday.blog.util.BlogUtils;
 import infra.beans.TypeMismatchException;
 import infra.dao.DataAccessResourceFailureException;
 import infra.http.HttpHeaders;
@@ -41,7 +42,6 @@ import infra.web.annotation.RestControllerAdvice;
 import infra.web.bind.MethodArgumentNotValidException;
 import infra.web.bind.MissingRequestParameterException;
 import infra.web.handler.ResponseEntityExceptionHandler;
-import infra.web.handler.SimpleNotFoundHandler;
 import infra.web.server.InternalServerException;
 import infra.web.server.MultipartException;
 import infra.web.server.NotMultipartRequestException;
@@ -62,12 +62,13 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
 
   private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
 
-  @Nullable
   @Override
-  public Object handleNotFound(RequestContext request) {
+  public @Nullable Object handleNotFound(RequestContext request) {
     request.setStatus(HttpStatus.NOT_FOUND);
-
-    SimpleNotFoundHandler.logNotFound(request);
+    if (pageNotFoundLogger.isWarnEnabled()) {
+      pageNotFoundLogger.warn("No mapping for {} {}, [{}]",
+              request.getMethodAsString(), request.getRequestURI(), BlogUtils.remoteAddress(request));
+    }
     return ErrorMessage.failed("资源找不到");
   }
 
