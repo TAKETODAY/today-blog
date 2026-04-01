@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +12,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.util;
+
+import org.jspecify.annotations.Nullable;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -27,14 +26,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,31 +39,25 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
 import cn.taketoday.blog.BlogConstant;
-import cn.taketoday.blog.ConfigBinding;
+import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.blog.web.Pageable;
-import cn.taketoday.format.support.ApplicationConversionService;
-import cn.taketoday.http.HttpHeaders;
-import cn.taketoday.ip2region.IpLocation;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.ui.Model;
-import cn.taketoday.util.DataSize;
-import cn.taketoday.util.ReflectionUtils;
-import cn.taketoday.util.StringUtils;
-import cn.taketoday.web.RequestContext;
+import infra.ui.Model;
+import infra.util.DataSize;
+import infra.web.RequestContext;
 
 import static java.util.regex.Pattern.compile;
 
 public abstract class BlogUtils {
   private static final List<String> IP_HEADERS = List.of(
+          "X-Forwarded-For",     // X-Forwarded-For：Squid 服务代理
           "X-Real-IP",           // X-Real-IP：nginx服务代理
           "Proxy-Client-IP",     // Proxy-Client-IP：apache 服务代理
           "WL-Proxy-Client-IP",  // WL-Proxy-Client-IP：weblogic 服务代理
-          "HTTP_CLIENT_IP",      // HTTP_CLIENT_IP：有些代理服务器
-          "X-Forwarded-For"      // X-Forwarded-For：Squid 服务代理
+          "HTTP_CLIENT_IP"      // HTTP_CLIENT_IP：有些代理服务器
   );
 
   public static String remoteAddress(RequestContext request) {
-    String ipAddresses = getIpAddresses(request.requestHeaders());
+    String ipAddresses = getIpAddresses(request);
 
     //有些网络通过多层代理，那么获取到的ip就会有多个，一般都是通过逗号（,）分割开来，并且第一个ip为客户端的真实IP
     if (StringUtils.isNotEmpty(ipAddresses)) {
@@ -80,10 +71,9 @@ public abstract class BlogUtils {
     return request.getRemoteAddress();
   }
 
-  @Nullable
-  private static String getIpAddresses(HttpHeaders requestHeaders) {
+  private static @Nullable String getIpAddresses(RequestContext request) {
     for (String ipHeader : IP_HEADERS) {
-      String ipAddresses = requestHeaders.getFirst(ipHeader);
+      String ipAddresses = request.getHeader(ipHeader);
       if (isIP(ipAddresses)) {
         return ipAddresses;
       }
@@ -95,64 +85,17 @@ public abstract class BlogUtils {
     return StringUtils.hasText(ipAddresses) && !IpLocation.UNKNOWN.equalsIgnoreCase(ipAddresses);
   }
 
-  // -------------------------------
-
-  public static void resolveBinding(Object bean, Map<String, String> optionsMap) {
-    Class<?> beanClass = bean.getClass();
-
-    ConfigBinding annotation = beanClass.getAnnotation(ConfigBinding.class);
-    String prefix;
-    if (annotation != null) {
-      prefix = annotation.value();
-    }
-    else {
-      prefix = BlogConstant.BLANK;
-    }
-
-    for (Field field : ReflectionUtils.getDeclaredFields(beanClass)) {
-      ConfigBinding bindingOnField = field.getAnnotation(ConfigBinding.class);
-      String key;
-      if (bindingOnField != null) {
-        if (bindingOnField.splice()) {
-          key = prefix + bindingOnField.value();
-        }
-        else {
-          key = bindingOnField.value();
-        }
-      }
-      else {
-        key = prefix + field.getName();
-      }
-
-      String source = optionsMap.get(key);
-      if (source != null) {
-        Object converted = ApplicationConversionService.getSharedInstance().convert(source, field.getType());
-        if (converted != null) {
-          ReflectionUtils.setField(ReflectionUtils.makeAccessible(field), bean, converted);
-        }
-      }
-    }
-  }
-
   // ----------------------------xss
 
-  private static final Set<Pattern> XSS_PATTERNS = new HashSet<Pattern>(7, 1.0f);
-
-  static {
-    XSS_PATTERNS.add(compile("<(no)?script[^>]*>.*?</(no)?script>", Pattern.CASE_INSENSITIVE));
-    XSS_PATTERNS.add(compile("(javascript:|vbscript:|view-source:)*", Pattern.CASE_INSENSITIVE));
-    XSS_PATTERNS.add(compile("eval\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-    XSS_PATTERNS.add(compile("expression\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-    XSS_PATTERNS.add(compile("<(\"[^\"]*\"|\'[^\']*\'|[^\'\">])*>",
-            Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-
-    XSS_PATTERNS.add(compile("(window\\.location|window\\.|\\.location|document\\.cookie|document\\.|alert\\(.*?\\)|window\\.open\\()*",
-            Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-
-    XSS_PATTERNS.add(compile(
-            "<+\\s*\\w*\\s*(oncontrolselect|oncopy|oncut|ondataavailable|ondatasetchanged|ondatasetcomplete|ondblclick|ondeactivate|ondrag|ondragend|ondragenter|ondragleave|ondragover|ondragstart|ondrop|onerror=|onerroupdate|onfilterchange|onfinish|onfocus|onfocusin|onfocusout|onhelp|onkeydown|onkeypress|onkeyup|onlayoutcomplete|onload|onlosecapture|onmousedown|onmouseenter|onmouseleave|onmousemove|onmousout|onmouseover|onmouseup|onmousewheel|onmove|onmoveend|onmovestart|onabort|onactivate|onafterprint|onafterupdate|onbefore|onbeforeactivate|onbeforecopy|onbeforecut|onbeforedeactivate|onbeforeeditocus|onbeforepaste|onbeforeprint|onbeforeunload|onbeforeupdate|onblur|onbounce|oncellchange|onchange|onclick|oncontextmenu|onpaste|onpropertychange|onreadystatechange|onreset|onresize|onresizend|onresizestart|onrowenter|onrowexit|onrowsdelete|onrowsinserted|onscroll|onselect|onselectionchange|onselectstart|onstart|onstop|onsubmit|onunload)+\\s*=+",
-            Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
-  }
+  private static final Set<Pattern> XSS_PATTERNS = Set.of(
+          compile("<(no)?script[^>]*>.*?</(no)?script>", Pattern.CASE_INSENSITIVE),
+          compile("(javascript:|vbscript:|view-source:)*", Pattern.CASE_INSENSITIVE),
+          compile("eval\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
+          compile("expression\\((.*?)\\)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
+          compile("<(\"[^\"]*\"|\'[^\']*\'|[^\'\">])*>", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
+          compile("(window\\.location|window\\.|\\.location|document\\.cookie|document\\.|alert\\(.*?\\)|window\\.open\\()*", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL),
+          compile("<+\\s*\\w*\\s*(oncontrolselect|oncopy|oncut|ondataavailable|ondatasetchanged|ondatasetcomplete|ondblclick|ondeactivate|ondrag|ondragend|ondragenter|ondragleave|ondragover|ondragstart|ondrop|onerror=|onerroupdate|onfilterchange|onfinish|onfocus|onfocusin|onfocusout|onhelp|onkeydown|onkeypress|onkeyup|onlayoutcomplete|onload|onlosecapture|onmousedown|onmouseenter|onmouseleave|onmousemove|onmousout|onmouseover|onmouseup|onmousewheel|onmove|onmoveend|onmovestart|onabort|onactivate|onafterprint|onafterupdate|onbefore|onbeforeactivate|onbeforecopy|onbeforecut|onbeforedeactivate|onbeforeeditocus|onbeforepaste|onbeforeprint|onbeforeunload|onbeforeupdate|onblur|onbounce|oncellchange|onchange|onclick|oncontextmenu|onpaste|onpropertychange|onreadystatechange|onreset|onresize|onresizend|onresizestart|onrowenter|onrowexit|onrowsdelete|onrowsinserted|onscroll|onselect|onselectionchange|onselectstart|onstart|onstop|onsubmit|onunload)+\\s*=+",
+                  Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL));
 
   /**
    *
@@ -170,14 +113,11 @@ public abstract class BlogUtils {
     return value;
   }
 
-  /**
-   *
-   */
   public static String stripAllXss(String value) {
-    if (StringUtils.isEmpty(value)) {
+    if (StringUtils.isBlank(value)) {
       return value;
     }
-    return stripXss(value).replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    return stripXss(value).replace("<", "&lt;").replace(">", "&gt;");
   }
 
   // --------------------------
@@ -250,7 +190,7 @@ public abstract class BlogUtils {
     // 处理数据
     for (int i = 0; i < buf.length; ++i) {
       if (buf[i] < 0) {
-        buf[i] += 256;
+        buf[i] += (byte) 256;
       }
     }
     try (OutputStream out = new FileOutputStream(path)) {

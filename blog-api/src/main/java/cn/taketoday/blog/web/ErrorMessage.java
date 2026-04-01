@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,9 @@
 
 package cn.taketoday.blog.web;
 
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+
+import infra.core.style.ToStringBuilder;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -44,7 +45,7 @@ public final class ErrorMessage implements HttpResult {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("message", message)
             .toString();
   }

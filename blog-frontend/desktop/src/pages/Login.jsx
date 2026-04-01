@@ -23,7 +23,7 @@ import { Login } from '../components';
 import { connect } from "react-redux";
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
-import { getQuery } from "../utils";
+import { getQuery } from "core";
 
 class LoginPage extends React.Component {
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><!--
-  ~ Copyright 2017 - 2024 the original author or authors.
+  ~ Copyright 2017 - 2026 the original author or authors.
   ~
   ~ This program is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
   <contextName>TODAY BLOG</contextName>
   <!--  <appender name="METRICS" class="io.prometheus.client.logback.InstrumentedAppender" />-->
 
-  <infra-profile name="dev">
-    <include resource="cn/taketoday/framework/logging/logback/console-appender.xml" />
+  <infra-profile name="dev,test">
+    <include resource="infra/app/logging/logback/console-appender.xml" />
 
     <!--
     value="%red(%d{yyyy-MM-dd HH:mm:ss.SSS}) %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} - %blue([%16.16t]) %cyan(%-40.40logger{40}) %4.4L - %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
@@ -34,7 +34,7 @@
   </infra-profile>
 
   <infra-profile name="prod">
-    <include resource="cn/taketoday/framework/logging/logback/file-appender.xml" />
+    <include resource="infra/app/logging/logback/file-appender.xml" />
 
     <root level="INFO">
       <appender-ref ref="FILE" />

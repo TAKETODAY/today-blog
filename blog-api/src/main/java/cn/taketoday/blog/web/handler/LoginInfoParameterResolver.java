@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +12,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.handler;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -28,14 +27,12 @@ import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.session.SessionManager;
-import cn.taketoday.session.SessionManagerOperations;
-import cn.taketoday.session.WebSession;
-import cn.taketoday.stereotype.Singleton;
-import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.bind.resolver.ParameterResolvingStrategy;
-import cn.taketoday.web.handler.method.ResolvableMethodParameter;
+import infra.session.Session;
+import infra.session.SessionManagerOperations;
+import infra.stereotype.Component;
+import infra.web.RequestContext;
+import infra.web.bind.resolver.ParameterResolvingStrategy;
+import infra.web.handler.method.ResolvableMethodParameter;
 
 /**
  * 登录信息参数解析
@@ -56,40 +53,26 @@ import cn.taketoday.web.handler.method.ResolvableMethodParameter;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-07-25 00:56
  */
-@Singleton
-public class LoginInfoParameterResolver
-        extends SessionManagerOperations implements ParameterResolvingStrategy {
+@Component
+class LoginInfoParameterResolver implements ParameterResolvingStrategy {
 
-  public LoginInfoParameterResolver(SessionManager sessionManager) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  LoginInfoParameterResolver(SessionManagerOperations sessionManagerOperations) {
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   @Override
   public boolean supportsParameter(ResolvableMethodParameter parameter) {
-    if (parameter.is(Optional.class)) {
-      ResolvableMethodParameter nested = parameter.nested();
-      return nested.is(User.class)
-              || nested.is(Blogger.class);
-    }
-
     return parameter.is(User.class)
             || parameter.is(Blogger.class)
             || parameter.is(LoginInfo.class);
   }
 
   @Override
-  public Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
-    WebSession session = getSession(context, false);
+  public @Nullable Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
+    Session session = sessionManagerOperations.getSession(context, false);
     if (session != null) {
-      if (parameter.is(Optional.class)) {
-        // Optional<User>
-        if (parameter.nested().is(User.class)) {
-          return Optional.ofNullable(User.find(session));
-        }
-        // Optional<Blogger>
-        return Optional.ofNullable(Blogger.find(context));
-      }
-
       if (parameter.is(User.class)) {
         return getAttribute(parameter, session, User::find);
       }
@@ -134,9 +117,8 @@ public class LoginInfoParameterResolver
     return new LoginInfo();
   }
 
-  @Nullable
-  private static <T> T getAttribute(ResolvableMethodParameter parameter,
-          WebSession session, Function<WebSession, T> finder) {
+  private static <T> @Nullable T getAttribute(ResolvableMethodParameter parameter,
+          Session session, Function<Session, @Nullable T> finder) {
     T attribute = finder.apply(session);
     if (attribute != null) {
       return attribute;

@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,21 +17,22 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
+import java.util.Map;
+
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.cache.annotation.CacheConfig;
-import cn.taketoday.cache.annotation.CacheEvict;
-import cn.taketoday.cache.annotation.Cacheable;
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.EntityManager;
-import cn.taketoday.persistence.Id;
-import cn.taketoday.persistence.Table;
-import cn.taketoday.stereotype.Service;
-import cn.taketoday.web.ResponseStatusException;
-
-import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
+import infra.cache.annotation.CacheConfig;
+import infra.cache.annotation.CacheEvict;
+import infra.cache.annotation.Cacheable;
+import infra.http.HttpStatus;
+import infra.persistence.EntityManager;
+import infra.persistence.EntityRef;
+import infra.persistence.Id;
+import infra.stereotype.Service;
+import infra.web.server.ResponseStatusException;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -68,19 +66,17 @@ public class UserService {
     }
   }
 
-  @Nullable
   @Cacheable(key = "'email_'+#email")
-  public User getByEmail(String email) {
-    return entityManager.findUnique(User.class, isEqualsTo("email", email));
+  public @Nullable User getByEmail(String email) {
+    return entityManager.findUnique(User.class, Map.of("email", email));
   }
 
   public void register(User user) {
     entityManager.persist(user);
   }
 
-  @Nullable
   @Cacheable(key = "'ById_'+#id")
-  public User getById(long id) {
+  public @Nullable User getById(long id) {
     return entityManager.findById(User.class, id);
   }
 
@@ -93,7 +89,7 @@ public class UserService {
     entityManager.updateById(new UserStatusUpdate(id, status));
   }
 
-  @Table("user")
+  @EntityRef(User.class)
   static class UserStatusUpdate {
 
     @Id

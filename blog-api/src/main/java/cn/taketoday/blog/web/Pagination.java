@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +17,14 @@
 
 package cn.taketoday.blog.web;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-import cn.taketoday.persistence.Page;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Page;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -50,6 +51,7 @@ public class Pagination<T> implements ListableHttpResult<T> {
   // --------------------------
   private final List<T> data;
 
+  @JsonCreator
   public Pagination(int pages, int total, int size, int current, List<T> data) {
     this.pages = pages;
     this.total = total;
@@ -82,6 +84,33 @@ public class Pagination<T> implements ListableHttpResult<T> {
   @Override
   public List<T> getData() {
     return data;
+  }
+
+  @Override
+  public boolean equals(Object param) {
+    if (this == param)
+      return true;
+    if (!(param instanceof Pagination<?> that))
+      return false;
+    return pages == that.pages && total == that.total
+            && size == that.size && current == that.current
+            && Objects.equals(data, that.data);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(pages, total, size, current, data);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.forInstance(this)
+            .append("current", current)
+            .append("pages", pages)
+            .append("total", total)
+            .append("size", size)
+            .append("data", data)
+            .toString();
   }
 
   // Static Factory Methods

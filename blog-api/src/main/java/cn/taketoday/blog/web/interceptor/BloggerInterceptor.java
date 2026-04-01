@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,41 +17,41 @@
 
 package cn.taketoday.blog.web.interceptor;
 
-import java.time.Clock;
+import org.jspecify.annotations.Nullable;
 
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.ErrorMessage;
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.http.MediaType;
-import cn.taketoday.http.ResponseEntity;
-import cn.taketoday.session.SessionHandlerInterceptor;
-import cn.taketoday.session.SessionManager;
-import cn.taketoday.session.SessionRepository;
-import cn.taketoday.session.WebSession;
-import cn.taketoday.web.InterceptorChain;
-import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.resource.ResourceHttpRequestHandler;
+import infra.http.HttpStatus;
+import infra.http.MediaType;
+import infra.http.ResponseEntity;
+import infra.session.Session;
+import infra.session.SessionManagerOperations;
+import infra.session.SessionRepository;
+import infra.web.HandlerInterceptor;
+import infra.web.InterceptorChain;
+import infra.web.RequestContext;
+import infra.web.resource.ResourceHttpRequestHandler;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:38
  */
-public class BloggerInterceptor extends SessionHandlerInterceptor {
-
-  private final Clock clock = Clock.systemUTC();
+final class BloggerInterceptor implements HandlerInterceptor {
 
   private final SessionRepository repository;
 
-  public BloggerInterceptor(SessionManager sessionManager, SessionRepository repository) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  BloggerInterceptor(SessionRepository repository, SessionManagerOperations sessionManagerOperations) {
     this.repository = repository;
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   @Override
-  public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
-    WebSession session = getSession(request, false);
+  public @Nullable Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
+    Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       if (User.isPresent(session)) {
         if (Blogger.isPresent(session)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.model.form;
 
+import org.jspecify.annotations.Nullable;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -27,19 +29,18 @@ import java.util.Objects;
 import cn.taketoday.blog.model.enums.OrderBy;
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.core.Pair;
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.format.annotation.DateTimeFormat;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.logging.LogMessage;
-import cn.taketoday.persistence.ConditionStatement;
-import cn.taketoday.persistence.DebugDescriptive;
-import cn.taketoday.persistence.EntityMetadata;
-import cn.taketoday.persistence.EntityProperty;
-import cn.taketoday.persistence.Order;
-import cn.taketoday.persistence.sql.MutableOrderByClause;
-import cn.taketoday.persistence.sql.OrderByClause;
-import cn.taketoday.persistence.sql.Restriction;
+import infra.core.Pair;
+import infra.core.style.ToStringBuilder;
+import infra.format.annotation.DateTimeFormat;
+import infra.logging.LogMessage;
+import infra.persistence.ConditionStatement;
+import infra.persistence.DebugDescriptive;
+import infra.persistence.EntityMetadata;
+import infra.persistence.EntityProperty;
+import infra.persistence.Order;
+import infra.persistence.sql.MutableOrderByClause;
+import infra.persistence.sql.OrderByClause;
+import infra.persistence.sql.Restriction;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -63,13 +64,11 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
   @Nullable
   private Map<String, OrderBy> sort;
 
-  @Nullable
   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private LocalDateTime[] createAt;
+  private LocalDateTime @Nullable [] createAt;
 
-  @Nullable
   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private LocalDateTime[] updateAt;
+  private LocalDateTime @Nullable [] updateAt;
 
   @Override
   public void renderWhereClause(EntityMetadata metadata, List<Restriction> restrictions) {
@@ -171,7 +170,7 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("q", q)
             .append("category", category)
             .append("status", status)

@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +23,6 @@ package cn.taketoday.blog.web;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-07-25 01:11
  */
-public interface Pageable extends cn.taketoday.persistence.Pageable {
+public interface Pageable extends infra.persistence.Pageable {
 
 }

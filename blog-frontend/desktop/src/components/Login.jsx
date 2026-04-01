@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +12,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Button, Checkbox, Form, Input, message, Popconfirm } from 'antd';
 import React from 'react';
-import github from '../assets/images/login/github.png';
-import gitee from '../assets/images/login/gitee.png';
 import { userService } from '../services';
-import { getStorage, removeStorage, saveStorage } from '../utils';
+import { getStorage, removeStorage, saveStorage } from 'core';
 import { Link } from "react-router-dom";
 import { Image } from './'
 import { userSessionMapStateToProps } from "../redux/action-types";
@@ -52,20 +47,13 @@ class Login extends React.PureComponent {
     const remember = fromData['remember']
     delete fromData['remember'] // delete remember value from the form-data
     userService.login(fromData).then(res => {
-      const result = res.data
-      if (result.success) { // 登陆成功
-        if (remember) { // 记住邮箱
-          saveStorage("lastLogin", fromData["email"])
-        }
-        else {
-          removeStorage("lastLogin")
-        }
-        message.success(result.message)
-        this.props.updateUserSession(result.data)
+      if (remember) { // 记住邮箱
+        saveStorage("lastLogin", fromData["email"])
       }
       else {
-        message.error(result.message)
+        removeStorage("lastLogin")
       }
+      this.props.updateUserSession(res.data)
     }).catch(res => {
       message.error(res.message)
     })
@@ -81,7 +69,7 @@ class Login extends React.PureComponent {
   }
 
   render() {
-    const { userSession, forward, message } = this.props
+    const { userSession, message } = this.props
     return (<>
       {userSession ?
         <>
@@ -117,19 +105,6 @@ class Login extends React.PureComponent {
           </Form>
         </>
       }
-      <div style={{ textAlign: 'center', marginTop: '35px' }}>
-        <div style={{ borderBottom: '1px solid #eee', margin: '0px 0 5px 0', position: 'relative', top: '-10px' }}>
-          <a style={{ position: 'relative', top: '10px', padding: '0 10px', background: '#fff' }}>更多登录方式</a>
-        </div>
-
-        {/*<a href={`/api/auth/github${forward ? `?forward=${encodeURIComponent(forward)}` : ''}`}>*/}
-        <a style={{ padding: 5 }} href={`/api/auth/github${forward ? `?forward=${encodeURIComponent(forward)}` : ''}`}>
-          <img alt="GitHub登录" title="GitHub登录" src={github} width="22"/>
-        </a>
-        <a style={{ padding: 5 }} href={`/api/auth/gitee${forward ? `?forward=${encodeURIComponent(forward)}` : ''}`}>
-          <img alt="Gitee登录" title="Gitee登录" src={gitee} width="25"/>
-        </a>
-      </div>
     </>)
   }
 

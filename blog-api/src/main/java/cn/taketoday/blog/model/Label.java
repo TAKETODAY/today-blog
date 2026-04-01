@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
@@ -24,8 +21,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Id;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -51,7 +48,7 @@ public class Label implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("name", name)
             .toString();
@@ -74,6 +71,12 @@ public class Label implements Serializable {
       return Objects.equals(label.id, id) && Objects.equals(name, label.name);
     }
     return false;
+  }
+
+  public static Label forName(String name) {
+    Label label = new Label();
+    label.name = name;
+    return label;
   }
 
 }

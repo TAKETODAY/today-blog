@@ -20,7 +20,7 @@
 
 package cn.taketoday.blog.model.enums;
 
-import cn.taketoday.lang.Enumerable;
+import infra.lang.Enumerable;
 
 /**
  * 文章状态

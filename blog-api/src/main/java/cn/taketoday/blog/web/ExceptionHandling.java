@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,33 +20,32 @@ package cn.taketoday.blog.web;
 import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSSException;
 
+import org.jspecify.annotations.Nullable;
+
 import java.sql.SQLException;
 
 import cn.taketoday.blog.UnauthorizedException;
-import cn.taketoday.blog.util.BlogUtils;
-import cn.taketoday.dao.DataAccessResourceFailureException;
-import cn.taketoday.http.HttpHeaders;
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.http.HttpStatusCode;
-import cn.taketoday.http.ResponseEntity;
-import cn.taketoday.http.converter.HttpMessageNotReadableException;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.util.ObjectUtils;
-import cn.taketoday.web.InternalServerException;
-import cn.taketoday.web.NotFoundHandler;
-import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.ResponseStatusException;
-import cn.taketoday.web.annotation.ExceptionHandler;
-import cn.taketoday.web.annotation.ResponseStatus;
-import cn.taketoday.web.annotation.RestControllerAdvice;
-import cn.taketoday.web.bind.MethodArgumentNotValidException;
-import cn.taketoday.web.bind.MissingRequestParameterException;
-import cn.taketoday.web.bind.NotMultipartRequestException;
-import cn.taketoday.web.bind.resolver.ParameterConversionException;
-import cn.taketoday.web.handler.ResponseEntityExceptionHandler;
-import cn.taketoday.web.handler.SimpleNotFoundHandler;
-import cn.taketoday.web.multipart.MaxUploadSizeExceededException;
-import io.prometheus.client.Counter;
+import infra.beans.TypeMismatchException;
+import infra.dao.DataAccessResourceFailureException;
+import infra.http.HttpHeaders;
+import infra.http.HttpStatus;
+import infra.http.HttpStatusCode;
+import infra.http.ResponseEntity;
+import infra.http.converter.HttpMessageNotReadableException;
+import infra.validation.ObjectError;
+import infra.web.NotFoundHandler;
+import infra.web.RequestContext;
+import infra.web.annotation.ExceptionHandler;
+import infra.web.annotation.ResponseStatus;
+import infra.web.annotation.RestControllerAdvice;
+import infra.web.bind.MethodArgumentNotValidException;
+import infra.web.bind.MissingRequestParameterException;
+import infra.web.handler.ResponseEntityExceptionHandler;
+import infra.web.handler.SimpleNotFoundHandler;
+import infra.web.server.InternalServerException;
+import infra.web.server.MultipartException;
+import infra.web.server.NotMultipartRequestException;
+import infra.web.server.ResponseStatusException;
 import lombok.CustomLog;
 
 /**
@@ -57,22 +56,15 @@ import lombok.CustomLog;
  */
 @CustomLog
 @RestControllerAdvice
-public class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFoundHandler {
+class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFoundHandler {
 
   private static final ErrorMessage illegalArgument = ErrorMessage.failed("参数错误");
-  private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
 
-  static final Counter requests = Counter.build()
-          .name("requests_not_found")
-          .labelNames("uri")
-          .help("Total Not Found requests.").register();
+  private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
 
   @Nullable
   @Override
   public Object handleNotFound(RequestContext request) {
-    requests.labels(request.getRequestURI())
-            .inc();
-
     request.setStatus(HttpStatus.NOT_FOUND);
 
     SimpleNotFoundHandler.logNotFound(request);
@@ -130,19 +122,9 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
 
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   @ExceptionHandler(NullPointerException.class)
-  public Json nullPointer(NullPointerException exception) {
+  public ErrorMessage nullPointer(NullPointerException exception) {
     log.error("Null Pointer occurred", exception);
-    StackTraceElement[] stackTrace = exception.getStackTrace();
-    if (ObjectUtils.isNotEmpty(stackTrace)) {
-      return Json.failed("空指针", stackTrace[0]);
-    }
-    return Json.failed("空指针", "暂无堆栈信息");
-  }
-
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler(ParameterConversionException.class)
-  public ErrorMessage conversion() {
-    return ErrorMessage.failed("参数转换失败");
+    return internalServerError;
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -164,32 +146,41 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler implements
     return ErrorMessage.failed("数据库连接出错");
   }
 
-  @Nullable
   @Override
-  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+  protected @Nullable ResponseEntity<@Nullable Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
           HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+    if (ex.hasErrors()) {
+      ObjectError objectError = ex.getGlobalError();
+      if (objectError == null) {
+        objectError = ex.getFieldError();
+      }
+      if (objectError != null) {
+        String defaultMessage = objectError.getDefaultMessage();
+        return handleExceptionInternal(ex, ErrorMessage.failed(defaultMessage), headers, status, request);
+      }
+    }
     return handleExceptionInternal(ex, illegalArgument, headers, status, request);
   }
 
-  @Nullable
   @Override
-  protected ResponseEntity<Object> handleMissingRequestParameter(
+  protected @Nullable ResponseEntity<@Nullable Object> handleMissingRequestParameter(
           MissingRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("缺少参数'" + ex.getParameterName() + "'"), headers, status, request);
   }
 
-  @Nullable
   @Override
-  protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
-          MaxUploadSizeExceededException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
-    String formattedSize = BlogUtils.formatSize(ex.getMaxUploadSize());
-    return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制: '" + formattedSize + "'"), headers, status, request);
+  protected @Nullable ResponseEntity<@Nullable Object> handleMultipartException(MultipartException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+    return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制"), headers, status, request);
   }
 
-  @Nullable
   @Override
-  protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("参数读取错误，请检查格式"), headers, status, request);
+  }
+
+  @Override
+  protected @Nullable ResponseEntity<@Nullable Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+    return handleExceptionInternal(ex, ErrorMessage.failed("参数错误，请检查"), headers, status, request);
   }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,38 +19,36 @@ package cn.taketoday.blog.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+import org.aopalliance.aop.Advice;
+
 import java.util.Map;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
-import javax.sql.DataSource;
-
-import cn.taketoday.aop.support.DefaultPointcutAdvisor;
-import cn.taketoday.aop.support.annotation.AnnotationMatchingPointcut;
-import cn.taketoday.beans.factory.ObjectProvider;
-import cn.taketoday.beans.factory.annotation.DisableAllDependencyInjection;
-import cn.taketoday.beans.factory.config.BeanDefinition;
 import cn.taketoday.blog.log.Logging;
-import cn.taketoday.blog.log.LoggingInterceptor;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.BloggerService;
-import cn.taketoday.blog.service.LoggingService;
 import cn.taketoday.blog.service.OptionService;
-import cn.taketoday.cache.annotation.EnableCaching;
-import cn.taketoday.cache.support.CaffeineCacheManager;
-import cn.taketoday.context.annotation.Configuration;
-import cn.taketoday.context.annotation.Role;
-import cn.taketoday.core.Ordered;
-import cn.taketoday.core.annotation.Order;
-import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.persistence.EntityManager;
-import cn.taketoday.session.config.EnableWebSession;
-import cn.taketoday.stereotype.Component;
-import cn.taketoday.web.config.ResourceHandlerRegistry;
-import cn.taketoday.web.config.ViewControllerRegistry;
-import cn.taketoday.web.config.WebMvcConfigurer;
-import cn.taketoday.web.view.ModelAndView;
-import io.prometheus.client.CollectorRegistry;
+import cn.taketoday.blog.util.BCryptPasswordEncoder;
+import cn.taketoday.blog.util.BCryptPasswordEncoder.BCryptVersion;
+import cn.taketoday.blog.util.PasswordEncoder;
+import infra.aop.support.DefaultPointcutAdvisor;
+import infra.aop.support.annotation.AnnotationMatchingPointcut;
+import infra.beans.factory.annotation.DisableAllDependencyInjection;
+import infra.beans.factory.annotation.Qualifier;
+import infra.beans.factory.config.BeanDefinition;
+import infra.cache.annotation.EnableCaching;
+import infra.cache.support.CaffeineCacheManager;
+import infra.context.annotation.Configuration;
+import infra.context.annotation.Primary;
+import infra.context.annotation.Role;
+import infra.flyway.config.FlywayMigrationStrategy;
+import infra.session.SessionManager;
+import infra.session.SessionManagerOperations;
+import infra.session.config.EnableSession;
+import infra.stereotype.Component;
+import infra.web.config.annotation.ViewControllerRegistry;
+import infra.web.config.annotation.WebMvcConfigurer;
+import infra.web.view.ModelAndView;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -60,38 +58,45 @@ import lombok.RequiredArgsConstructor;
  * @since 2019-05-26 17:28
  */
 @EnableCaching
-@EnableWebSession
+@EnableSession
 @RequiredArgsConstructor
 @DisableAllDependencyInjection
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @Configuration(proxyBeanMethods = false)
-public class AppConfig implements WebMvcConfigurer {
+class AppConfig implements WebMvcConfigurer {
 
   private final OptionService optionService;
+
   private final BloggerService bloggerService;
+
   private final ArticleService articleService;
 
+  @Primary
   @Component
-  static RepositoryManager repositoryManager(DataSource dataSource) {
-    return new RepositoryManager(dataSource);
+  public static SessionManagerOperations sessionManagerOperations(SessionManager sessionManager) {
+    return new SessionManagerOperations(sessionManager);
   }
 
   @Component
-  static EntityManager entityManager(RepositoryManager repositoryManager) {
-    return repositoryManager.getEntityManager();
+  static PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder(BCryptVersion.$2A);
+  }
+
+  @Component
+  static FlywayMigrationStrategy flywayMigrationStrategy() {
+    return flyway -> {
+      flyway.repair();
+      flyway.baseline();
+      flyway.migrate();
+    };
   }
 
   @Component
   static CaffeineCacheManager caffeineCacheManager() {
     return new CaffeineCacheManager(Caffeine.newBuilder()
-            .expireAfterWrite(10, TimeUnit.SECONDS)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .expireAfterAccess(10, TimeUnit.SECONDS)
             .maximumSize(100));
-  }
-
-  @Override
-  public void addResourceHandlers(ResourceHandlerRegistry registry) {
-//    registry.addResourceHandler("/upload/**")
-//            .addResourceLocations("file:/Users/today/website/data/docs/upload/");
   }
 
   @Override
@@ -119,46 +124,14 @@ public class AppConfig implements WebMvcConfigurer {
     );
   }
 
-  // 异常
-
-//  @Component
-//  public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-//    return builder.build();
-//  }
-
   // 日志
-  @Component
-  @Order(Ordered.HIGHEST_PRECEDENCE)
-  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  static LoggingInterceptor loggingInterceptor(
-          ObjectProvider<Executor> executor,
-          ObjectProvider<LoggingService> loggerService,
-          ObjectProvider<UserSessionResolver> sessionResolver) {
-    return new LoggingInterceptor(executor, loggerService, sessionResolver);
-  }
 
   @Component
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  static DefaultPointcutAdvisor pointcutAdvisor(LoggingInterceptor loggingInterceptor) {
+  static DefaultPointcutAdvisor pointcutAdvisor(@Qualifier("loggingInterceptor") Advice advice) {
     var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
-    return new DefaultPointcutAdvisor(pointcut, loggingInterceptor);
+    return new DefaultPointcutAdvisor(pointcut, advice);
   }
-
-  @Component
-  static CollectorRegistry collectorRegistry() {
-    return CollectorRegistry.defaultRegistry;
-  }
-
-//  @Component
-//  @ConditionalOnProperty("jackson.date-format")
-//  static Jackson2ObjectMapperBuilderCustomizer customizeLocalDateTimeFormat(@Value("${jackson.date-format}") String dateFormat) {
-//    return builder -> {
-//      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
-//
-//      builder.serializerByType(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
-//      builder.deserializerByType(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
-//    };
-//  }
 
 }
 

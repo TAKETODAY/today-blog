@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.log;
@@ -25,10 +22,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cn.taketoday.core.annotation.AliasFor;
-import cn.taketoday.lang.Constant;
+import infra.core.annotation.AliasFor;
+import infra.lang.Constant;
 
 /**
+ * 日志注解，用于标记需要记录日志的方法或类。
+ * <p>
+ * 支持自定义日志标题和内容，内容中可使用 {@code result} 变量来定制可视化的结果。
+ * </p>
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-11-10 19:06
  */
@@ -37,19 +39,28 @@ import cn.taketoday.lang.Constant;
 public @interface Logging {
 
   /**
-   * title
+   * 日志标题，等同于 {@link #title()}。
+   *
+   * @return 日志标题
    */
   @AliasFor(attribute = "title")
   String value() default Constant.BLANK;
 
+  /**
+   * 日志标题，等同于 {@link #value()}。
+   *
+   * @return 日志标题
+   */
   @AliasFor(attribute = "value")
   String title() default Constant.BLANK;
 
   /**
-   * 日志内容
+   * 日志内容模板。
    * <p>
-   * 提供了 result 可以定制 可视化的结果
+   * 支持使用 {@code result} 变量来引用方法执行结果，从而定制可视化的日志输出。
    * </p>
+   *
+   * @return 日志内容模板
    */
   String content() default Constant.DEFAULT_NONE;
 

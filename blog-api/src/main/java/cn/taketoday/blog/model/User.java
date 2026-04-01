@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +19,17 @@ package cn.taketoday.blog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.enums.UserStatus;
-import cn.taketoday.blog.util.HashUtils;
-import cn.taketoday.core.AttributeAccessor;
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.Transient;
+import infra.core.AttributeAccessor;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -49,10 +46,11 @@ public class User implements Serializable {
 
   public static final String AttributeKey = "userInfo";
 
-  private static final String DEFAULT_PASSWORD = HashUtils.getEncodedPassword("https://taketoday.cn");
+  private static final String DEFAULT_PASSWORD = "$2a$10$2FOYgUohsSb6oQeLo7s6vOAl6set5A2REF68u5xfhiw8J7cuxXmLa";
 
-  /** id register time */
+  /** id */
   private Long id;
+
   /** state */
   private UserStatus status;
   /** name */
@@ -63,23 +61,28 @@ public class User implements Serializable {
   private String site;
   /** type */
   private String type;
+
   /** passwd */
   @JsonIgnore
   private String password;
+
   /** avatar */
   private String avatar;
+
   /** description */
   private String introduce;
-  /** back ground **/
+
+  /** background **/
   private String background;
+
   /** email notification */
+  @Deprecated
   private Boolean notification;
 
   @Transient
   private boolean blogger;
 
   public User() {
-
   }
 
   public User(Long id) {
@@ -101,7 +104,7 @@ public class User implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("status", status)
             .append("name", name)

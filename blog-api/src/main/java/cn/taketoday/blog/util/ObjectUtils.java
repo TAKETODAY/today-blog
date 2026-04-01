@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,42 +12,36 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.util;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 
-import cn.taketoday.web.RequestContext;
+import infra.web.RequestContext;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * @author TODAY 2021/3/10 18:23
  */
 public abstract class ObjectUtils {
 
-  private static ObjectMapper objectMapper = new ObjectMapper();
-
-  static {
-    objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-  }
+  private static final JsonMapper objectMapper = JsonMapper.builder()
+          .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+          .build();
 
   // JSON
 
   public static ObjectMapper getSharedMapper() {
     return objectMapper;
-  }
-
-  public static void setSharedMapper(ObjectMapper objectMapper) {
-    ObjectUtils.objectMapper = objectMapper;
   }
 
   /**

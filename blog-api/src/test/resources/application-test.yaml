@@ -1,0 +1,33 @@
+datasource:
+  username: root
+  url: jdbc:mysql://localhost:3307/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+  type: com.zaxxer.hikari.HikariDataSource
+  driver-class-name: com.mysql.cj.jdbc.Driver
+  hikari:
+    maximum-pool-size: 20
+    max-lifetime: 120000
+    connection-test-query: 'select 1'
+
+
+
+mariadb4j:
+  port: 3307
+  create-database: "today"
+
+
+web:
+  error:
+    include-message: always
+  mvc:
+    log-request-details: true
+
+logging:
+  level:
+    web: debug
+    sql: info
+  pattern:
+    dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'
+
+flyway:
+  enabled: true
+  baseline-version: 0.0.0

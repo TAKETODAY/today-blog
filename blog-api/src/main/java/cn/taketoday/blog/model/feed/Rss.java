@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2022 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model.feed;
@@ -25,7 +22,7 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Objects;
 
-import cn.taketoday.core.style.ToStringBuilder;
+import infra.core.style.ToStringBuilder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -42,7 +39,11 @@ public class Rss implements Serializable {
 
   private long lastBuildDate;
 
-  private LinkedList<Item> items = new LinkedList<>();
+  private final LinkedList<Item> items = new LinkedList<>();
+
+  public void clear() {
+    items.clear();
+  }
 
   public void addItem(Item item) {
     items.add(item);
@@ -50,7 +51,7 @@ public class Rss implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("lastBuildDate", lastBuildDate)
             .append("items", items)
             .toString();
@@ -69,4 +70,5 @@ public class Rss implements Serializable {
   public int hashCode() {
     return Objects.hash(lastBuildDate, items);
   }
+
 }

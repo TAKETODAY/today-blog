@@ -1,0 +1,108 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.web.http;
+
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+import cn.taketoday.blog.config.BlogConfig;
+import cn.taketoday.blog.model.Article;
+import cn.taketoday.blog.model.Comment;
+import cn.taketoday.blog.model.OperationLogging;
+import cn.taketoday.blog.model.enums.StatisticsField;
+import cn.taketoday.blog.model.form.PageViewStatistics;
+import cn.taketoday.blog.service.ArticleService;
+import cn.taketoday.blog.service.AttachmentService;
+import cn.taketoday.blog.service.CommentService;
+import cn.taketoday.blog.service.LoggingService;
+import cn.taketoday.blog.service.StatisticsService;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
+import infra.format.annotation.DateTimeFormat;
+import infra.web.annotation.GET;
+import infra.web.annotation.PathVariable;
+import infra.web.annotation.RequestMapping;
+import infra.web.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 2020-08-24 20:59
+ */
+@RestController
+@RequiresBlogger
+@RequiredArgsConstructor
+@RequestMapping("/api/statistics")
+class StatisticsHttpHandler {
+
+  private final BlogConfig blogConfig;
+
+  private final LoggingService loggerService;
+
+  private final CommentService commentService;
+
+  private final ArticleService articleService;
+
+  private final AttachmentService attachmentService;
+
+  private final StatisticsService statisticsService;
+
+  @GET("/dashboard")
+  public DashboardStatistics dashboard() {
+    final DashboardStatistics statistics = new DashboardStatistics();
+    statistics.articleCount = articleService.count();
+    statistics.commentCount = commentService.count();
+    statistics.attachmentCount = attachmentService.count();
+    statistics.logs = loggerService.getLatest();
+    statistics.articles = articleService.getLatestArticles();
+    statistics.comments = commentService.getLatest();
+
+    return statistics;
+  }
+
+  @NullUnmarked
+  class DashboardStatistics {
+    public final long lastStartup = blogConfig.startupTimeMillis;
+    public int articleCount;
+    public int commentCount;
+    public int attachmentCount;
+
+    public List<OperationLogging> logs;
+
+    public List<Article> articles;
+
+    public List<Comment> comments;
+  }
+
+  //LocalDate from, LocalDate to
+
+  @GET("/{type}")
+  public Map<String, Integer> statistics(@PathVariable StatisticsField type) {
+    return statisticsService.analyze(type);
+  }
+
+  @GET("/pv")
+  @DateTimeFormat(pattern = "yyyy-MM-dd")
+  public Map<String, PageViewStatistics> statistics(@Nullable LocalDate from, @Nullable LocalDate to) {
+    return statisticsService.analyzePageView(from, to);
+  }
+
+}

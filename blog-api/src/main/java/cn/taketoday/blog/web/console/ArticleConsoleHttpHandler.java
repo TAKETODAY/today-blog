@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +17,9 @@
 
 package cn.taketoday.blog.web.console;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
+import cn.taketoday.blog.event.ArticleUpdateEvent;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.enums.PostStatus;
@@ -31,18 +29,19 @@ import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.util.StringUtils;
-import cn.taketoday.web.annotation.DELETE;
-import cn.taketoday.web.annotation.GET;
-import cn.taketoday.web.annotation.PATCH;
-import cn.taketoday.web.annotation.POST;
-import cn.taketoday.web.annotation.PUT;
-import cn.taketoday.web.annotation.PathVariable;
-import cn.taketoday.web.annotation.RequestBody;
-import cn.taketoday.web.annotation.RequestMapping;
-import cn.taketoday.web.annotation.ResponseStatus;
-import cn.taketoday.web.annotation.RestController;
+import infra.context.ApplicationEventPublisher;
+import infra.http.HttpStatus;
+import infra.util.StringUtils;
+import infra.web.annotation.DELETE;
+import infra.web.annotation.GET;
+import infra.web.annotation.PATCH;
+import infra.web.annotation.POST;
+import infra.web.annotation.PUT;
+import infra.web.annotation.PathVariable;
+import infra.web.annotation.RequestBody;
+import infra.web.annotation.RequestMapping;
+import infra.web.annotation.ResponseStatus;
+import infra.web.annotation.RestController;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
@@ -62,6 +61,8 @@ class ArticleConsoleHttpHandler {
   private final LabelService labelService;
 
   private final ArticleService articleService;
+
+  private final ApplicationEventPublisher eventPublisher;
 
   /**
    * 创建文章 API
@@ -89,19 +90,33 @@ class ArticleConsoleHttpHandler {
   @PUT("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "更新文章", content = "更新文章: [#{#from.title}]")
-  public void update(@PathVariable("id") Long id, @RequestBody ArticleForm from) {
+  public void update(@PathVariable("id") long id, @RequestBody ArticleForm from) {
     Article article = ArticleForm.forArticle(from, labelService);
     article.setId(id);
-    article.setUpdateAt(LocalDateTime.now());
+    article.setUpdateAt(Instant.now());
     articleService.update(article);
+
+    eventPublisher.publishEvent(new ArticleUpdateEvent(this, id));
   }
 
   /**
    * 更新状态 API
    */
+  @Deprecated
   @PATCH(path = "/{id}", params = "status")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
+  public void updateStatusDeprecated(@PathVariable Long id, PostStatus status) {
+    articleService.updateStatusById(status, id);
+  }
+
+  /**
+   * 更新状态 API
+   *
+   * @since 3.2
+   */
+  @PUT(path = "/{id}", params = "status")
+  @Logging(title = "更新文章状态", content = "更新文章：《#{@articleService.getById(#id)?.title}》状态为：[#{#status.description}]")
   public void updateStatus(@PathVariable Long id, PostStatus status) {
     articleService.updateStatusById(status, id);
   }

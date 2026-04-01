@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +17,8 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -29,10 +28,10 @@ import java.util.Map;
 import cn.taketoday.blog.model.enums.StatisticsField;
 import cn.taketoday.blog.model.form.PageViewStatistics;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.jdbc.core.JdbcOperations;
-import cn.taketoday.jdbc.core.PreparedStatementCallback;
-import cn.taketoday.stereotype.Service;
-import cn.taketoday.web.InternalServerException;
+import infra.jdbc.core.JdbcOperations;
+import infra.jdbc.core.PreparedStatementCallback;
+import infra.stereotype.Service;
+import infra.web.server.InternalServerException;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -71,7 +70,7 @@ public class StatisticsService {
     }
   }
 
-  public Map<String, PageViewStatistics> analyzePageView(LocalDate from, LocalDate to) {
+  public Map<String, PageViewStatistics> analyzePageView(@Nullable LocalDate from, @Nullable LocalDate to) {
     boolean hasPeriod = hasPeriod(from, to);
     String sql;
     if (hasPeriod) {
@@ -112,7 +111,7 @@ public class StatisticsService {
     }
   }
 
-  public static boolean hasPeriod(LocalDate from, LocalDate to) {
+  public static boolean hasPeriod(@Nullable LocalDate from, @Nullable LocalDate to) {
     if (from != null && to != null) {
       //检查时间是否合法
       if (to.isBefore(from)) {

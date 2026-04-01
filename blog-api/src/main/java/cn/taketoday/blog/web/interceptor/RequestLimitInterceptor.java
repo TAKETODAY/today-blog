@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +12,17 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.interceptor;
+
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,44 +33,43 @@ import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.web.ErrorMessage;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.http.HttpStatus;
-import cn.taketoday.http.MediaType;
-import cn.taketoday.http.ResponseEntity;
-import cn.taketoday.lang.Assert;
-import cn.taketoday.lang.Constant;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.session.SessionHandlerInterceptor;
-import cn.taketoday.session.SessionManager;
-import cn.taketoday.stereotype.Component;
-import cn.taketoday.util.ConcurrentReferenceHashMap;
-import cn.taketoday.util.MapCache;
-import cn.taketoday.web.HandlerInterceptor;
-import cn.taketoday.web.InterceptorChain;
-import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.handler.method.HandlerMethod;
+import infra.http.HttpStatus;
+import infra.http.MediaType;
+import infra.http.ResponseEntity;
+import infra.lang.Assert;
+import infra.lang.Constant;
+import infra.session.SessionManagerOperations;
+import infra.stereotype.Component;
+import infra.util.MapCache;
+import infra.web.HandlerInterceptor;
+import infra.web.InterceptorChain;
+import infra.web.RequestContext;
+import infra.web.handler.method.HandlerMethod;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/8/11 10:22
  */
 @Component
-final class RequestLimitInterceptor extends SessionHandlerInterceptor implements HandlerInterceptor {
+final class RequestLimitInterceptor implements HandlerInterceptor {
 
-  static final MapCache<HandlerMethod, RequestLimit, Object> requestLimitConfigCache = new MapCache<>(
-          new ConcurrentReferenceHashMap<>(128), RequestLimitInterceptor::findRequestLimit);
+  static final MapCache<HandlerMethod, @Nullable RequestLimit, Object> requestLimitConfigCache = new MapCache<>(
+          new ConcurrentHashMap<>(128), RequestLimitInterceptor::findRequestLimit);
 
   private int maxCacheSize = 1024;
 
   private String defaultErrorMessage = "操作频繁";
 
-  private Clock clock = Clock.system(ZoneId.of("GMT"));
+  private Clock clock = Clock.systemUTC();
 
   private final ExpiredChecker expiredChecker = new ExpiredChecker();
 
   private final ConcurrentHashMap<RequestKey, RequestLimitEntry> requestLimitCache = new ConcurrentHashMap<>();
 
-  public RequestLimitInterceptor(SessionManager sessionManager) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  RequestLimitInterceptor(SessionManagerOperations sessionManagerOperations) {
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   public void setDefaultErrorMessage(String defaultErrorMessage) {
@@ -92,8 +89,8 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
   }
 
   @Override
-  public Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
-    if (!Blogger.isPresent(getSession(request, false))) {
+  public @Nullable Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
+    if (!Blogger.isPresent(sessionManagerOperations.getSession(request, false))) {
       // 非博主，进行限流
       HandlerMethod handlerMethod = HandlerMethod.unwrap(chain.getHandler());
       if (handlerMethod != null) {
@@ -158,10 +155,10 @@ final class RequestLimitInterceptor extends SessionHandlerInterceptor implements
     expiredChecker.removeExpired(clock.instant());
   }
 
-  @Nullable
   private static RequestLimit findRequestLimit(HandlerMethod handlerMethod) {
-    if (handlerMethod.hasMethodAnnotation(RequestLimit.class)) {
-      return handlerMethod.getMethodAnnotation(RequestLimit.class);
+    RequestLimit annotation = handlerMethod.getAnnotation(RequestLimit.class);
+    if (annotation != null) {
+      return annotation;
     }
     return handlerMethod.getBeanType().getAnnotation(RequestLimit.class);
   }

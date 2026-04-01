@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@ package cn.taketoday.blog.service;
 
 import com.aliyun.oss.ClientException;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
@@ -34,14 +36,13 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
-import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.EntityManager;
-import cn.taketoday.persistence.Page;
-import cn.taketoday.stereotype.Service;
-import cn.taketoday.transaction.annotation.Transactional;
-import cn.taketoday.web.InternalServerException;
-import cn.taketoday.web.multipart.MultipartFile;
+import infra.persistence.EntityManager;
+import infra.persistence.Page;
+import infra.stereotype.Service;
+import infra.transaction.annotation.Transactional;
+import infra.transaction.support.TransactionOperations;
+import infra.web.multipart.Part;
+import infra.web.server.InternalServerException;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -60,7 +61,7 @@ public class AttachmentService {
 
   private final AttachmentConfig attachmentConfig;
 
-  private final RepositoryManager repositoryManager;
+  private final TransactionOperations txOperations;
 
   /**
    * 新增附件信息
@@ -68,7 +69,7 @@ public class AttachmentService {
    * @param attachment attachment
    */
   public void persist(Attachment attachment) {
-    repositoryManager.persist(attachment);
+    entityManager.persist(attachment);
   }
 
   @Nullable
@@ -102,9 +103,8 @@ public class AttachmentService {
    * @param attachId attachId
    * @return 旧附件
    */
-  @Nullable
   @Transactional
-  public Attachment removeById(long attachId) {
+  public @Nullable Attachment removeById(long attachId) {
     Attachment attachment = getById(attachId);
     if (attachment == null) {
       return null;
@@ -134,7 +134,7 @@ public class AttachmentService {
     return attachment;
   }
 
-  public Attachment upload(MultipartFile file, @Nullable String suffix) {
+  public Attachment upload(Part file, @Nullable String suffix) {
     if (ossOperations.isOssEnabled()) {
       return attachOssUpload(file, suffix);
     }
@@ -147,7 +147,7 @@ public class AttachmentService {
    * @param file file
    * @return Map
    */
-  public Attachment attachLocalUpload(MultipartFile file, @Nullable String suffix) {
+  public Attachment attachLocalUpload(Part file, @Nullable String suffix) {
     String fileName = getName(file, suffix);
     String uploadUri = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
 
@@ -163,20 +163,20 @@ public class AttachmentService {
     }
   }
 
-  private File saveFile(MultipartFile file, String uploadUrl) throws IOException {
+  private File saveFile(Part file, String uploadUrl) throws IOException {
     File dest = attachmentConfig.getLocalFile(uploadUrl);
     file.transferTo(dest);
     return dest;
   }
 
-  public Attachment attachOssUpload(MultipartFile file, @Nullable String suffix) {
+  public Attachment attachOssUpload(Part file, @Nullable String suffix) {
     String fileName = getName(file, suffix);
     String uploadUri = FileUtils.getUploadFilePath(fileName); // /upload/image/2019/3/10/1.jpg
 
     try {
       File destFile = saveFile(file, uploadUri);
       Attachment attachment = createAttachment(fileName, uploadUri, destFile);
-      repositoryManager.executeWithoutResult(status -> {
+      txOperations.executeWithoutResult(status -> {
         attachment.setSync(true);
         persist(attachment);
 
@@ -192,7 +192,7 @@ public class AttachmentService {
     }
   }
 
-  private String getName(MultipartFile file, @Nullable String suffix) {
+  private String getName(Part file, @Nullable String suffix) {
     if (StringUtils.isNotEmpty(suffix)) {
       return suffix;
     }

@@ -21,17 +21,18 @@
 import { Input, Pagination } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { ArticleList } from '../components';
-import { extractData, getQuery, scrollTop, setTitle } from '../utils';
+import { extractData, getQuery, scrollTop } from 'core';
 import { articleService } from "../services";
 import { connect } from "react-redux";
 import { navigationsMapStateToProps } from "../redux/action-types";
 import { updateNavigations } from "../redux/actions";
 import { useHistory, useLocation } from "react-router-dom";
+import { setTitle } from "../utils/common"
 
 const { Search } = Input;
 
 export default connect(
-  navigationsMapStateToProps, { updateNavigations }
+    navigationsMapStateToProps, { updateNavigations }
 )(props => {
 
   const history = useHistory();
@@ -58,18 +59,18 @@ export default connect(
       setArticles([])
       setLoading(true)
       articleService.searchPageable(query, page, size)
-        .then(extractData)
-        .then(setArticles)
-        .then(() => {
-          setTitle(`搜索 '${query}' 的文章`)
-        })
-        .catch(err => {
-          setError({
-            status: err.response ? err.response.status : 500,
-            title: err.message
+          .then(extractData)
+          .then(setArticles)
+          .then(() => {
+            setTitle(`搜索 '${query}' 的文章`)
           })
-        })
-        .finally(() => setLoading(false))
+          .catch(err => {
+            setError({
+              status: err.response ? err.response.status : 500,
+              title: err.message
+            })
+          })
+          .finally(() => setLoading(false))
     }
   }
 
@@ -91,18 +92,18 @@ export default connect(
   }, [query])
 
   const renderSearch = () => (
-    <Search
-      value={value}
-      allowClear
-      defaultValue={query}
-      loading={loading}
-      placeholder="Search TODAY"
-      onSearch={setQuery}
-      onChange={(event) => {
-        setValue(event.target.value)
-      }}
-      autoFocus={true}
-    />
+      <Search
+          value={value}
+          allowClear
+          defaultValue={query}
+          loading={loading}
+          placeholder="Search TODAY"
+          onSearch={setQuery}
+          onChange={(event) => {
+            setValue(event.target.value)
+          }}
+          autoFocus={true}
+      />
   )
 
   if (!query) {
@@ -123,13 +124,13 @@ export default connect(
       </div>
       <div align='center' style={{ padding: '20px' }}>
         <Pagination
-          showQuickJumper
-          showSizeChanger
-          total={articles.total}
-          onChange={updateArticles}
-          onShowSizeChange={updateArticles}
-          current={articles.current}
-          showTotal={n => <><b className='red'>{n}</b>篇文章</>}
+            showQuickJumper
+            showSizeChanger
+            total={articles.total}
+            onChange={updateArticles}
+            onShowSizeChange={updateArticles}
+            current={articles.current}
+            showTotal={n => <><b className='red'>{n}</b>篇文章</>}
         />
       </div>
     </div>

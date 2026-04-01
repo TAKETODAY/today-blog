@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +12,20 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.util;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalQueries;
 import java.util.List;
 
 /**
@@ -37,14 +40,26 @@ public abstract class DateFormatter {
           DateTimeFormatter.ISO_DATE_TIME
   );
 
-  public static LocalDateTime parse(CharSequence text) {
+  public static Instant parse(CharSequence text) {
     DateTimeParseException exception = null;
     for (DateTimeFormatter formatter : formatters) {
       try {
-        return LocalDateTime.parse(text, formatter);
+        TemporalAccessor accessor = formatter.parse(text);
+        ZoneId zoneId = accessor.query(TemporalQueries.zoneId());
+        LocalDate date = accessor.query(TemporalQueries.localDate());
+        LocalTime time = accessor.query(TemporalQueries.localTime());
+        if (zoneId == null) {
+          zoneId = ZoneId.systemDefault();
+        }
+        return ZonedDateTime.of(date, time, zoneId).toInstant();
       }
       catch (DateTimeParseException e) {
-        exception = e;
+        if (exception == null) {
+          exception = e;
+        }
+        else {
+          exception.addSuppressed(e);
+        }
       }
     }
     if (exception != null) {
@@ -57,7 +72,7 @@ public abstract class DateFormatter {
     else {
       abbr = text.toString();
     }
-    throw new DateTimeParseException("Text '" + abbr + "' could not be parsed ", text, 0, null);
+    throw new DateTimeParseException("Text '%s' could not be parsed ".formatted(abbr), text, 0, null);
   }
 
 }

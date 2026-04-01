@@ -1,0 +1,19 @@
+# Normalize line endings to LF.
+* text eol=lf
+
+# Ensure that line endings for multipart files in web are not modified.
+
+# Ensure that line endings for DOS batch files are not modified.
+*.bat -text
+
+# Ensure the following are treated as binary.
+*.gif   binary
+*.jar   binary
+*.jpeg  binary
+*.jpg   binary
+*.png   binary
+*.vsd   binary
+*.class   binary
+*.clazz   binary
+*.eot     binary
+*.ttf     binary

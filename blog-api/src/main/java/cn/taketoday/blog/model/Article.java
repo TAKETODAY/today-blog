@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +12,19 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
 
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.persistence.Id;
-import cn.taketoday.persistence.Table;
-import cn.taketoday.persistence.Transient;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Table;
+import infra.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -43,13 +36,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Table("article")
-public class Article implements Serializable {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  @Id
-  private Long id;
+public class Article extends BasicModel {
 
   private String cover;
 
@@ -79,22 +66,19 @@ public class Article implements Serializable {
   @Transient
   private Set<Label> labels;
 
-  private LocalDateTime createAt;
-  private LocalDateTime updateAt;
-
   public boolean needPassword() {
     return password != null;
   }
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("cover", cover)
             .append("title", title)
             .append("pv", pv)
             .append("status", status)
-            .append("summary", StringUtils.truncate(summary, 10))
+            .append("summary", summary != null ? StringUtils.truncate(summary, 10) : null)
             .append("password", password)
             .append("createAt", createAt)
             .append("updateAt", updateAt)

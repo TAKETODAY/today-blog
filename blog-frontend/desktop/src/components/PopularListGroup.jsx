@@ -20,7 +20,7 @@
 
 import React from 'react';
 import ListGroup from '../components/ListGroup';
-import { arrayNotEquals } from '../utils';
+import { arrayNotEquals } from 'core';
 import { Link } from "react-router-dom";
 
 

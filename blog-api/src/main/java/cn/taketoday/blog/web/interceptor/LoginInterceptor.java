@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,33 +12,35 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.interceptor;
 
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.session.SessionHandlerInterceptor;
-import cn.taketoday.session.SessionManager;
-import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.resource.ResourceHttpRequestHandler;
+import infra.session.SessionManagerOperations;
+import infra.web.HandlerInterceptor;
+import infra.web.RequestContext;
+import infra.web.resource.ResourceHttpRequestHandler;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-30 20:36
  */
-public class LoginInterceptor extends SessionHandlerInterceptor {
+final class LoginInterceptor implements HandlerInterceptor {
 
   // Authorization
 
-  public LoginInterceptor(SessionManager sessionManager) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  LoginInterceptor(SessionManagerOperations sessionManagerOperations) {
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   @Override
-  public boolean beforeProcess(RequestContext request, Object handler) throws Throwable {
-    if (User.isPresent(getSession(request, false))) {
+  public boolean preProcessing(RequestContext request, Object handler) throws Throwable {
+    if (User.isPresent(sessionManagerOperations.getSession(request, false))) {
       return true;
     }
 

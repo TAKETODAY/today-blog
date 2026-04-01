@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,18 +19,16 @@ package cn.taketoday.blog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.CommentStatus;
-import cn.taketoday.core.style.ToStringBuilder;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.Id;
-import cn.taketoday.persistence.Table;
-import cn.taketoday.persistence.Transient;
+import cn.taketoday.blog.util.StringUtils;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.Table;
+import infra.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -43,30 +38,51 @@ import lombok.Setter;
 @Setter
 @Getter
 @Table("t_comment")
-public class Comment implements Serializable {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  @Id
-  private Long id;
+public class Comment extends BasicModel {
 
   private String content;
 
+  private CommentStatus status;
+
   private Long articleId;
+
+  /**
+   * 文章标题
+   *
+   * @since 3.2
+   */
+  private String articleTitle;
+
+  /**
+   * 评论者的 邮箱
+   *
+   * @since 3.2
+   */
+  private String email;
+
+  /**
+   * 评论者的名字
+   *
+   * @since 3.2
+   */
+  private String commenter;
+
+  /**
+   * 评论者的网站地址
+   *
+   * @since 3.2
+   */
+  @Nullable
+  private String commenterSite;
 
   /** parent comment id */
   @JsonIgnore
-  private Long commentId;
+  @Nullable
+  private Long parentId;
 
-  private CommentStatus status;
-
+  @Nullable
   @JsonIgnore
   private Long userId;
-
-  private LocalDateTime createAt;
-
-  private LocalDateTime updateAt;
 
   @Nullable
   @Transient
@@ -86,7 +102,7 @@ public class Comment implements Serializable {
             && status == comment.status
             && Objects.equals(content, comment.content)
             && Objects.equals(articleId, comment.articleId)
-            && Objects.equals(commentId, comment.commentId)
+            && Objects.equals(parentId, comment.parentId)
             && Objects.equals(userId, comment.userId)
             && Objects.equals(createAt, comment.createAt)
             && Objects.equals(updateAt, comment.updateAt)
@@ -96,16 +112,16 @@ public class Comment implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, content, articleId, commentId, status, userId, createAt, updateAt, user, replies);
+    return Objects.hash(id, content, articleId, parentId, status, userId, createAt, updateAt, user, replies);
   }
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
-            .append("content", content)
+            .append("content", StringUtils.truncate(content, 10))
             .append("articleId", articleId)
-            .append("commentId", commentId)
+            .append("parent", parentId)
             .append("status", status)
             .append("userId", userId)
             .append("createAt", createAt)

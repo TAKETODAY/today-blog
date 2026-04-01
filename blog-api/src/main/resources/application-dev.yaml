@@ -7,20 +7,37 @@
 server:
   session:
     timeout: 3D
+    persistent: true
   netty:
     worker-threads: 8
     acceptor-threads: 1
-    logging-level: debug
+    max-connection: 10240000
+    leak-detection: paranoid
+    connection-timeout: 30s
+    auto-ack-ping-frame: true
+    auto-ack-settings-frame: true
+    http2-graceful-shutdown-timeout: 29s
+    auto-read: ${server.http2.enabled}
+
+  use-virtual-thread-service-executor: true
+
+  http2:
+    enabled: false
+    initial-settings:
+      max-header-list-size: 1024
+      push-enabled: false
+      connect-protocol-enabled: false
 
 datasource:
   username: root
   password: 88888888
-
-  #jdbc.pool.isReadOnly    = false
-  #jdbc.pool.idleTimeout   = 600000
-  #jdbc.username           = ${jdbc.userName}
-  #jdbc.driverClassName    = ${jdbc.driver}
-  #jdbc.pool.connectionTimeout = 30000
+  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+  type: com.zaxxer.hikari.HikariDataSource
+  driver-class-name: com.mysql.cj.jdbc.Driver
+  hikari:
+    maximum-pool-size: 20
+    max-lifetime: 120000
+    connection-test-query: 'select 1'
 
 site:
   #aliyun.oss.enable=false
@@ -30,22 +47,19 @@ aliyun:
   oss:
     enabled: false
 
-######################################## github login
-github:
-  app-id:
-  app-key:
-  callback: ${site.host}/api/auth/github/callback
-  redirect: https://github.com/login/oauth/authorize?client_id=${github.appId}&scope=user:email&state=
-
-gitee:
-  app-id:
-  app-key:
-  callback: ${site.host}/api/auth/gitee/callback
-  redirect: https://gitee.com/oauth/authorize?client_id=${gitee.appId}&response_type=code&state=
 
 web:
+  error:
+    include-message: always
   mvc:
     log-request-details: true
+
+infra:
+  task:
+    execution:
+      thread-name-prefix: app-pool-
+      pool:
+        max-size: 100
 
 app:
   main:
@@ -55,7 +69,7 @@ logging:
   level:
     netty: info
     nettyLogging: info
-    web: trace
-    sql: debug
+    web: debug
+    sql: info
   pattern:
     dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'

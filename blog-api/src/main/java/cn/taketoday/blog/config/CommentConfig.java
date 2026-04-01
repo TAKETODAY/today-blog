@@ -23,7 +23,7 @@ package cn.taketoday.blog.config;
 import java.io.Serializable;
 
 import cn.taketoday.blog.ConfigBinding;
-import cn.taketoday.stereotype.Component;
+import infra.stereotype.Component;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@ package cn.taketoday.blog.config;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ConfigBinding;
-import cn.taketoday.context.properties.ConfigurationProperties;
-import cn.taketoday.stereotype.Component;
+import infra.context.properties.ConfigurationProperties;
+import infra.stereotype.Component;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -56,7 +56,7 @@ public class BlogConfig {
 
   public final long startupTimeMillis = System.currentTimeMillis();
 
-  @ConfigBinding(value = "article.feed.list.size", splice = false)
+  @ConfigBinding(value = "article.feed.list.size", combine = false)
   public int articleFeedListSize = 10;
 
   @ConfigBinding("list.size")

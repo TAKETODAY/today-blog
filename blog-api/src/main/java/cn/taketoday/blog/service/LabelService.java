@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,41 +20,40 @@ package cn.taketoday.blog.service;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import cn.taketoday.blog.model.ArticleLabel;
 import cn.taketoday.blog.model.Label;
-import cn.taketoday.cache.annotation.CacheConfig;
-import cn.taketoday.cache.annotation.CacheEvict;
-import cn.taketoday.cache.annotation.Cacheable;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.EntityManager;
-import cn.taketoday.persistence.EntityRef;
-import cn.taketoday.persistence.Where;
-import cn.taketoday.stereotype.Service;
-import cn.taketoday.transaction.annotation.Transactional;
-
-import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
+import infra.cache.annotation.CacheConfig;
+import infra.cache.annotation.CacheEvict;
+import infra.cache.annotation.Cacheable;
+import infra.persistence.EntityManager;
+import infra.persistence.EntityRef;
+import infra.persistence.Where;
+import infra.stereotype.Service;
+import infra.transaction.annotation.Transactional;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:11
  */
 @Service
-@CacheConfig(cacheNames = "labels"/*, expire = 1, timeUnit = TimeUnit.MINUTES*/)
+@CacheConfig(cacheNames = "labels")
 public class LabelService {
 
   private final EntityManager entityManager;
 
   private final Cache<Long, Set<Label>> articleLabelsCache = Caffeine.newBuilder()
           .maximumSize(100)
-          .expireAfterWrite(10, TimeUnit.SECONDS)
+          .expireAfterWrite(1, TimeUnit.HOURS)
           .build();
 
   public LabelService(EntityManager entityManager) {
@@ -69,7 +68,7 @@ public class LabelService {
   @Nullable
   @Cacheable(key = "'ByName'+#name")
   public Label getByName(String name) {
-    return entityManager.findFirst(Label.class, isEqualsTo("name", name));
+    return entityManager.findFirst(Label.class, Map.of("name", name));
   }
 
   @Nullable
@@ -80,13 +79,13 @@ public class LabelService {
 
   @Transactional
   @CacheEvict(allEntries = true)
-  public void save(Label label) {
+  public void persist(Label label) {
     entityManager.persist(label);
   }
 
   @Transactional
   @CacheEvict(allEntries = true)
-  public void saveAll(Collection<Label> labels) {
+  public void persist(Collection<Label> labels) {
     entityManager.persist(labels);
   }
 
@@ -100,30 +99,8 @@ public class LabelService {
     return getAllLabels().size();
   }
 
-  final class ArticleLabelMappingFunction implements Function<Long, Set<Label>> {
-
-    @Override
-    public Set<Label> apply(Long articleId) {
-      return new LinkedHashSet<>(entityManager.find(Label.class, new TagQuery(articleId)));
-    }
-
-  }
-
-  @EntityRef(Label.class)
-  static class TagQuery {
-
-    @Where("`id` IN (SELECT `label_id` FROM article_label WHERE `article_id` = ? )")
-    public final Long articleId;
-
-    TagQuery(Long articleId) {
-      this.articleId = articleId;
-    }
-  }
-
-  final ArticleLabelMappingFunction mappingFunction = new ArticleLabelMappingFunction();
-
   public Set<Label> getByArticleId(long id) {
-    return articleLabelsCache.get(id, mappingFunction);
+    return articleLabelsCache.get(id, articleId -> new LinkedHashSet<>(entityManager.find(Label.class, new TagQuery(articleId))));
   }
 
   public Set<String> getAllLabelsNames() {
@@ -134,8 +111,9 @@ public class LabelService {
   }
 
   @CacheEvict(allEntries = true)
-  public void saveArticleLabels(Set<Label> labels, long articleId) {
+  public void persistArticleLabels(Set<Label> labels, long articleId) {
     entityManager.persist(labels.stream().map(label -> ArticleLabel.of(label.getId(), articleId)));
+    articleLabelsCache.invalidate(articleId);
   }
 
   @Transactional
@@ -149,6 +127,17 @@ public class LabelService {
   public void removeArticleLabels(long articleId) {
     entityManager.delete(ArticleLabel.forArticle(articleId));
     articleLabelsCache.invalidate(articleId);
+  }
+
+  @EntityRef(Label.class)
+  static class TagQuery {
+
+    @Where("`id` IN (SELECT `label_id` FROM article_label WHERE `article_id` = ? )")
+    public final Long articleId;
+
+    TagQuery(Long articleId) {
+      this.articleId = articleId;
+    }
   }
 
 }

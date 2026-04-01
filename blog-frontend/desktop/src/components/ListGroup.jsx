@@ -1,6 +1,6 @@
 import { Result, Skeleton } from 'antd';
 import React from 'react';
-import { arrayNotEquals, isEmpty } from '../utils';
+import { arrayNotEquals, isEmpty } from 'core';
 import { connect } from "react-redux";
 import { updateHttpErrorMessage } from "../redux/actions";
 import HttpError from "./http/HttpError";

@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2024 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +24,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import cn.taketoday.core.style.ToStringBuilder;
+import infra.core.style.ToStringBuilder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -62,7 +59,7 @@ public class Item implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.from(this)
+    return ToStringBuilder.forInstance(this)
             .append("id", id)
             .append("image", image)
             .append("title", title)

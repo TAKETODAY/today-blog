@@ -3,7 +3,7 @@ import React from 'react';
 import qq from '../assets/images/share/qq.png';
 import weibo from '../assets/images/share/weibo.png';
 import zone from '../assets/images/share/zone.png';
-import { shareQQ, shareQQZone, shareWeiBo } from '../utils';
+import { shareQQ, shareQQZone, shareWeiBo } from 'core';
 import { connect } from "react-redux";
 import { optionsMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";

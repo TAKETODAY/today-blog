@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,22 +12,22 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.config;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.session.SessionManager;
-import cn.taketoday.session.SessionManagerOperations;
-import cn.taketoday.session.WebSession;
-import cn.taketoday.stereotype.Singleton;
-import cn.taketoday.web.RequestContext;
-import cn.taketoday.web.RequestContextHolder;
+import infra.session.Session;
+import infra.session.SessionManagerOperations;
+import infra.stereotype.Component;
+import infra.web.RequestContext;
+import infra.web.RequestContextHolder;
 
 /**
  * 关于 获取用户会话 的处理器
@@ -42,11 +39,13 @@ import cn.taketoday.web.RequestContextHolder;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/8/12 21:47
  */
-@Singleton
-public class UserSessionResolver extends SessionManagerOperations {
+@Component
+public class UserSessionResolver {
 
-  public UserSessionResolver(SessionManager sessionManager) {
-    super(sessionManager);
+  private final SessionManagerOperations sessionManagerOperations;
+
+  public UserSessionResolver(SessionManagerOperations sessionManagerOperations) {
+    this.sessionManagerOperations = sessionManagerOperations;
   }
 
   /**
@@ -62,7 +61,7 @@ public class UserSessionResolver extends SessionManagerOperations {
    */
   @Nullable
   public User getLoginUser(RequestContext request) {
-    WebSession session = getSession(request, false);
+    Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       return User.find(session);
     }
@@ -82,7 +81,7 @@ public class UserSessionResolver extends SessionManagerOperations {
    */
   @Nullable
   public Blogger getLoggedInBlogger(RequestContext request) {
-    WebSession session = getSession(request, false);
+    Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       return Blogger.find(session);
     }

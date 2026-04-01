@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.model.enums;
@@ -23,10 +20,10 @@ package cn.taketoday.blog.model.enums;
 import java.io.File;
 
 import cn.taketoday.blog.model.Attachment;
-import cn.taketoday.http.MediaType;
-import cn.taketoday.http.MediaTypeFactory;
-import cn.taketoday.lang.Enumerable;
-import cn.taketoday.web.multipart.MultipartFile;
+import infra.http.MediaType;
+import infra.http.MediaTypeFactory;
+import infra.lang.Enumerable;
+import infra.web.multipart.Part;
 
 /**
  * 附件类型
@@ -77,10 +74,10 @@ public enum AttachmentType implements Enumerable<String> {
     return from(file.getName());
   }
 
-  public static AttachmentType from(MultipartFile file) {
-    String contentType = file.getContentType();
+  public static AttachmentType from(Part file) {
+    MediaType contentType = file.getContentType();
     if (contentType != null) {
-      AttachmentType fileType = from(MediaType.valueOf(contentType));
+      AttachmentType fileType = from(contentType);
       if (fileType == AttachmentType.OTHER) { // 检测文件名
         fileType = from(file.getOriginalFilename());
       }

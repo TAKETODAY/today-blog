@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +12,11 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 package cn.taketoday.blog.service;
+
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,16 +24,17 @@ import java.io.StringWriter;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import cn.taketoday.beans.factory.BeanFactory;
-import cn.taketoday.blog.model.Operation;
-import cn.taketoday.blog.util.MailSender;
-import cn.taketoday.blog.util.SendMailException;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.stereotype.Service;
-import cn.taketoday.web.InternalServerException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
+import infra.beans.factory.BeanFactory;
+import infra.core.task.TaskExecutor;
+import infra.mail.javamail.JavaMailSender;
+import infra.mail.javamail.MimeMessageHelper;
+import infra.mail.javamail.MimeMessagePreparator;
+import infra.stereotype.Service;
+import infra.web.server.InternalServerException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.CustomLog;
 
 /**
@@ -46,19 +46,14 @@ import lombok.CustomLog;
 public class MailService {
 
   private final Executor executor;
+
   private final BeanFactory beanFactory;
-  private final LoggingService loggerService;
 
   final Configuration configuration;
 
-  public MailService(
-          Executor executor,
-          BeanFactory beanFactory,
-          LoggingService loggerService,
-          @Nullable Configuration configuration) {
+  public MailService(TaskExecutor executor, BeanFactory beanFactory, @Nullable Configuration configuration) {
     this.executor = executor;
     this.beanFactory = beanFactory;
-    this.loggerService = loggerService;
     this.configuration = configuration == null ? new Configuration(Configuration.VERSION_2_3_31) : configuration;
   }
 
@@ -106,7 +101,6 @@ public class MailService {
    * @param templateName 模板路径
    * @param attachSrc 附件路径
    */
-
   public void sendAttachMail(String to, String subject, Map<String, Object> dataModel, String templateName, String attachSrc) {
     try (StringWriter result = new StringWriter()) {
       Template template = getTemplate(templateName);
@@ -119,18 +113,19 @@ public class MailService {
     }
   }
 
-  MailSender getEmailSender() {
-    return beanFactory.getBean(MailSender.class);
+  JavaMailSender getEmailSender() {
+    return beanFactory.getBean(JavaMailSender.class);
   }
 
-  class MailSenderRunnable implements Runnable {
+  class MailSenderRunnable implements Runnable, MimeMessagePreparator {
 
     final String to;
     final String subject;
     final String content;
-    final String file;
 
-    public MailSenderRunnable(String to, String subject, String content, String file) {
+    final @Nullable String file;
+
+    public MailSenderRunnable(String to, String subject, String content, @Nullable String file) {
       this.to = to;
       this.file = file;
       this.content = content;
@@ -138,26 +133,36 @@ public class MailService {
     }
 
     @Override
+    public void prepare(MimeMessage message) throws Exception {
+      MimeMessageHelper helper = new MimeMessageHelper(message, true);
+      helper.setTo(to);
+      helper.setSubject(subject);
+      helper.setText(content, true);
+
+      if (StringUtils.isNotEmpty(file)) {
+        File fileObj = new File(file);
+        helper.addAttachment(fileObj.getName(), fileObj);
+      }
+    }
+
+    @Override
     public void run() {
       try {
         log.info("send mail: [{}]", to);
-        MailSender mailSender = getEmailSender().subject(subject).to(to).html(content);
-
-        if (StringUtils.isNotEmpty(file)) {
-          mailSender.attach(new File(file));
-        }
-
-        mailSender.send();
+        JavaMailSender mailSender = getEmailSender();
+        mailSender.send(this);
       }
-      catch (SendMailException e) {
+      catch (Exception e) {
         log.error("can't send mail to: [{}]", to);
+        // todo 处理错误
+//        Operation operation = new Operation();
+//        operation.setUser("邮件系统");
+//        operation.setTitle("系统邮件发送出错");
 
-        loggerService.afterThrowing(e, new Operation()
-                .setUser("邮件系统")
-                .setTitle("系统邮件发送出错")
-        );
+//        loggerService.afterThrowing(e, operation);
       }
     }
+
   }
 
 }

@@ -1,0 +1,89 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.log;
+
+import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import cn.taketoday.blog.model.enums.CommentStatus;
+import cn.taketoday.blog.model.enums.PostStatus;
+import cn.taketoday.blog.model.enums.UserStatus;
+import infra.beans.factory.BeanFactory;
+import infra.context.expression.AnnotatedElementKey;
+import infra.context.expression.BeanFactoryResolver;
+import infra.context.expression.CachedExpressionEvaluator;
+import infra.context.expression.MethodBasedEvaluationContext;
+import infra.expression.Expression;
+import infra.expression.ParserContext;
+import infra.expression.spel.support.StandardTypeLocator;
+
+/**
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0 2022/3/26 20:45
+ */
+class LoggingExpressionEvaluator extends CachedExpressionEvaluator {
+
+  static final ParserContext parserContext = ParserContext.TEMPLATE_EXPRESSION;
+
+  /**
+   * The name of the variable holding the result object.
+   */
+  public static final String RESULT_VARIABLE = "result";
+
+  private final Map<ExpressionKey, Expression> conditionCache = new ConcurrentHashMap<>(64);
+
+  private final StandardTypeLocator typeLocator = new StandardTypeLocator();
+
+  private final BeanFactoryResolver beanResolver;
+
+  public LoggingExpressionEvaluator(BeanFactory beanFactory) {
+    this.beanResolver = new BeanFactoryResolver(beanFactory);
+    typeLocator.importClass(Arrays.class);
+    typeLocator.importClass(UserStatus.class);
+    typeLocator.importClass(PostStatus.class);
+    typeLocator.importClass(CommentStatus.class);
+  }
+
+  @Override
+  protected Expression parseExpression(String expression) {
+    return parser.parseExpression(expression, parserContext);
+  }
+
+  /**
+   * 使用 SpEL 定制日志内容
+   */
+  public String content(String expression, MethodOperation operation, @Nullable Object result) {
+    MethodInvocation invocation = operation.invocation;
+    var root = new LoggingRootObject(operation, invocation.getMethod(), invocation.getArguments(), invocation.getThis(), result);
+
+    var evaluationContext = new MethodBasedEvaluationContext(
+            root, invocation.getMethod(), invocation.getArguments(), parameterNameDiscoverer);
+
+    evaluationContext.setBeanResolver(beanResolver);
+    evaluationContext.setTypeLocator(typeLocator);
+
+    var elementKey = new AnnotatedElementKey(root.method, root.targetClass);
+    return getExpression(conditionCache, elementKey, expression)
+            .getValue(evaluationContext, String.class);
+  }
+
+}

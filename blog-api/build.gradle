@@ -1,92 +1,85 @@
-/*
- * Copyright 2017 - 2024 the original author or authors.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see [https://www.gnu.org/licenses/]
- */
+import java.util.function.Predicate
+
 description = "today-blog API"
 
 apply plugin: "application"
-apply plugin: 'cn.taketoday.application'
+apply plugin: 'infra.application'
 apply plugin: 'cn.taketoday.blog.conventions'
 apply plugin: 'cn.taketoday.blog.optional-dependencies'
 
-//apply plugin: 'cn.taketoday.application.aot'
+//apply plugin: 'infra.application.aot'
 //apply plugin: 'org.graalvm.buildtools.native'
 
 dependencies {
+  implementation 'cn.taketoday:infra-starter-application'
+  implementation 'cn.taketoday:infra-starter-netty-server'
+  implementation 'cn.taketoday:infra-starter-webmvc'
+  implementation 'cn.taketoday:infra-starter-persistence'
+  implementation 'cn.taketoday:infra-starter-json'
+  implementation 'cn.taketoday:infra-starter-restclient'
+  implementation 'cn.taketoday:infra-starter-http-service'
+  implementation 'cn.taketoday:infra-starter-validation'
+  implementation 'cn.taketoday:infra-starter-jdbc'
+  implementation 'cn.taketoday:infra-starter-mail'
+  implementation 'cn.taketoday:infra-starter-freemarker'
+  implementation 'cn.taketoday:infra-starter-flyway'
+  implementation 'cn.taketoday:infra-starter-logging'
+  implementation 'org.flywaydb:flyway-mysql'
 
-  implementation 'cn.taketoday:ip2region-java:1.0-SNAPSHOT'
-  implementation 'cn.taketoday:today-starter-netty'
-  implementation 'cn.taketoday:today-starter-json'
-  implementation 'cn.taketoday:today-starter-validation'
-  implementation 'cn.taketoday:today-starter-jdbc'
-  implementation 'cn.taketoday:today-starter-freemarker'
-  implementation 'org.kohsuke:github-api:1.301'
   implementation 'eu.bitwalker:UserAgentUtils:1.21'
   implementation 'com.mysql:mysql-connector-j'
-  implementation 'com.aliyun.oss:aliyun-sdk-oss:3.16.0'
+  implementation 'cn.taketoday:ip2region-java:1.0-SNAPSHOT'
+  
+  implementation('com.aliyun.oss:aliyun-sdk-oss:3.18.4') {
+    exclude group: "javax.xml.bind"
+    exclude group: "jakarta.xml.bind"
+    exclude group: "org.glassfish.jaxb"
+  }
+
 
   compileOnly 'org.projectlombok:lombok'
   annotationProcessor 'org.projectlombok:lombok'
 
-  implementation 'ch.qos.logback:logback-classic'
-  implementation 'jakarta.mail:jakarta.mail-api'
-  implementation 'jakarta.activation:jakarta.activation-api'
-  implementation 'com.sun.mail:jakarta.mail'
   implementation 'com.github.ben-manes.caffeine:caffeine'
-  implementation 'io.prometheus:simpleclient'
-  implementation 'io.prometheus:simpleclient_common'
-  implementation 'io.prometheus:simpleclient_logback'
+//  implementation("io.netty:netty-transport-native-kqueue") {
+//    artifact {
+//      classifier = 'osx-aarch_64'
+//    }
+//  }
+//
+//  implementation('io.netty:netty-transport-native-epoll') {
+//    artifact {
+//      classifier = 'linux-x86_64'
+//    }
+//  }
+
+  implementation "cn.taketoday:infra-core-aot"
 
   annotationProcessor "cn.taketoday:infra-configuration-processor"
   annotationProcessor "cn.taketoday:infra-annotation-config-processor"
 
-  testImplementation 'cn.taketoday:today-starter-test'
-  testImplementation 'io.projectreactor:reactor-test'
+  testImplementation 'cn.taketoday:infra-starter-test'
+  testImplementation 'cn.taketoday:infra-starter-webmvc-test'
+  testImplementation 'cn.taketoday:infra-mariadb4j'
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api")
-  testImplementation("org.junit.jupiter:junit-jupiter-params")
-  testImplementation("org.junit.platform:junit-platform-suite-api")
-  testImplementation("org.mockito:mockito-core")
-  testImplementation("org.mockito:mockito-junit-jupiter")
-  testImplementation("junit:junit")
-  testImplementation("org.assertj:assertj-core")
   testImplementation 'org.projectlombok:lombok'
   testAnnotationProcessor("org.projectlombok:lombok")
-
-  // Pull in the latest JUnit 5 Launcher API to ensure proper support in IDEs.
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-  testRuntimeOnly("org.junit.platform:junit-platform-suite-engine")
 
 }
 
 compileJava {
-  sourceCompatibility = JavaVersion.VERSION_17
-  targetCompatibility = JavaVersion.VERSION_17
-  options.encoding = 'UTF-8'
-  options.compilerArgs << '-parameters'
+  sourceCompatibility = JavaVersion.VERSION_21
+  targetCompatibility = JavaVersion.VERSION_21
 
 }
 
 application {
-  mainClass = 'cn.taketoday.blog.BlogApplication'
   applicationDefaultJvmArgs = [
       "-server",
       "--add-opens=java.base/java.nio=ALL-UNNAMED",
       "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-      "-Dinfra.profiles.active=prod",
+//      "-Dinfra.profiles.active=prod",
+      "--enable-native-access=ALL-UNNAMED",
       "-Dio.netty.leakDetection.level=disabled",
       "-Xms512M",
       "-Xmx512M"
@@ -100,14 +93,15 @@ infraJar {
 }
 
 infraApplication {
-  buildInfo()
+  buildInfo {
+
+  }
 }
 
-infraBuildImage {
-//  pullPolicy = "IF_NOT_PRESENT"
-  applicationDirectory = "/application"
-  network = "host"
-//  createdDate = Instant.now().toString()
+
+test {
+  useJUnitPlatform()
+
 }
 
 distributions {
@@ -122,3 +116,73 @@ distributions {
     }
   }
 }
+
+//graalvmNative {
+//  binaries {
+//    main {
+//      imageName = 'application'
+//      mainClass = 'org.test.Main'
+//      debug = true
+//      verbose = true
+//      fallback = true
+//      sharedLibrary = false
+//      quickBuild = false
+//      richOutput = false
+//
+//      systemProperties = [name1: 'value1', name2: 'value2']
+//      configurationFileDirectories.from(file('src/my-config'))
+//      excludeConfig.put("org.example.test:artifact:version", ["^/META-INF/native-image/.*", "^/config/.*"])
+//      excludeConfig.put(file("path/to/artifact.jar"), List.of("^/META-INF/native-image/.*", "^/config/.*"))
+//
+//      // Advanced options
+//      buildArgs.add('--link-at-build-time')
+//      jvmArgs.add('flag')
+//
+//      // Runtime options
+//      runtimeArgs.add('--help')
+//
+//      useFatJar = true
+//    }
+//  }
+//
+//  agent {
+//    defaultMode = "standard"
+//    enabled = true
+//
+//    modes {
+//      standard {
+//      }
+//      conditional {
+//        userCodeFilterPath = "path-to-filter.json"
+//        extraFilterPath = "path-to-another-filter.json" // Optional
+//      }
+//      direct {
+//        options.add("config-output-dir={output_dir}")
+//        options.add("experimental-configuration-with-origins")
+//      }
+//    }
+//
+//    callerFilterFiles.from("filter.json")
+//    accessFilterFiles.from("filter.json")
+//    builtinCallerFilter = true
+//    builtinHeuristicFilter = true
+//    enableExperimentalPredefinedClasses = false
+//    enableExperimentalUnsafeAllocationTracing = false
+//    trackReflectionMetadata = true
+//
+//    metadataCopy {
+//      inputTaskNames.add("test")
+//      outputDirectories.add("META-INF/native-image/<groupId>/<artifactId>/")
+//      mergeWithExisting = true
+//    }
+//
+//    tasksToInstrumentPredicate = new Predicate<Task>() {
+//
+//      @Override
+//      boolean test(Task task) {
+//        return true
+//      }
+//    }
+//
+//  }
+//}

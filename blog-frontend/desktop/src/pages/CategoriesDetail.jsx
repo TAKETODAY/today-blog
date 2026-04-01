@@ -25,7 +25,8 @@ import { ArticleList } from 'src/components';
 import { articleService } from "src/services";
 import { updateNavigations } from "src/redux/actions";
 import { navigationsMapStateToProps } from "src/redux/action-types";
-import { applySEO, extractData, isNotEmpty, scrollTop, setTitle } from 'src/utils';
+import { applySEO, extractData, isNotEmpty, scrollTop } from 'core';
+import { setTitle } from "../utils/common"
 
 class CategoriesDetail extends React.Component {
 
@@ -79,13 +80,13 @@ class CategoriesDetail extends React.Component {
     this.updateNavigations({ name: categoryId, url: window.location })
 
     articleService.getArticlesByCategory(categoryId, page, size)
-      .then(extractData)
-      .then(articles => {
-        super.setState({ articles });
-        const title = `关于分类 '${categoryId}' 的文章`;
-        setTitle(title)
-        applySEO(undefined, title)
-      })
+        .then(extractData)
+        .then(articles => {
+          super.setState({ articles });
+          const title = `关于分类 '${categoryId}' 的文章`;
+          setTitle(title)
+          applySEO(undefined, title)
+        })
   }
 
   render() {
@@ -98,20 +99,20 @@ class CategoriesDetail extends React.Component {
           <ArticleList articles={articles.data}/>
         </div>
         {isNotEmpty(articles.data) &&
-          <div align='center' style={{ padding: '20px' }}>
-            <Pagination
-              showQuickJumper
-              showSizeChanger
-              total={articles.total}
-              onChange={(page, size) => {
-                this.loadArticles(categoryId, page, size)
-              }}
-              onShowSizeChange={(page, size) => {
-                this.loadArticles(categoryId, page, size)
-              }}
-              current={articles.current}
-            />
-          </div>
+            <div align='center' style={{ padding: '20px' }}>
+              <Pagination
+                  showQuickJumper
+                  showSizeChanger
+                  total={articles.total}
+                  onChange={(page, size) => {
+                    this.loadArticles(categoryId, page, size)
+                  }}
+                  onShowSizeChange={(page, size) => {
+                    this.loadArticles(categoryId, page, size)
+                  }}
+                  current={articles.current}
+              />
+            </div>
         }
       </div>
     </>);
@@ -119,6 +120,6 @@ class CategoriesDetail extends React.Component {
 }
 
 export default connect(
-  navigationsMapStateToProps, { updateNavigations }
+    navigationsMapStateToProps, { updateNavigations }
 )(CategoriesDetail)
 

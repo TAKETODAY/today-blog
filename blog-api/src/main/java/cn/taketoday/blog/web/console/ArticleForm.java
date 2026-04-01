@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2024 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +17,8 @@
 
 package cn.taketoday.blog.web.console;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -29,9 +28,8 @@ import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.DateFormatter;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.util.CollectionUtils;
-import cn.taketoday.util.StringUtils;
+import infra.util.CollectionUtils;
+import infra.util.StringUtils;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -43,20 +41,36 @@ public class ArticleForm {
   public String createAt;
 
   public String category;
+
   public String copyright;
+
   public Set<String> labels;
 
   public String cover;
+
   public String title;
+
   public PostStatus status;
+
   public String summary;
+
   public String content;
+
   public String markdown;
+
   public String password;
 
   public String uri;
 
   public static Article forArticle(ArticleForm form, LabelService labelService) {
+    if (StringUtils.isBlank(form.title)) {
+      throw new IllegalArgumentException("Article title is required");
+    }
+
+    if (StringUtils.isBlank(form.uri)) {
+      throw new IllegalArgumentException("Article URI is required");
+    }
+
     Set<Label> labels = getLabels(form, labelService);
 
     Article article = new Article();
@@ -71,8 +85,8 @@ public class ArticleForm {
     article.setCopyright(form.copyright);
     article.setPassword(StringUtils.hasText(form.password) ? form.password : null);
     article.setCover(StringUtils.hasText(form.cover)
-                     ? form.cover
-                     : BlogUtils.getFirstImagePath(form.content)
+            ? form.cover
+            : BlogUtils.getFirstImagePath(form.content)
     );
 
     article.setUri(form.uri);
@@ -89,8 +103,8 @@ public class ArticleForm {
       for (String label : from.labels) {
         Label byName = labelService.getByName(label);
         if (byName == null) {
-          byName = new Label().setName(label);
-          labelService.save(byName);
+          byName = Label.forName(label);
+          labelService.persist(byName);
         }
         labels.add(byName);
       }

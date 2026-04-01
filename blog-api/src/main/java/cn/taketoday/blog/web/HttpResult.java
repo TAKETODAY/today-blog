@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 package cn.taketoday.blog.web;
 
 /**
- * The request result
+ * Represents the result of an HTTP request.
+ * This interface defines a contract for HTTP response data structure,
+ * typically containing status information, data payload, and error handling.
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-23 08:58

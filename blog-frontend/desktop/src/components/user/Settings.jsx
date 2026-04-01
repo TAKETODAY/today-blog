@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2025 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +12,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 import { Button, Checkbox, Form, Input, message } from 'antd';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ImageCropper } from '../';
 import { userService } from '../../services';
-import { scrollTop } from '../../utils';
+import { scrollTop } from 'core';
 import { connect } from "react-redux";
 import { userSessionOptionsMapStateToProps } from "../../redux/action-types";
 import { updateUserSession } from "../../redux/actions";
@@ -42,23 +39,13 @@ function handleError(err) {
   message.error(err.message)
 }
 
-function handleResult(props, res) {
-  if (res.data.success === true) {
-    message.success(res.data.message)
-    props.updateUserSession(res.data.data)
-  }
-  else {
-    message.error(res.data.message)
-  }
-}
-
 function InfoSettings(props) {
-  const update = (data) => {
-    userService
-      .updateInfo(data)
-      .then(res => handleResult(props, res))
-      .catch(handleError)
-  }
+  const update = useCallback((data) => {
+    userService.updateInfo(data).then(res => {
+      message.success("更新成功")
+      props.updateUserSession(res.data)
+    }).catch(handleError)
+  }, [props])
 
   return (<>
     <div className="shadow-box" id="info">
@@ -89,12 +76,12 @@ function InfoSettings(props) {
 }
 
 function EmailSettings(props) {
-  const update = (data) => {
-    userService
-      .updateEmail(data)
-      .then(res => handleResult(props, res))
-      .catch(handleError)
-  }
+  const update = useCallback((data) => {
+    userService.updateEmail(data).then(res => {
+      message.success("更新成功")
+      props.updateUserSession(res.data)
+    }).catch(handleError)
+  }, [props])
   return (
     <div className="shadow-box" id="email">
       <div className="data-list-title">邮箱修改</div>
@@ -115,30 +102,22 @@ function EmailSettings(props) {
 
 function PasswordSettings(props) {
   const update = (data) => {
-    userService
-      .updatePassword(data)
-      .then(res => {
-        if (res.data.success === true) {
-          message.success(res.data.message)
-        }
-        else {
-          message.error(res.data.message)
-        }
-      })
-      .catch(handleError)
+    userService.updatePassword(data).then(res => {
+      message.success("修改成功")
+    }).catch(handleError)
   }
   return (
     <div className="shadow-box" id="password">
       <div className="data-list-title">密码修改</div>
       <div className="data content">
         <Form name="passwordForm" layout="vertical" onFinish={update}>
-          <Form.Item name="password" label='原密码' rules={passwordRules}>
+          <Form.Item name="oldPassword" label='原密码' rules={passwordRules}>
             <Input maxLength="48"/>
           </Form.Item>
           <Form.Item name="newPassword" label='新密码' rules={passwordRules}>
             <Input.Password maxLength="48"/>
           </Form.Item>
-          <Form.Item name="rePassword" label='确认新密码' rules={passwordRules}>
+          <Form.Item name="confirmNewPassword" label='确认新密码' rules={passwordRules}>
             <Input.Password maxLength="48"/>
           </Form.Item>
           <Button type="primary" htmlType="submit" title="保存修改">保存修改</Button>

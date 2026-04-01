@@ -14,11 +14,24 @@ server:
       secure: true
       max-age: 1d
       same-site: lax
-    persistent: true
-  multipart:
-    max-file-size: 20MB
-    max-request-size: 100MB
-    file-size-threshold: 512MB
+  netty:
+    worker-threads: 8
+    acceptor-threads: 1
+    leak-detection: disabled
+    connection-timeout: 10s
+    auto-ack-ping-frame: true
+    auto-ack-settings-frame: true
+    http2-graceful-shutdown-timeout: 29s
+    auto-read: ${server.http2.enabled}
+
+  use-virtual-thread-service-executor: true
+
+  http2:
+    enabled: false
+    initial-settings:
+      max-header-list-size: 1024
+      push-enabled: false
+      connect-protocol-enabled: false
 
 infra:
   output:
@@ -44,13 +57,12 @@ freemarker:
     url_escaping_charset: UTF-8
 
 jackson:
-  #  time-zone: GMT+8
+  time-zone: UTC
   date-format: 'yyyy-MM-dd HH:mm:ss'
   deserialization:
     # 常用,json中含pojo不存在属性时是否失败报错,默认true
     FAIL_ON_UNKNOWN_PROPERTIES: false
   serialization:
-    WRITE_DATES_AS_TIMESTAMPS: false # 返回的java.util.date转换成timestamp
     FAIL_ON_EMPTY_BEANS: false # 对象为空时是否报错，默认true
 
 
@@ -63,23 +75,20 @@ aliyun:
     secretAccessKey:
 
 mail:
-  debug: false
-  from:
-    userName:
-  nickName:
-  password:
-  smtp:
-    auth: true
-    host: smtp.qq.com
-    port: 465
-    socketFactory:
-      class: javax.net.ssl.SSLSocketFactory
-    ssl:
-      enable: true
-    timeout: 25000
-  transport:
-    protocol: smtp
-  userName:
+  username: 1
+  password: 1
+  protocol: smtp
+  host: smtp.qq.com
+  port: 465
+  ssl:
+    enabled: true
+  properties:
+    mail:
+      smtp:
+        auth: true
+        connectionTimeout: 5000
+        writeTimeout: 5000
+        timeout: 3000
 
 site:
   subTitle: 代码是我心中的一首诗
@@ -87,15 +96,13 @@ site:
 
 datasource:
   name: 'blog-datasource'
-  url: jdbc:mysql://localhost:3306/today?useUnicode=true&characterEncoding=utf8&useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
-  type: com.zaxxer.hikari.HikariDataSource
-  username: root
-  password: 88888888
-  driver-class-name: com.mysql.cj.jdbc.Driver
-  hikari:
-    maximum-pool-size: 20
-    max-lifetime: 120000
-    connection-test-query: 'select 1'
+
+flyway:
+  baseline-version: 3.1.0
+  baseline-on-migrate: true
+  baseline-description: baseline
+  sql-migration-prefix: v
+  table: schema_history
 
 logging:
   file:

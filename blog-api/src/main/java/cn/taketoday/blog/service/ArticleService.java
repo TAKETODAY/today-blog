@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,16 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import cn.taketoday.beans.factory.InitializingBean;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.ArticleItem;
@@ -37,25 +41,29 @@ import cn.taketoday.blog.model.form.ArticleConditionForm;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
-import cn.taketoday.cache.annotation.CacheConfig;
-import cn.taketoday.cache.annotation.CacheEvict;
-import cn.taketoday.cache.annotation.Cacheable;
-import cn.taketoday.jdbc.AbstractQuery;
-import cn.taketoday.jdbc.JdbcConnection;
-import cn.taketoday.jdbc.NamedQuery;
-import cn.taketoday.jdbc.Query;
-import cn.taketoday.jdbc.RepositoryManager;
-import cn.taketoday.lang.Assert;
-import cn.taketoday.lang.Nullable;
-import cn.taketoday.persistence.EntityManager;
-import cn.taketoday.stereotype.Service;
-import cn.taketoday.transaction.annotation.Transactional;
-import cn.taketoday.util.CollectionUtils;
-import cn.taketoday.web.InternalServerException;
+import infra.beans.factory.InitializingBean;
+import infra.cache.annotation.CacheConfig;
+import infra.cache.annotation.CacheEvict;
+import infra.cache.annotation.Cacheable;
+import infra.jdbc.JdbcConnection;
+import infra.jdbc.Query;
+import infra.jdbc.RepositoryManager;
+import infra.lang.Assert;
+import infra.persistence.EntityManager;
+import infra.persistence.EntityMetadata;
+import infra.persistence.EntityRef;
+import infra.persistence.Order;
+import infra.persistence.OrderBy;
+import infra.persistence.SimpleSelectQueryStatement;
+import infra.persistence.Transient;
+import infra.persistence.sql.SimpleSelect;
+import infra.stereotype.Service;
+import infra.transaction.annotation.Transactional;
+import infra.transaction.support.TransactionOperations;
+import infra.util.CollectionUtils;
+import infra.web.server.InternalServerException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
-
-import static cn.taketoday.persistence.QueryCondition.isEqualsTo;
 
 @Service
 @CustomLog
@@ -71,10 +79,14 @@ public class ArticleService implements InitializingBean {
 
   private final RepositoryManager repository;
 
+  private final TransactionOperations txOperations;
+
   private final CategoryService categoryService;
 
   private final Rss rss = new Rss();
+
   private final Atom atom = new Atom();
+
   private final Sitemap sitemap = new Sitemap();
 
   /**
@@ -83,13 +95,13 @@ public class ArticleService implements InitializingBean {
    * @param article article instance
    */
   @Transactional
-  @CacheEvict(key = "'ById_'+#article.id")
+  @CacheEvict(allEntries = true)
   public void update(Article article) {
     Assert.notNull(article, "文章不能为空");
     Assert.notNull(article.getId(), "文章ID不能为空");
     Article oldArticle = obtainById(article.getId());
 
-    repository.getEntityManager().updateById(article);
+    entityManager.updateById(article);
 
     // update category
     if (!Objects.equals(article.getCategory(), oldArticle.getCategory())) {
@@ -126,7 +138,7 @@ public class ArticleService implements InitializingBean {
         labelService.removeArticleLabels(newArticle.getId());
       }
       if (CollectionUtils.isNotEmpty(newLabels)) {
-        labelService.saveArticleLabels(newLabels, newArticle.getId());
+        labelService.persistArticleLabels(newLabels, newArticle.getId());
       }
     }
   }
@@ -154,13 +166,9 @@ public class ArticleService implements InitializingBean {
   @Nullable
   @Cacheable(key = "'ById_'+#id")
   public Article getById(long id) {
-    try (Query query = repository.createQuery("SELECT * FROM article WHERE id = ? LIMIT 1")) {
-      query.addParameter(id);
-
-      Article article = query.fetchFirst(Article.class);
-      applyTags(article);
-      return article;
-    }
+    Article article = entityManager.findById(Article.class, id);
+    applyTags(article);
+    return article;
   }
 
   @Nullable
@@ -179,7 +187,7 @@ public class ArticleService implements InitializingBean {
   /**
    * @return {@link Article} never be null
    */
-  protected Article obtainById(long id) {
+  public Article obtainById(long id) {
     Article byId = getById(id);
     if (byId == null) {
       throw ErrorMessageException.failed("该文章不存在或已删除不能操作");
@@ -211,60 +219,20 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'home-'+#pageable.pageNumber()+'-'+#pageable.pageSize()")
   public Pagination<ArticleItem> getHomeArticles(Pageable pageable) {
-    try (JdbcConnection connection = repository.open()) {
-      try (Query countQuery = connection.createQuery(
-              "SELECT COUNT(id) FROM article WHERE `status` = ?")) {
-        countQuery.addParameter(PostStatus.PUBLISHED);
-        int count = countQuery.fetchScalar(int.class);
-        if (count < 1) {
-          return Pagination.empty();
-        }
-
-        String sql = """
-                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-                FROM article WHERE `status` = :status
-                order by create_at DESC LIMIT :offset, :pageSize
-                """;
-        try (NamedQuery query = repository.createNamedQuery(sql)) {
-          query.addParameter("offset", pageable.offset());
-          query.addParameter("status", PostStatus.PUBLISHED);
-          query.addParameter("pageSize", pageable.pageSize());
-
-          return fetchArticleItems(pageable, count, query);
-        }
-      }
-    }
-  }
-
-  private Pagination<ArticleItem> fetchArticleItems(Pageable pageable, int count, AbstractQuery query) {
-    List<ArticleItem> items = applyTags(query.fetch(ArticleItem.class));
-    return Pagination.ok(items, count, pageable);
+    return entityManager.page(ArticleItem.class, new ArticleStatus(PostStatus.PUBLISHED), pageable)
+            .peek(this::applyTags)
+            .map(Pagination::from);
   }
 
   /**
    * 搜索文章
    */
   public Pagination<ArticleItem> search(String q, Pageable pageable) {
-    try (JdbcConnection connection = repository.open()) {
-      try (NamedQuery countQuery = connection.createNamedQuery(
-              "select count(*) from article WHERE `title` like :q OR `content` like :q")) {
-        countQuery.addParameter("q", "%" + q + "%");
-        int count = countQuery.fetchScalar(int.class);
-        if (count < 1) {
-          return Pagination.empty();
-        }
-        try (NamedQuery dataQuery = connection.createNamedQuery("""
-                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-                FROM article WHERE `title` LIKE :q OR `content` LIKE :q
-                ORDER BY create_at DESC LIMIT :offset, :size""")) {
-
-          dataQuery.addParameter("q", "%" + q + "%");
-          dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("size", pageable.pageSize());
-          return fetchArticleItems(pageable, count, dataQuery);
-        }
-      }
-    }
+    ArticleConditionForm form = new ArticleConditionForm();
+    form.setQ(q);
+    return entityManager.page(ArticleItem.class, form, pageable)
+            .peek(this::applyTags)
+            .map(Pagination::from);
   }
 
   public Pagination<Article> search(ArticleConditionForm from, Pageable pageable) {
@@ -287,7 +255,7 @@ public class ArticleService implements InitializingBean {
 
         countQuery.addParameter("name", label);
         countQuery.addParameter("status", PostStatus.PUBLISHED);
-        int count = countQuery.fetchScalar(int.class);
+        int count = countQuery.scalar(int.class);
         if (count < 1) {
           return Pagination.empty();
         }
@@ -305,7 +273,8 @@ public class ArticleService implements InitializingBean {
           dataQuery.addParameter("status", PostStatus.PUBLISHED);
           dataQuery.addParameter("offset", pageable.offset());
           dataQuery.addParameter("size", pageable.pageSize());
-          return fetchArticleItems(pageable, count, dataQuery);
+          List<ArticleItem> items = applyTags(dataQuery.fetch(ArticleItem.class));
+          return Pagination.ok(items, count, pageable);
         }
       }
     }
@@ -315,48 +284,23 @@ public class ArticleService implements InitializingBean {
    * 根据类型找文章
    * @param pageable 分页
    */
-  @Cacheable(key = "'cate_'+#categoryName+'_'+#pageable")
+  @Cacheable(key = "'cate_'+#categoryName+'_'+#pageable.offset()")
   public Pagination<ArticleItem> getArticlesByCategory(String categoryName, Pageable pageable) {
-    try (JdbcConnection connection = repository.open()) {
-
-      try (var countQuery = connection.createNamedQuery("""
-              SELECT COUNT(id) FROM article WHERE status = :status AND category = :name""")) {
-        countQuery.addParameter("name", categoryName);
-        countQuery.addParameter("status", PostStatus.PUBLISHED);
-        int count = countQuery.fetchScalar(int.class);
-        if (count < 1) {
-          return Pagination.empty();
-        }
-
-        try (var dataQuery = connection.createNamedQuery("""
-                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
-                FROM article WHERE status = :status AND category = :name LIMIT :offset, :pageSize""")) {
-          dataQuery.addParameter("name", categoryName);
-          dataQuery.addParameter("status", PostStatus.PUBLISHED);
-          dataQuery.addParameter("offset", pageable.offset());
-          dataQuery.addParameter("pageSize", pageable.pageSize());
-          return fetchArticleItems(pageable, count, dataQuery);
-        }
-      }
-    }
+    return entityManager.page(ArticleItem.class, Map.of("status", PostStatus.PUBLISHED, "category", categoryName), pageable)
+            .peek(this::applyTags)
+            .map(Pagination::from);
   }
 
   /**
    * 刷新订阅文章
    */
   public void refreshFeedArticles() {
-    int listSize = blogConfig.articleFeedListSize;
-    try (Query query = repository.createQuery(
-            "SELECT * FROM article WHERE status=0 order by id DESC LIMIT ?")) {
-      query.addParameter(listSize);
+    var feedArticles = entityManager.find(Article.class, new FeedArticles(blogConfig.articleFeedListSize));
+    applyLabels(feedArticles);
 
-      List<Article> feedArticles = query.fetch(Article.class);
-      applyLabels(feedArticles);
-
-      buildAtom(feedArticles);
-      buildRss(feedArticles);
-      buildSitemap();
-    }
+    buildAtom(feedArticles);
+    buildRss(feedArticles);
+    buildSitemap();
   }
 
   @Override
@@ -369,7 +313,7 @@ public class ArticleService implements InitializingBean {
    */
   protected void buildAtom(List<Article> feedArticles) {
     log.debug("Build Atom ");
-    atom.getEntries().clear();
+    atom.clear();
 
     for (Article article : feedArticles) {
       if (article.needPassword()) {
@@ -402,9 +346,8 @@ public class ArticleService implements InitializingBean {
    * Rss
    */
   protected void buildRss(List<Article> feedArticles) {
-
     log.debug("Build Rss");
-    rss.getItems().clear();
+    rss.clear();
 
     for (Article article : feedArticles) {
       if (article.needPassword()) {
@@ -431,14 +374,13 @@ public class ArticleService implements InitializingBean {
     rss.setLastBuildDate(System.currentTimeMillis());
   }
 
-  protected synchronized void buildSitemap() {
+  protected void buildSitemap() {
     log.debug("Build Sitemap");
-    try (var query = repository.createQuery("SELECT * FROM article ORDER BY create_at DESC")) {
-      sitemap.getUrls().clear();
-      for (Article article : query.fetch(Article.class)) {
-        if (article.getStatus() == PostStatus.PUBLISHED) {
-          sitemap.addArticle(article);
-        }
+    sitemap.clear();
+
+    for (Article article : entityManager.find(Article.class, Map.of("create_at", Order.DESC))) {
+      if (article.getStatus() == PostStatus.PUBLISHED) {
+        sitemap.addArticle(article);
       }
     }
   }
@@ -446,24 +388,22 @@ public class ArticleService implements InitializingBean {
   @Transactional
   @CacheEvict(allEntries = true)
   public void deleteById(long id) {
-    repository.getEntityManager().delete(Article.class, id);
+    entityManager.delete(Article.class, id);
     // 更新文章标签数量
     categoryService.updateArticleCount();
     refreshFeedArticles();
   }
 
-  @Transactional
   @CacheEvict(allEntries = true)
   public void updateStatusById(PostStatus status, long id) {
+    Assert.notNull(status, "status is required");
     Article findById = obtainById(id);
-    try (Query query = repository.createQuery(
-            "UPDATE article set status = ? WHERE id = ?")) {
-      query.addParameter(status);
-      query.addParameter(id);
-      query.executeUpdate();
-    }
 
-    categoryService.updateArticleCount(findById.getCategory());
+    txOperations.executeWithoutResult(txStatus -> {
+      entityManager.updateById(new ArticleStatus(status), id);
+      categoryService.updateArticleCount(findById.getCategory());
+    });
+
     refreshFeedArticles();
   }
 
@@ -474,11 +414,11 @@ public class ArticleService implements InitializingBean {
   public void saveArticle(Article article) {
     // save
     // TODO 保存策略
-    repository.getEntityManager().persist(article);
+    entityManager.persist(article);
     // save labels
     Set<Label> labels = article.getLabels();
     if (CollectionUtils.isNotEmpty(labels)) {
-      labelService.saveArticleLabels(labels, article.getId());
+      labelService.persistArticleLabels(labels, article.getId());
     }
 
     // update category
@@ -495,7 +435,7 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'countBy_'+#status")
   public int countByStatus(PostStatus status) {
-    return entityManager.count(Article.class, isEqualsTo("status", status)).intValue();
+    return entityManager.count(Article.class, Map.of("status", status)).intValue();
   }
 
   /***
@@ -549,6 +489,13 @@ public class ArticleService implements InitializingBean {
     }
   }
 
+  private void applyTags(@Nullable ArticleItem item) {
+    if (item != null) {
+      Set<Label> labels = labelService.getByArticleId(item.id);
+      item.tags = labels.stream().map(Label::getName).toList();
+    }
+  }
+
   private List<ArticleItem> applyTags(List<ArticleItem> items) {
     for (ArticleItem item : items) {
       Set<Label> labels = labelService.getByArticleId(item.id);
@@ -568,6 +515,39 @@ public class ArticleService implements InitializingBean {
       }
     }
     return ret;
+  }
+
+  @OrderBy("create_at DESC")
+  @EntityRef(Article.class)
+  static class ArticleStatus {
+
+    public final PostStatus status;
+
+    ArticleStatus(PostStatus status) {
+      this.status = status;
+    }
+  }
+
+  static class FeedArticles extends SimpleSelectQueryStatement {
+
+    @Transient
+    public final int limit;
+
+    public FeedArticles(int limit) {
+      this.limit = limit;
+    }
+
+    @Override
+    protected void renderInternal(EntityMetadata metadata, SimpleSelect select) {
+      select.addRestriction("status");
+      select.limit(limit);
+      select.orderBy("id", Order.DESC);
+    }
+
+    @Override
+    public void setParameter(EntityMetadata metadata, PreparedStatement statement) throws SQLException {
+      statement.setInt(1, PostStatus.PUBLISHED.getValue());
+    }
   }
 
 }

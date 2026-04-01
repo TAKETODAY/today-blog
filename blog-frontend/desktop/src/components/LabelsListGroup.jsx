@@ -20,7 +20,7 @@
 
 import { Skeleton } from 'antd';
 import React from 'react';
-import { getRandLabel, isEmpty } from '../utils';
+import { getRandLabel, isEmpty } from 'core';
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import { updateHttpErrorMessage } from "../redux/actions";
