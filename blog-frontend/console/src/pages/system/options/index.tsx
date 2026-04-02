@@ -1,89 +1,113 @@
-/*
- * Copyright 2017 - 2026 the original author or authors.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see [https://www.gnu.org/licenses/]
- */
-
-import { useEffect, useState } from 'react';
-import { Button, Form, Input, message } from 'antd';
+import React, { useCallback, useRef, useState } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
-import { doUpdateOptions, queryOptions } from "./service";
+import { Space, Switch, Tag, Tooltip } from 'antd';
+import { CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
+import { query } from "./service";
+import OptionEditModal from "./OptionEditModal";
+import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
+import { format } from "@/utils";
+import { OptionItem } from './types';
 
 
-const layout = {
-  labelCol: { span: 4 },
-  wrapperCol: { span: 16 },
-};
+const renderConfigValue = (record: OptionItem): React.ReactNode => {
+  if (record.valueType === 'bool') {
+    return (
+        <Switch checked={record.value === 'true'} checkedChildren={<CheckOutlined/>} unCheckedChildren={<CloseOutlined/>}/>
+    );
+  }
+  return <span>{record.value || <Tag>N/A</Tag>}</span>;
+}
 
-export default () => {
-  const [options, setOptions] = useState({})
-  const [form] = Form.useForm();
+const ConfigManagement: React.FC = () => {
+  const actionRef = useRef<ActionType>()
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [currentOption, setCurrentOption] = useState<OptionItem | null>(null);
 
-  useEffect(() => {
-    queryOptions().then(res => {
-      setOptions(res.data)
-    })
+  const reload = useCallback(async () => {
+    await actionRef.current?.reload()
   }, [])
 
-  async function updateOptions() {
-    const fieldsValue = form.getFieldsValue()
-    const formValues = {}
-
-    Object.entries<string>(fieldsValue).forEach((entry) => {
-      const [key, value] = entry
-      const option = options[key];
-      if (option !== value) {
-        formValues[key] = value
-      }
-    })
-    if (Object.keys(formValues).length > 0) {
-      const hide = message.loading(`正在更新`)
-      try {
-        await doUpdateOptions(formValues)
-        message.success('更新成功，即将刷新', 1)
-        queryOptions().then(res => {
-          setOptions(res.data)
-        })
-      }
-      catch (error) {
-        message.error('更新失败，请重试')
-      }
-      finally {
-        hide()
-      }
-    }
-    else {
-      return message.info("配置没有变更")
-    }
+  const handleEdit = (record: OptionItem) => {
+    setCurrentOption(record);
+    setEditModalVisible(true);
   }
 
+  const columns: ProColumns<OptionItem>[] = [
+    {
+      fixed: 'left',
+      title: '名称',
+      key: 'name',
+      width: 280,
+      ellipsis: true,
+      render: (_, record) => (
+          <Tooltip title={record.name} key={record.name}>
+            <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{record.name}</span>
+          </Tooltip>
+      ),
+    },
+    {
+      title: '配置值',
+      key: 'value',
+      width: 280,
+      hideInSearch: true,
+      render: (_, record) => {
+        return renderConfigValue(record)
+      },
+    },
+    {
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
+      width: 280,
+      hideInSearch: true,
+      render: (_, record) => <span>{record.description || <Tag>N/A</Tag>}</span>,
+    },
+    {
+      title: '公开状态',
+      width: 100,
+      align: 'center',
+      hideInSearch: true,
+      render: (_, record) => (record.open ? <Tag color="success">公开</Tag> : <Tag>仅内部使用</Tag>)
+    },
+    {
+      title: '更新时间',
+      width: 180,
+      hideInSearch: true,
+      render: (_, record: OptionItem) => (record.updateAt ? format(record.updateAt)
+          : <Tag>N/A</Tag>)
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 150,
+      align: 'center',
+      hideInSearch: true,
+      render: (_, record) => (
+          <Space size="small">
+            <a onClick={() => handleEdit(record)}><EditOutlined/>编辑</a>
+          </Space>
+      ),
+    },
+  ];
+
   return (
-      <PageContainer>
-        <div style={{ background: '#fff', padding: 10, borderRadius: 5 }}>
-          <Form {...layout} form={form} name="options-form">
-            {Object.keys(options).map((option) => {
-              return (
-                  <Form.Item key={option} name={option} label={option} initialValue={options[option]}>
-                    <Input/>
-                  </Form.Item>
-              )
-            })}
-            <Form.Item wrapperCol={{ span: 14, offset: 4 }}>
-              <Button type="primary" onClick={updateOptions}>更新</Button>
-            </Form.Item>
-          </Form>
-        </div>
+      <PageContainer header={{ title: '系统配置管理' }}>
+        <ProTable<OptionItem>
+            rowKey="name"
+            headerTitle="系统配置列表"
+            actionRef={actionRef}
+            request={query}
+            columns={columns}
+            scroll={{ x: 1200 }}
+        />
+
+        <OptionEditModal option={currentOption} visible={editModalVisible} onSuccess={() => {
+          setEditModalVisible(false)
+          return reload()
+        }} onCancel={() => setEditModalVisible(false)}/>
+
       </PageContainer>
-  )
-}
+  );
+};
+
+export default ConfigManagement;

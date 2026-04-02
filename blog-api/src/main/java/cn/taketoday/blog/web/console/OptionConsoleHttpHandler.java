@@ -17,19 +17,18 @@
 
 package cn.taketoday.blog.web.console;
 
-import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Option;
 import cn.taketoday.blog.service.OptionService;
+import cn.taketoday.blog.web.Pageable;
+import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import infra.http.HttpStatus;
 import infra.web.annotation.GET;
-import infra.web.annotation.POST;
 import infra.web.annotation.PUT;
 import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
-import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestController;
 
 /**
@@ -57,31 +56,14 @@ class OptionConsoleHttpHandler {
    * @return 系统选项列表
    */
   @GET
-  public List<Option> listOptions() {
-    return optionsService.options();
+  public Pagination<Option> listOptions(@Nullable String name, Pageable pageable) {
+    return optionsService.queryOptions(name, pageable);
   }
 
-  /**
-   * 创建新的系统选项。
-   *
-   * @param options 待创建的选项列表
-   */
-  @POST
-  @Logging(title = "创建系统变量")
-  public void create(@RequestBody List<Option> options) {
-    optionsService.persist(options);
-  }
-
-  /**
-   * 更新现有的系统选项。
-   *
-   * @param options 待更新的选项列表
-   */
   @PUT
   @Logging(title = "更新系统变量")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void update(@RequestBody List<Option> options) {
-    optionsService.update(options);
+  public void update(@RequestBody Option option) {
+    optionsService.update(option);
   }
 
 }

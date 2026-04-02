@@ -29,6 +29,8 @@ import cn.taketoday.blog.ConfigBinding;
 import cn.taketoday.blog.event.OptionsUpdateEvent;
 import cn.taketoday.blog.model.Option;
 import cn.taketoday.blog.util.StringUtils;
+import cn.taketoday.blog.web.Pageable;
+import cn.taketoday.blog.web.Pagination;
 import infra.beans.BeanMetadata;
 import infra.beans.BeanProperty;
 import infra.beans.factory.BeanFactory;
@@ -37,6 +39,8 @@ import infra.core.env.ConfigurableEnvironment;
 import infra.core.env.EnumerablePropertySource;
 import infra.lang.Unmodifiable;
 import infra.persistence.EntityManager;
+import infra.persistence.EntityRef;
+import infra.persistence.Like;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import infra.util.CollectionUtils;
@@ -103,14 +107,15 @@ public class OptionService {
    * @since 3.2
    */
   public void update(Option option) {
-    entityManager.updateById(option);
+    doUpdateDatabase(option);
+    onUpdate();
   }
 
   @Transactional
   public void update(Map<String, String> optionsMap) {
     if (CollectionUtils.isNotEmpty(optionsMap)) {
       for (Map.Entry<String, String> entry : optionsMap.entrySet()) {
-        update(new Option(entry.getKey(), entry.getValue()));
+        doUpdateDatabase(new Option(entry.getKey(), entry.getValue()));
       }
       onUpdate();
     }
@@ -125,6 +130,10 @@ public class OptionService {
     onUpdate();
   }
 
+  private void doUpdateDatabase(Option option) {
+    entityManager.updateById(option);
+  }
+
   private List<Option> listOptions() {
     return entityManager.find(Option.class);
   }
@@ -132,6 +141,37 @@ public class OptionService {
   private void onUpdate() {
     optionsPropertySource.updateCache();
     eventPublisher.publishEvent(new OptionsUpdateEvent(this));
+  }
+
+  /**
+   * 分页查询配置选项列表。
+   *
+   * @param name 选项名称（支持模糊匹配），可为 null
+   * @param pageable 分页参数
+   * @return 包含选项列表的分页对象
+   */
+  public Pagination<Option> queryOptions(@Nullable String name, Pageable pageable) {
+    return Pagination.from(entityManager.page(Option.class, new OptionName(name), pageable));
+  }
+
+  /**
+   * 用于构建选项名称查询条件的内部类。
+   * 该类通过 {@link EntityRef} 注解关联到 {@link Option} 实体，
+   * 并使用 {@link Like} 注解实现名称字段的模糊匹配。
+   */
+  @EntityRef(Option.class)
+  static class OptionName {
+
+    /**
+     * 选项名称（支持模糊匹配）。
+     */
+    @Like
+    public final @Nullable String name;
+
+    public OptionName(@Nullable String name) {
+      this.name = name;
+    }
+
   }
 
   // ------------------------------------------------------------------------

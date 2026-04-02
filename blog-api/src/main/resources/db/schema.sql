@@ -99,8 +99,10 @@ create table t_option
 (
     name        varchar(255) default not null primary key,
     value       text         default null,
+    value_type  varchar(255) default 'string' not null comment '值类型',
     description text         default null comment 'description',
-    `public`    bit          default true not null comment 'public'
+    `public`    bit          default true     not null comment 'public',
+    update_at   datetime on update CURRENT_TIMESTAMP comment '更新时间'
 );
 
 create table t_page_view
