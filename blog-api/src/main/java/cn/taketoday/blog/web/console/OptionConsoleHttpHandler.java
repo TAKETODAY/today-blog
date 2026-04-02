@@ -61,7 +61,7 @@ class OptionConsoleHttpHandler {
   }
 
   @PUT
-  @Logging(title = "更新系统变量")
+  @Logging(title = "更新系统变量", content = "更新: #{#option.name} = #{#option.value}")
   public void update(@RequestBody Option option) {
     optionsService.update(option);
   }
