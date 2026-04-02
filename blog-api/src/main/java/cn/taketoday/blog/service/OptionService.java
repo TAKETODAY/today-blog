@@ -205,9 +205,8 @@ public class OptionService {
       }
     }
 
-    @Nullable
     @Override
-    public synchronized String getProperty(String name) {
+    public synchronized @Nullable String getProperty(String name) {
       return optionsMap.get(name);
     }
 
