@@ -1,9 +1,9 @@
 import { Effect, Reducer } from 'umi';
 import { DashboardStatistics } from './data.d';
-import request from "umi-request";
+import { extractData, http } from "@/utils";
 
 async function queryStatistics() {
-  return request('/api/statistics/dashboard');
+  return http.get('/api/statistics/dashboard').then(extractData)
 }
 
 export interface ModalState {

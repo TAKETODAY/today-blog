@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import { useModel } from "@@/plugin-model/useModel"
+import { useModel } from "@umijs/max"
 import { useCallback } from "react";
 
 // model

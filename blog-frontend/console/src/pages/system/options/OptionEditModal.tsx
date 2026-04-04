@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Form, Input, InputNumber, message, Modal, Switch } from 'antd';
 import { updateOption } from './service';
-import { OptionItem, OptionValueType } from './types';
+import { OptionItem, OptionValueType } from './types.d';
 
 
 interface OptionEditModalProps {

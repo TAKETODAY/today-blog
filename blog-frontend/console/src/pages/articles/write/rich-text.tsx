@@ -28,7 +28,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { AxiosResponse } from "axios";
 import ArticleDrawer from "@/pages/articles/components/ArticleSettingsDrawer";
 import RichTextEditor from "@/pages/articles/components/RichTextEditor";
-import { ArticleItem } from "@/pages/articles/data";
+import { ArticleItem } from "@/pages/articles/data.d";
 
 const articleCacheKey = "article_write_rich"
 

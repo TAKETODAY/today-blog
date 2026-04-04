@@ -29,8 +29,8 @@ import '@/assets/css/index.css'
 import { PlusOutlined } from "@ant-design/icons";
 import { AxiosResponse } from "axios";
 import ArticleDrawer from "@/pages/articles/components/ArticleSettingsDrawer";
-import { ArticleItem } from "@/pages/articles/data";
-import { Attachment } from "@/components/Attachment/data";
+import { ArticleItem } from "@/pages/articles/data.d";
+import { Attachment } from "@/components/Attachment/data.d";
 import { useCDN } from "@/components/hooks";
 
 const articleCacheKey = "article_write_md"

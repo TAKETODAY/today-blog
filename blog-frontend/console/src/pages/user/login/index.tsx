@@ -1,30 +1,12 @@
-/*
- * Copyright 2017 - 2025 the original author or authors.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see [https://www.gnu.org/licenses/]
- */
-
-import { LockOutlined, UserOutlined, } from '@ant-design/icons';
-import { Alert, message, Popconfirm } from 'antd';
+import { AlipayCircleOutlined, LockOutlined, TaobaoCircleOutlined, UserOutlined, WeiboCircleOutlined, } from '@ant-design/icons';
+import { LoginForm, ProFormCheckbox, ProFormText, } from '@ant-design/pro-components';
+import { FormattedMessage, Helmet, SelectLang, useIntl, useModel, } from '@umijs/max';
+import { Alert, App } from 'antd';
+import { createStyles } from 'antd-style';
 import React, { useState } from 'react';
-import { LoginForm, ProFormCheckbox, ProFormText } from '@ant-design/pro-form';
-import { FormattedMessage, history, SelectLang, useIntl, useModel } from 'umi';
-import Footer from '@/components/Footer';
+import Settings from '../../../../config/defaultSettings';
 import { login } from '@/services/ant-design-pro/login';
 
-import styles from './index.less';
-import logo from '@/assets/logo.svg';
 
 import { getStorage, mergeValidationError, removeStorage, saveStorage } from "@/utils";
 
@@ -35,21 +17,93 @@ function getInitialValue() {
   }
 }
 
-const LoginMessage: React.FC<{ content?: string; }> = ({ content }) => (
-    <Alert style={{ marginBottom: 24, }}
-           message={content}
-           type="error"
-           showIcon
-    />
-);
+const useStyles = createStyles(({ token }) => {
+  return {
+    action: {
+      marginLeft: '8px',
+      color: 'rgba(0, 0, 0, 0.2)',
+      fontSize: '24px',
+      verticalAlign: 'middle',
+      cursor: 'pointer',
+      transition: 'color 0.3s',
+      '&:hover': {
+        color: token.colorPrimaryActive,
+      },
+    },
+    lang: {
+      width: 42,
+      height: 42,
+      lineHeight: '42px',
+      position: 'fixed',
+      right: 16,
+      borderRadius: token.borderRadius,
+      ':hover': {
+        backgroundColor: token.colorBgTextHover,
+      },
+    },
+    container: {
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      overflow: 'auto',
+      backgroundImage:
+          "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
+      backgroundSize: '100% 100%',
+    },
+  };
+});
+
+const ActionIcons = () => {
+  const { styles } = useStyles();
+
+  return (
+      <>
+        <AlipayCircleOutlined
+            key="AlipayCircleOutlined"
+            className={styles.action}
+        />
+        <TaobaoCircleOutlined
+            key="TaobaoCircleOutlined"
+            className={styles.action}
+        />
+        <WeiboCircleOutlined
+            key="WeiboCircleOutlined"
+            className={styles.action}
+        />
+      </>
+  );
+};
+
+const Lang = () => {
+  const { styles } = useStyles();
+
+  return (
+      <div className={styles.lang} data-lang>
+        {SelectLang && <SelectLang/>}
+      </div>
+  );
+};
+
+const LoginMessage: React.FC<{
+  content: string;
+}> = ({ content }) => {
+  return (
+      <Alert
+          style={{
+            marginBottom: 24,
+          }}
+          title={content}
+          type="error"
+          showIcon
+      />
+  );
+};
 
 /** 此方法会跳转到 redirect 参数所在的位置 */
 const goto = () => {
-  if (!history) return;
   setTimeout(() => {
-    const { query } = history.location;
-    const { redirect } = query as { redirect: string };
-    history.push(redirect || '/');
+    const urlParams = new URL(window.location.href).searchParams;
+    window.location.href = urlParams.get('redirect') || '/';
   }, 10);
 };
 
@@ -57,7 +111,8 @@ const Login: React.FC = () => {
   const [_, setSubmitting] = useState(false);
   const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
   const { initialState, setInitialState } = useModel('@@initialState');
-
+  const { styles } = useStyles();
+  const { message } = App.useApp();
   const intl = useIntl();
 
   const setUserInfo = (userInfo: API.CurrentUser) => {
@@ -107,33 +162,56 @@ const Login: React.FC = () => {
       setSubmitting(false)
     }
   };
+
   const { success, message: errorMessage } = userLoginState;
 
   return (
       <div className={styles.container}>
-        <div className={styles.lang}>{SelectLang && <SelectLang/>}</div>
-        <div className={styles.content}>
+        <Helmet>
+          <title>
+            {intl.formatMessage({
+              id: 'menu.login',
+              defaultMessage: '登录页',
+            })}
+            {Settings.title && ` - ${Settings.title}`}
+          </title>
+        </Helmet>
+        <Lang/>
+        <div
+            style={{
+              flex: '1',
+              padding: '32px 0',
+            }}
+        >
+          <LoginForm contentStyle={{ minWidth: 280, maxWidth: '75vw', }}
+                     logo={<img alt="logo" src="/logo.svg"/>}
+                     title="TODAY BLOG 后台管理"
+                     subTitle={intl.formatMessage({ id: 'pages.layouts.userLayout.title' })}
 
-          <LoginForm
-              logo={logo}
-              title="TODAY BLOG 后台管理"
-              subTitle={intl.formatMessage({ id: 'pages.layouts.userLayout.title' })}
-              initialValues={getInitialValue()}
-              onFinish={async (values) => {
-                await handleSubmit(values as API.LoginParams);
-              }}
-              message={!success && errorMessage && (
-                  <LoginMessage content={errorMessage}/>
-              )}
+                     initialValues={getInitialValue()}
+                     actions={[
+                       <FormattedMessage
+                           key="loginWith"
+                           id="pages.login.loginWith"
+                           defaultMessage="其他登录方式"
+                       />,
+                       <ActionIcons key="icons"/>,
+                     ]}
+                     onFinish={async (values) => {
+                       await handleSubmit(values as API.LoginParams);
+                     }}
+
+                     message={!success && errorMessage && (
+                         <LoginMessage content={errorMessage}/>
+                     )}
           >
 
-            {/*输入框*/}
             <>
               <ProFormText
                   name="email"
                   fieldProps={{
                     size: 'large',
-                    prefix: <UserOutlined className={styles.prefixIcon}/>,
+                    prefix: <UserOutlined/>,
                   }}
                   placeholder={intl.formatMessage({
                     id: 'pages.login.username.placeholder',
@@ -155,7 +233,7 @@ const Login: React.FC = () => {
                   name="password"
                   fieldProps={{
                     size: 'large',
-                    prefix: <LockOutlined className={styles.prefixIcon}/>,
+                    prefix: <LockOutlined/>,
                   }}
                   placeholder={intl.formatMessage({
                     id: 'pages.login.password.placeholder',
@@ -174,22 +252,20 @@ const Login: React.FC = () => {
                   ]}
               />
             </>
-            {/*登录选项*/}
-            <div style={{ marginBottom: 24 }}>
-              <ProFormCheckbox noStyle name="remember">
-                <FormattedMessage id="pages.login.rememberMe" defaultMessage="记住邮箱"/>
+
+            <div style={{ marginBottom: 24, }}>
+              <ProFormCheckbox noStyle name="autoLogin">
+                <FormattedMessage
+                    id="pages.login.rememberMe"
+                    defaultMessage="自动登录"
+                />
               </ProFormCheckbox>
-              <Popconfirm title="还不支持">
-                <a style={{ float: 'right' }}>
-                  <FormattedMessage id="pages.login.forgotPassword" defaultMessage="忘记密码"/>
-                </a>
-              </Popconfirm>
+              <a style={{ float: 'right', }}>
+                <FormattedMessage id="pages.login.forgotPassword" defaultMessage="忘记密码"/>
+              </a>
             </div>
-
           </LoginForm>
-
         </div>
-        <Footer/>
       </div>
   );
 };

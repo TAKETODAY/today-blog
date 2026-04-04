@@ -1,5 +1,4 @@
-import { useModel } from "@@/plugin-model/useModel"
-
+import { useModel } from "@umijs/max"
 
 import { useCallback, useState } from 'react'
 

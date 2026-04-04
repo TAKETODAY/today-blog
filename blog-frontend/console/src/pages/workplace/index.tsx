@@ -18,8 +18,11 @@
 import { Avatar, Card, Col, Row, Skeleton, Statistic, Table, Tag } from 'antd';
 import React, { useEffect } from 'react';
 
-import { connect, Dispatch, Link } from 'umi';
-import { PageHeaderWrapper } from '@ant-design/pro-layout';
+import { Link } from '@umijs/max';
+import { connect, Dispatch } from 'umi';
+
+import { PageContainer } from '@ant-design/pro-components';
+
 import moment from 'moment';
 import { ModalState } from './model';
 import EditableLinkGroup, { EditableLink } from './components/EditableLinkGroup';
@@ -27,7 +30,7 @@ import styles from './style.less';
 import { DashboardComment, DashboardLog, DashboardStatistics } from './data.d';
 import { getCommentStatusDesc, isEmpty } from "@/utils";
 import Statistics from "@/pages/workplace/components/Statistics";
-import Image from "@/components/Image";
+import { Image } from "@/components";
 import { useUserSession } from "@/components/hooks";
 
 const links: EditableLink[] = [
@@ -180,8 +183,8 @@ const Workplace = (props: WorkplaceProps) => {
   }, [])
 
   return (
-      <PageHeaderWrapper content={<PageHeaderContent/>}
-                         extraContent={<ExtraContent statistics={statistics}/>}>
+      <PageContainer content={<PageHeaderContent/>}
+                     extraContent={<ExtraContent statistics={statistics}/>}>
 
         <Row gutter={24}>
           <Col xl={16} lg={24} md={24} sm={24} xs={24}>
@@ -258,7 +261,7 @@ const Workplace = (props: WorkplaceProps) => {
             </Card>
           </Col>
         </Row>
-      </PageHeaderWrapper>
+      </PageContainer>
   );
 }
 

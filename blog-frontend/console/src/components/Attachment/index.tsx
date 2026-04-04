@@ -22,7 +22,7 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import { Button, Card, Input, List, Select } from 'antd';
 import moment from "moment";
 import styles from './style.less';
-import { Attachment, FileType } from "./data";
+import { Attachment, FileType } from "./data.d";
 import { IMAGE } from "@/utils";
 import { UploadOutlined } from '@ant-design/icons';
 import UploadForm from "./UploadForm";

@@ -29,10 +29,10 @@ import '@/assets/css/index.css'
 import { PlusOutlined } from "@ant-design/icons";
 import { AxiosResponse } from "axios";
 import ArticleDrawer from "@/pages/articles/components/ArticleSettingsDrawer";
-import { Post } from "@/pages/articles/components/article";
-import { ArticleItem } from "@/pages/articles/data";
-import { PageLoading } from "@ant-design/pro-layout";
-import { Attachment } from "@/components/Attachment/data";
+import { Post } from "@/pages/articles/components/article.d";
+import { ArticleItem } from "@/pages/articles/data.d";
+import { PageLoading } from "@ant-design/pro-components";
+import { Attachment } from "@/components/Attachment/data.d";
 import { useCDN } from "@/components/hooks";
 
 export default (props: { match: { params: { id: string } } }) => {

@@ -20,11 +20,11 @@
 
 import { useState } from 'react';
 import { message } from 'antd';
-import { PageContainer } from '@ant-design/pro-layout';
+import { PageContainer } from '@ant-design/pro-components';
 import { update } from "./service";
 import AttachmentForm from "@/pages/attachment/AttachmentForm";
 import AttachmentList from "@/components/Attachment";
-import { Attachment } from "@/components/Attachment/data";
+import { Attachment } from "@/components/Attachment/data.d";
 
 
 /**

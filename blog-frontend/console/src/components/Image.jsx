@@ -22,7 +22,7 @@ import React from 'react';
 import { Image } from 'antd';
 import { isTrue } from "@/utils";
 import { useCDN } from "@/components/hooks";
-import loading from '/src/assets/images/loading.gif'
+import loading from '@/assets/images/loading.gif'
 
 // const imageServer = 'http://localhost:8080'
 

@@ -20,8 +20,7 @@
 
 import { useRef, useState } from 'react';
 import { Button, Divider, message, Popconfirm } from 'antd';
-import { PageContainer } from '@ant-design/pro-layout';
-import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
+import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { PlusOutlined } from '@ant-design/icons';
 
 import CategoryUpdateForm from "./CategoryUpdateForm";

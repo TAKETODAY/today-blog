@@ -17,8 +17,7 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Divider, message, Popconfirm, Popover, Tag } from 'antd';
-import { PageContainer } from '@ant-design/pro-layout';
-import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
+import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 
 import CommentUpdateForm from "./CommentUpdateForm";
 

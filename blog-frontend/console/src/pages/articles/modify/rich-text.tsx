@@ -29,8 +29,8 @@ import { PlusOutlined } from "@ant-design/icons";
 import { AxiosResponse } from "axios";
 import ArticleDrawer from "../components/ArticleSettingsDrawer";
 import RichTextEditor from "../components/RichTextEditor";
-import { ArticleItem } from "../data";
-import { PageLoading } from "@ant-design/pro-layout";
+import { ArticleItem } from "@/pages/articles/data.d";
+import { PageLoading } from "@ant-design/pro-components";
 
 export default (props: { match: { params: { id: string } } }) => {
   const { id } = props.match.params

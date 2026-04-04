@@ -20,8 +20,7 @@
 
 import { useRef } from 'react';
 import { message, Popconfirm, Space, Tag } from 'antd';
-import { PageContainer } from '@ant-design/pro-layout';
-import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
+import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { isNotEmpty } from "@/utils";
 
 import { LoggingItem } from "./data.d";

@@ -23,8 +23,8 @@ import { computeSummary, extractData, isEmpty, isNotEmpty, showHttpErrorMessageV
 import { Button, Col, DatePicker, Drawer, Form, Input, Row, Select } from "antd";
 import articleService from "@/services/ArticleService";
 import { AxiosResponse } from "axios";
-import { PostCategory, PostLabel } from "@/pages/articles/components/article";
-import { ArticleItem } from "@/pages/articles/data";
+import { PostCategory, PostLabel } from "@/pages/articles/components/article.d";
+import { ArticleItem } from "@/pages/articles/data.d";
 import { ReloadOutlined } from "@ant-design/icons";
 import ImageChooser from "@/components/ImageChooser"
 import moment from "moment";

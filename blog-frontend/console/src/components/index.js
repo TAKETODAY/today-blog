@@ -22,9 +22,18 @@ import Image from './Image';
 import ImageChooser from './ImageChooser';
 import AttachmentList from './Attachment';
 import ImageChooserModal from './ImageChooserModal';
+import Footer from './Footer';
+import { SelectLang, SiderTheme } from './RightContent';
+import { AvatarDropdown, AvatarName } from './RightContent/AvatarDropdown';
+
 
 export {
   Image,
+  Footer,
+  SelectLang,
+  SiderTheme,
+  AvatarName,
+  AvatarDropdown,
   ImageChooser,
   AttachmentList,
   ImageChooserModal

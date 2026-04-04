@@ -1,12 +1,11 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { PageContainer } from '@ant-design/pro-layout';
+import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Space, Switch, Tag, Tooltip } from 'antd';
 import { CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
 import { query } from "./service";
 import OptionEditModal from "./OptionEditModal";
-import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
 import { format } from "@/utils";
-import { OptionItem } from './types';
+import { OptionItem } from './types.d';
 
 
 const renderConfigValue = (record: OptionItem): React.ReactNode => {

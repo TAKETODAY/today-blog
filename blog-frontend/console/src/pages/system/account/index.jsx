@@ -21,7 +21,7 @@
 import { MailOutlined } from '@ant-design/icons';
 import { Button, Card, Col, Modal, Row } from 'antd';
 import React, { useState } from 'react';
-import { GridContent } from '@ant-design/pro-layout';
+import { GridContent } from '@ant-design/pro-components';
 import styles from './Center.less';
 import Settings from "@/pages/system/account/settings"
 import { useUserSession } from "@/components/hooks"
