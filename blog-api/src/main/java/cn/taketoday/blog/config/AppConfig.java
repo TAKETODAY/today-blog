@@ -20,6 +20,7 @@ package cn.taketoday.blog.config;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import org.aopalliance.aop.Advice;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -33,12 +34,16 @@ import cn.taketoday.blog.util.BCryptPasswordEncoder.BCryptVersion;
 import cn.taketoday.blog.util.PasswordEncoder;
 import infra.aop.support.DefaultPointcutAdvisor;
 import infra.aop.support.annotation.AnnotationMatchingPointcut;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.RuntimeHints;
+import infra.aot.hint.RuntimeHintsRegistrar;
 import infra.beans.factory.annotation.DisableAllDependencyInjection;
 import infra.beans.factory.annotation.Qualifier;
 import infra.beans.factory.config.BeanDefinition;
 import infra.cache.annotation.EnableCaching;
 import infra.cache.support.CaffeineCacheManager;
 import infra.context.annotation.Configuration;
+import infra.context.annotation.ImportRuntimeHints;
 import infra.context.annotation.Primary;
 import infra.context.annotation.Role;
 import infra.flyway.config.FlywayMigrationStrategy;
@@ -92,6 +97,7 @@ class AppConfig implements WebMvcConfigurer {
   }
 
   @Component
+  @ImportRuntimeHints(CaffeineCacheHints.class)
   static CaffeineCacheManager caffeineCacheManager() {
     return new CaffeineCacheManager(Caffeine.newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -131,6 +137,19 @@ class AppConfig implements WebMvcConfigurer {
   static DefaultPointcutAdvisor pointcutAdvisor(@Qualifier("loggingInterceptor") Advice advice) {
     var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
     return new DefaultPointcutAdvisor(pointcut, advice);
+  }
+
+  static class CaffeineCacheHints implements RuntimeHintsRegistrar {
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      hints.reflection().registerTypeIfPresent(classLoader, "com.github.benmanes.caffeine.cache.SSMSAW",
+              MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.ACCESS_DECLARED_FIELDS);
+
+      hints.reflection().registerTypeIfPresent(classLoader, "com.github.benmanes.caffeine.cache.PSAWMS",
+              MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.ACCESS_DECLARED_FIELDS);
+    }
+
   }
 
 }

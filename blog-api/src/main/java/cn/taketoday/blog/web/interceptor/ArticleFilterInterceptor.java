@@ -27,6 +27,8 @@ import cn.taketoday.blog.model.ArticleItem;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.web.ListableHttpResult;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
 import infra.context.ApplicationListener;
 import infra.session.SessionManagerOperations;
 import infra.util.CollectionUtils;
@@ -37,6 +39,7 @@ import infra.web.RequestContext;
 /**
  * @author TODAY 2021/1/10 22:45
  */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)
 public class ArticleFilterInterceptor implements HandlerInterceptor, ApplicationListener<ArticleUpdateEvent> {
 
   private final ArticleService articleService;

@@ -29,6 +29,8 @@ import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
 import infra.core.style.ToStringBuilder;
 import infra.web.RequestContext;
 
@@ -36,6 +38,7 @@ import infra.web.RequestContext;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2.0 2024/8/15 21:18
  */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_PUBLIC_METHODS)
 final class LazyPageable implements Pageable, Serializable {
 
   @Serial

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,16 @@
 
 package cn.taketoday.blog.web;
 
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
+
 /**
  * 分页
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-07-25 01:11
  */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_PUBLIC_METHODS)
 public interface Pageable extends infra.persistence.Pageable {
 
 }

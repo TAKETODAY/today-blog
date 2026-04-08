@@ -23,6 +23,8 @@ import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.ErrorMessage;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
 import infra.http.HttpStatus;
 import infra.http.MediaType;
 import infra.http.ResponseEntity;
@@ -38,6 +40,7 @@ import infra.web.resource.ResourceHttpRequestHandler;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:38
  */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)
 final class BloggerInterceptor implements HandlerInterceptor {
 
   private final SessionRepository repository;

@@ -19,6 +19,8 @@ package cn.taketoday.blog.web.interceptor;
 
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.User;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
 import infra.session.SessionManagerOperations;
 import infra.web.HandlerInterceptor;
 import infra.web.RequestContext;
@@ -28,6 +30,7 @@ import infra.web.resource.ResourceHttpRequestHandler;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-30 20:36
  */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)
 final class LoginInterceptor implements HandlerInterceptor {
 
   // Authorization
