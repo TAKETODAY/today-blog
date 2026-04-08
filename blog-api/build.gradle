@@ -1,5 +1,3 @@
-import java.util.function.Predicate
-
 description = "today-blog API"
 
 apply plugin: "application"
@@ -7,8 +5,8 @@ apply plugin: 'infra.application'
 apply plugin: 'cn.taketoday.blog.conventions'
 apply plugin: 'cn.taketoday.blog.optional-dependencies'
 
-//apply plugin: 'infra.application.aot'
-//apply plugin: 'org.graalvm.buildtools.native'
+apply plugin: 'infra.application.aot'
+apply plugin: 'org.graalvm.buildtools.native'
 
 dependencies {
   implementation 'cn.taketoday:infra-starter-application'
@@ -29,7 +27,7 @@ dependencies {
   implementation 'eu.bitwalker:UserAgentUtils:1.21'
   implementation 'com.mysql:mysql-connector-j'
   implementation 'cn.taketoday:ip2region-java:1.0-SNAPSHOT'
-  
+
   implementation('com.aliyun.oss:aliyun-sdk-oss:3.18.4') {
     exclude group: "javax.xml.bind"
     exclude group: "jakarta.xml.bind"
@@ -53,7 +51,7 @@ dependencies {
 //    }
 //  }
 
-//  implementation "cn.taketoday:infra-core-aot"
+  implementation "cn.taketoday:infra-core-aot"
 
   annotationProcessor "cn.taketoday:infra-configuration-processor"
   annotationProcessor "cn.taketoday:infra-annotation-config-processor"
@@ -84,6 +82,11 @@ application {
       "-Xms512M",
       "-Xmx512M"
   ]
+}
+
+processAot {
+  jvmArgs "--add-opens=java.base/java.lang=ALL-UNNAMED"
+//  debug = true
 }
 
 infraJar {

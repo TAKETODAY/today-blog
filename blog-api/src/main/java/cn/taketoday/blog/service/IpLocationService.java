@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,10 @@ import java.util.regex.Pattern;
 
 import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.ip2region.IpSearcher;
+import infra.aop.framework.AopProxyUtils;
+import infra.aot.hint.RuntimeHints;
+import infra.aot.hint.RuntimeHintsRegistrar;
+import infra.context.annotation.ImportRuntimeHints;
 import infra.http.service.annotation.GetExchange;
 import infra.http.service.annotation.HttpExchange;
 import infra.http.service.invoker.HttpServiceProxyFactory;
@@ -42,6 +46,7 @@ import lombok.Data;
  * @since 3.2 2024/11/14 22:51
  */
 @Component
+@ImportRuntimeHints(IpLocationService.HttpExchangeHints.class)
 public class IpLocationService {
 
   private static final Logger log = LoggerFactory.getLogger(IpLocationService.class);
@@ -132,6 +137,14 @@ public class IpLocationService {
 
     public String isp;
 
+  }
+
+  static class HttpExchangeHints implements RuntimeHintsRegistrar {
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      hints.proxies().registerJdkProxy(AopProxyUtils.completeJdkProxyInterfaces(Client.class));
+    }
   }
 
 }
