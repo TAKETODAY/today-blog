@@ -17,10 +17,14 @@
 
 package cn.taketoday.blog.model;
 
+import infra.jdbc.type.EnumType;
+import infra.jdbc.type.Enumerated;
+
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.3 2026/4/2 12:58
  */
+@Enumerated(EnumType.NAME)
 public enum OptionValueType {
   bool,
 
