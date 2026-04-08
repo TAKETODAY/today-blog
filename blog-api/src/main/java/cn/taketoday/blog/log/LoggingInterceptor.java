@@ -64,10 +64,10 @@ final class LoggingInterceptor implements MethodInterceptor {
 
   private final LoggingExpressionEvaluator expressionEvaluator;
 
-  private final IpLocationService ipLocationService;
+  private final ObjectProvider<IpLocationService> ipLocationService;
 
   public LoggingInterceptor(BeanFactory beanFactory,
-          IpLocationService ipLocationService,
+          ObjectProvider<IpLocationService> ipLocationService,
           ObjectProvider<Executor> executor,
           ObjectProvider<LoggingPersister> loggingPersister,
           ObjectProvider<UserSessionResolver> sessionResolver) {
@@ -164,7 +164,7 @@ final class LoggingInterceptor implements MethodInterceptor {
     entity.setContent(content);
     entity.setInvokeAt(operation.invokeAt);
 
-    IpLocation ipLocation = ipLocationService.lookup(operation.ip);
+    IpLocation ipLocation = ipLocationService.get().lookup(operation.ip);
     if (ipLocation != null) {
       entity.setIpCountry(ipLocation.getCountry());
       entity.setIpProvince(ipLocation.getProvince());
