@@ -79,6 +79,8 @@ application {
 //      "-Dinfra.profiles.active=prod",
       "--enable-native-access=ALL-UNNAMED",
       "-Dio.netty.leakDetection.level=disabled",
+      "-Dlogging.level.web=info",
+      "-Dlogging.level.root=info",
       "-Xms512M",
       "-Xmx512M"
   ]
