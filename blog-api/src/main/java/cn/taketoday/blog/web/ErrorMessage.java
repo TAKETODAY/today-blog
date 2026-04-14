@@ -22,6 +22,10 @@ import org.jspecify.annotations.Nullable;
 import infra.core.style.ToStringBuilder;
 
 /**
+ * 错误消息封装类，用于表示操作失败时的错误信息。
+ * <p>
+ * 实现了 {@link HttpResult} 接口，通常作为 HTTP 响应体的一部分返回给客户端。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2020-04-16 14:23
  */

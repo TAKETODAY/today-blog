@@ -69,11 +69,11 @@ public class ArticleFilterInterceptor implements HandlerInterceptor, Application
   @Override
   @SuppressWarnings("unchecked")
   public void postProcessing(RequestContext context, Object handler, @Nullable Object result) {
-    if (result instanceof ListableHttpResult<?> pagination
+    if (result instanceof ListableHttpResult<?> listable
             && !Blogger.isPresent(sessionManagerOperations.getSession(context, false))) {
 
       // 过滤
-      List<?> objects = pagination.getData();
+      List<?> objects = listable.getData();
       Object first = CollectionUtils.firstElement(objects);
       if (first instanceof ArticleItem) {
         for (ArticleItem item : (List<ArticleItem>) objects) {
