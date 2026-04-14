@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,24 +17,14 @@
 
 package cn.taketoday.blog.web.http;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
-import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.service.LabelService;
-import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
-import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
-import infra.web.annotation.POST;
-import infra.web.annotation.PUT;
 import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestMapping;
-import infra.web.annotation.RequestParam;
 import infra.web.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
@@ -48,59 +38,6 @@ import lombok.RequiredArgsConstructor;
 class LabelHttpHandler {
 
   private final LabelService labelService;
-
-  @POST("/{name}")
-  @RequiresBlogger
-  @Logging(title = "保存标签", content = "name: [#{#name}]")
-  public void post(@PathVariable String name) {
-    Label byName = labelService.getByName(name);
-    if (byName != null) {
-      throw ErrorMessageException.failed("标签重复");
-    }
-    labelService.persist(Label.forName(name));
-  }
-
-  @POST
-  @RequiresBlogger
-  @Logging(title = "批量保存标签", content = "names: #{Arrays.toString(#name)}")
-  public void post(@RequestParam String[] name) {
-    Set<Label> labels = new HashSet<>(name.length);
-    for (String label : name) {
-      if (StringUtils.isEmpty(label)) {
-        throw ErrorMessageException.failed("标签名不能为空");
-      }
-      Label byName = labelService.getByName(label);
-      if (byName != null) {
-        throw ErrorMessageException.failed("标签重复");
-      }
-      labels.add(Label.forName(label));
-    }
-
-    labelService.persist(labels);
-  }
-
-  @PUT("/{id}")
-  @RequiresBlogger
-  @Logging(title = "标签更新", content = "update:[#{#id}] with name:[#{#name}]")
-  public void put(@RequestParam String name, @PathVariable int id) {
-    Label label = labelService.getById(id);
-    ErrorMessageException.notNull(label, "标签不存在");
-
-    if (Objects.equals(label.getName(), name)) {
-      throw ErrorMessageException.failed("标签名未更改");
-    }
-    label.setName(name);
-    labelService.updateById(label);
-  }
-
-  @DELETE("/{id}")
-  @RequiresBlogger
-  @Logging(title = "删除标签", content = "delete id:[#{#id}]")
-  public void delete(@PathVariable long id) {
-    Label byName = labelService.getById(id);
-    ErrorMessageException.notNull(byName, "标签不存在");
-    labelService.deleteById(byName.getId());
-  }
 
   @GET
   public List<Label> get() {

@@ -45,7 +45,7 @@ export default new class {
   }
 
   getAllLabels() {
-    return getCacheable('/api/tags')
+    return getCacheable('/api/console/tags')
   }
 
 }()
