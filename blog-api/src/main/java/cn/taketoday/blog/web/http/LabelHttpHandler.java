@@ -29,6 +29,8 @@ import infra.web.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 /**
+ * 标签 HTTP 处理器，提供标签相关的 RESTful API 接口。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-11-30 11:05
  */

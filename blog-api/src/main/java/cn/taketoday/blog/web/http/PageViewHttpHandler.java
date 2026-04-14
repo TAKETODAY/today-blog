@@ -21,7 +21,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.blog.model.PageView;
@@ -31,14 +30,12 @@ import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
-import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import eu.bitwalker.useragentutils.Browser;
 import eu.bitwalker.useragentutils.UserAgent;
 import eu.bitwalker.useragentutils.Version;
 import infra.http.HttpHeaders;
 import infra.persistence.EntityManager;
 import infra.web.RequestContext;
-import infra.web.annotation.GET;
 import infra.web.annotation.POST;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
@@ -46,6 +43,10 @@ import infra.web.util.UriUtils;
 import lombok.RequiredArgsConstructor;
 
 /**
+ * 页面访问统计处理器
+ * <p>
+ * 用于记录博客页面的访问信息，包括用户代理、IP地址、地理位置等。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-05-23 17:10
  */
@@ -114,12 +115,6 @@ class PageViewHttpHandler {
 
       entityManager.persist(pageView);
     }
-  }
-
-  @GET
-  @RequiresBlogger
-  public List<PageView> listPageViews() {
-    return entityManager.find(PageView.class);
   }
 
 }

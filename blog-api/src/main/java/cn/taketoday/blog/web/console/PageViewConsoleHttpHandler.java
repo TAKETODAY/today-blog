@@ -15,51 +15,38 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.http;
+package cn.taketoday.blog.web.console;
 
 import java.util.List;
 
-import cn.taketoday.blog.model.Category;
-import cn.taketoday.blog.service.CategoryService;
-import cn.taketoday.blog.web.ErrorMessageException;
-import infra.stereotype.Controller;
+import cn.taketoday.blog.model.PageView;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
+import infra.persistence.EntityManager;
 import infra.web.annotation.GET;
-import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestMapping;
+import infra.web.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 分类 HTTP 处理器
+ * 页面访问统计控制台处理器
+ * <p>
+ * 提供用于管理页面浏览量（Page View）数据的 RESTful API 接口。
+ * 主要功能包括查询页面浏览记录等，仅限博主权限访问。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 2018-09-20 19:07
+ * @since 3.3 2026/4/14 21:34
  */
-@Controller
+@RequiresBlogger
+@RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/categories")
-class CategoriesHttpHandler {
+@RequestMapping("/api/console/pv")
+class PageViewConsoleHttpHandler {
 
-  private final CategoryService categoryService;
+  private final EntityManager entityManager;
 
-  /**
-   * 获取全部分类
-   */
   @GET
-  public List<Category> listAll() {
-    return categoryService.getAllCategories();
-  }
-
-  /**
-   * 获取文章分类
-   *
-   * @param name 分类
-   * @return 文章分类
-   */
-  @GET("/{name}")
-  public Category name(@PathVariable String name) {
-    Category category = categoryService.getCategory(name);
-    ErrorMessageException.notNull(category, "分类不存在");
-    return category;
+  public List<PageView> listPageViews() {
+    return entityManager.find(PageView.class);
   }
 
 }
