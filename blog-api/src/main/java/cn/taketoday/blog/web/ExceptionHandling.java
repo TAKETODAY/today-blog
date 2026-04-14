@@ -82,7 +82,7 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   @ResponseStatus(HttpStatus.UNAUTHORIZED)
   @ExceptionHandler(UnauthorizedException.class)
   public ErrorMessage unauthorized() {
-    return ErrorMessage.failed("登录超时");
+    return ErrorMessage.unauthorized;
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)

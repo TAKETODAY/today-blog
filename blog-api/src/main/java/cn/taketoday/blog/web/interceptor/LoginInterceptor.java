@@ -27,6 +27,11 @@ import infra.web.RequestContext;
 import infra.web.resource.ResourceHttpRequestHandler;
 
 /**
+ * 登录拦截器，用于验证用户会话状态。
+ * <p>
+ * 如果用户未登录且请求的不是静态资源，则抛出 {@link UnauthorizedException} 异常。
+ * 如果请求的是静态资源且用户未登录，则返回 404 状态码。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-30 20:36
  */

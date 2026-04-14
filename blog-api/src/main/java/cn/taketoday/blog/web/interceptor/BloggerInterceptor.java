@@ -19,7 +19,6 @@ package cn.taketoday.blog.web.interceptor;
 
 import org.jspecify.annotations.Nullable;
 
-import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.ErrorMessage;
@@ -37,6 +36,13 @@ import infra.web.RequestContext;
 import infra.web.resource.ResourceHttpRequestHandler;
 
 /**
+ * 博主拦截器，用于验证请求是否来自已登录的博主。
+ * <p>
+ * 该拦截器检查会话中是否存在有效的用户信息以及是否为博主身份。
+ * 如果是博主，则更新最后访问时间并继续处理请求；
+ * 如果是普通用户但非博主，则返回 404 Not Found；
+ * 如果未登录且访问的不是静态资源，则抛出未授权异常。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:38
  */
@@ -70,7 +76,7 @@ final class BloggerInterceptor implements HandlerInterceptor {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
               .body("Not Found");
     }
-    throw new UnauthorizedException();
+    return ErrorMessage.unauthorized;
   }
 
 }
