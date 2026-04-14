@@ -231,6 +231,7 @@ class AuthHttpHandler {
     return loginUser;
   }
 
+  @NullUnmarked
   public static class ChangePasswordForm {
 
     @NotBlank(message = "旧密码不能为空")
@@ -290,9 +291,6 @@ class AuthHttpHandler {
 
     @NotEmpty(message = "请输入密码")
     public String password;
-
-//    @NotEmpty(message = "请输入手机号")
-//    public String mobilePhone;
   }
 
   /**
