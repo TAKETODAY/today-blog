@@ -31,7 +31,6 @@ import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.CommentItem;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
-import cn.taketoday.blog.model.form.CommentConditionForm;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.CommentService;
 import cn.taketoday.blog.util.BlogUtils;
@@ -41,7 +40,6 @@ import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
-import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.context.ApplicationEventPublisher;
 import infra.http.HttpStatus;
@@ -49,16 +47,12 @@ import infra.persistence.Page;
 import infra.validation.annotation.Validated;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
-import infra.web.annotation.PATCH;
 import infra.web.annotation.POST;
-import infra.web.annotation.PUT;
 import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
-import infra.web.annotation.RequestParam;
 import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestController;
-import infra.web.server.ResponseStatusException;
 import infra.web.util.UriBuilder;
 import infra.web.util.UriComponents;
 import infra.web.util.UriComponentsBuilder;
@@ -198,25 +192,6 @@ class CommentHttpHandler {
     return commentService.fetchByArticleId(articleId);
   }
 
-  @RequiresBlogger
-  @PATCH("/{id}/status")
-  @Logging(title = "更新评论状态", content = "更新评论：[#{#id}]状态为：[#{#status}]")
-  public void status(@PathVariable Long id, @RequestParam CommentStatus status) {
-    commentService.updateStatusById(status, id);
-  }
-
-  /**
-   * 更新评论状态
-   *
-   * @since 3.2
-   */
-  @RequiresBlogger
-  @PUT(path = "/{id}", params = "status")
-  @Logging(title = "更新评论状态", content = "更新评论：[#{#id}]状态为：[#{#status}]")
-  public void updateStatus(@PathVariable Long id, @RequestParam CommentStatus status) {
-    commentService.updateStatusById(status, id);
-  }
-
   @DELETE("/{id}")
   @Logging(title = "删除评论", content = "删除评论：[#{#id}]")
   public void delete(@RequiresUser LoginInfo loginInfo, @PathVariable Long id) {
@@ -236,6 +211,7 @@ class CommentHttpHandler {
    * 获取用户自己的评论
    */
   @GET("/users")
+  @Deprecated(forRemoval = true, since = "3.3")
   public Pagination<Comment> getByUser(User userInfo, Pageable pageable) {
     Page<Comment> byUser = commentService.getByUser(userInfo, pageable);
     assertFound(pageable, byUser.getTotalRows().intValue());
@@ -243,37 +219,11 @@ class CommentHttpHandler {
   }
 
   @SuppressWarnings("removal")
+  @Deprecated(forRemoval = true, since = "3.3")
   protected void assertFound(Pageable pageable, int rowCount) {
     if (BlogUtils.notFound(pageable.pageNumber(), BlogUtils.pageCount(rowCount, pageable.pageSize()))) {
       throw ErrorMessageException.failed("分页不存在");
     }
-  }
-
-  // 分页
-
-  @Deprecated(forRemoval = true)
-  @GET
-  @RequiresBlogger
-  public Pagination<Comment> list(CommentConditionForm form, Pageable pageable) {
-    return commentService.pagination(form, pageable);
-  }
-
-  /**
-   * 更新评论
-   */
-  @Deprecated
-  @PUT("/{id}")
-  @Logging(title = "更新评论", content = "更新评论：[#{#id}]")
-  public void update(@RequiresUser LoginInfo loginInfo, @PathVariable Long id, @RequestBody Comment comment) {
-    Comment byId = commentService.obtainById(id);
-
-    // not blogger
-    if (!loginInfo.isBloggerLoggedIn() && !Objects.equals(loginInfo.getLoginUserId(), byId.getUserId())) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "权限不足");
-    }
-
-    comment.setId(id);
-    commentService.updateById(comment);
   }
 
 }

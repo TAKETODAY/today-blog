@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@ package cn.taketoday.blog.web.console;
 
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Comment;
+import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.model.form.CommentConditionForm;
 import cn.taketoday.blog.service.CommentService;
 import cn.taketoday.blog.web.Pageable;
@@ -29,6 +30,7 @@ import infra.web.annotation.PUT;
 import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
+import infra.web.annotation.RequestParam;
 import infra.web.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
@@ -62,6 +64,18 @@ class CommentConsoleHttpHandler {
 
     comment.setId(id);
     commentService.updateById(comment);
+  }
+
+  /**
+   * 更新评论状态
+   *
+   * @since 3.3
+   */
+  @RequiresBlogger
+  @PUT(path = "/{id}", params = "status")
+  @Logging(title = "更新评论状态", content = "更新评论：[#{#id}]状态为：[#{#status}]")
+  public void updateStatus(@PathVariable Long id, @RequestParam CommentStatus status) {
+    commentService.updateStatusById(status, id);
   }
 
 }
