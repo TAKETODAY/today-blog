@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 package cn.taketoday.blog.event;
 
 import cn.taketoday.blog.model.Comment;
+import cn.taketoday.blog.web.LoginInfo;
 
 /**
  * 当有新的评论时触发
@@ -29,13 +30,19 @@ public class CommentCreatedEvent extends BlogEvent {
 
   private final Comment comment;
 
-  public CommentCreatedEvent(Object source, Comment comment) {
+  private final LoginInfo loginInfo;
+
+  public CommentCreatedEvent(Object source, Comment comment, LoginInfo loginInfo) {
     super(source);
     this.comment = comment;
+    this.loginInfo = loginInfo;
   }
 
   public Comment getComment() {
     return comment;
   }
 
+  public LoginInfo getLoginInfo() {
+    return loginInfo;
+  }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,17 +25,17 @@ import cn.taketoday.blog.model.User;
 import lombok.Data;
 
 /**
+ * 登录信息封装类，用于存储当前会话中的用户和博主信息。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/8/11 08:05
  */
 @Data
 public class LoginInfo {
 
-  @Nullable
-  private User loginUser;
+  private @Nullable User loginUser;
 
-  @Nullable
-  private Blogger blogger;
+  private @Nullable Blogger blogger;
 
   public boolean isLoggedIn() {
     return loginUser != null;

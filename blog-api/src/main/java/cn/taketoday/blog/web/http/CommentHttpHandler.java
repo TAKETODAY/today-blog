@@ -46,6 +46,7 @@ import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.context.ApplicationEventPublisher;
 import infra.http.HttpStatus;
 import infra.persistence.Page;
+import infra.validation.annotation.Validated;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
 import infra.web.annotation.PATCH;
@@ -61,12 +62,15 @@ import infra.web.server.ResponseStatusException;
 import infra.web.util.UriBuilder;
 import infra.web.util.UriComponents;
 import infra.web.util.UriComponentsBuilder;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 /**
+ * 评论 HTTP 处理器
+ * <p>
+ * 处理与博客评论相关的 RESTful API 请求，包括创建、查询、更新状态和删除评论等操作。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-22 20:38
  */
@@ -135,7 +139,7 @@ class CommentHttpHandler {
   @ResponseStatus(HttpStatus.CREATED)
   @Logging(title = "用户评论", content = "用户：[#{#from.commenter}] " +
           "评论了文章:[#{@articleService.getById(#from.articleId)?.title}] 回复了:[#{#from.commentId}]")
-  public void create(LoginInfo loginInfo, @RequestBody @Valid CommentFrom from) {
+  public void create(LoginInfo loginInfo, @RequestBody @Validated CommentFrom from) {
     Article article = articleService.obtainById(from.articleId);
 
     Comment comment = new Comment();
@@ -181,8 +185,8 @@ class CommentHttpHandler {
 
     // comment.setContent(BlogUtils.stripXss(comment.getContent()));
 
-    commentService.create(comment);
-    eventPublisher.publishEvent(new CommentCreatedEvent(this, comment));
+    commentService.persist(comment);
+    eventPublisher.publishEvent(new CommentCreatedEvent(this, comment, loginInfo));
   }
 
   /**
