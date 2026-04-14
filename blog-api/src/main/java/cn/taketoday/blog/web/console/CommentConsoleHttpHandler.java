@@ -25,6 +25,7 @@ import cn.taketoday.blog.service.CommentService;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
+import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
 import infra.web.annotation.PUT;
 import infra.web.annotation.PathVariable;
@@ -71,11 +72,16 @@ class CommentConsoleHttpHandler {
    *
    * @since 3.3
    */
-  @RequiresBlogger
   @PUT(path = "/{id}", params = "status")
   @Logging(title = "更新评论状态", content = "更新评论：[#{#id}]状态为：[#{#status}]")
   public void updateStatus(@PathVariable Long id, @RequestParam CommentStatus status) {
     commentService.updateStatusById(status, id);
+  }
+
+  @DELETE("/{id}")
+  @Logging(title = "删除评论", content = "删除评论：[#{#id}]")
+  public void delete(@PathVariable Long id) {
+    commentService.delete(id);
   }
 
 }

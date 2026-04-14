@@ -192,6 +192,7 @@ class CommentHttpHandler {
     return commentService.fetchByArticleId(articleId);
   }
 
+  @Deprecated(forRemoval = true, since = "3.3")
   @DELETE("/{id}")
   @Logging(title = "删除评论", content = "删除评论：[#{#id}]")
   public void delete(@RequiresUser LoginInfo loginInfo, @PathVariable Long id) {
@@ -204,8 +205,6 @@ class CommentHttpHandler {
 
     commentService.delete(id);
   }
-
-  // -----------------------------
 
   /**
    * 获取用户自己的评论
