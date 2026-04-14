@@ -35,7 +35,7 @@ export default (props) => {
     toolbar,
     upload: {
       // setIsUploading,
-      url: '/api/attachments',
+      url: '/api/console/attachments',
       onUploadError: error => {
         return message.error(error.message)
       }

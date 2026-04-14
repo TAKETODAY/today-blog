@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
-package cn.taketoday.blog.web.http;
+package cn.taketoday.blog.web.console;
 
 import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.log.Logging;
@@ -41,13 +41,18 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
 /**
+ * 附件管理 HTTP 处理器
+ * <p>
+ * 提供附件的上传、查询、更新、删除以及同步到阿里云 OSS 等功能。
+ * 所有接口均需要博主权限 ({@link RequiresBlogger})。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-03-28 19:58
  */
 @CustomLog
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/attachments")
+@RequestMapping("/api/console/attachments")
 @RequiresBlogger
 class AttachmentHttpHandler {
 
@@ -55,6 +60,13 @@ class AttachmentHttpHandler {
 
   private final AttachmentService attachmentService;
 
+  /**
+   * 分页查询附件列表
+   *
+   * @param form 附件查询表单，包含筛选条件
+   * @param pageable 分页参数，包含页码和每页大小
+   * @return 附件分页数据
+   */
   @GET
   public Pagination<Attachment> filter(AttachmentForm form, Pageable pageable) {
     return attachmentService.filter(form, pageable);
