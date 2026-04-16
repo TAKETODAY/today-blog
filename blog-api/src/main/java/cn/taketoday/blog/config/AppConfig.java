@@ -56,6 +56,8 @@ import infra.web.config.annotation.WebMvcConfigurer;
 import infra.web.view.ModelAndView;
 import lombok.RequiredArgsConstructor;
 
+import static infra.aot.hint.MemberCategory.INVOKE_DECLARED_CONSTRUCTORS;
+
 /**
  * App 配置
  *
@@ -144,10 +146,10 @@ class AppConfig implements WebMvcConfigurer {
     @Override
     public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
       hints.reflection().registerTypeIfPresent(classLoader, "com.github.benmanes.caffeine.cache.SSMSAW",
-              MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.ACCESS_DECLARED_FIELDS);
+              INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.ACCESS_DECLARED_FIELDS);
 
       hints.reflection().registerTypeIfPresent(classLoader, "com.github.benmanes.caffeine.cache.PSAWMS",
-              MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.ACCESS_DECLARED_FIELDS);
+              INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.ACCESS_DECLARED_FIELDS);
     }
 
   }

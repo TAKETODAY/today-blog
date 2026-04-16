@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.enums.UserStatus;
 import infra.core.AttributeAccessor;
 import infra.core.style.ToStringBuilder;
+import infra.persistence.Table;
 import infra.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,6 +40,7 @@ import lombok.Setter;
  */
 @Setter
 @Getter
+@Table("user")
 public class User implements Serializable {
 
   @Serial
@@ -53,6 +55,7 @@ public class User implements Serializable {
 
   /** state */
   private UserStatus status;
+
   /** name */
   private String name;
   /** email */
@@ -64,7 +67,7 @@ public class User implements Serializable {
 
   /** passwd */
   @JsonIgnore
-  private String password;
+  private /*transient*/ String password;
 
   /** avatar */
   private String avatar;
@@ -111,7 +114,6 @@ public class User implements Serializable {
             .append("email", email)
             .append("site", site)
             .append("type", type)
-            .append("password", password)
             .append("avatar", avatar)
             .append("introduce", introduce)
             .append("background", background)

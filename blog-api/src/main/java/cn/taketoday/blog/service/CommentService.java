@@ -36,6 +36,7 @@ import cn.taketoday.blog.model.form.CommentConditionForm;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
+import infra.beans.aot.RegisterBeanMetadata;
 import infra.cache.annotation.CacheConfig;
 import infra.lang.Assert;
 import infra.persistence.EntityManager;
@@ -283,21 +284,19 @@ public class CommentService {
             .peek(comment -> comment.setUser(userService.getById(comment.getUserId())));
   }
 
+  @RegisterBeanMetadata
   @OrderBy(clause = "id DESC")
   static class PageByUserQuery {
 
-    final Long userId;
+    public final Long userId;
 
     PageByUserQuery(User userInfo) {
       this.userId = userInfo.getId();
     }
 
-    public Long getUserId() {
-      return userId;
-    }
-
   }
 
+  @RegisterBeanMetadata
   @OrderBy(clause = "create_at DESC")
   static class QueryByArticleId {
 
