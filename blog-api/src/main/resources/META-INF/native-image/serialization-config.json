@@ -1,7 +1,6 @@
 [
   {
-    "name": "java.time.Instant",
-    "customTargetConstructorClass": "java.time.Ser"
+    "name": "java.time.Instant"
   },
   {
     "name": "java.time.Ser"
