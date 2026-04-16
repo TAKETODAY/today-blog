@@ -1,12 +1,1 @@
-[
-  {
-    "name": "cn.taketoday.blog.model.User",
-    "serializable": true
-  },
-  {
-    "name": "java.time.Ser",
-    "serializable": true,
-    "allPublicConstructors": true,
-    "allDeclaredFields": true
-  }
-]
+[]
