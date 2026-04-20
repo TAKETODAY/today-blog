@@ -51,8 +51,6 @@ dependencies {
 //    }
 //  }
 
-  implementation "cn.taketoday:infra-core-aot"
-
   annotationProcessor "cn.taketoday:infra-configuration-processor"
   annotationProcessor "cn.taketoday:infra-annotation-config-processor"
 
