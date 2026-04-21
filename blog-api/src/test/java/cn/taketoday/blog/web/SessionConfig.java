@@ -26,7 +26,9 @@ import infra.session.Session;
 import infra.session.SessionEventDispatcher;
 import infra.session.SessionIdGenerator;
 import infra.session.SessionIdResolver;
+import infra.session.SessionListener;
 import infra.session.SessionRepository;
+import infra.stereotype.Component;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -40,17 +42,21 @@ public class SessionConfig {
     return SessionIdResolver.authenticationInfo();
   }
 
+  @Component
+  static SessionListener authSessionListener() {
+    return new SessionListener() {
+
+      @Override
+      public void sessionCreated(Session session) {
+        new Blogger().bindTo(session);
+        new User().bindTo(session);
+      }
+    };
+  }
+
   @Bean
   public SessionRepository sessionRepository(SessionEventDispatcher eventDispatcher, SessionIdGenerator idGenerator) {
     return new InMemorySessionRepository(eventDispatcher, idGenerator) {
-
-      @Override
-      public Session createSession(String id) {
-        Session session = super.createSession(id);
-        new Blogger().bindTo(session);
-        new User().bindTo(session);
-        return session;
-      }
 
       @Override
       public Session retrieveSession(String id) {

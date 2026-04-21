@@ -21,11 +21,10 @@ import org.junit.jupiter.api.Test;
 
 import cn.taketoday.blog.BlogApplication;
 import cn.taketoday.blog.model.Article;
-import cn.taketoday.blog.web.SessionConfig;
+import cn.taketoday.blog.web.AutoLogin;
 import infra.app.test.context.InfraTest;
 import infra.beans.BeansException;
 import infra.context.ApplicationContext;
-import infra.context.annotation.Import;
 import infra.http.MediaType;
 import infra.http.converter.HttpMessageConverters;
 import infra.persistence.EntityManager;
@@ -43,8 +42,8 @@ import static infra.test.web.mock.request.MockMvcRequestBuilders.get;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2026/3/7 22:04
  */
+@AutoLogin
 @ActiveProfiles("test")
-@Import({ SessionConfig.class })
 @InfraTest(classes = BlogApplication.class)
 class ArticleConsoleHttpHandlerTests {
 

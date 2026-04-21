@@ -22,12 +22,11 @@ import org.junit.jupiter.api.Test;
 
 import cn.taketoday.blog.BlogApplication;
 import cn.taketoday.blog.model.ArticleItem;
+import cn.taketoday.blog.web.AutoLogin;
 import cn.taketoday.blog.web.Pagination;
-import cn.taketoday.blog.web.SessionConfig;
 import cn.taketoday.blog.web.console.ArticleForm;
 import infra.app.test.context.InfraTest;
 import infra.context.ApplicationContext;
-import infra.context.annotation.Import;
 import infra.core.ParameterizedTypeReference;
 import infra.http.MediaType;
 import infra.http.converter.HttpMessageConverters;
@@ -46,8 +45,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2023/4/12 17:19
  */
+@AutoLogin
 @ActiveProfiles("test")
-@Import(SessionConfig.class)
 @InfraTest(classes = BlogApplication.class)
 class ArticleHttpHandlerTests {
 
