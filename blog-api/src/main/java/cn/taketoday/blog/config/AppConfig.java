@@ -136,7 +136,7 @@ class AppConfig implements WebMvcConfigurer {
 
   @Component
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  static DefaultPointcutAdvisor pointcutAdvisor(@Qualifier("loggingInterceptor") Advice advice) {
+  static DefaultPointcutAdvisor loggingPointcutAdvisor(@Qualifier("loggingInterceptor") Advice advice) {
     var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
     return new DefaultPointcutAdvisor(pointcut, advice);
   }
