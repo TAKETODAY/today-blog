@@ -17,56 +17,33 @@
 
 package cn.taketoday.blog.web.http;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import cn.taketoday.blog.BlogApplication;
 import cn.taketoday.blog.model.ArticleItem;
-import cn.taketoday.blog.web.AutoLogin;
 import cn.taketoday.blog.web.Pagination;
+import cn.taketoday.blog.web.WebAPITest;
 import cn.taketoday.blog.web.console.ArticleForm;
-import infra.app.test.context.InfraTest;
-import infra.context.ApplicationContext;
+import infra.beans.factory.annotation.Autowired;
 import infra.core.ParameterizedTypeReference;
 import infra.http.MediaType;
-import infra.http.converter.HttpMessageConverters;
-import infra.session.HeaderSessionIdResolver;
-import infra.test.context.ActiveProfiles;
-import infra.test.web.mock.MockMvc;
 import infra.test.web.mock.assertj.MockMvcTester;
 import infra.test.web.mock.client.RestTestClient;
-import infra.test.web.mock.setup.MockMvcBuilders;
 import infra.transaction.annotation.Transactional;
 
-import static infra.test.web.mock.request.MockMvcRequestBuilders.get;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2023/4/12 17:19
  */
-@AutoLogin
-@ActiveProfiles("test")
-@InfraTest(classes = BlogApplication.class)
+@WebAPITest
 class ArticleHttpHandlerTests {
 
-  MockMvcTester mvc;
+  @Autowired
+  private MockMvcTester mvc;
 
-  RestTestClient client;
-
-  @BeforeEach
-  void setup(ApplicationContext context) {
-    MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .defaultRequest(get("/")
-                    .header(HeaderSessionIdResolver.HEADER_AUTHENTICATION_INFO, "key"))
-            .build();
-
-    mvc = MockMvcTester.create(mockMvc)
-            .withHttpMessageConverters(HttpMessageConverters.ClientBuilder::registerDefaults);
-    client = RestTestClient.bindTo(mockMvc)
-            .configureMessageConverters(HttpMessageConverters.ClientBuilder::registerDefaults)
-            .build();
-  }
+  @Autowired
+  private RestTestClient client;
 
   @Test
   void uri() {

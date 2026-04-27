@@ -56,6 +56,7 @@ dependencies {
 
   testImplementation 'cn.taketoday:infra-starter-test'
   testImplementation 'cn.taketoday:infra-starter-webmvc-test'
+  testImplementation 'cn.taketoday:infra-starter-restclient-test'
   testImplementation 'cn.taketoday:infra-mariadb4j'
 
   testImplementation 'org.projectlombok:lombok'
@@ -86,8 +87,14 @@ application {
   ]
 }
 
-processAot {
+//processAot {
 //  jvmArgs "--add-opens=java.base/java.lang=ALL-UNNAMED"
+//  debug = true
+//}
+
+
+processTestAot {
+  enabled = false
 //  debug = true
 }
 

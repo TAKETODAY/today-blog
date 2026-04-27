@@ -71,5 +71,9 @@ logging:
     nettyLogging: info
     web: debug
     sql: info
+    infra:
+      app:
+        availability: debug
+
   pattern:
     dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'

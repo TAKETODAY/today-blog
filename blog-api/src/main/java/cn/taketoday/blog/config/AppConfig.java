@@ -37,15 +37,14 @@ import infra.aop.support.annotation.AnnotationMatchingPointcut;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.RuntimeHints;
 import infra.aot.hint.RuntimeHintsRegistrar;
-import infra.beans.factory.annotation.DisableAllDependencyInjection;
 import infra.beans.factory.annotation.Qualifier;
 import infra.beans.factory.config.BeanDefinition;
 import infra.cache.annotation.EnableCaching;
 import infra.cache.support.CaffeineCacheManager;
-import infra.context.annotation.Configuration;
 import infra.context.annotation.ImportRuntimeHints;
 import infra.context.annotation.Primary;
 import infra.context.annotation.Role;
+import infra.context.annotation.config.DisableDIAutoConfiguration;
 import infra.flyway.config.FlywayMigrationStrategy;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
@@ -67,9 +66,8 @@ import static infra.aot.hint.MemberCategory.INVOKE_DECLARED_CONSTRUCTORS;
 @EnableCaching
 @EnableSession
 @RequiredArgsConstructor
-@DisableAllDependencyInjection
+@DisableDIAutoConfiguration
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-@Configuration(proxyBeanMethods = false)
 class AppConfig implements WebMvcConfigurer {
 
   private final OptionService optionService;

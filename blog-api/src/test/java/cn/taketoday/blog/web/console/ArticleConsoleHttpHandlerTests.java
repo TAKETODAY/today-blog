@@ -19,57 +19,31 @@ package cn.taketoday.blog.web.console;
 
 import org.junit.jupiter.api.Test;
 
-import cn.taketoday.blog.BlogApplication;
 import cn.taketoday.blog.model.Article;
-import cn.taketoday.blog.web.AutoLogin;
-import infra.app.test.context.InfraTest;
-import infra.beans.BeansException;
-import infra.context.ApplicationContext;
+import cn.taketoday.blog.web.WebAPITest;
+import infra.beans.factory.annotation.Autowired;
 import infra.http.MediaType;
-import infra.http.converter.HttpMessageConverters;
 import infra.persistence.EntityManager;
-import infra.session.HeaderSessionIdResolver;
-import infra.test.context.ActiveProfiles;
-import infra.test.web.mock.MockMvc;
 import infra.test.web.mock.assertj.MockMvcTester;
 import infra.test.web.mock.client.RestTestClient;
-import infra.test.web.mock.setup.MockMvcBuilders;
 import infra.transaction.annotation.Transactional;
-
-import static infra.test.web.mock.request.MockMvcRequestBuilders.get;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2026/3/7 22:04
  */
-@AutoLogin
-@ActiveProfiles("test")
-@InfraTest(classes = BlogApplication.class)
+@WebAPITest
 class ArticleConsoleHttpHandlerTests {
 
-  private final MockMvcTester mvc;
+  @Autowired
+  private MockMvcTester mvc;
 
-  private final RestTestClient client;
-
-  private final EntityManager entityManager;
-
-  ArticleConsoleHttpHandlerTests(ApplicationContext context) throws BeansException {
-    MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context)
-            .defaultRequest(get("/")
-                    .header(HeaderSessionIdResolver.HEADER_AUTHENTICATION_INFO, "key"))
-            .build();
-
-    mvc = MockMvcTester.create(mockMvc).withHttpMessageConverters(HttpMessageConverters.ClientBuilder::registerDefaults);
-    client = RestTestClient.bindTo(mockMvc)
-            .configureMessageConverters(HttpMessageConverters.ClientBuilder::registerDefaults)
-            .build();
-
-    this.entityManager = context.getBean(EntityManager.class);
-  }
+  @Autowired
+  private EntityManager entityManager;
 
   @Test
   @Transactional
-  public void update() {
+  public void update(@Autowired RestTestClient client) {
     ArticleForm form = new ArticleForm();
     form.uri = "test";
     form.title = "test";
