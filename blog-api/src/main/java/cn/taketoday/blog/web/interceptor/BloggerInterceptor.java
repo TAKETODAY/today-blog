@@ -76,7 +76,8 @@ final class BloggerInterceptor implements HandlerInterceptor {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
               .body("Not Found");
     }
-    return ErrorMessage.unauthorized;
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(ErrorMessage.unauthorized);
   }
 
 }
