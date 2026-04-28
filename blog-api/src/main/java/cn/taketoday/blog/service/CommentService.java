@@ -41,7 +41,6 @@ import infra.cache.annotation.CacheConfig;
 import infra.lang.Assert;
 import infra.persistence.EntityManager;
 import infra.persistence.OrderBy;
-import infra.persistence.Page;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import infra.util.CollectionUtils;
@@ -277,23 +276,6 @@ public class CommentService {
 
   public Pagination<Comment> pagination(CommentConditionForm form, Pageable pageable) {
     return Pagination.from(entityManager.page(Comment.class, form, pageable));
-  }
-
-  public Page<Comment> getByUser(User userInfo, Pageable pageable) {
-    return entityManager.page(Comment.class, new PageByUserQuery(userInfo), pageable)
-            .peek(comment -> comment.setUser(userService.getById(comment.getUserId())));
-  }
-
-  @RegisterBeanMetadata
-  @OrderBy(clause = "id DESC")
-  static class PageByUserQuery {
-
-    public final Long userId;
-
-    PageByUserQuery(User userInfo) {
-      this.userId = userInfo.getId();
-    }
-
   }
 
   @RegisterBeanMetadata

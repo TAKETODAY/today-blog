@@ -70,7 +70,7 @@ logging:
     netty: info
     nettyLogging: info
     web: debug
-    sql: info
+    sql: debug
     infra:
       app:
         availability: debug
