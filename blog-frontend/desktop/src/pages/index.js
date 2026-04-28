@@ -25,15 +25,11 @@ import LabelsDetail from './LabelsDetail';
 import Login from './Login';
 import ErrorPage from './ErrorPage';
 import Search from './Search';
-import UserInfo from './user/Info';
-import UserSettings from './user/Settings';
 
 export {
   Login,
   Search,
-  UserSettings,
   ArticleDetail,
-  UserInfo,
   LabelsDetail,
   Home,
   CategoriesDetail,

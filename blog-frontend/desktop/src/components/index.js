@@ -24,7 +24,6 @@ import CategoriesListGroup from './CategoriesListGroup';
 import ArticleComment from './comment/ArticleComment';
 import CommentEdit from './comment/CommentEdit';
 import CommentList from './comment/List';
-import UserComment from './comment/UserComment';
 import Editor from './Editor';
 import Footer from './Footer';
 import Header from './Header';
@@ -33,10 +32,6 @@ import LabelsListGroup from './LabelsListGroup';
 import Login from './Login';
 import PopularListGroup from './PopularListGroup';
 import Search from './Search';
-import UserDescription from './user/Description';
-import InfoRight from './user/InfoRight';
-import UserNav from './user/Nav';
-import Settings from './user/Settings';
 import ImageCropper from './cropper/ImageCropper';
 import HttpError from "./http/HttpError";
 import AdminLink from "./AdminLink";
@@ -44,12 +39,7 @@ import ApiLink from "./ApiLink";
 
 export {
   ImageCropper,
-  UserComment,
-  Settings,
   HttpError,
-  UserNav,
-  InfoRight,
-  UserDescription,
   Search,
   ArticleComment,
   PopularListGroup,

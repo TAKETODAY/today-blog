@@ -23,7 +23,7 @@ import { http } from 'core';
 import { Layout } from 'antd';
 import { ArticleLayout, SearchLayout } from './layouts';
 import './App.css';
-import { ArticleDetail, CategoriesDetail, ErrorPage, Home, LabelsDetail, Login, Search, UserInfo, UserSettings } from 'src/pages';
+import { ArticleDetail, CategoriesDetail, ErrorPage, Home, LabelsDetail, Login, Search } from 'src/pages';
 import { useUserSession } from "./components/hooks";
 
 const { Content } = Layout;
@@ -82,8 +82,6 @@ export default () => {
                 <Search/>
               </SearchLayout>
             </Route>
-            <Route path='/user/info' exact component={UserInfo}/>
-            <Route path='/user/settings' exact component={UserSettings}/>
             <Route>
               <ArticleLayout>
                 <Switch>
