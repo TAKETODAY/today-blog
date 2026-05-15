@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,12 +50,22 @@ public class CategoryService {
     entityManager.persist(category, false);
   }
 
-  public List<Category> getAllCategories() {
+  /**
+   * 获取所有分类，并按排序字段升序排列
+   *
+   * @return 分类列表
+   */
+  public List<Category> getOrderedCategories() {
     return entityManager.find(Category.class, Map.of("order", Order.ASC));
   }
 
-  @Nullable
-  public Category getCategory(String name) {
+  /**
+   * 根据名称获取分类
+   *
+   * @param name 分类名称
+   * @return 分类对象，如果不存在则返回 null
+   */
+  public @Nullable Category findCategory(String name) {
     return entityManager.findById(Category.class, name);
   }
 

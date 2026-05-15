@@ -58,7 +58,7 @@ class CategoriesConsoleHttpHandler {
    */
   @GET
   public List<Category> listCategories() {
-    return categoryService.getAllCategories();
+    return categoryService.getOrderedCategories();
   }
 
   /**
@@ -79,7 +79,8 @@ class CategoriesConsoleHttpHandler {
     if (StringUtils.isBlank(category.getDescription())) {
       category.setDescription(category.getName());
     }
-    if (categoryService.getCategory(category.getName()) != null) {
+
+    if (categoryService.findCategory(category.getName()) != null) {
       throw ErrorMessageException.failed("分类重复");
     }
 
@@ -92,7 +93,7 @@ class CategoriesConsoleHttpHandler {
   @PUT("/{name}")
   @Logging(title = "更新分类", content = "name:[#{#name}]")
   public void update(@RequestBody Category category, @PathVariable String name) {
-    Category oldCategory = categoryService.getCategory(name);
+    Category oldCategory = categoryService.findCategory(name);
     ErrorMessageException.notNull(oldCategory, "要更新的分类不存在");
 
     if (oldCategory.equals(category)) {
@@ -109,7 +110,7 @@ class CategoriesConsoleHttpHandler {
   @DELETE("/{name}")
   @Logging(title = "删除分类", content = "delete name:[#{#name}]")
   public void delete(@PathVariable String name) {
-    ErrorMessageException.notNull(categoryService.getCategory(name), () -> "分类'" + name + "'不存在");
+    ErrorMessageException.notNull(categoryService.findCategory(name), () -> "分类'" + name + "'不存在");
     categoryService.deleteById(name);
   }
 

@@ -46,7 +46,7 @@ class CategoriesHttpHandler {
    */
   @GET
   public List<Category> listAll() {
-    return categoryService.getAllCategories();
+    return categoryService.getOrderedCategories();
   }
 
   /**
@@ -57,7 +57,7 @@ class CategoriesHttpHandler {
    */
   @GET("/{name}")
   public Category name(@PathVariable String name) {
-    Category category = categoryService.getCategory(name);
+    Category category = categoryService.findCategory(name);
     ErrorMessageException.notNull(category, "分类不存在");
     return category;
   }
