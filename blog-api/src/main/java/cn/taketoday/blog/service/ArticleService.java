@@ -411,11 +411,10 @@ public class ArticleService implements InitializingBean {
    * 保存文章
    */
   @Transactional
-  public void saveArticle(Article article) {
+  public void createArticle(Article article) {
     // save
-    // TODO 保存策略
     entityManager.persist(article);
-    // save labels
+
     Set<Label> labels = article.getLabels();
     if (CollectionUtils.isNotEmpty(labels)) {
       labelService.persistArticleLabels(labels, article.getId());
