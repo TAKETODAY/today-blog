@@ -41,7 +41,6 @@ import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.beans.support.BeanProperties;
 import infra.http.HttpStatus;
 import infra.session.Session;
-import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.web.RequestContext;
 import infra.web.annotation.DELETE;
@@ -78,8 +77,7 @@ class AuthHttpHandler {
 
   private final SessionManagerOperations sessionManagerOperations;
 
-  public AuthHttpHandler(SessionManager sessionManager, UserService userService,
-          BloggerService bloggerService, AttachmentService attachmentService,
+  public AuthHttpHandler(UserService userService, BloggerService bloggerService, AttachmentService attachmentService,
           SessionManagerOperations sessionManagerOperations, PasswordEncoder passwordEncoder) {
     this.userService = userService;
     this.bloggerService = bloggerService;

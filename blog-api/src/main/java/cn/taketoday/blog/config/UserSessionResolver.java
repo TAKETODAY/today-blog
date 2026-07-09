@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ public class UserSessionResolver {
    */
   @Nullable
   public User getLoginUser() {
-    return getLoginUser(RequestContextHolder.getRequired());
+    return getLoginUser(RequestContextHolder.required());
   }
 
   /**
@@ -73,7 +73,7 @@ public class UserSessionResolver {
    */
   @Nullable
   public Blogger getLoggedInBlogger() {
-    return getLoggedInBlogger(RequestContextHolder.getRequired());
+    return getLoggedInBlogger(RequestContextHolder.required());
   }
 
   /**

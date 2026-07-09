@@ -91,7 +91,7 @@ final class LoggingInterceptor implements MethodInterceptor {
       throw e;
     }
     finally {
-      RequestContext request = RequestContextHolder.getRequired();
+      RequestContext request = RequestContextHolder.required();
       MethodOperation operation = new MethodOperation(remoteAddress(request), invocation, loginUser(request));
       afterInvocation(operation, throwable, result);
     }
