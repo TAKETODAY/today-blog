@@ -35,7 +35,7 @@ import eu.bitwalker.useragentutils.UserAgent;
 import eu.bitwalker.useragentutils.Version;
 import infra.http.HttpHeaders;
 import infra.persistence.EntityManager;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.annotation.POST;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
@@ -61,7 +61,7 @@ class PageViewHttpHandler {
 
   @POST
   @RequestLimit(count = 5)
-  public void create(@Nullable String referer, RequestContext request, LoginInfo loginInfo) {
+  public void create(@Nullable String referer, HttpContext request, LoginInfo loginInfo) {
     if (!loginInfo.isBloggerLoggedIn()) {
 
       String url = request.getHeader(HttpHeaders.REFERER);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.bind.resolver.ParameterResolvingStrategy;
 import infra.web.handler.method.ResolvableMethodParameter;
 
@@ -70,7 +70,7 @@ class LoginInfoParameterResolver implements ParameterResolvingStrategy {
   }
 
   @Override
-  public @Nullable Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
+  public @Nullable Object resolveArgument(HttpContext context, ResolvableMethodParameter parameter) {
     Session session = sessionManagerOperations.getSession(context, false);
     if (session != null) {
       if (parameter.is(User.class)) {

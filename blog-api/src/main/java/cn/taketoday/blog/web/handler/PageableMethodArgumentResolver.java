@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.web.Pageable;
 import infra.lang.Assert;
 import infra.stereotype.Component;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.bind.resolver.ParameterResolvingStrategy;
 import infra.web.handler.method.ResolvableMethodParameter;
 
@@ -65,7 +65,7 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
   }
 
   @Override
-  public Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
+  public Object resolveArgument(HttpContext context, ResolvableMethodParameter parameter) {
     return new LazyPageable(blogConfig, sessionResolver, context, pageRequestParameterName, pageSizeRequestParameterName);
   }
 

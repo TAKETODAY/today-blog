@@ -36,7 +36,7 @@ import infra.http.converter.HttpMessageNotReadableException;
 import infra.validation.ObjectError;
 import infra.web.MultipartException;
 import infra.web.NotFoundHandler;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.annotation.ExceptionHandler;
 import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestControllerAdvice;
@@ -63,7 +63,7 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
 
   @Override
-  public @Nullable Object handleNotFound(RequestContext request) {
+  public @Nullable Object handleNotFound(HttpContext request) {
     request.setStatus(HttpStatus.NOT_FOUND);
     if (pageNotFoundLogger.isWarnEnabled()) {
       pageNotFoundLogger.warn("No mapping for {} {}, [{}]",
@@ -149,7 +149,7 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
 
   @Override
   protected @Nullable ResponseEntity<@Nullable Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-          HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+          HttpHeaders headers, HttpStatusCode status, HttpContext request) {
     if (ex.hasErrors()) {
       ObjectError objectError = ex.getGlobalError();
       if (objectError == null) {
@@ -165,22 +165,22 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
 
   @Override
   protected @Nullable ResponseEntity<@Nullable Object> handleMissingRequestParameter(
-          MissingRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+          MissingRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("缺少参数'" + ex.getParameterName() + "'"), headers, status, request);
   }
 
   @Override
-  protected @Nullable ResponseEntity<@Nullable Object> handleMultipartException(MultipartException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleMultipartException(MultipartException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制"), headers, status, request);
   }
 
   @Override
-  protected @Nullable ResponseEntity<@Nullable Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("参数读取错误，请检查格式"), headers, status, request);
   }
 
   @Override
-  protected @Nullable ResponseEntity<@Nullable Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, RequestContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
     return handleExceptionInternal(ex, ErrorMessage.failed("参数错误，请检查"), headers, status, request);
   }
 

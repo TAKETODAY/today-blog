@@ -32,7 +32,7 @@ import infra.session.SessionManagerOperations;
 import infra.session.SessionRepository;
 import infra.web.HandlerInterceptor;
 import infra.web.InterceptorChain;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.resource.ResourceHttpRequestHandler;
 
 /**
@@ -59,7 +59,7 @@ final class BloggerInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public @Nullable Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
+  public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Throwable {
     Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       if (User.isPresent(session)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import cn.taketoday.blog.BlogConstant;
 import infra.http.HttpHeaders;
 import infra.logging.Logger;
 import infra.logging.LoggerFactory;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -83,7 +83,7 @@ public class CSVUtils {
    * @param fileName 文件名
    * @param content 内容
    */
-  public static void exportCsv(String fileName, String content, RequestContext context) throws IOException {
+  public static void exportCsv(String fileName, String content, HttpContext context) throws IOException {
 
     // 读取字符编码
     HttpHeaders responseHeaders = context.responseHeaders();
@@ -116,7 +116,7 @@ public class CSVUtils {
   /**
    * demo,请勿调用！
    */
-  public static void demo(RequestContext context) {
+  public static void demo(HttpContext context) {
     // csv表头
     String header = "openid,手机号,红包名称,状态,导入时间,领取时间,短信状态,红包金额,兑换结果";
     // 下面 data里的key，可以说是数据库字段了

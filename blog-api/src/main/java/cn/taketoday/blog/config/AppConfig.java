@@ -51,7 +51,9 @@ import infra.session.SessionManagerOperations;
 import infra.session.config.EnableSession;
 import infra.stereotype.Component;
 import infra.web.config.annotation.ViewControllerRegistry;
+import infra.web.config.annotation.ViewResolverRegistry;
 import infra.web.config.annotation.WebMvcConfigurer;
+import infra.web.view.InternalResourceViewResolver;
 import infra.web.view.ModelAndView;
 import lombok.RequiredArgsConstructor;
 
@@ -85,6 +87,11 @@ class AppConfig implements WebMvcConfigurer {
   @Component
   static PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder(BCryptVersion.$2A);
+  }
+
+  @Override
+  public void configureViewResolvers(ViewResolverRegistry registry) {
+    registry.viewResolver(new InternalResourceViewResolver());
   }
 
   @Component

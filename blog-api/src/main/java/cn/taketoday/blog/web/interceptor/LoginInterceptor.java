@@ -23,7 +23,7 @@ import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
 import infra.session.SessionManagerOperations;
 import infra.web.HandlerInterceptor;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.resource.ResourceHttpRequestHandler;
 
 /**
@@ -47,7 +47,7 @@ final class LoginInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public boolean preProcessing(RequestContext request, Object handler) throws Throwable {
+  public boolean preProcessing(HttpContext request, Object handler) throws Throwable {
     if (User.isPresent(sessionManagerOperations.getSession(request, false))) {
       return true;
     }

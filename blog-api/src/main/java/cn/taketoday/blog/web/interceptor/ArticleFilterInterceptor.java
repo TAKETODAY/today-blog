@@ -34,7 +34,7 @@ import infra.session.SessionManagerOperations;
 import infra.util.CollectionUtils;
 import infra.util.MapCache;
 import infra.web.HandlerInterceptor;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 
 /**
  * @author TODAY 2021/1/10 22:45
@@ -68,7 +68,7 @@ public class ArticleFilterInterceptor implements HandlerInterceptor, Application
 
   @Override
   @SuppressWarnings("unchecked")
-  public void postProcessing(RequestContext context, Object handler, @Nullable Object result) {
+  public void postProcessing(HttpContext context, Object handler, @Nullable Object result) {
     if (result instanceof ListableHttpResult<?> listable
             && !Blogger.isPresent(sessionManagerOperations.getSession(context, false))) {
 

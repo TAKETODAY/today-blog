@@ -41,8 +41,8 @@ import infra.lang.Constant;
 import infra.stereotype.Component;
 import infra.util.concurrent.Future;
 import infra.util.function.SingletonSupplier;
-import infra.web.RequestContext;
-import infra.web.RequestContextHolder;
+import infra.web.HttpContext;
+import infra.web.HttpContextHolder;
 import lombok.CustomLog;
 
 import static cn.taketoday.blog.util.BlogUtils.remoteAddress;
@@ -91,7 +91,7 @@ final class LoggingInterceptor implements MethodInterceptor {
       throw e;
     }
     finally {
-      RequestContext request = RequestContextHolder.required();
+      HttpContext request = HttpContextHolder.required();
       MethodOperation operation = new MethodOperation(remoteAddress(request), invocation, loginUser(request));
       afterInvocation(operation, throwable, result);
     }
@@ -116,7 +116,7 @@ final class LoggingInterceptor implements MethodInterceptor {
     });
   }
 
-  private @Nullable User loginUser(RequestContext request) {
+  private @Nullable User loginUser(HttpContext request) {
     return sessionResolver.obtain().getLoginUser(request);
   }
 

@@ -26,8 +26,8 @@ import cn.taketoday.blog.model.User;
 import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
-import infra.web.RequestContext;
-import infra.web.RequestContextHolder;
+import infra.web.HttpContext;
+import infra.web.HttpContextHolder;
 
 /**
  * 关于 获取用户会话 的处理器
@@ -53,15 +53,15 @@ public class UserSessionResolver {
    */
   @Nullable
   public User getLoginUser() {
-    return getLoginUser(RequestContextHolder.required());
+    return getLoginUser(HttpContextHolder.required());
   }
 
   /**
    * 获取当前登录的用户
    */
   @Nullable
-  public User getLoginUser(RequestContext request) {
-    Session session = sessionManagerOperations.getSession(request, false);
+  public User getLoginUser(HttpContext context) {
+    Session session = sessionManagerOperations.getSession(context, false);
     if (session != null) {
       return User.find(session);
     }
@@ -73,14 +73,14 @@ public class UserSessionResolver {
    */
   @Nullable
   public Blogger getLoggedInBlogger() {
-    return getLoggedInBlogger(RequestContextHolder.required());
+    return getLoggedInBlogger(HttpContextHolder.required());
   }
 
   /**
    * 获取当前登录的博主
    */
   @Nullable
-  public Blogger getLoggedInBlogger(RequestContext request) {
+  public Blogger getLoggedInBlogger(HttpContext request) {
     Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       return Blogger.find(session);
@@ -98,7 +98,7 @@ public class UserSessionResolver {
   /**
    * 获取当前登录的用户
    */
-  public Optional<User> loginUser(RequestContext request) {
+  public Optional<User> loginUser(HttpContext request) {
     return Optional.ofNullable(getLoginUser(request));
   }
 
@@ -112,7 +112,7 @@ public class UserSessionResolver {
   /**
    * 获取当前登录的博主
    */
-  public Optional<Blogger> loggedInBlogger(RequestContext request) {
+  public Optional<Blogger> loggedInBlogger(HttpContext request) {
     return Optional.ofNullable(getLoggedInBlogger(request));
   }
 
