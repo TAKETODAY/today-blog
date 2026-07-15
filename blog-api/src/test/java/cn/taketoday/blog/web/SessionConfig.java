@@ -31,7 +31,6 @@ import infra.session.SessionIdResolver;
 import infra.session.SessionListener;
 import infra.session.SessionRepository;
 import infra.stereotype.Component;
-import infra.test.web.mock.request.MockMvcRequestBuilders;
 import infra.test.web.mock.setup.ConfigurableMockMvcBuilder;
 
 import static infra.test.web.mock.request.MockMvcRequestBuilders.get;
@@ -69,8 +68,7 @@ public class SessionConfig implements MockMvcBuilderCustomizer {
         Session session = super.retrieveSession(id);
         if (session == null) {
           session = createSession(id);
-          session.start();
-          session.save();
+          saveOrUpdate(session);
         }
         return session;
       }
