@@ -21,9 +21,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -111,28 +108,6 @@ public class CSVUtils {
     os.flush();
     os.close();
     logger.info("csv file download completed");
-  }
-
-  /**
-   * demo,请勿调用！
-   */
-  public static void demo(HttpContext context) {
-    // csv表头
-    String header = "openid,手机号,红包名称,状态,导入时间,领取时间,短信状态,红包金额,兑换结果";
-    // 下面 data里的key，可以说是数据库字段了
-    String key = "user_openid,user_phone,gift_name,status,create_time,get_time,staff_code,gift_price,responseContent";
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-    String fileName = sdf.format(new Date()) + "-慢必赔信息.csv";
-
-    // 从数据库加载 你的数据
-    List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
-    String content = CSVUtils.formatCsvData(data, header, key).toString();
-    try {
-      CSVUtils.exportCsv(fileName, content, context);
-    }
-    catch (IOException e) {
-      e.printStackTrace();
-    }
   }
 
 }
