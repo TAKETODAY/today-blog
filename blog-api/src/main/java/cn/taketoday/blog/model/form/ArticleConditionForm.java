@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
+ * 文章条件查询
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2020/12/20 22:42
  */
@@ -52,17 +54,17 @@ import lombok.Setter;
 @Setter
 public class ArticleConditionForm implements ConditionStatement, DebugDescriptive {
 
-  @Nullable
-  private String q;
+  private @Nullable String q;
 
-  @Nullable
-  private String category;
+  private @Nullable String title;
 
-  @Nullable
-  private PostStatus status;
+  private @Nullable String content;
 
-  @Nullable
-  private Map<String, OrderBy> sort;
+  private @Nullable String category;
+
+  private @Nullable PostStatus status;
+
+  private @Nullable Map<String, OrderBy> sort;
 
   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private LocalDateTime @Nullable [] createAt;
@@ -74,6 +76,14 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
   public void renderWhereClause(EntityMetadata metadata, List<Restriction> restrictions) {
     if (StringUtils.hasText(q)) {
       restrictions.add(Restriction.plain(" (`title` like ? OR `content` like ? )"));
+    }
+
+    if (StringUtils.hasText(title)) {
+      restrictions.add(Restriction.plain("`title` like ?"));
+    }
+
+    if (StringUtils.hasText(content)) {
+      restrictions.add(Restriction.plain("`content` like ?"));
     }
 
     if (StringUtils.hasText(category)) {
@@ -120,6 +130,14 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
       String string = '%' + q.trim() + '%';
       smt.setString(idx++, string);
       smt.setString(idx++, string);
+    }
+
+    if (StringUtils.hasText(title)) {
+      smt.setString(idx++, '%' + title.trim() + '%');
+    }
+
+    if (StringUtils.hasText(content)) {
+      smt.setString(idx++, '%' + content.trim() + '%');
     }
 
     if (StringUtils.hasText(category)) {
@@ -172,9 +190,14 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
   public String toString() {
     return ToStringBuilder.forInstance(this)
             .append("q", q)
+            .append("title", title)
+            .append("content", content)
             .append("category", category)
             .append("status", status)
             .append("sort", sort)
+            .append("createAt", createAt)
+            .append("updateAt", updateAt)
             .toString();
   }
+
 }

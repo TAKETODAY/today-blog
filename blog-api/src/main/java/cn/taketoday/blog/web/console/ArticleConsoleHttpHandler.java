@@ -65,6 +65,14 @@ class ArticleConsoleHttpHandler {
   private final ApplicationEventPublisher eventPublisher;
 
   /**
+   * 查询 文章列表 API
+   */
+  @GET
+  public Pagination<Article> articles(ArticleConditionForm from, Pageable pageable) {
+    return articleService.search(from, pageable);
+  }
+
+  /**
    * 创建文章 API
    */
   @POST
@@ -129,14 +137,6 @@ class ArticleConsoleHttpHandler {
   @Logging(title = "删除文章", content = "删除文章: [#{#id}]")
   public void delete(@PathVariable Long id) {
     articleService.deleteById(id);
-  }
-
-  /**
-   * 查询 文章列表 API
-   */
-  @GET
-  public Pagination<Article> articles(ArticleConditionForm from, Pageable pageable) {
-    return articleService.search(from, pageable);
   }
 
 }
