@@ -19,7 +19,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Button, Divider, message, Popconfirm, Popover } from 'antd';
+import { Button, Divider, message, Popconfirm, Popover, Tag } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
 import { format, isEmpty } from "@/utils";
@@ -31,10 +31,11 @@ import { PlusOutlined } from "@ant-design/icons/lib";
 import { Link } from "react-router-dom";
 import { ArticleLink } from "@/components/Article";
 import Image from "@/components/Image";
+import { CheckCircleOutlined, ExclamationCircleOutlined, SyncOutlined } from "@ant-design/icons";
 
 
 /**
- *  删除节点
+ * 删除节点
  * @param article
  */
 const handleRemove = async (article: ArticleItem) => {
@@ -49,9 +50,9 @@ const renderStatusMenu = (article: ArticleItem, reload: () => Promise<any>) => {
 
   const toggleStatus = async (status: string) => {
     return updateStatus(article.id, status)
-        .then(reload)
         .then(() => message.success('切换状态成功，即将刷新', 1))
         .catch(() => message.error('切换状态失败，请重试'))
+        .then(reload)
   }
 
   const renderPublished = () => {
@@ -98,6 +99,17 @@ const renderStatusMenu = (article: ArticleItem, reload: () => Promise<any>) => {
   )
 }
 
+const renderStatus = (article: ArticleItem) => {
+  switch (article.status) {
+    case 'DRAFT' :
+      return <Tag color='processing' icon={<ExclamationCircleOutlined/>}>草稿</Tag>
+    case 'PUBLISHED' :
+      return <Tag color='success' icon={<CheckCircleOutlined/>}>已发布</Tag>
+    default :
+      return <Tag color='error' icon={<SyncOutlined/>}>回收站</Tag>
+  }
+}
+
 export default () => {
   const actionRef = useRef<ActionType>()
   const [categories, setCategories] = useState({})
@@ -127,6 +139,13 @@ export default () => {
 
   const columns: ProColumns<ArticleItem>[] = [
     {
+      title: 'ID',
+      width: 60,
+      dataIndex: 'id',
+      fixed: 'left',
+      hideInSearch: true
+    },
+    {
       width: 200,
       title: '标题',
       fixed: 'left',
@@ -153,6 +172,9 @@ export default () => {
       width: 100,
       dataIndex: 'category',
       valueEnum: categories,
+      render: (_, article) => (
+          <Tag>{article.category}</Tag>
+      ),
     },
     {
       title: '内容',
@@ -178,6 +200,17 @@ export default () => {
       width: 100,
       dataIndex: 'password',
       hideInSearch: true
+    },
+    {
+      title: '状态',
+      width: 100,
+      dataIndex: 'status',
+      valueEnum: { 'PUBLISHED': { text: '已发布' }, 'DRAFT': { text: '草稿' }, 'RECYCLE': { text: '已回收' } },
+      render: (_, record) => (
+          <>
+            {renderStatus(record)}
+          </>
+      ),
     },
     {
       title: '发表日期',
