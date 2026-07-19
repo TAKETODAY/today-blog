@@ -41,20 +41,28 @@ const links: EditableLink[] = [
     href: '/blog/articles',
   },
   {
-    title: '文章标签',
-    href: '/blog/labels',
-  },
-  {
-    title: '文章索引',
-    href: '/blog/search',
-  },
-  {
     title: '文章分类',
     href: '/blog/categories',
   },
   {
+    title: '文章标签',
+    href: '/blog/labels',
+  },
+  {
+    title: '文章评论',
+    href: '/blog/comments',
+  },
+  {
     title: '用户管理',
-    href: '/user',
+    href: '/user/list',
+  },
+  {
+    title: '附件管理',
+    href: '/attachment/list',
+  },
+  {
+    title: '变量管理',
+    href: '/system/options',
   },
 ];
 
