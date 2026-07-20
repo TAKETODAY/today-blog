@@ -34,7 +34,6 @@ import infra.http.HttpStatus;
 import infra.util.StringUtils;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
-import infra.web.annotation.PATCH;
 import infra.web.annotation.POST;
 import infra.web.annotation.PUT;
 import infra.web.annotation.PathVariable;
@@ -105,17 +104,6 @@ class ArticleConsoleHttpHandler {
     articleService.update(article);
 
     eventPublisher.publishEvent(new ArticleUpdateEvent(this, id));
-  }
-
-  /**
-   * 更新状态 API
-   */
-  @Deprecated
-  @PATCH(path = "/{id}", params = "status")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
-  public void updateStatusDeprecated(@PathVariable Long id, PostStatus status) {
-    articleService.updateStatusById(status, id);
   }
 
   /**
