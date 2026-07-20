@@ -1,12 +1,27 @@
-description = "today-blog API"
+description = "TODAY BLOG REST API"
 
 apply plugin: "application"
 apply plugin: 'infra.application'
 apply plugin: 'cn.taketoday.blog.conventions'
 apply plugin: 'cn.taketoday.blog.optional-dependencies'
 
-apply plugin: 'infra.application.aot'
-apply plugin: 'org.graalvm.buildtools.native'
+
+configure(project) {
+  if (it.hasProperty("includeAOT")) {
+    apply plugin: 'infra.application.aot'
+    apply plugin: 'org.graalvm.buildtools.native'
+
+    processTestAot {
+      enabled = false
+//      debug = true
+    }
+
+//    processAot {
+//      jvmArgs "--add-opens=java.base/java.lang=ALL-UNNAMED"
+//      debug = true
+//    }
+  }
+}
 
 dependencies {
   implementation 'cn.taketoday:infra-starter-application'
@@ -87,16 +102,6 @@ application {
   ]
 }
 
-//processAot {
-//  jvmArgs "--add-opens=java.base/java.lang=ALL-UNNAMED"
-//  debug = true
-//}
-
-
-processTestAot {
-  enabled = false
-//  debug = true
-}
 
 infraJar {
   layered {
