@@ -51,9 +51,11 @@ import infra.jdbc.RepositoryManager;
 import infra.lang.Assert;
 import infra.persistence.EntityManager;
 import infra.persistence.EntityMetadata;
+import infra.persistence.EntityProperty;
 import infra.persistence.EntityRef;
 import infra.persistence.Order;
 import infra.persistence.OrderBy;
+import infra.persistence.PropertyUpdateStrategy;
 import infra.persistence.SimpleSelectQueryStatement;
 import infra.persistence.Transient;
 import infra.persistence.sql.SimpleSelect;
@@ -101,7 +103,7 @@ public class ArticleService implements InitializingBean {
     Assert.notNull(article.getId(), "文章ID不能为空");
     Article oldArticle = obtainById(article.getId());
 
-    entityManager.updateById(article);
+    entityManager.updateById(article, ArticleUpdateStrategy.instance);
 
     // update category
     if (!Objects.equals(article.getCategory(), oldArticle.getCategory())) {
@@ -547,6 +549,23 @@ public class ArticleService implements InitializingBean {
     public void setParameter(EntityMetadata metadata, PreparedStatement statement) throws SQLException {
       statement.setInt(1, PostStatus.PUBLISHED.getValue());
     }
+  }
+
+  static class ArticleUpdateStrategy implements PropertyUpdateStrategy {
+
+    public static final ArticleUpdateStrategy instance = new ArticleUpdateStrategy();
+
+    private static final Set<String> allowNullValues = Set.of("cover", "password");
+
+    @Override
+    public boolean shouldUpdate(Object entity, EntityProperty property) {
+      String name = property.property.getName();
+      if (allowNullValues.contains(name)) {
+        return true;
+      }
+      return property.getValue(entity) != null;
+    }
+
   }
 
 }
