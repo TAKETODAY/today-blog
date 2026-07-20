@@ -1,8 +1,8 @@
 {
-  "name": "today-blog-ui-admin",
-  "version": "3.1",
+  "name": "today-blog-ui-console",
+  "version": "3.3",
   "private": true,
-  "description": "TODAY BLOG Admin UI",
+  "description": "TODAY BLOG Console UI",
   "author": "Harry Yang <taketoday@foxmail.com>",
   "license": "GPL v3",
   "scripts": {
