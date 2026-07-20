@@ -25,14 +25,14 @@ import infra.context.ApplicationEvent;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2025/1/12 15:52
  */
-public abstract class BlogEvent extends ApplicationEvent {
+public abstract class BlogApplicationEvent extends ApplicationEvent {
 
   /**
    * 构造一个新的博客事件。
    *
    * @param source 事件源对象
    */
-  public BlogEvent(Object source) {
+  public BlogApplicationEvent(Object source) {
     super(source);
   }
 

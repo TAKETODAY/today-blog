@@ -26,7 +26,7 @@ package cn.taketoday.blog.event;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2025/1/12 15:51
  */
-public class OptionsUpdateEvent extends BlogEvent {
+public class OptionsUpdateEvent extends BlogApplicationEvent {
 
   /**
    * 构造一个新的 {@code OptionsUpdateEvent} 实例。

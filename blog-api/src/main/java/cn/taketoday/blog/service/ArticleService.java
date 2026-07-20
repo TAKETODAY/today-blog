@@ -165,17 +165,15 @@ public class ArticleService implements InitializingBean {
     }
   }
 
-  @Nullable
   @Cacheable(key = "'ById_'+#id")
-  public Article getById(long id) {
+  public @Nullable Article getById(long id) {
     Article article = entityManager.findById(Article.class, id);
     applyTags(article);
     return article;
   }
 
-  @Nullable
   @Cacheable(key = "'getByURI_'+#uri")
-  public Article getByURI(String uri) {
+  public @Nullable Article getByURI(String uri) {
     Assert.notNull(uri, "文章地址不能为空");
     try (Query query = repository.createQuery("SELECT * FROM article WHERE uri=? LIMIT 1")) {
       query.addParameter(uri);

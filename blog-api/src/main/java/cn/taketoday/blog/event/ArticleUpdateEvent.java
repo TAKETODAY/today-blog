@@ -25,7 +25,7 @@ package cn.taketoday.blog.event;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2024/11/12 17:55
  */
-public class ArticleUpdateEvent extends BlogEvent {
+public class ArticleUpdateEvent extends BlogApplicationEvent {
 
   private final long articleId;
 
