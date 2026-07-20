@@ -29,6 +29,7 @@ import { getCommentStatusDesc, isEmpty } from "@/utils";
 import Statistics from "@/pages/workplace/components/Statistics";
 import Image from "@/components/Image";
 import { useUserSession } from "@/components/hooks";
+import { ArticleLink } from "@/components/Article";
 
 const links: EditableLink[] = [
   {
@@ -208,13 +209,13 @@ const Workplace = (props: WorkplaceProps) => {
                           title={
                             <div className={styles.cardTitle}>
                               <Avatar size="small" src={article.cover}/>
-                              <a target='_blank' href={`/articles/${article.uri}`}>{article.title}</a>
+                              <ArticleLink target='_blank' article={article}/>
                             </div>
                           }
                           description={article.summary}
                       />
                       <div className={styles.projectItemContent}>
-                        <a target='_blank' href={`/articles/${article.uri}`}>浏览</a>
+                        <ArticleLink target='_blank' article={article}>浏览</ArticleLink>
                         <span className={styles.datetime} title={moment(article.updateAt).format("lll")}>
                             {moment(article.updateAt).fromNow()}
                           </span>
