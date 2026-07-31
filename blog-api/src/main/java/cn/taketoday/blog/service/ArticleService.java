@@ -503,10 +503,6 @@ public class ArticleService implements InitializingBean {
     return items;
   }
 
-  protected int getPageNow(int pageNow, int pageSize) {
-    return (pageNow - 1) * pageSize;
-  }
-
   private List<Article> applyLabels(List<Article> ret) {
     if (CollectionUtils.isNotEmpty(ret)) {
       for (Article article : ret) {
