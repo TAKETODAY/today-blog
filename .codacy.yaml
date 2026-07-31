@@ -5,6 +5,7 @@ exclude_paths:
   - "**.html"
   - "**.xml"
   - "**.json"
+  - "**.sql"
   - "**.properties"
   - "**.md"
   - "**.adoc"
