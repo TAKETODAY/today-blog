@@ -33,15 +33,12 @@ import lombok.Setter;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-08 08:22
  */
-@Getter
-@Setter
 public class Sitemap implements Serializable {
-  static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
   @Serial
   private static final long serialVersionUID = 1L;
 
-  //	always hourly daily weekly monthly yearly never
+  // always hourly daily weekly monthly yearly never
 
   private final LinkedList<SiteURL> urls = new LinkedList<>();
 
@@ -69,6 +66,10 @@ public class Sitemap implements Serializable {
     String lastModify = updateAt.toString();
     String cover = article.getCover();
     return newURL(0.9f, "/articles/" + article.getUri(), lastModify, "daily", cover);
+  }
+
+  public LinkedList<SiteURL> getUrls() {
+    return urls;
   }
 
   public static SiteURL newURL(float priority, String location, String lastModify, String changeFreq, String cover) {
