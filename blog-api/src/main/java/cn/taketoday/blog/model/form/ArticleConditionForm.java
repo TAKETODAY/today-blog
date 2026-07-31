@@ -155,7 +155,8 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
 
     if (updateAt != null && updateAt.length == 2) {
       smt.setObject(idx++, updateAt[0]);
-      smt.setObject(idx, updateAt[1]);
+      //noinspection UnusedAssignment
+      smt.setObject(idx++, updateAt[1]);
     }
 
   }
