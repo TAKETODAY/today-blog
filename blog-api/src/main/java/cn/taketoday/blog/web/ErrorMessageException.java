@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 import infra.core.NoStackTraceRuntimeException;
 import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
-import infra.lang.Assert;
+import infra.util.Assert;
 import infra.web.HttpStatusProvider;
 
 /**
