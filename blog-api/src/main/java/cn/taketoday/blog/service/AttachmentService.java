@@ -127,7 +127,7 @@ public class AttachmentService {
         ossOperations.removeFile(location);
       }
       catch (RuntimeException e) {
-        throw InternalServerException.failed("OSS 删除失败", e);
+        throw new InternalServerException("OSS 删除失败", e);
       }
     }
 

@@ -89,10 +89,10 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Throwable {
+  public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Exception {
     if (!Blogger.isPresent(sessionManagerOperations.getSession(request, false))) {
       // 非博主，进行限流
-      HandlerMethod handlerMethod = HandlerMethod.unwrap(chain.getHandler());
+      HandlerMethod handlerMethod = HandlerMethod.resolve(chain.getHandler());
       if (handlerMethod != null) {
         RequestLimit requestLimit = requestLimitConfigCache.get(handlerMethod);
         if (requestLimit != null && hasTooManyRequests(request, handlerMethod, requestLimit)) {

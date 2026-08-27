@@ -66,7 +66,7 @@ public class StatisticsService {
       });
     }
     catch (Exception e) {
-      throw InternalServerException.failed("查询出错", e);
+      throw new InternalServerException("查询出错", e);
     }
   }
 
@@ -107,7 +107,7 @@ public class StatisticsService {
       });
     }
     catch (Exception e) {
-      throw InternalServerException.failed("查询出错", e);
+      throw new InternalServerException("查询出错", e);
     }
   }
 

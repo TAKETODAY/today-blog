@@ -59,7 +59,7 @@ final class BloggerInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Throwable {
+  public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Exception {
     Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       if (User.isPresent(session)) {

@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.web.interceptor;
 
+import java.io.IOException;
+
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.User;
 import infra.aot.hint.MemberCategory;
@@ -47,7 +49,7 @@ final class LoginInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public boolean preProcessing(HttpContext request, Object handler) throws Throwable {
+  public boolean preProcessing(HttpContext request, Object handler) throws IOException {
     if (User.isPresent(sessionManagerOperations.getSession(request, false))) {
       return true;
     }

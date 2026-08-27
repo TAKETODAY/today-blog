@@ -112,7 +112,7 @@ public class ArticleService implements InitializingBean {
         categoryService.updateArticleCount(oldArticle.getCategory());
       }
       catch (Exception e) {
-        throw InternalServerException.failed("文章分类更新失败", e);
+        throw new InternalServerException("文章分类更新失败", e);
       }
     }
 
@@ -121,14 +121,14 @@ public class ArticleService implements InitializingBean {
       updateArticleLabels(article, oldArticle);
     }
     catch (Exception e) {
-      throw InternalServerException.failed("文章标签更新失败", e);
+      throw new InternalServerException("文章标签更新失败", e);
     }
 
     try {
       refreshFeedArticles();
     }
     catch (Exception e) {
-      throw InternalServerException.failed("文章订阅更新失败", e);
+      throw new InternalServerException("文章订阅更新失败", e);
     }
   }
 
