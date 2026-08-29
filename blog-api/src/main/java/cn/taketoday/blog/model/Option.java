@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,9 @@
 
 package cn.taketoday.blog.model;
 
-import java.io.Serial;
-import java.io.Serializable;
+import org.jspecify.annotations.Nullable;
+
+import java.time.Instant;
 import java.util.Objects;
 
 import infra.persistence.Column;
@@ -34,10 +35,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Table(name = "t_option")
-public class Option implements Serializable {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
+public class Option {
 
   @Id
   private String name;
@@ -49,11 +47,14 @@ public class Option implements Serializable {
 
   private String description;
 
-  public Option() {
+  private Instant updateAt;
 
+  private OptionValueType valueType;
+
+  public Option() {
   }
 
-  public Option(String name, String value) {
+  public Option(String name, @Nullable String value) {
     this.name = name;
     this.value = value;
   }
@@ -66,11 +67,14 @@ public class Option implements Serializable {
       return false;
     return Objects.equals(name, option.name)
             && Objects.equals(open, option.open)
-            && Objects.equals(value, option.value);
+            && Objects.equals(value, option.value)
+            && Objects.equals(description, option.description)
+            && Objects.equals(updateAt, option.updateAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, value);
+    return Objects.hash(name, value, open, description, updateAt);
   }
+
 }

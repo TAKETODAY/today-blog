@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.http;
+package cn.taketoday.blog.web.console;
 
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;

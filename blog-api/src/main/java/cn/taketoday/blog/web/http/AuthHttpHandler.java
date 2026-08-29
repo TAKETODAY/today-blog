@@ -41,9 +41,8 @@ import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.beans.support.BeanProperties;
 import infra.http.HttpStatus;
 import infra.session.Session;
-import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
@@ -78,8 +77,7 @@ class AuthHttpHandler {
 
   private final SessionManagerOperations sessionManagerOperations;
 
-  public AuthHttpHandler(SessionManager sessionManager, UserService userService,
-          BloggerService bloggerService, AttachmentService attachmentService,
+  public AuthHttpHandler(UserService userService, BloggerService bloggerService, AttachmentService attachmentService,
           SessionManagerOperations sessionManagerOperations, PasswordEncoder passwordEncoder) {
     this.userService = userService;
     this.bloggerService = bloggerService;
@@ -133,7 +131,7 @@ class AuthHttpHandler {
   @POST(params = "v2")
   @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
   @Logging(title = "登录", content = "邮箱:[#{#from.email}]登录")
-  public User loginV2(@Valid @RequestBody UserFrom from, RequestContext request) {
+  public User loginV2(@Valid @RequestBody UserFrom from, HttpContext request) {
     User loginUser = userService.getByEmail(from.email);
     if (loginUser == null) {
       throw ErrorMessageException.failed(from.email + " 账号不存在!");
@@ -231,6 +229,7 @@ class AuthHttpHandler {
     return loginUser;
   }
 
+  @NullUnmarked
   public static class ChangePasswordForm {
 
     @NotBlank(message = "旧密码不能为空")
@@ -290,9 +289,6 @@ class AuthHttpHandler {
 
     @NotEmpty(message = "请输入密码")
     public String password;
-
-//    @NotEmpty(message = "请输入手机号")
-//    public String mobilePhone;
   }
 
   /**

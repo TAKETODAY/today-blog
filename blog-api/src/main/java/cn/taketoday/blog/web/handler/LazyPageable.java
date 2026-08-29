@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,27 +29,28 @@ import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
 import infra.core.style.ToStringBuilder;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2.0 2024/8/15 21:18
  */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_PUBLIC_METHODS)
 final class LazyPageable implements Pageable, Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;
 
-  @Nullable
-  private Integer size;
+  private @Nullable Integer size;
 
-  @Nullable
-  private Integer current;
+  private @Nullable Integer current;
 
   private final BlogConfig blogConfig;
 
-  private final RequestContext request;
+  private final HttpContext request;
 
   private final UserSessionResolver sessionResolver;
 
@@ -58,7 +59,7 @@ final class LazyPageable implements Pageable, Serializable {
   private final String pageSizeRequestParameterName;
 
   public LazyPageable(BlogConfig blogConfig, UserSessionResolver sessionResolver,
-          RequestContext request, String pageRequestParameterName, String pageSizeRequestParameterName) {
+          HttpContext request, String pageRequestParameterName, String pageSizeRequestParameterName) {
     this.blogConfig = blogConfig;
     this.sessionResolver = sessionResolver;
     this.request = request;

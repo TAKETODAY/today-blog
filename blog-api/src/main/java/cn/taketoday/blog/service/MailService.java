@@ -88,7 +88,7 @@ public class MailService {
     }
     catch (Exception e) {
       log.error("When sending a mail to:[{}] for subject:[{}]", to, subject, e);
-      throw InternalServerException.failed("邮件发送失败", e);
+      throw new InternalServerException("邮件发送失败", e);
     }
   }
 
@@ -109,7 +109,7 @@ public class MailService {
     }
     catch (Exception e) {
       log.error("When sending a mail to:[{}] for subject:[{}]", to, subject, e);
-      throw InternalServerException.failed("邮件发送失败", e);
+      throw new InternalServerException("邮件发送失败", e);
     }
   }
 

@@ -34,7 +34,7 @@ export async function queryComments(params, sort) {
 }
 
 export async function create(data) {
-  return http.post('/api/comments', data)
+  return http.post('/api/console/comments', data)
 }
 
 export async function update(id, comment) {
@@ -45,10 +45,10 @@ export async function update(id, comment) {
  * @since 3.2
  */
 export async function updateStatus(id, status) {
-  return http.put(`/api/comments/${id}?status=${status}`)
+  return http.put(`/api/console/comments/${id}?status=${status}`)
 }
 
 export async function deleteComment(comment) {
-  return http.delete(`/api/comments/${comment.id}`)
+  return http.delete(`/api/console/comments/${comment.id}`)
 }
 

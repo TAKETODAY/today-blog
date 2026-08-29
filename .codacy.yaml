@@ -1,0 +1,17 @@
+---
+exclude_paths:
+  - "**.js"
+  - "**.css"
+  - "**.html"
+  - "**.xml"
+  - "**.json"
+  - "**.sql"
+  - "**.properties"
+  - "**.md"
+  - "**.adoc"
+  - "**.gradle"
+  - "**/test/**/*"
+  - "**/src/jmh/**/*"
+  - "**/buildSrc/**/*"
+  - "buildSrc/**/*"
+  - "**/testFixtures/**/*"

@@ -36,6 +36,7 @@ import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
+import cn.taketoday.blog.web.interceptor.RequestLimit;
 import infra.http.HttpStatus;
 import infra.web.annotation.GET;
 import infra.web.annotation.Interceptor;
@@ -125,6 +126,7 @@ class ArticleHttpHandler {
    * @param id 文章ID
    * @param author 博主
    */
+  @RequestLimit(count = 2)
   @PATCH("/{id}/pv") // PATCH /api/articles/1560163530909/pv Referer
   public void updatePageView(@PathVariable("id") Long id,
           @RequestHeader String Referer, @Nullable Blogger author) {

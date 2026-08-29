@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.http;
+package cn.taketoday.blog.web.console;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -48,12 +48,12 @@ import lombok.CustomLog;
 @CustomLog
 @RestController
 @RequiresBlogger
-@RequestMapping("/api/logging")
-class LoggingHttpHandler {
+@RequestMapping("/api/console/logging")
+class LoggingConsoleHttpHandler {
 
   private final LoggingService loggerService;
 
-  public LoggingHttpHandler(final LoggingService loggerService) {
+  public LoggingConsoleHttpHandler(final LoggingService loggerService) {
     this.loggerService = loggerService;
   }
 

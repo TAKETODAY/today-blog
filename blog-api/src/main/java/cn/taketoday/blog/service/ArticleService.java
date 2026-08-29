@@ -48,18 +48,20 @@ import infra.cache.annotation.Cacheable;
 import infra.jdbc.JdbcConnection;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
-import infra.lang.Assert;
 import infra.persistence.EntityManager;
 import infra.persistence.EntityMetadata;
+import infra.persistence.EntityProperty;
 import infra.persistence.EntityRef;
 import infra.persistence.Order;
 import infra.persistence.OrderBy;
+import infra.persistence.PropertyUpdateStrategy;
 import infra.persistence.SimpleSelectQueryStatement;
 import infra.persistence.Transient;
 import infra.persistence.sql.SimpleSelect;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import infra.transaction.support.TransactionOperations;
+import infra.util.Assert;
 import infra.util.CollectionUtils;
 import infra.web.server.InternalServerException;
 import lombok.CustomLog;
@@ -101,7 +103,7 @@ public class ArticleService implements InitializingBean {
     Assert.notNull(article.getId(), "文章ID不能为空");
     Article oldArticle = obtainById(article.getId());
 
-    entityManager.updateById(article);
+    entityManager.updateById(article, ArticleUpdateStrategy.instance);
 
     // update category
     if (!Objects.equals(article.getCategory(), oldArticle.getCategory())) {
@@ -110,7 +112,7 @@ public class ArticleService implements InitializingBean {
         categoryService.updateArticleCount(oldArticle.getCategory());
       }
       catch (Exception e) {
-        throw InternalServerException.failed("文章分类更新失败", e);
+        throw new InternalServerException("文章分类更新失败", e);
       }
     }
 
@@ -119,14 +121,14 @@ public class ArticleService implements InitializingBean {
       updateArticleLabels(article, oldArticle);
     }
     catch (Exception e) {
-      throw InternalServerException.failed("文章标签更新失败", e);
+      throw new InternalServerException("文章标签更新失败", e);
     }
 
     try {
       refreshFeedArticles();
     }
     catch (Exception e) {
-      throw InternalServerException.failed("文章订阅更新失败", e);
+      throw new InternalServerException("文章订阅更新失败", e);
     }
   }
 
@@ -163,17 +165,15 @@ public class ArticleService implements InitializingBean {
     }
   }
 
-  @Nullable
   @Cacheable(key = "'ById_'+#id")
-  public Article getById(long id) {
+  public @Nullable Article getById(long id) {
     Article article = entityManager.findById(Article.class, id);
     applyTags(article);
     return article;
   }
 
-  @Nullable
   @Cacheable(key = "'getByURI_'+#uri")
-  public Article getByURI(String uri) {
+  public @Nullable Article getByURI(String uri) {
     Assert.notNull(uri, "文章地址不能为空");
     try (Query query = repository.createQuery("SELECT * FROM article WHERE uri=? LIMIT 1")) {
       query.addParameter(uri);
@@ -411,11 +411,10 @@ public class ArticleService implements InitializingBean {
    * 保存文章
    */
   @Transactional
-  public void saveArticle(Article article) {
+  public void createArticle(Article article) {
     // save
-    // TODO 保存策略
     entityManager.persist(article);
-    // save labels
+
     Set<Label> labels = article.getLabels();
     if (CollectionUtils.isNotEmpty(labels)) {
       labelService.persistArticleLabels(labels, article.getId());
@@ -504,10 +503,6 @@ public class ArticleService implements InitializingBean {
     return items;
   }
 
-  protected int getPageNow(int pageNow, int pageSize) {
-    return (pageNow - 1) * pageSize;
-  }
-
   private List<Article> applyLabels(List<Article> ret) {
     if (CollectionUtils.isNotEmpty(ret)) {
       for (Article article : ret) {
@@ -548,6 +543,23 @@ public class ArticleService implements InitializingBean {
     public void setParameter(EntityMetadata metadata, PreparedStatement statement) throws SQLException {
       statement.setInt(1, PostStatus.PUBLISHED.getValue());
     }
+  }
+
+  static class ArticleUpdateStrategy implements PropertyUpdateStrategy {
+
+    public static final ArticleUpdateStrategy instance = new ArticleUpdateStrategy();
+
+    private static final Set<String> allowNullValues = Set.of("cover", "password");
+
+    @Override
+    public boolean shouldUpdate(Object entity, EntityProperty property) {
+      String name = property.property.getName();
+      if (allowNullValues.contains(name)) {
+        return true;
+      }
+      return property.getValue(entity) != null;
+    }
+
   }
 
 }

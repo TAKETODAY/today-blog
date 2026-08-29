@@ -27,16 +27,19 @@ import cn.taketoday.blog.model.ArticleItem;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.web.ListableHttpResult;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
 import infra.context.ApplicationListener;
 import infra.session.SessionManagerOperations;
 import infra.util.CollectionUtils;
 import infra.util.MapCache;
 import infra.web.HandlerInterceptor;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 
 /**
  * @author TODAY 2021/1/10 22:45
  */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)
 public class ArticleFilterInterceptor implements HandlerInterceptor, ApplicationListener<ArticleUpdateEvent> {
 
   private final ArticleService articleService;
@@ -65,12 +68,12 @@ public class ArticleFilterInterceptor implements HandlerInterceptor, Application
 
   @Override
   @SuppressWarnings("unchecked")
-  public void postProcessing(RequestContext context, Object handler, @Nullable Object result) {
-    if (result instanceof ListableHttpResult<?> pagination
+  public void postProcessing(HttpContext context, Object handler, @Nullable Object result) {
+    if (result instanceof ListableHttpResult<?> listable
             && !Blogger.isPresent(sessionManagerOperations.getSession(context, false))) {
 
       // 过滤
-      List<?> objects = pagination.getData();
+      List<?> objects = listable.getData();
       Object first = CollectionUtils.firstElement(objects);
       if (first instanceof ArticleItem) {
         for (ArticleItem item : (List<ArticleItem>) objects) {

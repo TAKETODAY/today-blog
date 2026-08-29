@@ -43,7 +43,7 @@ import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.blog.web.Pageable;
 import infra.ui.Model;
 import infra.util.DataSize;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 
 import static java.util.regex.Pattern.compile;
 
@@ -56,7 +56,7 @@ public abstract class BlogUtils {
           "HTTP_CLIENT_IP"      // HTTP_CLIENT_IP：有些代理服务器
   );
 
-  public static String remoteAddress(RequestContext request) {
+  public static String remoteAddress(HttpContext request) {
     String ipAddresses = getIpAddresses(request);
 
     //有些网络通过多层代理，那么获取到的ip就会有多个，一般都是通过逗号（,）分割开来，并且第一个ip为客户端的真实IP
@@ -71,7 +71,7 @@ public abstract class BlogUtils {
     return request.getRemoteAddress();
   }
 
-  private static @Nullable String getIpAddresses(RequestContext request) {
+  private static @Nullable String getIpAddresses(HttpContext request) {
     for (String ipHeader : IP_HEADERS) {
       String ipAddresses = request.getHeader(ipHeader);
       if (isIP(ipAddresses)) {
@@ -314,60 +314,6 @@ public abstract class BlogUtils {
     model.setAttribute("size", pageable.pageSize());
     model.setAttribute("pageNow", pageable.pageNumber());
     model.setAttribute("count", count);
-  }
-
-  @Deprecated(forRemoval = true)
-  public static boolean notFound(int page, int pageCount) {
-    return page > pageCount || page < 1;
-  }
-
-  @Deprecated(forRemoval = true)
-  public static int pageCount(int rowCount, int size) {
-    return (rowCount - 1) / size + 1;
-  }
-
-  public static void main(String[] args) {
-
-    String value = null;
-    value = stripXss("<script language=text/javascript>alert(document.cookie);</script>");
-    System.out.println("type-1: '" + value + "'");
-
-    value = stripXss("<script src='' onerror='alert(document.cookie)'></script>");
-    System.out.println("type-2: '" + value + "'");
-
-    value = stripXss("</script>");
-    System.out.println("type-3: '" + value + "'");
-
-    value = stripXss(" eval(abc);");
-    System.out.println("type-4: '" + value + "'");
-
-    value = stripXss(" expression(abc);");
-    System.out.println("type-5: '" + value + "'");
-
-    value = stripXss("<img src='' onerror='alert(document.cookie);'></img>");
-    System.out.println("type-6: '" + value + "'");
-
-    value = stripXss("<img src='' onerror='alert(document.cookie);'/>");
-    System.out.println("type-7: '" + value + "'");
-
-    value = stripXss("<img src='' onerror='alert(document.cookie);'>");
-    System.out.println("type-8: '" + value + "'");
-
-    value = stripXss("<script language=text/javascript>alert(document.cookie);");
-    System.out.println("type-9: '" + value + "'");
-
-    value = stripXss("<script>window.location='url'");
-    System.out.println("type-10: '" + value + "'");
-
-    value = stripXss(" onload='alert(\"abc\");");
-    System.out.println("type-11: '" + value + "'");
-
-    value = stripXss("<img src=x<!--'<\"-->>");
-    System.out.println("type-12: '" + value + "'");
-
-    value = stripXss("<=img onstop=");
-    System.out.println("type-13: '" + value + "'");
-
   }
 
 }

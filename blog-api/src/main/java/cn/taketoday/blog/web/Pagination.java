@@ -60,11 +60,6 @@ public class Pagination<T> implements ListableHttpResult<T> {
     this.data = data;
   }
 
-  public static <T> Pagination<T> ok(List<T> data, int totalRecord, Pageable pageable) {
-    int pages = ((totalRecord - 1) / pageable.pageSize() + 1);
-    return new Pagination<>(pages, totalRecord, pageable.pageSize(), pageable.pageNumber(), data);
-  }
-
   public int getPages() {
     return pages;
   }
@@ -118,6 +113,11 @@ public class Pagination<T> implements ListableHttpResult<T> {
   @SuppressWarnings("unchecked")
   public static <T> Pagination<T> empty() {
     return empty;
+  }
+
+  public static <T> Pagination<T> ok(List<T> data, int totalRecord, Pageable pageable) {
+    int pages = ((totalRecord - 1) / pageable.pageSize() + 1);
+    return new Pagination<>(pages, totalRecord, pageable.pageSize(), pageable.pageNumber(), data);
   }
 
   public static <T> Pagination<T> from(Page<T> page) {

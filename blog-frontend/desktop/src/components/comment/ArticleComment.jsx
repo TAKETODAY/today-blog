@@ -41,27 +41,24 @@ export default class ArticleComment extends React.Component {
   intersectionObserver = null
 
   componentDidMount() {
-
-    if (typeof window !== undefined && this.intersectionObserver === null) {
-      this.intersectionObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.intersectionRatio <= 0) {// If intersectionRatio is 0, the target is out of view and we do not need to do anything.
-            return
-          }
-          if (!this.state.commentsLoaded) {
-            this.loadComment(1)
-            console.log('正在加载评论')
-          }
-        })
-      }, { threshold: [1] })
-    }
-  }
-
-  componentDidUpdate() {
-    if (typeof window !== undefined && this.intersectionObserver !== null) {
+    if (this.intersectionObserver) {
       this.intersectionObserver.disconnect()
-      this.intersectionObserver.observe(document.getElementById("comments"))
+      this.intersectionObserver = null
     }
+
+    this.intersectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.intersectionRatio <= 0) {// If intersectionRatio is 0, the target is out of view and we do not need to do anything.
+          return
+        }
+        if (!this.state.commentsLoaded) {
+          this.loadComment(1)
+        }
+      })
+    }, {
+      threshold: 1
+    })
+    this.intersectionObserver.observe(document.getElementById("comments"))
   }
 
   componentWillUnmount() {
@@ -74,7 +71,6 @@ export default class ArticleComment extends React.Component {
       .then(extractData)
       .then(comments => {
         scrollTo('div#comments.data_list.markdown')
-        console.log(comments)
         this.setState({ comments, commentsLoaded: true })
       })
       .catch(res => {

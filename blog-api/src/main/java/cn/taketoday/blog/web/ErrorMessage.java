@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,16 @@ import org.jspecify.annotations.Nullable;
 import infra.core.style.ToStringBuilder;
 
 /**
+ * 错误消息封装类，用于表示操作失败时的错误信息。
+ * <p>
+ * 实现了 {@link HttpResult} 接口，通常作为 HTTP 响应体的一部分返回给客户端。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2020-04-16 14:23
  */
 public final class ErrorMessage implements HttpResult {
+
+  public static final ErrorMessage unauthorized = ErrorMessage.failed("登录超时");
 
   @Nullable
   private final String message;

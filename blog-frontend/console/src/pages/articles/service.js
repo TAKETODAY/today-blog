@@ -34,7 +34,7 @@ export async function queryArticles(params, sort) {
 }
 
 export async function getCategories() {
-  return http.get('/api/categories')
+  return http.get('/api/console/categories')
 }
 
 export async function updateStatus(id, status) {

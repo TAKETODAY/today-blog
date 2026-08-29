@@ -54,7 +54,9 @@ public class Blogger implements Serializable {
   private String sex;
   private String name;
   private String email;
-  private String passwd;
+
+  private /*transient*/ String passwd;
+
   private String introduce;
   private String image;
   private String address;
@@ -71,7 +73,6 @@ public class Blogger implements Serializable {
             .append("sex", sex)
             .append("name", name)
             .append("email", email)
-            .append("passwd", passwd)
             .append("introduce", introduce)
             .append("image", image)
             .append("address", address)

@@ -19,25 +19,44 @@ package cn.taketoday.blog.web;
 
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
+import infra.app.webmvc.test.config.MockMvcBuilderCustomizer;
 import infra.context.annotation.Bean;
 import infra.context.annotation.Configuration;
+import infra.session.HeaderSessionIdResolver;
 import infra.session.InMemorySessionRepository;
 import infra.session.Session;
 import infra.session.SessionEventDispatcher;
 import infra.session.SessionIdGenerator;
 import infra.session.SessionIdResolver;
+import infra.session.SessionListener;
 import infra.session.SessionRepository;
+import infra.stereotype.Component;
+import infra.test.web.mock.setup.ConfigurableMockMvcBuilder;
+
+import static infra.test.web.mock.request.MockMvcRequestBuilders.get;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2026/3/7 22:06
  */
 @Configuration
-public class SessionConfig {
+public class SessionConfig implements MockMvcBuilderCustomizer {
 
   @Bean
   static SessionIdResolver sessionIdResolver() {
     return SessionIdResolver.authenticationInfo();
+  }
+
+  @Component
+  static SessionListener authSessionListener() {
+    return new SessionListener() {
+
+      @Override
+      public void sessionCreated(Session session) {
+        new Blogger().bindTo(session);
+        new User().bindTo(session);
+      }
+    };
   }
 
   @Bean
@@ -45,24 +64,21 @@ public class SessionConfig {
     return new InMemorySessionRepository(eventDispatcher, idGenerator) {
 
       @Override
-      public Session createSession(String id) {
-        Session session = super.createSession(id);
-        new Blogger().bindTo(session);
-        new User().bindTo(session);
-        return session;
-      }
-
-      @Override
       public Session retrieveSession(String id) {
         Session session = super.retrieveSession(id);
         if (session == null) {
           session = createSession(id);
-          session.start();
-          session.save();
+          saveOrUpdate(session);
         }
         return session;
       }
     };
   }
 
+  @Override
+  public void customize(ConfigurableMockMvcBuilder<?> builder) {
+    builder.defaultRequest(get("/")
+            .header(HeaderSessionIdResolver.HEADER_AUTHENTICATION_INFO, "key"));
+
+  }
 }

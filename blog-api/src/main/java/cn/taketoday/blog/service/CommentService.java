@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,13 +36,13 @@ import cn.taketoday.blog.model.form.CommentConditionForm;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
+import infra.beans.aot.RegisterBeanMetadata;
 import infra.cache.annotation.CacheConfig;
-import infra.lang.Assert;
 import infra.persistence.EntityManager;
 import infra.persistence.OrderBy;
-import infra.persistence.Page;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
+import infra.util.Assert;
 import infra.util.CollectionUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -141,7 +141,7 @@ public class CommentService {
   }
 
   @Transactional
-  public void create(Comment comment) {
+  public void persist(Comment comment) {
     entityManager.persist(comment);
 
     //sendMail(comment);
@@ -278,26 +278,7 @@ public class CommentService {
     return Pagination.from(entityManager.page(Comment.class, form, pageable));
   }
 
-  public Page<Comment> getByUser(User userInfo, Pageable pageable) {
-    return entityManager.page(Comment.class, new PageByUserQuery(userInfo), pageable)
-            .peek(comment -> comment.setUser(userService.getById(comment.getUserId())));
-  }
-
-  @OrderBy(clause = "id DESC")
-  static class PageByUserQuery {
-
-    final Long userId;
-
-    PageByUserQuery(User userInfo) {
-      this.userId = userInfo.getId();
-    }
-
-    public Long getUserId() {
-      return userId;
-    }
-
-  }
-
+  @RegisterBeanMetadata
   @OrderBy(clause = "create_at DESC")
   static class QueryByArticleId {
 

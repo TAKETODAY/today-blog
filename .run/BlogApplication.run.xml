@@ -3,6 +3,7 @@
     <option name="ACTIVE_PROFILES" value="dev" />
     <option name="MAIN_CLASS_NAME" value="cn.taketoday.blog.BlogApplication" />
     <module name="today-blog.blog-api.main" />
+    <option name="VM_PARAMETERS" value="-Djdk.tracePinnedThreads=full" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

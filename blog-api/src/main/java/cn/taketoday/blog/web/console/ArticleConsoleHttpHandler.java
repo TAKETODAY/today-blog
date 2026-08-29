@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ import infra.http.HttpStatus;
 import infra.util.StringUtils;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
-import infra.web.annotation.PATCH;
 import infra.web.annotation.POST;
 import infra.web.annotation.PUT;
 import infra.web.annotation.PathVariable;
@@ -65,6 +64,14 @@ class ArticleConsoleHttpHandler {
   private final ApplicationEventPublisher eventPublisher;
 
   /**
+   * 查询 文章列表 API
+   */
+  @GET
+  public Pagination<Article> articles(ArticleConditionForm from, Pageable pageable) {
+    return articleService.search(from, pageable);
+  }
+
+  /**
    * 创建文章 API
    */
   @POST
@@ -81,7 +88,7 @@ class ArticleConsoleHttpHandler {
       log.debug("创建新文章: [{}]", form.title);
     }
 
-    articleService.saveArticle(article);
+    articleService.createArticle(article);
   }
 
   /**
@@ -97,17 +104,6 @@ class ArticleConsoleHttpHandler {
     articleService.update(article);
 
     eventPublisher.publishEvent(new ArticleUpdateEvent(this, id));
-  }
-
-  /**
-   * 更新状态 API
-   */
-  @Deprecated
-  @PATCH(path = "/{id}", params = "status")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
-  public void updateStatusDeprecated(@PathVariable Long id, PostStatus status) {
-    articleService.updateStatusById(status, id);
   }
 
   /**
@@ -129,14 +125,6 @@ class ArticleConsoleHttpHandler {
   @Logging(title = "删除文章", content = "删除文章: [#{#id}]")
   public void delete(@PathVariable Long id) {
     articleService.deleteById(id);
-  }
-
-  /**
-   * 查询 文章列表 API
-   */
-  @GET
-  public Pagination<Article> articles(ArticleConditionForm from, Pageable pageable) {
-    return articleService.search(from, pageable);
   }
 
 }

@@ -14,6 +14,9 @@ mariadb4j:
   port: 3307
   create-database: "today"
 
+app:
+  main:
+    allow-bean-definition-overriding: true
 
 web:
   error:
