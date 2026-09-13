@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ import infra.cache.annotation.CacheConfig;
 import infra.cache.annotation.CacheEvict;
 import infra.cache.annotation.Cacheable;
 import infra.persistence.EntityManager;
-import infra.persistence.EntityRef;
-import infra.persistence.Where;
+import infra.persistence.annotation.EntityRef;
+import infra.persistence.annotation.Where;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 

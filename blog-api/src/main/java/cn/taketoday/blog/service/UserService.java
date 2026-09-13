@@ -29,8 +29,8 @@ import infra.cache.annotation.CacheEvict;
 import infra.cache.annotation.Cacheable;
 import infra.http.HttpStatus;
 import infra.persistence.EntityManager;
-import infra.persistence.EntityRef;
-import infra.persistence.Id;
+import infra.persistence.annotation.EntityRef;
+import infra.persistence.annotation.Id;
 import infra.stereotype.Service;
 import infra.web.server.ResponseStatusException;
 

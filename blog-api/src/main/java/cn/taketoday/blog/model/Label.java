@@ -22,8 +22,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import infra.core.style.ToStringBuilder;
-import infra.persistence.Id;
-import infra.persistence.Table;
+import infra.persistence.annotation.Id;
+import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
 

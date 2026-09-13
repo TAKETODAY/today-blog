@@ -23,8 +23,8 @@ import java.util.Objects;
 
 import cn.taketoday.blog.util.StringUtils;
 import infra.core.style.ToStringBuilder;
-import infra.persistence.EntityRef;
-import infra.persistence.Transient;
+import infra.persistence.annotation.EntityRef;
+import infra.persistence.annotation.Transient;
 
 /**
  * 文章列表项

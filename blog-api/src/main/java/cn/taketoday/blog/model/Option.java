@@ -22,9 +22,9 @@ import org.jspecify.annotations.Nullable;
 import java.time.Instant;
 import java.util.Objects;
 
-import infra.persistence.Column;
-import infra.persistence.Id;
-import infra.persistence.Table;
+import infra.persistence.annotation.Column;
+import infra.persistence.annotation.Id;
+import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
 

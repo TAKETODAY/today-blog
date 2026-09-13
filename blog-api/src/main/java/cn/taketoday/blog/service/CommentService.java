@@ -39,7 +39,7 @@ import cn.taketoday.blog.web.Pagination;
 import infra.beans.aot.RegisterBeanMetadata;
 import infra.cache.annotation.CacheConfig;
 import infra.persistence.EntityManager;
-import infra.persistence.OrderBy;
+import infra.persistence.annotation.OrderBy;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import infra.util.Assert;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package cn.taketoday.blog.model.form;
 import org.jspecify.annotations.Nullable;
 
 import cn.taketoday.blog.model.enums.CommentStatus;
-import infra.persistence.Like;
-import infra.persistence.OrderBy;
+import infra.persistence.annotation.Like;
+import infra.persistence.annotation.OrderBy;
 import lombok.Data;
 
 /**

@@ -23,9 +23,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 
-import infra.persistence.Id;
 import infra.persistence.NewEntityIndicator;
-import infra.persistence.Transient;
+import infra.persistence.annotation.Id;
+import infra.persistence.annotation.Transient;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
