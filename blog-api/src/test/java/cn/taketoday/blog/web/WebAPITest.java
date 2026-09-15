@@ -23,8 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import infra.app.resttestclient.config.AutoConfigureRestTestClient;
-import infra.app.test.context.InfraTest;
 import infra.app.webmvc.test.config.AutoConfigureMockMvc;
+import infra.test.app.context.InfraTest;
 import infra.test.context.ActiveProfiles;
 
 /**

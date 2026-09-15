@@ -33,11 +33,11 @@ import infra.core.Pair;
 import infra.core.style.ToStringBuilder;
 import infra.format.annotation.DateTimeFormat;
 import infra.logging.LogMessage;
-import infra.persistence.ConditionStatement;
 import infra.persistence.DebugDescriptive;
 import infra.persistence.EntityMetadata;
 import infra.persistence.EntityProperty;
 import infra.persistence.Order;
+import infra.persistence.QueryCondition;
 import infra.persistence.sql.MutableOrderByClause;
 import infra.persistence.sql.OrderByClause;
 import infra.persistence.sql.Restriction;
@@ -52,7 +52,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ArticleConditionForm implements ConditionStatement, DebugDescriptive {
+public class ArticleConditionForm implements QueryCondition, DebugDescriptive {
 
   private @Nullable String q;
 
@@ -73,7 +73,7 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
   private LocalDateTime @Nullable [] updateAt;
 
   @Override
-  public void renderWhereClause(EntityMetadata metadata, List<Restriction> restrictions) {
+  public void collectRestrictions(EntityMetadata metadata, List<Restriction> restrictions) {
     if (StringUtils.hasText(q)) {
       restrictions.add(Restriction.plain(" (`title` like ? OR `content` like ? )"));
     }
@@ -104,15 +104,14 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
 
   }
 
-  @Nullable
   @Override
-  public OrderByClause getOrderByClause(EntityMetadata metadata) {
+  public @Nullable OrderByClause resolveOrderByClause(EntityMetadata metadata) {
     if (sort != null) {
       List<Pair<String, Order>> list = sort.entrySet().stream()
               .map(entry -> {
                 EntityProperty property = metadata.findProperty(entry.getKey());
                 if (property != null) {
-                  return Pair.of(property.columnName, entry.getValue().order);
+                  return Pair.of(property.getColumnName(), entry.getValue().order);
                 }
                 return null;
               })
