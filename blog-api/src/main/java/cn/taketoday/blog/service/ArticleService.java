@@ -553,7 +553,7 @@ public class ArticleService implements InitializingBean {
 
     @Override
     public boolean shouldUpdate(Object entity, EntityProperty property) {
-      String name = property.getBeanProperty().getName();
+      String name = property.getName();
       if (allowNullValues.contains(name)) {
         return true;
       }
