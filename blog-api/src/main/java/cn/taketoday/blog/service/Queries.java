@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ import java.sql.PreparedStatement;
 import java.util.function.Consumer;
 
 import infra.persistence.EntityMetadata;
-import infra.persistence.QueryStatement;
-import infra.persistence.SimpleSelectQueryStatement;
+import infra.persistence.query.QueryStatement;
+import infra.persistence.query.SimpleSelectQueryStatement;
 import infra.persistence.sql.SimpleSelect;
 
 /**

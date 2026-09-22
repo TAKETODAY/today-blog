@@ -35,7 +35,7 @@ import infra.logging.LogMessage;
 import infra.persistence.DebugDescriptive;
 import infra.persistence.EntityMetadata;
 import infra.persistence.EntityProperty;
-import infra.persistence.QueryCondition;
+import infra.persistence.query.QueryCondition;
 import infra.persistence.sql.OrderSpec;
 import infra.persistence.sql.Restriction;
 import lombok.Getter;
