@@ -55,7 +55,7 @@ import infra.persistence.Order;
 import infra.persistence.PropertyUpdateStrategy;
 import infra.persistence.SimpleSelectQueryStatement;
 import infra.persistence.annotation.EntityRef;
-import infra.persistence.annotation.OrderBy;
+import infra.persistence.annotation.OrderByClause;
 import infra.persistence.annotation.Transient;
 import infra.persistence.sql.SimpleSelect;
 import infra.stereotype.Service;
@@ -66,6 +66,8 @@ import infra.util.CollectionUtils;
 import infra.web.server.InternalServerException;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
+
+import static infra.persistence.sql.OrderSpec.desc;
 
 @Service
 @CustomLog
@@ -378,7 +380,7 @@ public class ArticleService implements InitializingBean {
     log.debug("Build Sitemap");
     sitemap.clear();
 
-    for (Article article : entityManager.find(Article.class, Map.of("create_at", Order.DESC))) {
+    for (Article article : entityManager.find(Article.class, desc("create_at"))) {
       if (article.getStatus() == PostStatus.PUBLISHED) {
         sitemap.addArticle(article);
       }
@@ -512,7 +514,7 @@ public class ArticleService implements InitializingBean {
     return ret;
   }
 
-  @OrderBy("create_at DESC")
+  @OrderByClause("create_at DESC")
   @EntityRef(Article.class)
   static class ArticleStatus {
 

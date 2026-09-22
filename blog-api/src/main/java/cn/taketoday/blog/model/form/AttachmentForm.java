@@ -24,7 +24,7 @@ import java.util.Objects;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import infra.core.style.ToStringBuilder;
 import infra.persistence.annotation.Like;
-import infra.persistence.annotation.OrderBy;
+import infra.persistence.annotation.OrderByClause;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,7 +33,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@OrderBy(clause = "update_at DESC, create_at DESC")
+@OrderByClause("update_at DESC, create_at DESC")
 public class AttachmentForm {
 
   @Nullable

@@ -37,7 +37,7 @@ import infra.cache.annotation.CacheEvict;
 import infra.cache.annotation.Cacheable;
 import infra.persistence.EntityManager;
 import infra.persistence.annotation.EntityRef;
-import infra.persistence.annotation.Where;
+import infra.persistence.annotation.Subquery;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 
@@ -132,7 +132,8 @@ public class LabelService {
   @EntityRef(Label.class)
   static class TagQuery {
 
-    @Where("`id` IN (SELECT `label_id` FROM article_label WHERE `article_id` = ? )")
+    //@Where("`id` IN (SELECT `label_id` FROM article_label WHERE `article_id` = ? )")
+    @Subquery(select = "label_id", from = ArticleLabel.class)
     public final Long articleId;
 
     TagQuery(Long articleId) {

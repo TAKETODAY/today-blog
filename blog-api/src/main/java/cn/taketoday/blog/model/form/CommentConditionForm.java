@@ -22,6 +22,7 @@ import org.jspecify.annotations.Nullable;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import infra.persistence.annotation.Like;
 import infra.persistence.annotation.OrderBy;
+import infra.persistence.annotation.OrderByClause;
 import lombok.Data;
 
 /**
@@ -29,7 +30,7 @@ import lombok.Data;
  * @since 3.2 2024/10/12 18:31
  */
 @Data
-@OrderBy("id DESC")
+@OrderByClause("id DESC")
 public class CommentConditionForm {
 
   @Nullable

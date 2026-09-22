@@ -39,7 +39,7 @@ import cn.taketoday.blog.web.Pagination;
 import infra.beans.aot.RegisterBeanMetadata;
 import infra.cache.annotation.CacheConfig;
 import infra.persistence.EntityManager;
-import infra.persistence.annotation.OrderBy;
+import infra.persistence.annotation.OrderByClause;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import infra.util.Assert;
@@ -279,7 +279,7 @@ public class CommentService {
   }
 
   @RegisterBeanMetadata
-  @OrderBy(clause = "create_at DESC")
+  @OrderByClause("create_at DESC")
   static class QueryByArticleId {
 
     public final Long articleId;

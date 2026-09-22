@@ -20,7 +20,6 @@ package cn.taketoday.blog.service;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
 import cn.taketoday.blog.model.Category;
 import infra.app.context.event.ApplicationStartedEvent;
@@ -29,10 +28,11 @@ import infra.jdbc.NamedQuery;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
 import infra.persistence.EntityManager;
-import infra.persistence.Order;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import static infra.persistence.sql.OrderSpec.asc;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -56,7 +56,7 @@ public class CategoryService {
    * @return 分类列表
    */
   public List<Category> getOrderedCategories() {
-    return entityManager.find(Category.class, Map.of("order", Order.ASC));
+    return entityManager.find(Category.class, asc("order"));
   }
 
   /**

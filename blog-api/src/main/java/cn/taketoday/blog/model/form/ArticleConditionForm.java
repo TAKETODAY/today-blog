@@ -29,20 +29,21 @@ import java.util.Objects;
 import cn.taketoday.blog.model.enums.OrderBy;
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.util.StringUtils;
-import infra.core.Pair;
 import infra.core.style.ToStringBuilder;
 import infra.format.annotation.DateTimeFormat;
 import infra.logging.LogMessage;
 import infra.persistence.DebugDescriptive;
 import infra.persistence.EntityMetadata;
 import infra.persistence.EntityProperty;
-import infra.persistence.Order;
 import infra.persistence.QueryCondition;
-import infra.persistence.sql.MutableOrderByClause;
-import infra.persistence.sql.OrderByClause;
+import infra.persistence.sql.OrderSpec;
 import infra.persistence.sql.Restriction;
 import lombok.Getter;
 import lombok.Setter;
+
+import static infra.persistence.sql.Restrictions.between;
+import static infra.persistence.sql.Restrictions.equal;
+import static infra.persistence.sql.Restrictions.plain;
 
 /**
  * 文章条件查询
@@ -75,51 +76,48 @@ public class ArticleConditionForm implements QueryCondition, DebugDescriptive {
   @Override
   public void collectRestrictions(EntityMetadata metadata, List<Restriction> restrictions) {
     if (StringUtils.hasText(q)) {
-      restrictions.add(Restriction.plain(" (`title` like ? OR `content` like ? )"));
+      restrictions.add(plain(" (`title` like ? OR `content` like ? )"));
     }
 
     if (StringUtils.hasText(title)) {
-      restrictions.add(Restriction.plain("`title` like ?"));
+      restrictions.add(plain("`title` like ?"));
     }
 
     if (StringUtils.hasText(content)) {
-      restrictions.add(Restriction.plain("`content` like ?"));
+      restrictions.add(plain("`content` like ?"));
     }
 
     if (StringUtils.hasText(category)) {
-      restrictions.add(Restriction.equal("category"));
+      restrictions.add(equal("category"));
     }
 
     if (status != null) {
-      restrictions.add(Restriction.equal("status"));
+      restrictions.add(equal("status"));
     }
 
     if (createAt != null && createAt.length == 2) {
-      restrictions.add(Restriction.plain("create_at between ? and ?"));
+      restrictions.add(between("create_at"));
     }
 
     if (updateAt != null && updateAt.length == 2) {
-      restrictions.add(Restriction.plain("update_at between ? and ?"));
+      restrictions.add(between("update_at"));
     }
 
   }
 
   @Override
-  public @Nullable OrderByClause resolveOrderByClause(EntityMetadata metadata) {
+  public OrderSpec resolveOrderByClause(EntityMetadata metadata) {
     if (sort != null) {
-      List<Pair<String, Order>> list = sort.entrySet().stream()
-              .map(entry -> {
-                EntityProperty property = metadata.findProperty(entry.getKey());
-                if (property != null) {
-                  return Pair.of(property.getColumnName(), entry.getValue().order);
-                }
-                return null;
-              })
-              .filter(Objects::nonNull)
-              .toList();
-      return new MutableOrderByClause(list);
+      var builder = OrderSpec.builder();
+      for (var entry : sort.entrySet()) {
+        EntityProperty property = metadata.findProperty(entry.getKey());
+        if (property != null) {
+          builder.orderBy(property.getColumnName(), entry.getValue().order);
+        }
+      }
+      return builder.build();
     }
-    return OrderByClause.plain("update_at DESC, create_at DESC");
+    return OrderSpec.plain("update_at DESC, create_at DESC");
   }
 
   @Override
