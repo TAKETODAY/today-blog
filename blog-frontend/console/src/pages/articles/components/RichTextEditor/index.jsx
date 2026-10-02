@@ -20,8 +20,8 @@
 
 import React from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-// import ClassicEditor from '@/components/ckeditor';
-import '@/components/ckeditor';
+import ClassicEditor from '@/components/ckeditor';
+//import '@/components/ckeditor';
 import { message } from 'antd'
 
 import UploadAdapterPlugin from './UploadAdapterPlugin'
@@ -35,7 +35,7 @@ export default (props) => {
     toolbar,
     upload: {
       // setIsUploading,
-      url: '/api/attachments',
+      url: '/api/console/attachments',
       onUploadError: error => {
         return message.error(error.message)
       }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,9 +30,9 @@ import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.bind.resolver.ParameterResolvingStrategy;
-import infra.web.handler.method.ResolvableMethodParameter;
+import infra.web.handler.method.HandlerParameter;
 
 /**
  * 登录信息参数解析
@@ -63,14 +63,14 @@ class LoginInfoParameterResolver implements ParameterResolvingStrategy {
   }
 
   @Override
-  public boolean supportsParameter(ResolvableMethodParameter parameter) {
+  public boolean supportsParameter(HandlerParameter parameter) {
     return parameter.is(User.class)
             || parameter.is(Blogger.class)
             || parameter.is(LoginInfo.class);
   }
 
   @Override
-  public @Nullable Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
+  public @Nullable Object resolveArgument(HttpContext context, HandlerParameter parameter) throws Exception {
     Session session = sessionManagerOperations.getSession(context, false);
     if (session != null) {
       if (parameter.is(User.class)) {
@@ -117,7 +117,7 @@ class LoginInfoParameterResolver implements ParameterResolvingStrategy {
     return new LoginInfo();
   }
 
-  private static <T> @Nullable T getAttribute(ResolvableMethodParameter parameter,
+  private static <T> @Nullable T getAttribute(HandlerParameter parameter,
           Session session, Function<Session, @Nullable T> finder) {
     T attribute = finder.apply(session);
     if (attribute != null) {

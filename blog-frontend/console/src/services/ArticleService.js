@@ -37,7 +37,7 @@ export default new class {
   }
 
   getAllCategories() {
-    return getCacheable('/api/categories')
+    return getCacheable('/api/console/categories')
   }
 
   getById(id) {
@@ -45,7 +45,7 @@ export default new class {
   }
 
   getAllLabels() {
-    return getCacheable('/api/tags')
+    return getCacheable('/api/console/tags')
   }
 
 }()

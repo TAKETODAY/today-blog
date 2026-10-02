@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ import java.util.Objects;
 
 import cn.taketoday.blog.util.StringUtils;
 import infra.core.style.ToStringBuilder;
-import infra.persistence.EntityRef;
-import infra.persistence.Transient;
+import infra.persistence.annotation.EntityRef;
+import infra.persistence.annotation.Transient;
 
 /**
  * 文章列表项
@@ -52,7 +52,8 @@ public class ArticleItem {
 
   public Instant createAt;
 
-  public ArticleItem() { }
+  public ArticleItem() {
+  }
 
   public ArticleItem(Article article) {
     this.id = article.getId();

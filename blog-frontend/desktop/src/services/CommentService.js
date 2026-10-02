@@ -31,13 +31,5 @@ export default class CommentService {
     return http.get(`/api/comments/${commentsId}`)
   }
 
-  getByUser(page, size) {
-    return http.get(`/api/comments/users?page=${page}&size=${size}`)
-  }
-
-  deleteComment(id) {
-    return http.delete(`/api/comments/${id}`)
-  }
-
 }
 

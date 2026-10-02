@@ -19,10 +19,11 @@ package cn.taketoday.blog.web.interceptor;
 
 import org.jspecify.annotations.Nullable;
 
-import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.ErrorMessage;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
 import infra.http.HttpStatus;
 import infra.http.MediaType;
 import infra.http.ResponseEntity;
@@ -30,14 +31,22 @@ import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.session.SessionRepository;
 import infra.web.HandlerInterceptor;
+import infra.web.HttpContext;
 import infra.web.InterceptorChain;
-import infra.web.RequestContext;
 import infra.web.resource.ResourceHttpRequestHandler;
 
 /**
+ * 博主拦截器，用于验证请求是否来自已登录的博主。
+ * <p>
+ * 该拦截器检查会话中是否存在有效的用户信息以及是否为博主身份。
+ * 如果是博主，则更新最后访问时间并继续处理请求；
+ * 如果是普通用户但非博主，则返回 404 Not Found；
+ * 如果未登录且访问的不是静态资源，则抛出未授权异常。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-16 21:38
  */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)
 final class BloggerInterceptor implements HandlerInterceptor {
 
   private final SessionRepository repository;
@@ -50,7 +59,7 @@ final class BloggerInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public @Nullable Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
+  public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Exception {
     Session session = sessionManagerOperations.getSession(request, false);
     if (session != null) {
       if (User.isPresent(session)) {
@@ -67,7 +76,8 @@ final class BloggerInterceptor implements HandlerInterceptor {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
               .body("Not Found");
     }
-    throw new UnauthorizedException();
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(ErrorMessage.unauthorized);
   }
 
 }

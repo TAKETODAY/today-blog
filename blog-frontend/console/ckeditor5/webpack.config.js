@@ -66,8 +66,7 @@ module.exports = {
     new CKEditorWebpackPlugin({
       // UI language. Language codes follow the https://en.wikipedia.org/wiki/ISO_639-1 format.
       // When changing the built-in language, remember to also change it in the editor's configuration (src/ckeditor.js).
-      language: 'zh-cn',
-      additionalLanguages: 'all'
+      translations: []
     }),
     new webpack.BannerPlugin({
       banner: bundler.getLicenseBanner(),

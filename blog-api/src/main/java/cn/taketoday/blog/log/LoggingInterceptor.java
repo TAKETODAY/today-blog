@@ -41,8 +41,8 @@ import infra.lang.Constant;
 import infra.stereotype.Component;
 import infra.util.concurrent.Future;
 import infra.util.function.SingletonSupplier;
-import infra.web.RequestContext;
-import infra.web.RequestContextHolder;
+import infra.web.HttpContext;
+import infra.web.HttpContextHolder;
 import lombok.CustomLog;
 
 import static cn.taketoday.blog.util.BlogUtils.remoteAddress;
@@ -64,10 +64,10 @@ final class LoggingInterceptor implements MethodInterceptor {
 
   private final LoggingExpressionEvaluator expressionEvaluator;
 
-  private final IpLocationService ipLocationService;
+  private final ObjectProvider<IpLocationService> ipLocationService;
 
   public LoggingInterceptor(BeanFactory beanFactory,
-          IpLocationService ipLocationService,
+          ObjectProvider<IpLocationService> ipLocationService,
           ObjectProvider<Executor> executor,
           ObjectProvider<LoggingPersister> loggingPersister,
           ObjectProvider<UserSessionResolver> sessionResolver) {
@@ -91,7 +91,7 @@ final class LoggingInterceptor implements MethodInterceptor {
       throw e;
     }
     finally {
-      RequestContext request = RequestContextHolder.getRequired();
+      HttpContext request = HttpContextHolder.required();
       MethodOperation operation = new MethodOperation(remoteAddress(request), invocation, loginUser(request));
       afterInvocation(operation, throwable, result);
     }
@@ -116,7 +116,7 @@ final class LoggingInterceptor implements MethodInterceptor {
     });
   }
 
-  private @Nullable User loginUser(RequestContext request) {
+  private @Nullable User loginUser(HttpContext request) {
     return sessionResolver.obtain().getLoginUser(request);
   }
 
@@ -164,7 +164,7 @@ final class LoggingInterceptor implements MethodInterceptor {
     entity.setContent(content);
     entity.setInvokeAt(operation.invokeAt);
 
-    IpLocation ipLocation = ipLocationService.lookup(operation.ip);
+    IpLocation ipLocation = ipLocationService.get().lookup(operation.ip);
     if (ipLocation != null) {
       entity.setIpCountry(ipLocation.getCountry());
       entity.setIpProvince(ipLocation.getProvince());

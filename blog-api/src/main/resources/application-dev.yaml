@@ -36,7 +36,6 @@ datasource:
   driver-class-name: com.mysql.cj.jdbc.Driver
   hikari:
     maximum-pool-size: 20
-    max-lifetime: 120000
     connection-test-query: 'select 1'
 
 site:
@@ -54,12 +53,11 @@ web:
   mvc:
     log-request-details: true
 
-infra:
-  task:
-    execution:
-      thread-name-prefix: app-pool-
-      pool:
-        max-size: 100
+task:
+  execution:
+    thread-name-prefix: app-pool-
+    pool:
+      max-size: 100
 
 app:
   main:
@@ -70,6 +68,10 @@ logging:
     netty: info
     nettyLogging: info
     web: debug
-    sql: info
+    sql: debug
+    infra:
+      app:
+        availability: debug
+
   pattern:
     dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'

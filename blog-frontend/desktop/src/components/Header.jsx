@@ -64,25 +64,25 @@ class NavHeader extends React.Component {
 
   renderAdmin = () => {
     return this.props.userSession.blogger &&
-      <SubMenu title="管理员">
+      <>
         <MenuItem key="write" style={{ width: '200px' }}>
           <AdminLink href="/articles/write" target="_blank">写文章</AdminLink>
         </MenuItem>
         <MenuItem key="admin">
           <AdminLink to="/" target="_blank">后台管理</AdminLink>
         </MenuItem>
-      </SubMenu>
+      </>
   }
 
   renderUserMenu = () => {
     return (
       <Menu style={{ width: '200px', top: '15px', left: '5px' }}>
-        <MenuItem>
+     {/*    <MenuItem>
           <Link to="/user/info" title="个人主页">个人主页</Link>
-        </MenuItem>
-        <MenuItem>
+        </MenuItem> */}
+   {/*      <MenuItem>
           <Link to="/user/settings" title="设置">设置</Link>
-        </MenuItem>
+        </MenuItem> */}
         {this.renderAdmin()}
         <Menu.Divider/>
         <MenuItem>
@@ -153,7 +153,7 @@ class NavHeader extends React.Component {
               }
             </Menu.Item>
 
-{/*    TODO        {window.shouldGotoMobile &&
+            {/*    TODO        {window.shouldGotoMobile &&
               <Menu.Item key="isMobile">
                 <a href={window.mobilePath}><i className="fa fa-mobile"/> 跳转到移动版本</a>
               </Menu.Item>

@@ -29,6 +29,7 @@ import { getCommentStatusDesc, isEmpty } from "@/utils";
 import Statistics from "@/pages/workplace/components/Statistics";
 import Image from "@/components/Image";
 import { useUserSession } from "@/components/hooks";
+import { ArticleLink } from "@/components/Article";
 
 const links: EditableLink[] = [
   {
@@ -41,20 +42,28 @@ const links: EditableLink[] = [
     href: '/blog/articles',
   },
   {
-    title: '文章标签',
-    href: '/blog/labels',
-  },
-  {
-    title: '文章索引',
-    href: '/blog/search',
-  },
-  {
     title: '文章分类',
     href: '/blog/categories',
   },
   {
+    title: '文章标签',
+    href: '/blog/labels',
+  },
+  {
+    title: '文章评论',
+    href: '/blog/comments',
+  },
+  {
     title: '用户管理',
-    href: '/user',
+    href: '/user/list',
+  },
+  {
+    title: '附件管理',
+    href: '/attachment/list',
+  },
+  {
+    title: '变量管理',
+    href: '/system/options',
   },
 ];
 
@@ -200,13 +209,13 @@ const Workplace = (props: WorkplaceProps) => {
                           title={
                             <div className={styles.cardTitle}>
                               <Avatar size="small" src={article.cover}/>
-                              <a target='_blank' href={`/articles/${article.uri}`}>{article.title}</a>
+                              <ArticleLink target='_blank' article={article}/>
                             </div>
                           }
                           description={article.summary}
                       />
                       <div className={styles.projectItemContent}>
-                        <a target='_blank' href={`/articles/${article.uri}`}>浏览</a>
+                        <ArticleLink target='_blank' article={article}>浏览</ArticleLink>
                         <span className={styles.datetime} title={moment(article.updateAt).format("lll")}>
                             {moment(article.updateAt).fromNow()}
                           </span>

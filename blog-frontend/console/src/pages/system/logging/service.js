@@ -4,7 +4,7 @@ import { request } from 'umi';
 export async function queryLogging(params, sort) {
   const { pageSize, current, ...rest } = params
   params = { ...rest, ...sort, size: pageSize, page: current }
-  return request('/api/logging', {
+  return request('/api/console/logging', {
     method: 'GET',
     params
   }).then(res => {
@@ -18,5 +18,5 @@ export async function queryLogging(params, sort) {
 }
 
 export async function deleteById(id) {
-  return http.delete(`/api/logging/${ id }`)
+  return http.delete(`/api/console/logging/${ id }`)
 }

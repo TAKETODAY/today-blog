@@ -24,15 +24,16 @@ import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.LoggingType;
 import infra.core.style.ToStringBuilder;
-import infra.persistence.Id;
-import infra.persistence.OrderBy;
-import infra.persistence.Table;
+import infra.persistence.annotation.Id;
+import infra.persistence.annotation.OrderBy;
+import infra.persistence.annotation.OrderByClause;
+import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 @Setter
 @Getter
-@OrderBy("id DESC")
+@OrderByClause("id DESC")
 @Table("logging")
 public class OperationLogging implements Serializable {
 
