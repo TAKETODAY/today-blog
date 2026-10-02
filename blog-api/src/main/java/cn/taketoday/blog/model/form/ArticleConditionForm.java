@@ -121,8 +121,7 @@ public class ArticleConditionForm implements QueryCondition, DebugDescriptive {
   }
 
   @Override
-  public void setParameter(EntityMetadata metadata, PreparedStatement smt) throws SQLException {
-    int idx = 1;
+  public int setParameter(EntityMetadata metadata, PreparedStatement smt, int idx) throws SQLException {
     if (StringUtils.hasText(q)) {
       String string = '%' + q.trim() + '%';
       smt.setString(idx++, string);
@@ -152,10 +151,9 @@ public class ArticleConditionForm implements QueryCondition, DebugDescriptive {
 
     if (updateAt != null && updateAt.length == 2) {
       smt.setObject(idx++, updateAt[0]);
-      //noinspection UnusedAssignment
       smt.setObject(idx++, updateAt[1]);
     }
-
+    return idx;
   }
 
   @Override

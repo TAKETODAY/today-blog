@@ -38,7 +38,7 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import infra.beans.support.BeanProperties;
+import infra.beans.support.BeanPropertyUtils;
 import infra.http.HttpStatus;
 import infra.session.Session;
 import infra.session.SessionManagerOperations;
@@ -225,7 +225,7 @@ class AuthHttpHandler {
     userService.updateById(user);
 
     // update to session
-    BeanProperties.copy(user, loginUser);
+    BeanPropertyUtils.copy(user, loginUser);
     return loginUser;
   }
 

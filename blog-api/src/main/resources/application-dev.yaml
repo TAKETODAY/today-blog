@@ -53,12 +53,11 @@ web:
   mvc:
     log-request-details: true
 
-infra:
-  task:
-    execution:
-      thread-name-prefix: app-pool-
-      pool:
-        max-size: 100
+task:
+  execution:
+    thread-name-prefix: app-pool-
+    pool:
+      max-size: 100
 
 app:
   main:

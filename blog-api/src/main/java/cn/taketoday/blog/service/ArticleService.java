@@ -542,8 +542,9 @@ public class ArticleService implements InitializingBean {
     }
 
     @Override
-    public void setParameter(EntityMetadata metadata, PreparedStatement statement) throws SQLException {
-      statement.setInt(1, PostStatus.PUBLISHED.getValue());
+    public int setParameter(EntityMetadata metadata, PreparedStatement statement, int parameterIndex) throws SQLException {
+      statement.setInt(parameterIndex, PostStatus.PUBLISHED.getValue());
+      return parameterIndex + 1;
     }
   }
 

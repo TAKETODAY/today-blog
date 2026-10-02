@@ -40,9 +40,10 @@ public class Queries {
       }
 
       @Override
-      public void setParameter(EntityMetadata metadata, PreparedStatement statement) {
-
+      public int setParameter(EntityMetadata metadata, PreparedStatement statement, int parameterIndex) {
+        return parameterIndex;
       }
+
     };
   }
 

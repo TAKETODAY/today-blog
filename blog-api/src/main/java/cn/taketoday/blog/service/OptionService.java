@@ -224,7 +224,7 @@ public class OptionService {
       Class<?> beanClass = bean.getClass();
       String prefix = getPrefix(beanClass);
       var conversionService = source.environment.getConversionService();
-      for (BeanProperty property : BeanMetadata.forClass(beanClass)) {
+      for (BeanProperty property : BeanMetadata.forClass(beanClass).getPropertyList()) {
         String key = getKey(prefix, property);
         String value = getProperty(key);
         if (value != null) {
