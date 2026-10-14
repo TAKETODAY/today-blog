@@ -100,6 +100,14 @@ public class ApiKeyService {
     }
   }
 
+  @Transactional
+  public void deleteById(long id, long userId) {
+    ApiKey apiKey = entityManager.findById(ApiKey.class, id);
+    if (apiKey != null && Objects.equals(apiKey.getUserId(), userId)) {
+      entityManager.delete(ApiKey.class, id);
+    }
+  }
+
   public static @Nullable String extractValue(@Nullable String authorization, @Nullable String apiKey) {
     if (apiKey != null && !apiKey.isBlank()) {
       return apiKey;

@@ -66,6 +66,12 @@ class ApiKeyConsoleHttpHandlerTests {
   }
 
   @Test
+  void deleteUsesCurrentUserId() {
+    handler.delete(7L, owner);
+    verify(service).deleteById(7L, 42L);
+  }
+
+  @Test
   void revokeUsesCurrentUserId() {
     handler.revoke(7L, owner);
     verify(service).revoke(7L, 42L);

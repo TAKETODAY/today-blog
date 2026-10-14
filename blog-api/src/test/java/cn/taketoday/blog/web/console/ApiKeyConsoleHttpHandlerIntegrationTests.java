@@ -161,11 +161,20 @@ class ApiKeyConsoleHttpHandlerIntegrationTests {
                         assertThat(keys.get(0).getLastUsedAt()).isNotNull();
                       });
 
-              mvc.delete().uri("/api/console/api-keys/{id}", stored.getId())
+              mvc.post().uri("/api/console/api-keys/{id}/revoke", stored.getId())
                       .assertThat().hasStatus(204);
               assertThat(service.authenticate(created.value())).isNull();
               assertThat(entityManager.findById(ApiKey.class, stored.getId()).getRevokedAt()).isNotNull();
             });
+  }
+
+  @Test
+  void deleteRemovesOwnedKey() {
+    ApiKeyService.CreatedApiKey created = service.create("to delete", owner);
+
+    mvc.delete().uri("/api/console/api-keys/{id}", created.apiKey().getId())
+            .assertThat().hasStatus(204);
+    assertThat(entityManager.findById(ApiKey.class, created.apiKey().getId())).isNull();
   }
 
   @Test
@@ -191,6 +200,6 @@ class ApiKeyConsoleHttpHandlerIntegrationTests {
             .satisfies(keys -> assertThat(keys).isEmpty());
     mvc.delete().uri("/api/console/api-keys/{id}", created.apiKey().getId())
             .assertThat().hasStatus(204);
-    assertThat(entityManager.findById(ApiKey.class, created.apiKey().getId()).revoked()).isFalse();
+    assertThat(entityManager.findById(ApiKey.class, created.apiKey().getId())).isNotNull();
   }
 }

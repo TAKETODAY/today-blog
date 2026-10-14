@@ -186,6 +186,26 @@ class ApiKeyServiceTests {
   }
 
   @Test
+  void deleteRemovesOwnedKey() {
+    ApiKey key = key();
+    when(entities.findById(ApiKey.class, 7L)).thenReturn(key);
+
+    service.deleteById(7L, 42L);
+
+    verify(entities).delete(ApiKey.class, 7L);
+  }
+
+  @Test
+  void otherUserCannotDeleteKey() {
+    ApiKey key = key();
+    when(entities.findById(ApiKey.class, 7L)).thenReturn(key);
+
+    service.deleteById(7L, 99L);
+
+    verify(entities, never()).delete(ApiKey.class, 7L);
+  }
+
+  @Test
   void headersSupportBearerAndExplicitKeyPrecedence() {
     assertThat(ApiKeyService.extractValue("bEaReR  tbk_secret  ", null)).isEqualTo("tbk_secret");
     assertThat(ApiKeyService.extractValue("Bearer tbk_bearer", "tbk_header")).isEqualTo("tbk_header");

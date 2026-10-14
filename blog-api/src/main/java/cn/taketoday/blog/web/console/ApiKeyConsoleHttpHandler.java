@@ -61,6 +61,12 @@ class ApiKeyConsoleHttpHandler {
 
   @DELETE("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void delete(@PathVariable long id, User user) {
+    apiKeyService.deleteById(id, user.getId());
+  }
+
+  @POST("/{id}/revoke")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public void revoke(@PathVariable long id, User user) {
     apiKeyService.revoke(id, user.getId());
   }

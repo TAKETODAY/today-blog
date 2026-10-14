@@ -24,5 +24,9 @@ export async function createApiKey(name: string): Promise<CreatedApiKey> {
 }
 
 export async function revokeApiKey(id: number): Promise<void> {
+  await http.post(`/api/console/api-keys/${id}/revoke`);
+}
+
+export async function deleteApiKey(id: number): Promise<void> {
   await http.delete(`/api/console/api-keys/${id}`);
 }

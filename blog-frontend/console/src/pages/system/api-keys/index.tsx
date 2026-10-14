@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Alert, Button, Form, Input, message, Modal, Popconfirm, Space, Tag, Typography } from 'antd';
 import { format } from '@/utils';
-import { ApiKeyItem, CreatedApiKey, createApiKey, listApiKeys, revokeApiKey } from './service';
+import { ApiKeyItem, CreatedApiKey, createApiKey, deleteApiKey, listApiKeys, revokeApiKey } from './service';
 
 const ApiKeyManagement: React.FC = () => {
   const actionRef = useRef<ActionType>();
@@ -13,6 +13,7 @@ const ApiKeyManagement: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState<CreatedApiKey | null>(null);
   const [revoking, setRevoking] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   const handleCreate = async () => {
     const values = await form.validateFields().catch(() => null);
@@ -28,6 +29,19 @@ const ApiKeyManagement: React.FC = () => {
       message.error('创建失败，请重试');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeleting(id);
+    try {
+      await deleteApiKey(id);
+      message.success('API Key 已删除');
+      actionRef.current?.reload();
+    } catch {
+      message.error('删除失败，请重试');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -47,16 +61,24 @@ const ApiKeyManagement: React.FC = () => {
   const columns: ProColumns<ApiKeyItem>[] = [
     { title: '名称', dataIndex: 'name', ellipsis: true },
     { title: '状态', width: 100, render: (_, item) => item.revokedAt ? <Tag>已撤销</Tag> : <Tag color="success">有效</Tag> },
-    { title: '创建时间', width: 180, render: (_, item) => format(item.createdAt) },
-    { title: '最近使用', width: 180, render: (_, item) => item.lastUsedAt ? format(item.lastUsedAt) : '尚未使用' },
-    { title: '撤销时间', width: 180, render: (_, item) => item.revokedAt ? format(item.revokedAt) : '—' },
+    { title: '创建时间', width: 260, render: (_, item) => format(item.createdAt) },
+    { title: '最近使用', width: 260, render: (_, item) => item.lastUsedAt ? format(item.lastUsedAt) : '尚未使用' },
+    { title: '撤销时间', width: 260, render: (_, item) => item.revokedAt ? format(item.revokedAt) : 'N/A' },
     {
       title: '操作', valueType: 'option', width: 100,
-      render: (_, item) => item.revokedAt ? '—' : (
+      render: (_, item) => item.revokedAt ? (
+        <Popconfirm title={`删除「${item.name}」？删除后无法恢复。`}
+          okText="删除" cancelText="取消" onConfirm={() => handleDelete(item.id)}
+          disabled={deleting !== null}>
+          <Button type="link" danger icon={<DeleteOutlined />} loading={deleting === item.id}
+            disabled={deleting !== null && deleting !== item.id}>删除</Button>
+        </Popconfirm>
+      ) : (
         <Popconfirm title={`撤销「${item.name}」？使用此密钥的接口调用将失效。`}
           okText="撤销" cancelText="取消" onConfirm={() => handleRevoke(item.id)}
-          disabled={revoking !== null}>
-          <Button type="link" danger loading={revoking === item.id} disabled={revoking !== null && revoking !== item.id}>撤销</Button>
+          disabled={revoking !== null || deleting !== null}>
+          <Button type="link" danger loading={revoking === item.id}
+            disabled={revoking !== null && revoking !== item.id || deleting !== null}>撤销</Button>
         </Popconfirm>
       ),
     },
