@@ -180,6 +180,27 @@ class ArticleHttpHandler {
    */
   @GET("/{uri}")
   public Article detail(@Nullable String key, @PathVariable String uri, LoginInfo loginInfo) {
+    return getArticle(key, uri, loginInfo);
+  }
+
+  /**
+   * 获取文章的 Markdown 原文。
+   *
+   * <p>请求文章详情时通过 {@code Accept: text/markdown}
+   * 选择此响应格式。</p>
+   *
+   * @param key 文章的密码，如果有的话
+   * @param uri 文章地址
+   * @param loginInfo 自动注入登录信息
+   * @return 文章的 Markdown 原文
+   */
+  @GET(path = "/{uri}", produces = "text/markdown")
+  public String markdown(@Nullable String key, @PathVariable String uri, LoginInfo loginInfo) {
+    Article article = getArticle(key, uri, loginInfo);
+    return article.getMarkdown();
+  }
+
+  private Article getArticle(@Nullable String key, String uri, LoginInfo loginInfo) {
     uri = processURI(uri);
     Article article = articleService.getByURI(uri);
     if (article == null) {

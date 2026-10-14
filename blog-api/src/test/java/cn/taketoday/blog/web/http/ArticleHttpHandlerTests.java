@@ -103,6 +103,25 @@ class ArticleHttpHandlerTests {
 
   @Test
   @Transactional
+  public void detailAsMarkdown() {
+    ArticleForm form = new ArticleForm();
+    form.uri = "markdown-test";
+    form.title = "Markdown test";
+    form.markdown = "# Markdown title\n\nMarkdown content";
+
+    createArticle(form);
+
+    client.get().uri("/api/articles/{uri}", form.uri)
+            .accept(new MediaType("text", "markdown"))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(new MediaType("text", "markdown"))
+            .expectBody(String.class)
+            .isEqualTo(form.markdown);
+  }
+
+  @Test
+  @Transactional
   public void detailNotFound() {
     // 不存在的文章应该返回 404
     mvc.get().uri("/api/articles/{uri}", "non-existent-uri-xxx")
