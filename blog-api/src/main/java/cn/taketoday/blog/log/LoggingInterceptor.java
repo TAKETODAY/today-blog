@@ -21,8 +21,6 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.jspecify.annotations.Nullable;
 
-import java.util.concurrent.Executor;
-
 import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.model.IpLocation;
 import cn.taketoday.blog.model.OperationLogging;
@@ -32,10 +30,12 @@ import cn.taketoday.blog.service.IpLocationService;
 import cn.taketoday.blog.util.StringUtils;
 import infra.beans.factory.BeanFactory;
 import infra.beans.factory.ObjectProvider;
+import infra.beans.factory.annotation.Qualifier;
 import infra.beans.factory.config.BeanDefinition;
 import infra.context.annotation.Role;
 import infra.core.annotation.MergedAnnotation;
 import infra.core.annotation.MergedAnnotations;
+import infra.core.task.TaskExecutor;
 import infra.expression.ExpressionException;
 import infra.lang.Constant;
 import infra.stereotype.Component;
@@ -56,7 +56,7 @@ import static cn.taketoday.blog.util.BlogUtils.remoteAddress;
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 final class LoggingInterceptor implements MethodInterceptor {
 
-  private final SingletonSupplier<Executor> executor;
+  private final SingletonSupplier<TaskExecutor> executor;
 
   private final ObjectProvider<LoggingPersister> loggingPersister;
 
@@ -68,7 +68,7 @@ final class LoggingInterceptor implements MethodInterceptor {
 
   public LoggingInterceptor(BeanFactory beanFactory,
           ObjectProvider<IpLocationService> ipLocationService,
-          ObjectProvider<Executor> executor,
+          @Qualifier("applicationTaskExecutor") ObjectProvider<TaskExecutor> executor,
           ObjectProvider<LoggingPersister> loggingPersister,
           ObjectProvider<UserSessionResolver> sessionResolver) {
 
