@@ -143,6 +143,11 @@ export default [
         path: '/system/options',
         component: './system/options',
       },
+      {
+        name: 'api-keys',
+        path: '/system/api-keys',
+        component: './system/api-keys',
+      },
     ],
   },
   {
