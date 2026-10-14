@@ -24,7 +24,7 @@ import java.io.Serializable;
 import java.time.Instant;
 
 import infra.persistence.NewEntityIndicator;
-import infra.persistence.annotation.Id;
+import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.Transient;
 
 /**
@@ -36,7 +36,7 @@ public abstract class BasicModel implements Serializable, NewEntityIndicator {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  @Id
+  @GeneratedId
   protected Long id;
 
   protected Instant createAt;

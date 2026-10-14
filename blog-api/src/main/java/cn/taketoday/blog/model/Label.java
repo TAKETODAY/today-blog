@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import infra.core.style.ToStringBuilder;
-import infra.persistence.annotation.Id;
+import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,12 +41,13 @@ public class Label implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  @Id
+  @GeneratedId
   private Long id;
 
   private String name;
 
-  public Label() { }
+  public Label() {
+  }
 
   @Override
   public String toString() {

@@ -47,7 +47,7 @@ public class CategoryService {
   private final RepositoryManager repository;
 
   public void persist(Category category) {
-    entityManager.persist(category, false);
+    entityManager.persist(category);
   }
 
   /**

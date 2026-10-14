@@ -26,7 +26,7 @@ import java.util.Objects;
 import cn.taketoday.blog.UnauthorizedException;
 import infra.core.AttributeAccessor;
 import infra.core.style.ToStringBuilder;
-import infra.persistence.annotation.Id;
+import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,7 +46,7 @@ public class Blogger implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  @Id
+  @GeneratedId
   private Integer id;
 
   private Integer age;

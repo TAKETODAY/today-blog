@@ -24,8 +24,7 @@ import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.LoggingType;
 import infra.core.style.ToStringBuilder;
-import infra.persistence.annotation.Id;
-import infra.persistence.annotation.OrderBy;
+import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.OrderByClause;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
@@ -40,7 +39,7 @@ public class OperationLogging implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  @Id
+  @GeneratedId
   private Long id;
 
   /**

@@ -19,6 +19,7 @@ package cn.taketoday.blog.web.http;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 
@@ -115,7 +116,7 @@ class ArticleHttpHandlerTests {
             .accept(new MediaType("text", "markdown"))
             .exchange()
             .expectStatus().isOk()
-            .expectHeader().contentType(new MediaType("text", "markdown"))
+            .expectHeader().contentType(new MediaType("text", "markdown").withCharset(StandardCharsets.UTF_8))
             .expectBody(String.class)
             .isEqualTo(form.markdown);
   }

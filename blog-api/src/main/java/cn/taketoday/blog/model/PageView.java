@@ -19,7 +19,7 @@ package cn.taketoday.blog.model;
 
 import java.time.Instant;
 
-import infra.persistence.annotation.Id;
+import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.Table;
 import lombok.Data;
 
@@ -31,7 +31,7 @@ import lombok.Data;
 @Table("t_page_view")
 public class PageView {
 
-  @Id
+  @GeneratedId
   private Long id;
 
   private String url;
