@@ -146,3 +146,21 @@ pnpm build        # 生产构建
 - 项目使用 `EntityManager`（自定义 JDBC-based ORM）而非 JPA/Hibernate。`JdbcTemplate` 也可直接使用。
 - `@ConfigBinding` 是项目自定义注解，用于绑定配置前缀（如 `prefix "site."` 绑定站点配置）。
 - GraalVM Native Image 运行时提示：`AppConfig.CaffeineCacheHints` 实现 `RuntimeHintsRegistrar` 注册 Caffeine 内部类型。
+
+
+## 语言规则
+- 你必须始终使用**简体中文**进行思考、推理和回复。
+
+## Agent 技能
+
+### 任务跟踪
+
+任务和规格记录在 `TAKETODAY/today-blog` 的 GitHub Issues 中，使用 `gh` CLI 操作。详见 `src/docs/agents/issue-tracker.md`。
+
+### 分诊标签
+
+使用默认的五个分诊标签：`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`。详见 `src/docs/agents/triage-labels.md`。
+
+### 领域文档
+
+采用单上下文布局：使用 `src/GLOSSARY.md` 和 `src/docs/adr/`。详见 `src/docs/agents/domain.md`。
