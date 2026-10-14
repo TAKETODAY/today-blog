@@ -132,6 +132,11 @@ export default [
         component: './system/account',
       },
       {
+        name: 'mails',
+        path: '/system/mails',
+        component: './system/mails',
+      },
+      {
         name: 'logging',
         icon: 'log',
         path: '/system/logging',

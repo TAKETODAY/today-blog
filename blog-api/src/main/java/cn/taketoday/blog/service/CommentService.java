@@ -21,16 +21,14 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import cn.taketoday.blog.config.BlogConfig;
-import cn.taketoday.blog.config.CommentConfig;
+import cn.taketoday.blog.event.CommentApprovedEvent;
+import cn.taketoday.blog.event.CommentCreatedEvent;
 import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.CommentItem;
-import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.model.form.CommentConditionForm;
 import cn.taketoday.blog.web.ErrorMessageException;
@@ -38,11 +36,11 @@ import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import infra.beans.aot.RegisterBeanMetadata;
 import infra.cache.annotation.CacheConfig;
+import infra.context.ApplicationEventPublisher;
 import infra.persistence.EntityManager;
 import infra.persistence.annotation.OrderByClause;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
-import infra.util.Assert;
 import infra.util.CollectionUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -55,17 +53,9 @@ import lombok.RequiredArgsConstructor;
 @CacheConfig(cacheNames = "comments"/*, expire = 30, timeUnit = TimeUnit.SECONDS*/)
 public class CommentService {
 
-  private final BlogConfig blogConfig;
-
   private final UserService userService;
 
-  private final MailService mailService;
-
-  private final CommentConfig commentConfig;
-
-  private final ArticleService articleService;
-
-  private final BloggerService bloggerService;
+  private final ApplicationEventPublisher eventPublisher;
 
   private final EntityManager entityManager;
 
@@ -143,61 +133,7 @@ public class CommentService {
   @Transactional
   public void persist(Comment comment) {
     entityManager.persist(comment);
-
-    //sendMail(comment);
-  }
-
-  protected void sendMail(Comment comment) {
-    // send admin check mail
-
-    if (comment == null || comment.getStatus() == CommentStatus.CHECKED) {
-      return;
-    }
-    {
-      Map<String, Object> dataModel = new HashMap<>();
-
-      dataModel.put("replyUser", userService.getById(comment.getUserId()));
-      dataModel.put("article", articleService.getById(comment.getArticleId()));
-      dataModel.put("comment", comment);
-
-      mailService.sendTemplateMail(bloggerService.getBlogger().getEmail(),
-              blogConfig.name + " 有了新评论请查看",
-              dataModel, "/core/mail/admin"
-      );
-    }
-    long commentId = comment.getParentId();
-    if (commentId <= 0) {
-      return;
-    }
-
-    if (!commentConfig.isSendMail()) {
-      return;
-    }
-    Comment parentComment = obtainById(commentId);
-    if (Objects.equals(parentComment.getUserId(), comment.getUserId())) {
-      return;
-    }
-
-    User parentUser = userService.getById(parentComment.getUserId());
-    if (parentUser.getNotification()) {
-
-      Map<String, Object> dataModel = new HashMap<>();
-      User replyUser = comment.getUser();
-      if (replyUser == null) {
-        replyUser = userService.getById(comment.getUserId());
-      }
-      dataModel.put("user", parentUser);
-      dataModel.put("replyUser", replyUser);
-      dataModel.put("article", articleService.getById(comment.getArticleId()));
-
-      dataModel.put("reply", comment);
-      dataModel.put("comment", parentComment);
-
-      mailService.sendTemplateMail(parentUser.getEmail(),
-              "您在 " + blogConfig.name + " 的评论有了新回复",
-              dataModel, "/core/mail/reply"
-      );
-    }
+    eventPublisher.publishEvent(new CommentCreatedEvent(this, comment));
   }
 
   public int count() {
@@ -217,7 +153,11 @@ public class CommentService {
 
   @Transactional
   public void updateById(Comment comment) {
+    Comment previous = obtainById(comment.getId());
     entityManager.updateById(comment);
+    if (comment.getStatus() == CommentStatus.CHECKED && previous.getStatus() != CommentStatus.CHECKED) {
+      eventPublisher.publishEvent(new CommentApprovedEvent(this, obtainById(comment.getId())));
+    }
   }
 
   @Nullable
@@ -238,39 +178,18 @@ public class CommentService {
 
   @Transactional
   public void updateStatusById(CommentStatus status, long id) {
+    Comment previous = obtainById(id);
+    if (previous.getStatus() == status) {
+      return;
+    }
     Comment comment1 = new Comment();
     comment1.setId(id);
     comment1.setStatus(status);
     entityManager.updateById(comment1);
 
-//    Comment byId = obtainById(id);
-//    byId.setUser(userService.getById(byId.getUserId()));
-//    sendMail(byId);
-
-//    if (status == CommentStatus.CHECKED) {
-//      sendCheckedMail(byId);
-//    }
-  }
-
-  private void sendCheckedMail(Comment comment) {
-    if (!commentConfig.isSendMail()) {
-      return;
-    }
-
-    User user = comment.getUser();
-    Assert.state(user != null, "用户找不到");
-    if (user.getNotification()) {
-
-      Map<String, Object> dataModel = new HashMap<>();
-      dataModel.put("user", user);
-      dataModel.put("article", articleService.getById(comment.getArticleId()));
-      dataModel.put("comment", comment);
-
-      mailService.sendTemplateMail(user.getEmail(), //
-              "您在 " + blogConfig.name + " 的评论审核通过", //
-              dataModel, "/core/mail/checked.ftl"//
-      );
-
+    if (status == CommentStatus.CHECKED) {
+      previous.setStatus(status);
+      eventPublisher.publishEvent(new CommentApprovedEvent(this, previous));
     }
   }
 

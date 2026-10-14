@@ -11,6 +11,7 @@ export default {
   'menu.attachment':'附件管理',
   'menu.attachment.list':'附件列表',
   'menu.system':'系统管理',
+  'menu.system.mails':'邮件记录',
   'menu.system.logging':'日志管理',
   'menu.system.options':'变量管理',
   'menu.system.api-keys': 'API Key 管理',

@@ -18,7 +18,6 @@
 package cn.taketoday.blog.event;
 
 import cn.taketoday.blog.model.Comment;
-import cn.taketoday.blog.web.LoginInfo;
 
 /**
  * 当有新的评论时触发
@@ -30,19 +29,13 @@ public class CommentCreatedEvent extends BlogApplicationEvent {
 
   private final Comment comment;
 
-  private final LoginInfo loginInfo;
-
-  public CommentCreatedEvent(Object source, Comment comment, LoginInfo loginInfo) {
+  public CommentCreatedEvent(Object source, Comment comment) {
     super(source);
     this.comment = comment;
-    this.loginInfo = loginInfo;
   }
 
   public Comment getComment() {
     return comment;
   }
 
-  public LoginInfo getLoginInfo() {
-    return loginInfo;
-  }
 }

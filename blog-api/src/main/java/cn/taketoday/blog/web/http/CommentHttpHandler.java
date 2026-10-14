@@ -23,7 +23,6 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 
 import cn.taketoday.blog.config.CommentConfig;
-import cn.taketoday.blog.event.CommentCreatedEvent;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Comment;
@@ -35,7 +34,6 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
-import infra.context.ApplicationEventPublisher;
 import infra.http.HttpStatus;
 import infra.validation.annotation.Validated;
 import infra.web.annotation.GET;
@@ -69,14 +67,11 @@ class CommentHttpHandler {
 
   private final ArticleService articleService;
 
-  private final ApplicationEventPublisher eventPublisher;
-
   public CommentHttpHandler(CommentConfig commentConfig, CommentService commentService,
-          ArticleService articleService, ApplicationEventPublisher eventPublisher) {
+          ArticleService articleService) {
     this.commentConfig = commentConfig;
     this.commentService = commentService;
     this.articleService = articleService;
-    this.eventPublisher = eventPublisher;
   }
 
   @NullUnmarked
@@ -169,7 +164,6 @@ class CommentHttpHandler {
     // comment.setContent(BlogUtils.stripXss(comment.getContent()));
 
     commentService.persist(comment);
-    eventPublisher.publishEvent(new CommentCreatedEvent(this, comment, loginInfo));
   }
 
   /**

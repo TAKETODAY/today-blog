@@ -20,6 +20,7 @@ package cn.taketoday.blog.model;
 import java.time.Instant;
 
 import infra.persistence.annotation.Table;
+import infra.persistence.annotation.Column;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -34,6 +35,7 @@ import lombok.EqualsAndHashCode;
 @Table("t_mail")
 public class Mail extends BasicModel {
 
+  @Column("recipient")
   private String to;
 
   private String subject;
@@ -41,5 +43,16 @@ public class Mail extends BasicModel {
   private String content;
 
   private Instant sentAt;
+
+  /** PENDING / SENDING / SENT / FAILED */
+  private String status;
+
+  private Integer attempts;
+
+  private Instant lastAttemptAt;
+
+  private String lastError;
+
+  private String attachment;
 
 }

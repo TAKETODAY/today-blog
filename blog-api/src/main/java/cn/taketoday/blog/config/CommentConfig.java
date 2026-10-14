@@ -49,7 +49,7 @@ public class CommentConfig implements Serializable {
   /**
    * 是否需要审核
    */
-  private boolean check;
+  private boolean check = true;
 
   private String placeholder;
 
