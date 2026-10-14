@@ -32,8 +32,6 @@ import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import static infra.persistence.sql.OrderSpec.asc;
-
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-11-02 21:02
@@ -56,7 +54,7 @@ public class CategoryService {
    * @return 分类列表
    */
   public List<Category> getOrderedCategories() {
-    return entityManager.find(Category.class, asc("order"));
+    return entityManager.find(Category.class);
   }
 
   /**

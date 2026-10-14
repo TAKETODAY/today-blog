@@ -20,7 +20,9 @@ package cn.taketoday.blog.model;
 import java.util.Objects;
 
 import infra.core.style.ToStringBuilder;
+import infra.persistence.annotation.Column;
 import infra.persistence.annotation.Id;
+import infra.persistence.annotation.OrderBy;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,6 +41,8 @@ public class Category {
   @Id
   private String name;
 
+  @OrderBy
+  @Column("`order`")
   private Integer order;
 
   private Integer articleCount;
