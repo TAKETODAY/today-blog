@@ -1,6 +1,27 @@
 # AGENTS.md
 
-## 两套独立的构建系统
+## Java 文件版权头
+
+新增 Java 文件（包括测试）在 `package` 声明之前使用以下完整版权头，逐行保留模板内容：
+
+```java
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+```
 
 - **后端（`blog-api/`）**: Gradle 9.4.1（wrapper），Java 21。根项目名 `today-blog`。
 - **前端（`blog-frontend/`）**: pnpm 10.33 monorepo，4 个子包：`console/`、`desktop/`、`mobile/`、`common/`。
@@ -29,6 +50,12 @@
 | 服务器 | Netty 嵌入式（不是 Tomcat/Jetty） |
 | 模板 | FreeMarker（`.ftl` 文件在 `templates/`） |
 | DB 迁移 | Flyway（通过 `infra.flyway.config.FlywayMigrationStrategy` 配置） |
+
+### 数据库表命名规则
+
+- 新增数据库表统一使用 `t_` 前缀，例如 `t_api_key`。
+- Java 实体的 `@Table` 名称必须与迁移脚本中的表名保持一致。
+- 新增表的 Flyway migration、实体映射和测试数据应同时遵循该命名规则。
 
 ### 项目核心文件
 

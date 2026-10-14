@@ -23,3 +23,35 @@
 ## 📄 开源协议
 
 使用 [GPLv3](https://github.com/TAKETODAY/today-infrastructure/blob/master/LICENSE) 开源协议
+
+## API Key
+
+博主登录后可以通过管理接口创建 API Key。创建响应中的 `value` 只返回一次，请妥善保存。
+
+```http
+POST /api/console/api-keys
+Content-Type: application/json
+
+{"name":"automation"}
+```
+
+使用 API Key 调用需要登录或博主权限的接口时，支持以下两种请求头：
+
+```http
+Authorization: Bearer tbk_...
+```
+
+或：
+
+```http
+X-API-Key: tbk_...
+```
+
+管理 API Key：
+
+```http
+GET    /api/console/api-keys
+DELETE /api/console/api-keys/{id}
+```
+
+API Key 数据库存储的是 SHA-256 摘要，撤销后不可恢复。API Key 的权限与所属用户一致；如果所属用户被禁用，API Key 也无法认证。

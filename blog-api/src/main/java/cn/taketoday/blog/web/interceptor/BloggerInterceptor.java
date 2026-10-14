@@ -21,6 +21,8 @@ import org.jspecify.annotations.Nullable;
 
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
+import cn.taketoday.blog.service.ApiKeyService;
+import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.web.ErrorMessage;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
@@ -53,14 +55,25 @@ final class BloggerInterceptor implements HandlerInterceptor {
 
   private final SessionManagerOperations sessionManagerOperations;
 
-  BloggerInterceptor(SessionRepository repository, SessionManagerOperations sessionManagerOperations) {
+  private final ApiKeyService apiKeyService;
+
+  private final BloggerService bloggerService;
+
+  BloggerInterceptor(SessionRepository repository, SessionManagerOperations sessionManagerOperations,
+          ApiKeyService apiKeyService, BloggerService bloggerService) {
     this.repository = repository;
     this.sessionManagerOperations = sessionManagerOperations;
+    this.apiKeyService = apiKeyService;
+    this.bloggerService = bloggerService;
   }
 
   @Override
   public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Exception {
     Session session = sessionManagerOperations.getSession(request, false);
+    if (!User.isPresent(session)) {
+      ApiKeyAuthentication.authenticate(request, sessionManagerOperations, apiKeyService, bloggerService);
+      session = sessionManagerOperations.getSession(request, false);
+    }
     if (session != null) {
       if (User.isPresent(session)) {
         if (Blogger.isPresent(session)) {
