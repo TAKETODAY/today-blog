@@ -23,6 +23,10 @@ import java.util.Optional;
 
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
+import cn.taketoday.blog.UnauthorizedException;
+import cn.taketoday.blog.service.ApiKeyService;
+import cn.taketoday.blog.service.BloggerService;
+import cn.taketoday.blog.web.LoginInfo;
 import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
@@ -44,8 +48,54 @@ public class UserSessionResolver {
 
   private final SessionManagerOperations sessionManagerOperations;
 
-  public UserSessionResolver(SessionManagerOperations sessionManagerOperations) {
+  private final ApiKeyService apiKeyService;
+
+  private final BloggerService bloggerService;
+
+  public UserSessionResolver(SessionManagerOperations sessionManagerOperations,
+          ApiKeyService apiKeyService, BloggerService bloggerService) {
     this.sessionManagerOperations = sessionManagerOperations;
+    this.apiKeyService = apiKeyService;
+    this.bloggerService = bloggerService;
+  }
+
+  /**
+   * 解析当前请求身份。显式 API Key 优先于会话，认证结果只缓存在当前请求。
+   */
+  public LoginInfo resolve(HttpContext request) {
+    Object cached = request.getAttribute(LoginInfo.class.getName());
+    if (cached instanceof LoginInfo info) {
+      return info;
+    }
+    LoginInfo info = new LoginInfo();
+    if (usesApiKey(request)) {
+      String value = ApiKeyService.extractValue(request.getHeader("Authorization"), request.getHeader("X-API-Key"));
+      User user = apiKeyService.authenticate(value);
+      if (user == null) {
+        throw new UnauthorizedException("API Key 无效或已撤销");
+      }
+      info.setLoginUser(user);
+      Blogger blogger = bloggerService.getBlogger();
+      if (blogger != null && user.getEmail() != null && user.getEmail().equals(blogger.getEmail())) {
+        info.setBlogger(blogger);
+      }
+    }
+    else {
+      Session session = sessionManagerOperations.getSession(request, false);
+      if (session != null) {
+        info.setLoginUser(User.find(session));
+        info.setBlogger(Blogger.find(session));
+      }
+    }
+    request.setAttribute(LoginInfo.class.getName(), info);
+    return info;
+  }
+
+  public boolean usesApiKey(HttpContext request) {
+    String authorization = request.getHeader("Authorization");
+    return request.getHeader("X-API-Key") != null
+            || (authorization != null && (authorization.equalsIgnoreCase("Bearer")
+            || authorization.regionMatches(true, 0, "Bearer ", 0, 7)));
   }
 
   /**
@@ -61,11 +111,7 @@ public class UserSessionResolver {
    */
   @Nullable
   public User getLoginUser(HttpContext context) {
-    Session session = sessionManagerOperations.getSession(context, false);
-    if (session != null) {
-      return User.find(session);
-    }
-    return null;
+    return resolve(context).getLoginUser();
   }
 
   /**
@@ -81,11 +127,7 @@ public class UserSessionResolver {
    */
   @Nullable
   public Blogger getLoggedInBlogger(HttpContext request) {
-    Session session = sessionManagerOperations.getSession(request, false);
-    if (session != null) {
-      return Blogger.find(session);
-    }
-    return null;
+    return resolve(request).getBlogger();
   }
 
   /**

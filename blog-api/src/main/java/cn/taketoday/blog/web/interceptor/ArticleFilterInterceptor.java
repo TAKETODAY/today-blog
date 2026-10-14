@@ -24,13 +24,12 @@ import java.util.List;
 import cn.taketoday.blog.event.ArticleUpdateEvent;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.ArticleItem;
-import cn.taketoday.blog.model.Blogger;
+import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.web.ListableHttpResult;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
 import infra.context.ApplicationListener;
-import infra.session.SessionManagerOperations;
 import infra.util.CollectionUtils;
 import infra.util.MapCache;
 import infra.web.HandlerInterceptor;
@@ -44,7 +43,7 @@ public class ArticleFilterInterceptor implements HandlerInterceptor, Application
 
   private final ArticleService articleService;
 
-  private final SessionManagerOperations sessionManagerOperations;
+  private final UserSessionResolver identities;
 
   private final MapCache<Long, Boolean, ArticleItem> passwordCache = new MapCache<>() {
 
@@ -55,9 +54,9 @@ public class ArticleFilterInterceptor implements HandlerInterceptor, Application
     }
   };
 
-  public ArticleFilterInterceptor(ArticleService articleService, SessionManagerOperations sessionManagerOperations) {
+  public ArticleFilterInterceptor(ArticleService articleService, UserSessionResolver identities) {
     this.articleService = articleService;
-    this.sessionManagerOperations = sessionManagerOperations;
+    this.identities = identities;
   }
 
   @Override
@@ -70,7 +69,7 @@ public class ArticleFilterInterceptor implements HandlerInterceptor, Application
   @SuppressWarnings("unchecked")
   public void postProcessing(HttpContext context, Object handler, @Nullable Object result) {
     if (result instanceof ListableHttpResult<?> listable
-            && !Blogger.isPresent(sessionManagerOperations.getSession(context, false))) {
+            && identities.getLoggedInBlogger(context) == null) {
 
       // 过滤
       List<?> objects = listable.getData();

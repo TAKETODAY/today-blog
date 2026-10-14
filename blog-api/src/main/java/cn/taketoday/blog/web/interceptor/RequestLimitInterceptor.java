@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import cn.taketoday.blog.model.Blogger;
+import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.web.ErrorMessage;
 import cn.taketoday.blog.web.ErrorMessageException;
@@ -37,7 +37,6 @@ import infra.http.HttpStatus;
 import infra.http.MediaType;
 import infra.http.ResponseEntity;
 import infra.lang.Constant;
-import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
 import infra.util.Assert;
 import infra.util.MapCache;
@@ -66,10 +65,10 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
 
   private final ConcurrentHashMap<RequestKey, RequestLimitEntry> requestLimitCache = new ConcurrentHashMap<>();
 
-  private final SessionManagerOperations sessionManagerOperations;
+  private final UserSessionResolver identities;
 
-  RequestLimitInterceptor(SessionManagerOperations sessionManagerOperations) {
-    this.sessionManagerOperations = sessionManagerOperations;
+  RequestLimitInterceptor(UserSessionResolver identities) {
+    this.identities = identities;
   }
 
   public void setDefaultErrorMessage(String defaultErrorMessage) {
@@ -90,7 +89,7 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
 
   @Override
   public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Exception {
-    if (!Blogger.isPresent(sessionManagerOperations.getSession(request, false))) {
+    if (identities.getLoggedInBlogger(request) == null) {
       // 非博主，进行限流
       HandlerMethod handlerMethod = HandlerMethod.resolve(chain.getHandler());
       if (handlerMethod != null) {

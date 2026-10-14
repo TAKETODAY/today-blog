@@ -55,3 +55,6 @@ DELETE /api/console/api-keys/{id}
 ```
 
 API Key 数据库存储的是 SHA-256 摘要，撤销后不可恢复。API Key 的权限与所属用户一致；如果所属用户被禁用，API Key 也无法认证。
+
+API Key 每个请求重新验证，仅设置当前请求身份，不创建或修改登录 Session。
+携带 Bearer 或 `X-API-Key` 时优先使用密钥认证；无效、空白或已撤销的密钥返回 401，不回退到已有登录会话。

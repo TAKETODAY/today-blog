@@ -20,12 +20,9 @@ package cn.taketoday.blog.web.interceptor;
 import java.io.IOException;
 
 import cn.taketoday.blog.UnauthorizedException;
-import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.service.ApiKeyService;
-import cn.taketoday.blog.service.BloggerService;
+import cn.taketoday.blog.config.UserSessionResolver;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
-import infra.session.SessionManagerOperations;
 import infra.web.HandlerInterceptor;
 import infra.web.HttpContext;
 import infra.web.resource.ResourceHttpRequestHandler;
@@ -44,23 +41,15 @@ final class LoginInterceptor implements HandlerInterceptor {
 
   // Authorization
 
-  private final SessionManagerOperations sessionManagerOperations;
+  private final UserSessionResolver identities;
 
-  private final ApiKeyService apiKeyService;
-
-  private final BloggerService bloggerService;
-
-  LoginInterceptor(SessionManagerOperations sessionManagerOperations, ApiKeyService apiKeyService,
-          BloggerService bloggerService) {
-    this.sessionManagerOperations = sessionManagerOperations;
-    this.apiKeyService = apiKeyService;
-    this.bloggerService = bloggerService;
+  LoginInterceptor(UserSessionResolver identities) {
+    this.identities = identities;
   }
 
   @Override
   public boolean preProcessing(HttpContext request, Object handler) throws IOException {
-    if (User.isPresent(sessionManagerOperations.getSession(request, false)
-            ) || ApiKeyAuthentication.authenticate(request, sessionManagerOperations, apiKeyService, bloggerService)) {
+    if (identities.getLoginUser(request) != null) {
       return true;
     }
 

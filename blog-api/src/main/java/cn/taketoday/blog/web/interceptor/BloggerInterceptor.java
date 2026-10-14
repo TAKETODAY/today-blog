@@ -19,10 +19,7 @@ package cn.taketoday.blog.web.interceptor;
 
 import org.jspecify.annotations.Nullable;
 
-import cn.taketoday.blog.model.Blogger;
-import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.service.ApiKeyService;
-import cn.taketoday.blog.service.BloggerService;
+import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.web.ErrorMessage;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
@@ -55,35 +52,30 @@ final class BloggerInterceptor implements HandlerInterceptor {
 
   private final SessionManagerOperations sessionManagerOperations;
 
-  private final ApiKeyService apiKeyService;
-
-  private final BloggerService bloggerService;
+  private final UserSessionResolver identities;
 
   BloggerInterceptor(SessionRepository repository, SessionManagerOperations sessionManagerOperations,
-          ApiKeyService apiKeyService, BloggerService bloggerService) {
+          UserSessionResolver identities) {
     this.repository = repository;
     this.sessionManagerOperations = sessionManagerOperations;
-    this.apiKeyService = apiKeyService;
-    this.bloggerService = bloggerService;
+    this.identities = identities;
   }
 
   @Override
   public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Exception {
-    Session session = sessionManagerOperations.getSession(request, false);
-    if (!User.isPresent(session)) {
-      ApiKeyAuthentication.authenticate(request, sessionManagerOperations, apiKeyService, bloggerService);
-      session = sessionManagerOperations.getSession(request, false);
-    }
-    if (session != null) {
-      if (User.isPresent(session)) {
-        if (Blogger.isPresent(session)) {
-          repository.updateLastAccessTime(session);
-          return chain.proceed(request);
+    if (identities.getLoginUser(request) != null) {
+      if (identities.getLoggedInBlogger(request) != null) {
+        if (!identities.usesApiKey(request)) {
+          Session session = sessionManagerOperations.getSession(request, false);
+          if (session != null) {
+            repository.updateLastAccessTime(session);
+          }
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(ErrorMessage.failed("Not Found"));
+        return chain.proceed(request);
       }
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+              .contentType(MediaType.APPLICATION_JSON)
+              .body(ErrorMessage.failed("Not Found"));
     }
     if (chain.unwrapHandler() instanceof ResourceHttpRequestHandler) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
