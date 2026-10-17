@@ -1,0 +1,2796 @@
+openapi: 3.0.3
+
+info:
+  title: TODAY BLOG API
+  description: |
+    TODAY BLOG（TODAY 博客系统）的 HTTP API 规范。
+
+    ## 鉴权
+
+    - **公开接口**（`/api/*`）：无需登录即可访问。
+    - **用户接口**（`/api/auth` 中部分接口）：需要处于登录状态，
+      浏览器会话通过 `SESSION` Cookie 自动携带。
+    - **管理后台接口**（`/api/console/*`、`/api/statistics/*`）：需要博主权限，
+      支持以下两种方式之一：
+      1. 会话鉴权：浏览器登录会话（`SESSION` Cookie），需为博主账号；
+      2. API Key 鉴权：请求头 `Authorization: <api-key>` 或 `X-API-Key: <api-key>`。
+  version: "3.3-SNAPSHOT"
+  contact:
+    name: TAKETODAY
+    url: https://taketoday.cn
+
+servers:
+  - url: http://localhost:8080
+    description: 本地开发环境（端口 8080）
+  - url: https://api.example.com
+    description: 生产环境（占位，请按实际部署地址替换）
+
+tags:
+  - name: 文章
+    description: 公开文章查询接口
+  - name: 认证
+    description: 登录、登出与当前用户信息维护
+  - name: 分类
+    description: 公开分类查询接口
+  - name: 评论
+    description: 公开评论接口
+  - name: 标签
+    description: 公开标签查询接口
+  - name: 站点选项
+    description: 公开的站点配置选项
+  - name: 页面访问
+    description: 页面浏览量（PV）记录
+  - name: 后台-文章
+    description: 管理后台文章管理接口（需博主权限）
+  - name: 后台-API Key
+    description: 博主 API Key 管理接口（需博主权限）
+  - name: 后台-附件
+    description: 附件上传与管理接口（需博主权限）
+  - name: 后台-分类
+    description: 管理后台分类管理接口（需博主权限）
+  - name: 后台-评论
+    description: 管理后台评论管理接口（需博主权限）
+  - name: 后台-标签
+    description: 管理后台标签管理接口（需博主权限）
+  - name: 后台-日志
+    description: 操作日志查询与删除接口（需博主权限）
+  - name: 后台-邮件
+    description: 邮件队列管理接口（需博主权限）
+  - name: 后台-选项
+    description: 管理后台选项（配置项）管理接口（需博主权限）
+  - name: 后台-页面访问
+    description: 页面访问记录查询接口（需博主权限）
+  - name: 后台-用户
+    description: 管理后台用户管理接口（需博主权限）
+  - name: 统计
+    description: 博客统计接口（需博主权限）
+
+paths:
+  # ============================== 公开 API ==============================
+  # ----------------------------- 文章相关 ------------------------------
+  /api/articles:
+    get:
+      tags:
+        - 文章
+      summary: 文章列表 / 搜索 / 分类 / 标签 / 最受欢迎
+      description: |
+        本路径根据不同的查询参数组合提供多种查询能力：
+
+        - 无参数（或携带分页参数）：获取主页文章列表（分页）；
+        - `q`：全文搜索；
+        - `category`：按分类获取文章；
+        - `tag`：按标签获取文章；
+        - `most-popular`：获取最受欢迎的文章列表（不参与分页 data 形式）。
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: q
+          in: query
+          required: false
+          description: 搜索关键字（当提供本参数时执行搜索）
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          description: 文章分类名（当提供本参数时按分类查询）
+          schema:
+            type: string
+        - name: tag
+          in: query
+          required: false
+          description: 文章标签名（当提供本参数时按标签查询）
+          schema:
+            type: string
+        - name: most-popular
+          in: query
+          required: false
+          description: 固定标志参数，用于区分"最受欢迎"接口，值任意（可为空）
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查询成功。`most-popular` 模式返回 `ArticleItem[]`，其余模式返回分页结构
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ArticleItemPage'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/ArticleItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/articles/{id}/pv:
+    patch:
+      tags:
+        - 文章
+      summary: 更新文章浏览量
+      description: |
+        增加文章 PV 计数。仅当请求不携带已登录博主会话时执行计数；
+        若带验证码频率限制（`RequestLimit(count = 2)`）。
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章 ID
+          schema:
+            type: integer
+            format: int64
+        - name: Referer
+          in: header
+          required: true
+          description: 来源页面地址
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 更新成功
+        '429':
+          description: 请求过于频繁
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/articles/{id}/tags:
+    get:
+      tags:
+        - 文章
+      summary: 获取文章标签
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 文章标签名集合
+          content:
+            application/json:
+              schema:
+                type: array
+                uniqueItems: true
+                items:
+                  type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/articles/{uri}:
+    get:
+      tags:
+        - 文章
+      summary: 获取文章详情
+      description: |
+        根据文章 URI（或数字 ID）获取文章详情。
+
+        - 默认返回 `application/json` 的 `Article` 结构；
+        - 请求头 `Accept: text/markdown` 时返回文章的 Markdown 原文（`string`）。
+
+        若文章设置了访问密码，需要通过 `key` 查询参数传入密码。
+      parameters:
+        - name: uri
+          in: path
+          required: true
+          description: 文章访问地址（URI），也兼容数字文章 ID
+          schema:
+            type: string
+        - name: key
+          in: query
+          required: false
+          description: 文章访问密码（若文章设置了密码）
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功。JSON 模式下为文章详情，Markdown 模式下为原文文本
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+            text/markdown:
+              schema:
+                type: string
+                description: 文章 Markdown 原文
+        '403':
+          description: 文章未发布或访问密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 认证相关 ------------------------------
+  /api/auth:
+    get:
+      tags:
+        - 认证
+      summary: 获取当前登录用户信息
+      description: 获取当前登录用户信息。需要处于登录状态（浏览器请求自动携带 `SESSION` Cookie）。
+      security:
+        - AuthenticationInfo: []
+      responses:
+        '200':
+          description: 当前登录用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      tags:
+        - 认证
+      summary: 退出登录
+      description: 使当前会话失效。需要登录用户会话。
+      security:
+        - AuthenticationInfo: []
+      responses:
+        '200':
+          description: 登出成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - 认证
+      summary: 用户登录
+      description: |
+        通过邮箱 + 密码登录。登录成功后返回用户信息并建立会话。
+        频率限制：1 分钟内最多尝试 5 次。
+      parameters:
+        - name: v2
+          in: query
+          required: true
+          description: 固定标志参数，标识当前登录 API 版本，值为 `v2`
+          schema:
+            type: string
+            const: v2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserFrom'
+      responses:
+        '200':
+          description: 登录成功，返回用户信息（博主账号还会绑定博主身份）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          description: 登录尝试过于频繁
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - 认证
+      summary: 更新当前登录用户信息
+      description: |
+        更新当前登录用户信息。根据携带的查询参数区分执行的操作：
+
+        - 不带区分参数：更新资料（昵称、站点、介绍、邮件通知），请求体为 `InfoForm`；
+        - `password`：修改密码，请求体为 `ChangePasswordForm`，成功返回 204；
+        - `email-mobile-phone`：修改邮箱，请求体为 `UserEmailForm`，返回更新后的用户；
+        - `avatar`：更换头像，`multipart/form-data` 字段 `avatar`，返回更新后的用户；
+        - `background`：更换背景，`multipart/form-data` 字段 `background`，返回更新后的用户。
+
+        上述操作均需要登录用户会话。
+      security:
+        - AuthenticationInfo: []
+      parameters:
+        - name: password
+          in: query
+          required: false
+          description: 存在该参数时表示修改密码
+          schema:
+            type: string
+        - name: email-mobile-phone
+          in: query
+          required: false
+          description: 存在该参数时表示修改邮箱
+          schema:
+            type: string
+        - name: avatar
+          in: query
+          required: false
+          description: 存在该参数时表示更换头像（multipart/form-data，字段 `avatar`）
+          schema:
+            type: string
+        - name: background
+          in: query
+          required: false
+          description: 存在该参数时表示更换背景（multipart/form-data，字段 `background`）
+          schema:
+            type: string
+      requestBody:
+        description: |
+          请求体取决于所执行的操作（见描述）：
+
+          - 更新资料：`InfoForm`
+          - 修改密码：`ChangePasswordForm`
+          - 修改邮箱：`UserEmailForm`
+          - 更换头像 / 背景：`multipart/form-data`，字段分别为 `avatar` / `background`
+        required: false
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/InfoForm'
+                - $ref: '#/components/schemas/ChangePasswordForm'
+                - $ref: '#/components/schemas/UserEmailForm'
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: 头像图片文件（`?avatar` 模式）
+                background:
+                  type: string
+                  format: binary
+                  description: 背景图片文件（`?background` 模式）
+      responses:
+        '200':
+          description: 更新资料 / 邮箱 / 头像 / 背景成功，返回更新后的用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '204':
+          description: 修改密码成功（无内容）
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ----------------------------- 分类相关 ------------------------------
+  /api/categories:
+    get:
+      tags:
+        - 分类
+      summary: 获取全部分类
+      responses:
+        '200':
+          description: 分类列表（按 `order` 排序）
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/categories/{name}:
+    get:
+      tags:
+        - 分类
+      summary: 按名称获取分类
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: 分类名
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 分类信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 评论相关 ------------------------------
+  /api/comments:
+    post:
+      tags:
+        - 评论
+      summary: 发表评论
+      description: |
+        提交评论。创建成功返回 201。频率限制：10 秒内只能评论一次。
+        若博主已登录，评论直接通过审核；否则根据站点配置决定是否进入待审核状态。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentFrom'
+      responses:
+        '201':
+          description: 评论创建成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          description: 评论过于频繁
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags:
+        - 评论
+      summary: 获取文章评论列表
+      parameters:
+        - name: articleId
+          in: query
+          required: true
+          description: 文章 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 文章评论列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommentItem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 标签相关 ------------------------------
+  /api/tags:
+    get:
+      tags:
+        - 标签
+      summary: 获取全部标签
+      responses:
+        '200':
+          description: 标签列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/tags/{name}:
+    get:
+      tags:
+        - 标签
+      summary: 按名称获取标签
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: 标签名
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 标签信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Label'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 站点选项 ------------------------------
+  /api/options:
+    get:
+      tags:
+        - 站点选项
+      summary: 获取公开的站点选项
+      responses:
+        '200':
+          description: 公开选项键值对（key=选项名，value=选项值）
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ----------------------------- 页面访问 ------------------------------
+  /api/pv:
+    post:
+      tags:
+        - 页面访问
+      summary: 记录页面访问（PV）
+      description: |
+        记录一次页面访问，用于站内浏览统计。
+        访问来源 URL 从请求头 `Referer` 中读取；`referer` 查询参数为可选的外链来源。
+        若请求来自已登录博客主，则不记录。
+      parameters:
+        - name: referer
+          in: query
+          required: false
+          description: 可选的外部来源地址
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 记录成功
+        '429':
+          description: 请求过于频繁（5 次/周期）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============================== 管理后台 API ==============================
+  # ----------------------------- 后台-文章 ------------------------------
+  /api/console/articles:
+    get:
+      tags:
+        - 后台-文章
+      summary: 条件分页查询文章列表
+      description: 支持关键字、标题、内容、分类、状态与时间范围等条件筛选。
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: 关键字（匹配标题或内容）
+          schema:
+            type: string
+        - name: title
+          in: query
+          required: false
+          description: 文章标题（模糊匹配）
+          schema:
+            type: string
+        - name: content
+          in: query
+          required: false
+          description: 文章内容（模糊匹配）
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          description: 文章分类
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: 文章状态
+          schema:
+            $ref: '#/components/schemas/PostStatus'
+        - name: sort
+          in: query
+          required: false
+          description: 排序字段与方向，如 `sort[createAt]=descend`
+          schema:
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/OrderBy'
+        - name: createAt
+          in: query
+          required: false
+          description: 创建时间范围（两个值构成闭区间），格式 `yyyy-MM-dd HH:mm:ss`
+          schema:
+            type: array
+            items:
+              type: string
+              format: date-time
+        - name: updateAt
+          in: query
+          required: false
+          description: 更新时间范围（两个值构成闭区间），格式 `yyyy-MM-dd HH:mm:ss`
+          schema:
+            type: array
+            items:
+              type: string
+              format: date-time
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 文章分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticlePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - 后台-文章
+      summary: 创建文章
+      description: 创建成功返回 201，无响应体。
+      security:
+        - BloggerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleForm'
+      responses:
+        '201':
+          description: 创建成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/console/articles/{id}:
+    put:
+      tags:
+        - 后台-文章
+      summary: 更新文章
+      description: |
+        更新文章内容。若查询参数携带 `status`，则为"更新文章状态"接口（仅接收
+        `status` 参数，须传入 `PostStatus` 枚举值），否则为完整更新文章。
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章 ID
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          required: false
+          description: 当提供本参数时执行"更新文章状态"，值为 `PostStatus` 枚举
+          schema:
+            $ref: '#/components/schemas/PostStatus'
+      requestBody:
+        description: 文章表单（完整更新时必填；仅更新状态时可省略）
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleForm'
+      responses:
+        '204':
+          description: 更新成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - 后台-文章
+      summary: 删除文章
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 后台-API Key ------------------------------
+  /api/console/api-keys:
+    get:
+      tags:
+        - 后台-API Key
+      summary: 查询当前用户的 API Key 列表
+      security:
+        - BloggerAuth: []
+      responses:
+        '200':
+          description: API Key 列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiKey'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - 后台-API Key
+      summary: 创建 API Key
+      description: 创建成功返回 201。密钥原文 `value` 只在创建响应中返回一次。
+      security:
+        - BloggerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+      responses:
+        '201':
+          description: 创建成功，返回 API Key 信息与明文密钥
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedApiKey'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/api-keys/{id}:
+    delete:
+      tags:
+        - 后台-API Key
+      summary: 删除 API Key
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/console/api-keys/{id}/revoke:
+    post:
+      tags:
+        - 后台-API Key
+      summary: 吊销 API Key
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 吊销成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 后台-附件 ------------------------------
+  /api/console/attachments:
+    get:
+      tags:
+        - 后台-附件
+      summary: 条件分页查询附件列表
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: fileType
+          in: query
+          required: false
+          description: 附件类型
+          schema:
+            $ref: '#/components/schemas/AttachmentType'
+        - name: name
+          in: query
+          required: false
+          description: 附件名（模糊匹配）
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 附件分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttachmentPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - 后台-附件
+      summary: 上传文件
+      description: multipart/form-data 上传，字段名为 `file`。创建成功返回 201。
+      security:
+        - BloggerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 待上传的文件
+      responses:
+        '201':
+          description: 上传成功，返回附件 URI 与 CDN 地址
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadReturnValue'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/attachments/{id}:
+    get:
+      tags:
+        - 后台-附件
+      summary: 按 ID 获取附件
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 附件 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 附件信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - 后台-附件
+      summary: 更新附件信息
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 附件 ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attachment'
+      responses:
+        '204':
+          description: 更新成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    delete:
+      tags:
+        - 后台-附件
+      summary: 删除附件
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 附件 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/console/attachments/{id}/sync-aliyun:
+    put:
+      tags:
+        - 后台-附件
+      summary: 同步附件到阿里云 OSS
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 附件 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 同步成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/console/attachments/{id}/delete-aliyun:
+    put:
+      tags:
+        - 后台-附件
+      summary: 删除阿里云 OSS 上的附件
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 附件 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ----------------------------- 后台-分类 ------------------------------
+  /api/console/categories:
+    get:
+      tags:
+        - 后台-分类
+      summary: 获取全部分类
+      security:
+        - BloggerAuth: []
+      responses:
+        '200':
+          description: 分类列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - 后台-分类
+      summary: 创建分类
+      security:
+        - BloggerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+      responses:
+        '201':
+          description: 创建成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/categories/{name}:
+    put:
+      tags:
+        - 后台-分类
+      summary: 更新分类
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: 要更新的分类名
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+      responses:
+        '200':
+          description: 更新成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - 后台-分类
+      summary: 删除分类
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: 分类名
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 后台-评论 ------------------------------
+  /api/console/comments:
+    get:
+      tags:
+        - 后台-评论
+      summary: 条件分页查询评论列表
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: 评论状态
+          schema:
+            $ref: '#/components/schemas/CommentStatus'
+        - name: commenter
+          in: query
+          required: false
+          description: 评论者昵称（模糊匹配）
+          schema:
+            type: string
+        - name: commenterSite
+          in: query
+          required: false
+          description: 评论者网站（模糊匹配）
+          schema:
+            type: string
+        - name: email
+          in: query
+          required: false
+          description: 评论者邮箱
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 评论分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/comments/{id}:
+    put:
+      tags:
+        - 后台-评论
+      summary: 更新评论
+      description: |
+        更新评论。若查询参数携带 `status`，则为"更新评论状态"接口（须传入
+        `CommentStatus` 枚举值），否则为完整更新评论。
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 评论 ID
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          required: false
+          description: 当提供本参数时执行"更新评论状态"
+          schema:
+            $ref: '#/components/schemas/CommentStatus'
+      requestBody:
+        description: 评论对象（完整更新时必填）
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+      responses:
+        '200':
+          description: 更新成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - 后台-评论
+      summary: 删除评论
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 评论 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 后台-标签 ------------------------------
+  /api/console/tags:
+    get:
+      tags:
+        - 后台-标签
+      summary: 获取全部标签
+      security:
+        - BloggerAuth: []
+      responses:
+        '200':
+          description: 标签列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - 后台-标签
+      summary: 批量保存标签
+      description: 通过重复的 `name` 查询参数批量创建标签，如 `?name=a&name=b`。
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: 待创建的标签名（可重复出现多次进行批量创建）
+          schema:
+            type: array
+            items:
+              type: string
+          explode: true
+      responses:
+        '200':
+          description: 创建成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/tags/{name}:
+    post:
+      tags:
+        - 后台-标签
+      summary: 保存单个标签
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: 标签名
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 创建成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/tags/{id}:
+    put:
+      tags:
+        - 后台-标签
+      summary: 更新标签名称
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 标签 ID
+          schema:
+            type: integer
+            format: int64
+        - name: name
+          in: query
+          required: true
+          description: 新的标签名
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 更新成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - 后台-标签
+      summary: 删除标签
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 标签 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 后台-日志 ------------------------------
+  /api/console/logging:
+    get:
+      tags:
+        - 后台-日志
+      summary: 分页查询操作日志
+      security:
+        - BloggerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 操作日志分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationLoggingPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    delete:
+      tags:
+        - 后台-日志
+      summary: 删除操作日志
+      description: |
+        通过重复的 `ids` 查询参数删除指定日志；若未提供 `ids`（参数为空），则清空全部日志。
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: ids
+          in: query
+          required: false
+          description: 待删除的日志 ID 列表（可重复出现多次）
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+          explode: true
+      responses:
+        '204':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/logging/{id}:
+    delete:
+      tags:
+        - 后台-日志
+      summary: 按 ID 删除操作日志
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 日志 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/logging/export.csv:
+    get:
+      tags:
+        - 后台-日志
+      summary: 导出操作日志为 CSV
+      security:
+        - BloggerAuth: []
+      responses:
+        '200':
+          description: CSV 文件（UTF-8 编码）
+          content:
+            text/csv:
+              schema:
+                type: string
+                description: |
+                  CSV 内容，列：`id,date,title,user,ip,content,type`
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ----------------------------- 后台-邮件 ------------------------------
+  /api/console/mails:
+    get:
+      tags:
+        - 后台-邮件
+      summary: 分页查询邮件发送记录
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: 邮件状态（`PENDING`/`SENDING`/`SENT`/`FAILED`）
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          description: 收件人邮箱
+          schema:
+            type: string
+        - name: subject
+          in: query
+          required: false
+          description: 邮件主题（模糊匹配）
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 邮件分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/mails/{id}/retry:
+    post:
+      tags:
+        - 后台-邮件
+      summary: 重试发送邮件
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 邮件记录 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 已加入重试队列
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 后台-选项 ------------------------------
+  /api/console/options:
+    get:
+      tags:
+        - 后台-选项
+      summary: 分页查询系统选项
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: 按选项名过滤
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 选项分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptionPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    put:
+      tags:
+        - 后台-选项
+      summary: 更新系统选项
+      security:
+        - BloggerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Option'
+      responses:
+        '200':
+          description: 更新成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ----------------------------- 后台-页面访问 ------------------------------
+  /api/console/pv:
+    get:
+      tags:
+        - 后台-页面访问
+      summary: 查询全部页面访问记录
+      security:
+        - BloggerAuth: []
+      responses:
+        '200':
+          description: 页面访问记录列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PageView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ----------------------------- 后台-用户 ------------------------------
+  /api/console/users:
+    get:
+      tags:
+        - 后台-用户
+      summary: 分页查询用户列表
+      security:
+        - BloggerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 用户分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - 后台-用户
+      summary: 注册新用户
+      security:
+        - BloggerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: 注册成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/console/users/{id}:
+    put:
+      tags:
+        - 后台-用户
+      summary: 更新用户
+      description: |
+        更新用户资料。若查询参数携带 `status`，则为"更新用户状态"接口
+        （须传入 `UserStatus` 枚举值），否则为更新用户资料。
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 用户 ID
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          required: false
+          description: 当提供本参数时执行"更新用户状态"
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+      requestBody:
+        description: 用户资料表单（更新资料时必填）
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettingsForm'
+      responses:
+        '200':
+          description: 更新成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - 后台-用户
+      summary: 删除用户
+      security:
+        - BloggerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 用户 ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 删除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ----------------------------- 统计 ------------------------------
+  /api/statistics/dashboard:
+    get:
+      tags:
+        - 统计
+      summary: 获取仪表盘统计数据
+      security:
+        - BloggerAuth: []
+      responses:
+        '200':
+          description: 仪表盘统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStatistics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/statistics/{type}:
+    get:
+      tags:
+        - 统计
+      summary: 按维度统计页面访问数据
+      description: |
+        按指定维度分析页面访问记录，返回维度值 -> 计数的映射。
+        例如 `GET /api/statistics/os` 返回 `{ "Windows": 123, "macOS": 45 }`。
+
+        注意 `/api/statistics/pv` 为更具体的日期区间统计接口（见下一路径），
+        `{type}` 实际可取 `os`、`url`、`user`、`device`、`referer`、`browser`、`user_agent`。
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: 统计维度
+          schema:
+            $ref: '#/components/schemas/StatisticsField'
+      security:
+        - BloggerAuth: []
+      responses:
+        '200':
+          description: 维度 -> 计数映射
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/statistics/pv:
+    get:
+      tags:
+        - 统计
+      summary: 按日期区间统计页面访问
+      description: 按天统计指定日期区间内的 IP、UV、PV，返回日期 -> 统计的映射。
+      parameters:
+        - name: from
+          in: query
+          required: false
+          description: 起始日期，格式 `yyyy-MM-dd`
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          description: 结束日期，格式 `yyyy-MM-dd`
+          schema:
+            type: string
+            format: date
+      security:
+        - BloggerAuth: []
+      responses:
+        '200':
+          description: 日期 -> 页面统计映射
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/PageViewStatistics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    AuthenticationInfo:
+      type: apiKey
+      in: cookie
+      name: SESSION
+      description: |
+        登录会话标识（Session Id）。登录成功后由服务端在 `SESSION` Cookie 中下发，
+        浏览器会自动携带，无需手动添加。
+    BloggerAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        博主权限认证。两种方式均可：
+        - 请求头 `X-API-Key: <api-key>`；
+        - 请求头 `Authorization: <api-key>`（或依赖已登录博主的 `SESSION` Cookie）。
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      description: 当前页码（从 1 开始）
+      schema:
+        type: integer
+        format: int32
+        default: 1
+        minimum: 1
+    Size:
+      name: size
+      in: query
+      required: false
+      description: 每页条数
+      schema:
+        type: integer
+        format: int32
+        default: 10
+        minimum: 1
+
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: 未登录或登录已失效
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: 无访问权限（非博主）
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # ------------------------------------------------------------------
+    # 通用
+    # ------------------------------------------------------------------
+    Error:
+      type: object
+      description: 错误信息
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          nullable: true
+          description: 错误描述
+
+    Pagination:
+      type: object
+      description: 分页结构基类
+      required:
+        - pages
+        - total
+        - size
+        - current
+        - data
+      properties:
+        pages:
+          type: integer
+          description: 总页数
+        total:
+          type: integer
+          description: 记录总数
+        size:
+          type: integer
+          description: 每页条数
+        current:
+          type: integer
+          description: 当前页码
+        data:
+          type: array
+          items: {}
+
+    # ------------------------------------------------------------------
+    # 文章
+    # ------------------------------------------------------------------
+    PostStatus:
+      type: string
+      description: 文章状态
+      enum:
+        - PUBLISHED
+        - DRAFT
+        - RECYCLE
+
+    Article:
+      type: object
+      description: 文章
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+      properties:
+        cover:
+          type: string
+          nullable: true
+          description: 封面图
+        title:
+          type: string
+          description: 标题
+        pv:
+          type: integer
+          description: 浏览量
+        status:
+          $ref: '#/components/schemas/PostStatus'
+        summary:
+          type: string
+          description: 摘要
+        content:
+          type: string
+          description: HTML 内容
+        markdown:
+          type: string
+          nullable: true
+          description: Markdown 原文
+        password:
+          type: string
+          nullable: true
+          description: 访问密码（仅在后台列表中可见）
+        uri:
+          type: string
+          description: 文章访问地址
+        category:
+          type: string
+          description: 文章分类名
+        copyright:
+          type: string
+          description: 版权声明
+        labels:
+          type: array
+          nullable: true
+          description: 文章标签
+          items:
+            $ref: '#/components/schemas/Label'
+
+    ArticleItem:
+      type: object
+      description: 文章列表项（公开列表使用，不含正文）
+      required:
+        - id
+        - pv
+      properties:
+        id:
+          type: integer
+          format: int64
+        pv:
+          type: integer
+        uri:
+          type: string
+        title:
+          type: string
+        cover:
+          type: string
+          nullable: true
+        summary:
+          type: string
+        tags:
+          type: array
+          description: 标签名列表
+          items:
+            type: string
+        createAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ArticleForm:
+      type: object
+      description: 创建 / 更新文章的请求体
+      required:
+        - title
+        - uri
+      properties:
+        createAt:
+          type: string
+          nullable: true
+          description: 创建时间（格式化字符串）
+        category:
+          type: string
+        copyright:
+          type: string
+        labels:
+          type: array
+          description: 标签名集合
+          items:
+            type: string
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/PostStatus'
+        summary:
+          type: string
+        content:
+          type: string
+          description: HTML 内容
+        markdown:
+          type: string
+        uri:
+          type: string
+        cover:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+
+    # ------------------------------------------------------------------
+    # 用户 / 认证
+    # ------------------------------------------------------------------
+    UserStatus:
+      type: string
+      description: 用户状态
+      enum:
+        - NORMAL
+        - INACTIVE
+        - LOCKED
+        - RECYCLE
+
+    User:
+      type: object
+      description: 用户
+      properties:
+        id:
+          type: integer
+          format: int64
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        site:
+          type: string
+          nullable: true
+        type:
+          type: string
+          description: 用户类型
+        avatar:
+          type: string
+          nullable: true
+        introduce:
+          type: string
+          nullable: true
+        background:
+          type: string
+          nullable: true
+        notification:
+          type: boolean
+          description: 是否接收邮件通知
+        blogger:
+          type: boolean
+          description: 是否为博主
+
+    UserFrom:
+      type: object
+      description: 登录请求体
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    InfoForm:
+      type: object
+      description: 更新当前用户信息的请求体
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        site:
+          type: string
+          nullable: true
+        introduce:
+          type: string
+          description: 自我简介（最多 256 字符）
+        notification:
+          type: boolean
+          default: false
+
+    ChangePasswordForm:
+      type: object
+      description: 修改密码请求体
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+          description: 新密码（6 - 48 个字符）
+          minLength: 6
+          maxLength: 48
+        confirmNewPassword:
+          type: string
+          description: 确认新密码
+
+    UserEmailForm:
+      type: object
+      description: 修改邮箱请求体
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    UserSettingsForm:
+      type: object
+      description: 后台更新用户资料请求体
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        site:
+          type: string
+        introduce:
+          type: string
+          default: 暂无介绍
+        notification:
+          type: boolean
+          default: false
+
+    # ------------------------------------------------------------------
+    # 分类 / 标签 / 评论
+    # ------------------------------------------------------------------
+    Category:
+      type: object
+      description: 文章分类
+      properties:
+        name:
+          type: string
+          description: 分类名（同时作为唯一的 ID）
+        order:
+          type: integer
+          description: 排序值（默认 128）
+        articleCount:
+          type: integer
+          nullable: true
+          description: 该分类下的文章数
+        description:
+          type: string
+          nullable: true
+
+    Label:
+      type: object
+      description: 文章标签
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+
+    CommentStatus:
+      type: string
+      description: 评论状态
+      enum:
+        - CHECKED
+        - CHECKING
+        - RECYCLE
+
+    CommentFrom:
+      type: object
+      description: 发表评论请求体
+      required:
+        - content
+        - articleId
+        - commenter
+      properties:
+        content:
+          type: string
+          description: 评论内容
+        articleId:
+          type: integer
+          format: int64
+          description: 被评论的文章 ID
+        commentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: 父评论 ID（回复某条评论时填写）
+        email:
+          type: string
+          format: email
+          description: 评论者邮箱
+        commenter:
+          type: string
+          description: 评论者昵称
+        commenterSite:
+          type: string
+          nullable: true
+          description: 评论者网站地址
+
+    Comment:
+      type: object
+      description: 评论
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+      properties:
+        content:
+          type: string
+        status:
+          $ref: '#/components/schemas/CommentStatus'
+        articleId:
+          type: integer
+          format: int64
+        articleTitle:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        commenter:
+          type: string
+          nullable: true
+        commenterSite:
+          type: string
+          nullable: true
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+        replies:
+          type: array
+          description: 子评论（后台列表树）
+          items:
+            $ref: '#/components/schemas/Comment'
+
+    CommentItem:
+      type: object
+      description: 评论列表项（公开文章评论使用）
+      properties:
+        id:
+          type: integer
+          format: int64
+        content:
+          type: string
+        email:
+          type: string
+          nullable: true
+        commenter:
+          type: string
+        commenterSite:
+          type: string
+          nullable: true
+        commenterDesc:
+          type: string
+          nullable: true
+          description: 评论者简介（来自用户资料）
+        user:
+          $ref: '#/components/schemas/User'
+          nullable: true
+        replies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        createAt:
+          type: string
+          format: date-time
+          nullable: true
+        updateAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ------------------------------------------------------------------
+    # API Key
+    # ------------------------------------------------------------------
+    ApiKey:
+      type: object
+      description: API Key 信息
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+          description: 所属用户 ID
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateApiKeyRequest:
+      type: object
+      description: 创建 API Key 请求体
+      required:
+        - name
+      properties:
+        name:
+          type: string
+
+    CreatedApiKey:
+      type: object
+      description: 创建 API Key 的响应。密钥原文只在本响应中返回一次
+      required:
+        - apiKey
+        - value
+      properties:
+        apiKey:
+          $ref: '#/components/schemas/ApiKey'
+        value:
+          type: string
+          description: 明文密钥（请立即保存）
+
+    # ------------------------------------------------------------------
+    # 附件
+    # ------------------------------------------------------------------
+    AttachmentType:
+      type: string
+      description: 附件类型
+      enum:
+        - IMAGE
+        - AUDIO
+        - VIDEO
+        - TEXT
+        - OTHER
+
+    Attachment:
+      type: object
+      description: 附件
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+      properties:
+        name:
+          type: string
+          description: 附件名
+        uri:
+          type: string
+          description: 对外访问地址（CDN 或本地）
+        location:
+          type: string
+          nullable: true
+          description: 附件本地存储路径
+        fileType:
+          $ref: '#/components/schemas/AttachmentType'
+        size:
+          type: integer
+          format: int64
+          nullable: true
+        sync:
+          type: boolean
+          nullable: true
+          description: 是否已同步到 OSS
+
+    UploadReturnValue:
+      type: object
+      description: 文件上传响应
+      required:
+        - uri
+        - cdnURL
+      properties:
+        uri:
+          type: string
+          description: 附件本地/相对 URI
+        cdnURL:
+          type: string
+          nullable: true
+          description: 附件 CDN 地址（可能为空）
+
+    # ------------------------------------------------------------------
+    # 日志 / 邮件 / 选项 / 页面访问
+    # ------------------------------------------------------------------
+    LoggingType:
+      type: string
+      description: 操作日志类型
+      enum:
+        - LOGIN
+        - LOGOUT
+        - SYSTEM
+
+    OperationLogging:
+      type: object
+      description: 操作日志
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+          nullable: true
+        content:
+          type: string
+          nullable: true
+        ip:
+          type: string
+          nullable: true
+          description: 产生日志的 IP
+        ipCountry:
+          type: string
+          nullable: true
+        ipProvince:
+          type: string
+          nullable: true
+        ipCity:
+          type: string
+          nullable: true
+        ipArea:
+          type: string
+          nullable: true
+        ipIsp:
+          type: string
+          nullable: true
+        user:
+          type: string
+          nullable: true
+          description: 操作者
+        type:
+          $ref: '#/components/schemas/LoggingType'
+        invokeAt:
+          type: string
+          format: date-time
+          nullable: true
+        createAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    Mail:
+      type: object
+      description: 邮件发送记录
+      allOf:
+        - $ref: '#/components/schemas/BasicModel'
+      properties:
+        to:
+          type: string
+          description: 收件人（数据库列 `recipient`）
+        subject:
+          type: string
+        content:
+          type: string
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum:
+            - PENDING
+            - SENDING
+            - SENT
+            - FAILED
+        attempts:
+          type: integer
+          nullable: true
+          description: 发送尝试次数
+        lastAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastError:
+          type: string
+          nullable: true
+        attachment:
+          type: string
+          nullable: true
+
+    OptionValueType:
+      type: string
+      description: 选项值类型
+      enum:
+        - bool
+        - string
+        - number
+
+    Option:
+      type: object
+      description: 系统选项（配置项）
+      properties:
+        name:
+          type: string
+          description: 选项名（同时作为唯一的 ID）
+        value:
+          type: string
+          nullable: true
+        open:
+          type: boolean
+          nullable: true
+          description: 是否对公开接口开放
+        description:
+          type: string
+          nullable: true
+        updateAt:
+          type: string
+          format: date-time
+          nullable: true
+        valueType:
+          $ref: '#/components/schemas/OptionValueType'
+          nullable: true
+
+    PageView:
+      type: object
+      description: 页面访问记录
+      properties:
+        id:
+          type: integer
+          format: int64
+        url:
+          type: string
+          nullable: true
+        host:
+          type: string
+          nullable: true
+        path:
+          type: string
+          nullable: true
+        user:
+          type: string
+          nullable: true
+          description: 登录用户标识（`名字:邮箱`，未登录为空）
+        os:
+          type: string
+          nullable: true
+        device:
+          type: string
+          nullable: true
+        referer:
+          type: string
+          nullable: true
+        userAgent:
+          type: string
+          nullable: true
+        browser:
+          type: string
+          nullable: true
+        browserVersion:
+          type: string
+          nullable: true
+        ip:
+          type: string
+          nullable: true
+        ipCountry:
+          type: string
+          nullable: true
+        ipProvince:
+          type: string
+          nullable: true
+        ipCity:
+          type: string
+          nullable: true
+        ipArea:
+          type: string
+          nullable: true
+        ipIsp:
+          type: string
+          nullable: true
+        createAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    PageViewStatistics:
+      type: object
+      description: 单日页面访问统计
+      required:
+        - ip
+        - uv
+        - pv
+      properties:
+        ip:
+          type: integer
+          description: 独立 IP 数
+        uv:
+          type: integer
+          description: 独立访客数
+        pv:
+          type: integer
+          description: 浏览量
+
+    # ------------------------------------------------------------------
+    # 统计
+    # ------------------------------------------------------------------
+    StatisticsField:
+      type: string
+      description: 页面访问统计维度
+      enum:
+        - os
+        - url
+        - user
+        - device
+        - referer
+        - browser
+        - user_agent
+
+    DashboardStatistics:
+      type: object
+      description: 仪表盘统计
+      required:
+        - lastStartup
+        - articleCount
+        - commentCount
+        - attachmentCount
+      properties:
+        lastStartup:
+          type: integer
+          format: int64
+          description: 最近一次启动时间（毫秒时间戳）
+        articleCount:
+          type: integer
+        commentCount:
+          type: integer
+        attachmentCount:
+          type: integer
+        logs:
+          type: array
+          description: 最近的操作日志
+          items:
+            $ref: '#/components/schemas/OperationLogging'
+        articles:
+          type: array
+          description: 最近的文章
+          items:
+            $ref: '#/components/schemas/Article'
+        comments:
+          type: array
+          description: 最近的评论
+          items:
+            $ref: '#/components/schemas/Comment'
+
+    # ------------------------------------------------------------------
+    # 基础模型（id / createAt / updateAt）
+    # ------------------------------------------------------------------
+    BasicModel:
+      type: object
+      description: 公共基础字段
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 主键 ID
+        createAt:
+          type: string
+          format: date-time
+          nullable: true
+        updateAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ------------------------------------------------------------------
+    # 排序
+    # ------------------------------------------------------------------
+    OrderBy:
+      type: string
+      description: 排序方向
+      enum:
+        - descend
+        - ascend
+
+    # ------------------------------------------------------------------
+    # 分页数据 wrapper
+    # ------------------------------------------------------------------
+    ArticleItemPage:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ArticleItem'
+    ArticlePage:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Article'
+    CommentPage:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Comment'
+    AttachmentPage:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Attachment'
+    OperationLoggingPage:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/OperationLogging'
+    MailPage:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Mail'
+    OptionPage:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Option'
+    UserPage:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'

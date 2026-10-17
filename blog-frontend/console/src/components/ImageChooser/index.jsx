@@ -18,10 +18,10 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import { fallbackImage, isNotEmpty } from "@/utils"
+import { isNotEmpty } from "@/utils"
 import { Button, Input, message, Popconfirm } from "antd"
 import React, { useEffect, useState } from "react"
-import { ImageChooserModal, Image } from "@/components"
+import { Image, ImageChooserModal } from "@/components"
 import { PlusOutlined } from "@ant-design/icons"
 
 import "./style.less"

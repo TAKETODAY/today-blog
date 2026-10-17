@@ -69,14 +69,3 @@ export interface LabelItem {
   id: number;
   name: string;
 }
-
-export interface TableListPagination {
-  total: number;
-  pageSize: number;
-  current: number;
-}
-
-export interface TableListData {
-  list: ArticleItem[];
-  pagination: Partial<TableListPagination>;
-}

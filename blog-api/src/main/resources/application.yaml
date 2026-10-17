@@ -24,7 +24,7 @@ server:
     http2-graceful-shutdown-timeout: 29s
     auto-read: ${server.http2.enabled}
 
-  use-virtual-thread-service-executor: true
+  use-virtual-threads: true
 
   http2:
     enabled: false
@@ -34,11 +34,12 @@ server:
       connect-protocol-enabled: false
 
 infra:
-  output:
-    ansi:
-      enabled: always
   profiles:
     active: dev
+
+output:
+  ansi:
+    enabled: always
 
 freemarker:
   cache: false

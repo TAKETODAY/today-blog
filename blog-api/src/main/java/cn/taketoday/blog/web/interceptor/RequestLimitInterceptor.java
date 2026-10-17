@@ -29,21 +29,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import cn.taketoday.blog.model.Blogger;
+import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.web.ErrorMessage;
 import cn.taketoday.blog.web.ErrorMessageException;
 import infra.http.HttpStatus;
 import infra.http.MediaType;
 import infra.http.ResponseEntity;
-import infra.lang.Assert;
 import infra.lang.Constant;
-import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
+import infra.util.Assert;
 import infra.util.MapCache;
 import infra.web.HandlerInterceptor;
+import infra.web.HttpContext;
 import infra.web.InterceptorChain;
-import infra.web.RequestContext;
 import infra.web.handler.method.HandlerMethod;
 
 /**
@@ -66,10 +65,10 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
 
   private final ConcurrentHashMap<RequestKey, RequestLimitEntry> requestLimitCache = new ConcurrentHashMap<>();
 
-  private final SessionManagerOperations sessionManagerOperations;
+  private final UserSessionResolver identities;
 
-  RequestLimitInterceptor(SessionManagerOperations sessionManagerOperations) {
-    this.sessionManagerOperations = sessionManagerOperations;
+  RequestLimitInterceptor(UserSessionResolver identities) {
+    this.identities = identities;
   }
 
   public void setDefaultErrorMessage(String defaultErrorMessage) {
@@ -89,10 +88,10 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public @Nullable Object intercept(RequestContext request, InterceptorChain chain) throws Throwable {
-    if (!Blogger.isPresent(sessionManagerOperations.getSession(request, false))) {
+  public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Exception {
+    if (identities.getLoggedInBlogger(request) == null) {
       // 非博主，进行限流
-      HandlerMethod handlerMethod = HandlerMethod.unwrap(chain.getHandler());
+      HandlerMethod handlerMethod = HandlerMethod.resolve(chain.getHandler());
       if (handlerMethod != null) {
         RequestLimit requestLimit = requestLimitConfigCache.get(handlerMethod);
         if (requestLimit != null && hasTooManyRequests(request, handlerMethod, requestLimit)) {
@@ -134,7 +133,7 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
   /**
    * 接口的访问频次限制
    */
-  private boolean hasTooManyRequests(RequestContext request, HandlerMethod handler, RequestLimit requestLimit) {
+  private boolean hasTooManyRequests(HttpContext request, HandlerMethod handler, RequestLimit requestLimit) {
     Instant now = clock.instant();
     expiredChecker.checkIfNecessary(now);
 

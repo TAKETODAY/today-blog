@@ -132,6 +132,11 @@ export default [
         component: './system/account',
       },
       {
+        name: 'mails',
+        path: '/system/mails',
+        component: './system/mails',
+      },
+      {
         name: 'logging',
         icon: 'log',
         path: '/system/logging',
@@ -142,6 +147,11 @@ export default [
         icon: 'options',
         path: '/system/options',
         component: './system/options',
+      },
+      {
+        name: 'api-keys',
+        path: '/system/api-keys',
+        component: './system/api-keys',
       },
     ],
   },

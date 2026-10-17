@@ -20,6 +20,7 @@ package cn.taketoday.blog.config;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import org.aopalliance.aop.Advice;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -33,23 +34,30 @@ import cn.taketoday.blog.util.BCryptPasswordEncoder.BCryptVersion;
 import cn.taketoday.blog.util.PasswordEncoder;
 import infra.aop.support.DefaultPointcutAdvisor;
 import infra.aop.support.annotation.AnnotationMatchingPointcut;
-import infra.beans.factory.annotation.DisableAllDependencyInjection;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.RuntimeHints;
+import infra.aot.hint.RuntimeHintsRegistrar;
 import infra.beans.factory.annotation.Qualifier;
 import infra.beans.factory.config.BeanDefinition;
 import infra.cache.annotation.EnableCaching;
 import infra.cache.support.CaffeineCacheManager;
-import infra.context.annotation.Configuration;
+import infra.context.annotation.ImportRuntimeHints;
 import infra.context.annotation.Primary;
 import infra.context.annotation.Role;
+import infra.context.annotation.config.DisableDIAutoConfiguration;
 import infra.flyway.config.FlywayMigrationStrategy;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
 import infra.session.config.EnableSession;
 import infra.stereotype.Component;
 import infra.web.config.annotation.ViewControllerRegistry;
+import infra.web.config.annotation.ViewResolverRegistry;
 import infra.web.config.annotation.WebMvcConfigurer;
+import infra.web.view.InternalResourceViewResolver;
 import infra.web.view.ModelAndView;
 import lombok.RequiredArgsConstructor;
+
+import static infra.aot.hint.MemberCategory.INVOKE_DECLARED_CONSTRUCTORS;
 
 /**
  * App 配置
@@ -60,9 +68,8 @@ import lombok.RequiredArgsConstructor;
 @EnableCaching
 @EnableSession
 @RequiredArgsConstructor
-@DisableAllDependencyInjection
+@DisableDIAutoConfiguration
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-@Configuration(proxyBeanMethods = false)
 class AppConfig implements WebMvcConfigurer {
 
   private final OptionService optionService;
@@ -82,6 +89,11 @@ class AppConfig implements WebMvcConfigurer {
     return new BCryptPasswordEncoder(BCryptVersion.$2A);
   }
 
+  @Override
+  public void configureViewResolvers(ViewResolverRegistry registry) {
+    registry.viewResolver(new InternalResourceViewResolver());
+  }
+
   @Component
   static FlywayMigrationStrategy flywayMigrationStrategy() {
     return flyway -> {
@@ -92,6 +104,7 @@ class AppConfig implements WebMvcConfigurer {
   }
 
   @Component
+  @ImportRuntimeHints(CaffeineCacheHints.class)
   static CaffeineCacheManager caffeineCacheManager() {
     return new CaffeineCacheManager(Caffeine.newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -128,9 +141,22 @@ class AppConfig implements WebMvcConfigurer {
 
   @Component
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  static DefaultPointcutAdvisor pointcutAdvisor(@Qualifier("loggingInterceptor") Advice advice) {
+  static DefaultPointcutAdvisor loggingPointcutAdvisor(@Qualifier("loggingInterceptor") Advice advice) {
     var pointcut = AnnotationMatchingPointcut.forMethodAnnotation(Logging.class);
     return new DefaultPointcutAdvisor(pointcut, advice);
+  }
+
+  static class CaffeineCacheHints implements RuntimeHintsRegistrar {
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      hints.reflection().registerTypeIfPresent(classLoader, "com.github.benmanes.caffeine.cache.SSMSAW",
+              INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.ACCESS_DECLARED_FIELDS);
+
+      hints.reflection().registerTypeIfPresent(classLoader, "com.github.benmanes.caffeine.cache.PSAWMS",
+              INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.ACCESS_DECLARED_FIELDS);
+    }
+
   }
 
 }

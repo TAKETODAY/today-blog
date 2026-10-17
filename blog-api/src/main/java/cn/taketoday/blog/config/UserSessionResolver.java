@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,15 @@ import java.util.Optional;
 
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
+import cn.taketoday.blog.UnauthorizedException;
+import cn.taketoday.blog.service.ApiKeyService;
+import cn.taketoday.blog.service.BloggerService;
+import cn.taketoday.blog.web.LoginInfo;
 import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
-import infra.web.RequestContext;
-import infra.web.RequestContextHolder;
+import infra.web.HttpContext;
+import infra.web.HttpContextHolder;
 
 /**
  * 关于 获取用户会话 的处理器
@@ -44,8 +48,54 @@ public class UserSessionResolver {
 
   private final SessionManagerOperations sessionManagerOperations;
 
-  public UserSessionResolver(SessionManagerOperations sessionManagerOperations) {
+  private final ApiKeyService apiKeyService;
+
+  private final BloggerService bloggerService;
+
+  public UserSessionResolver(SessionManagerOperations sessionManagerOperations,
+          ApiKeyService apiKeyService, BloggerService bloggerService) {
     this.sessionManagerOperations = sessionManagerOperations;
+    this.apiKeyService = apiKeyService;
+    this.bloggerService = bloggerService;
+  }
+
+  /**
+   * 解析当前请求身份。显式 API Key 优先于会话，认证结果只缓存在当前请求。
+   */
+  public LoginInfo resolve(HttpContext request) {
+    Object cached = request.getAttribute(LoginInfo.class.getName());
+    if (cached instanceof LoginInfo info) {
+      return info;
+    }
+    LoginInfo info = new LoginInfo();
+    if (usesApiKey(request)) {
+      String value = ApiKeyService.extractValue(request.getHeader("Authorization"), request.getHeader("X-API-Key"));
+      User user = apiKeyService.authenticate(value);
+      if (user == null) {
+        throw new UnauthorizedException("API Key 无效或已撤销");
+      }
+      info.setLoginUser(user);
+      Blogger blogger = bloggerService.getBlogger();
+      if (blogger != null && user.getEmail() != null && user.getEmail().equals(blogger.getEmail())) {
+        info.setBlogger(blogger);
+      }
+    }
+    else {
+      Session session = sessionManagerOperations.getSession(request, false);
+      if (session != null) {
+        info.setLoginUser(User.find(session));
+        info.setBlogger(Blogger.find(session));
+      }
+    }
+    request.setAttribute(LoginInfo.class.getName(), info);
+    return info;
+  }
+
+  public boolean usesApiKey(HttpContext request) {
+    String authorization = request.getHeader("Authorization");
+    return request.getHeader("X-API-Key") != null
+            || (authorization != null && (authorization.equalsIgnoreCase("Bearer")
+            || authorization.regionMatches(true, 0, "Bearer ", 0, 7)));
   }
 
   /**
@@ -53,19 +103,15 @@ public class UserSessionResolver {
    */
   @Nullable
   public User getLoginUser() {
-    return getLoginUser(RequestContextHolder.getRequired());
+    return getLoginUser(HttpContextHolder.required());
   }
 
   /**
    * 获取当前登录的用户
    */
   @Nullable
-  public User getLoginUser(RequestContext request) {
-    Session session = sessionManagerOperations.getSession(request, false);
-    if (session != null) {
-      return User.find(session);
-    }
-    return null;
+  public User getLoginUser(HttpContext context) {
+    return resolve(context).getLoginUser();
   }
 
   /**
@@ -73,19 +119,15 @@ public class UserSessionResolver {
    */
   @Nullable
   public Blogger getLoggedInBlogger() {
-    return getLoggedInBlogger(RequestContextHolder.getRequired());
+    return getLoggedInBlogger(HttpContextHolder.required());
   }
 
   /**
    * 获取当前登录的博主
    */
   @Nullable
-  public Blogger getLoggedInBlogger(RequestContext request) {
-    Session session = sessionManagerOperations.getSession(request, false);
-    if (session != null) {
-      return Blogger.find(session);
-    }
-    return null;
+  public Blogger getLoggedInBlogger(HttpContext request) {
+    return resolve(request).getBlogger();
   }
 
   /**
@@ -98,7 +140,7 @@ public class UserSessionResolver {
   /**
    * 获取当前登录的用户
    */
-  public Optional<User> loginUser(RequestContext request) {
+  public Optional<User> loginUser(HttpContext request) {
     return Optional.ofNullable(getLoginUser(request));
   }
 
@@ -112,7 +154,7 @@ public class UserSessionResolver {
   /**
    * 获取当前登录的博主
    */
-  public Optional<Blogger> loggedInBlogger(RequestContext request) {
+  public Optional<Blogger> loggedInBlogger(HttpContext request) {
     return Optional.ofNullable(getLoggedInBlogger(request));
   }
 

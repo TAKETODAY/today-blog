@@ -134,7 +134,7 @@ function getQuery(name, search) {
 export async function upload(file) {
   const formData = new FormData();
   formData.append('file', file);
-  return (await http.post('/api/attachments', formData)).data.url
+  return (await http.post('/api/console/attachments', formData)).data.url
 }
 
 export async function uploadFile(url, file, onUploadProgress) {

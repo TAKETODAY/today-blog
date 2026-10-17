@@ -21,8 +21,8 @@ import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
 import infra.core.style.ToStringBuilder;
-import infra.persistence.Table;
-import infra.persistence.Transient;
+import infra.persistence.annotation.Table;
+import infra.persistence.annotation.Transient;
 import lombok.Getter;
 import lombok.Setter;
 

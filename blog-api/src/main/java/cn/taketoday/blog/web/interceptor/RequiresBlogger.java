@@ -1,8 +1,5 @@
 /*
- * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
 package cn.taketoday.blog.web.interceptor;
@@ -28,7 +25,14 @@ import java.lang.annotation.Target;
 import infra.web.annotation.Interceptor;
 
 /**
+ * 标记需要博主权限才能访问的资源。
+ * <p>
+ * 该注解用于类或方法级别，表示只有经过认证且拥有博主角色的用户才能访问被标记的资源。
+ * 当请求到达时，{@link BloggerInterceptor} 拦截器将检查当前用户是否具有相应的权限。
+ * </p>
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @see BloggerInterceptor
  * @since 4.0 2022/8/11 08:52
  */
 @Retention(RetentionPolicy.RUNTIME)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ import java.util.Objects;
 
 import cn.taketoday.blog.model.enums.AttachmentType;
 import infra.core.style.ToStringBuilder;
-import infra.persistence.Like;
-import infra.persistence.OrderBy;
+import infra.persistence.annotation.Like;
+import infra.persistence.annotation.OrderByClause;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,7 +33,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@OrderBy(clause = "update_at DESC, create_at DESC")
+@OrderByClause("update_at DESC, create_at DESC")
 public class AttachmentForm {
 
   @Nullable

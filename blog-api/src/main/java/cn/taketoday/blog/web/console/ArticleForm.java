@@ -37,16 +37,13 @@ import infra.util.StringUtils;
  */
 public class ArticleForm {
 
-  @Nullable
-  public String createAt;
+  public @Nullable String createAt;
 
   public String category;
 
   public String copyright;
 
   public Set<String> labels;
-
-  public String cover;
 
   public String title;
 
@@ -58,9 +55,11 @@ public class ArticleForm {
 
   public String markdown;
 
-  public String password;
-
   public String uri;
+  
+  public @Nullable String cover;
+
+  public @Nullable String password;
 
   public static Article forArticle(ArticleForm form, LabelService labelService) {
     if (StringUtils.isBlank(form.title)) {
@@ -96,8 +95,7 @@ public class ArticleForm {
     return article;
   }
 
-  @Nullable
-  private static Set<Label> getLabels(ArticleForm from, LabelService labelService) {
+  private static @Nullable Set<Label> getLabels(ArticleForm from, LabelService labelService) {
     if (CollectionUtils.isNotEmpty(from.labels)) {
       var labels = new LinkedHashSet<Label>();
       for (String label : from.labels) {

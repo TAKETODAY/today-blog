@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,40 +29,43 @@ import java.util.Objects;
 import cn.taketoday.blog.model.enums.OrderBy;
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.util.StringUtils;
-import infra.core.Pair;
 import infra.core.style.ToStringBuilder;
 import infra.format.annotation.DateTimeFormat;
 import infra.logging.LogMessage;
-import infra.persistence.ConditionStatement;
 import infra.persistence.DebugDescriptive;
 import infra.persistence.EntityMetadata;
 import infra.persistence.EntityProperty;
-import infra.persistence.Order;
-import infra.persistence.sql.MutableOrderByClause;
-import infra.persistence.sql.OrderByClause;
+import infra.persistence.query.QueryCondition;
+import infra.persistence.sql.OrderSpec;
 import infra.persistence.sql.Restriction;
 import lombok.Getter;
 import lombok.Setter;
 
+import static infra.persistence.sql.Restrictions.between;
+import static infra.persistence.sql.Restrictions.equal;
+import static infra.persistence.sql.Restrictions.plain;
+
 /**
+ * 文章条件查询
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2020/12/20 22:42
  */
 @Getter
 @Setter
-public class ArticleConditionForm implements ConditionStatement, DebugDescriptive {
+public class ArticleConditionForm implements QueryCondition, DebugDescriptive {
 
-  @Nullable
-  private String q;
+  private @Nullable String q;
 
-  @Nullable
-  private String category;
+  private @Nullable String title;
 
-  @Nullable
-  private PostStatus status;
+  private @Nullable String content;
 
-  @Nullable
-  private Map<String, OrderBy> sort;
+  private @Nullable String category;
+
+  private @Nullable PostStatus status;
+
+  private @Nullable Map<String, OrderBy> sort;
 
   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private LocalDateTime @Nullable [] createAt;
@@ -71,55 +74,66 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
   private LocalDateTime @Nullable [] updateAt;
 
   @Override
-  public void renderWhereClause(EntityMetadata metadata, List<Restriction> restrictions) {
+  public void collectRestrictions(EntityMetadata metadata, List<Restriction> restrictions) {
     if (StringUtils.hasText(q)) {
-      restrictions.add(Restriction.plain(" (`title` like ? OR `content` like ? )"));
+      restrictions.add(plain(" (`title` like ? OR `content` like ? )"));
+    }
+
+    if (StringUtils.hasText(title)) {
+      restrictions.add(plain("`title` like ?"));
+    }
+
+    if (StringUtils.hasText(content)) {
+      restrictions.add(plain("`content` like ?"));
     }
 
     if (StringUtils.hasText(category)) {
-      restrictions.add(Restriction.equal("category"));
+      restrictions.add(equal("category"));
     }
 
     if (status != null) {
-      restrictions.add(Restriction.equal("status"));
+      restrictions.add(equal("status"));
     }
 
     if (createAt != null && createAt.length == 2) {
-      restrictions.add(Restriction.plain("create_at between ? and ?"));
+      restrictions.add(between("create_at"));
     }
 
     if (updateAt != null && updateAt.length == 2) {
-      restrictions.add(Restriction.plain("update_at between ? and ?"));
+      restrictions.add(between("update_at"));
     }
 
   }
 
-  @Nullable
   @Override
-  public OrderByClause getOrderByClause(EntityMetadata metadata) {
+  public OrderSpec resolveOrderByClause(EntityMetadata metadata) {
     if (sort != null) {
-      List<Pair<String, Order>> list = sort.entrySet().stream()
-              .map(entry -> {
-                EntityProperty property = metadata.findProperty(entry.getKey());
-                if (property != null) {
-                  return Pair.of(property.columnName, entry.getValue().order);
-                }
-                return null;
-              })
-              .filter(Objects::nonNull)
-              .toList();
-      return new MutableOrderByClause(list);
+      var builder = OrderSpec.builder();
+      for (var entry : sort.entrySet()) {
+        EntityProperty property = metadata.findProperty(entry.getKey());
+        if (property != null) {
+          builder.orderBy(property.getColumnName(), entry.getValue().order);
+        }
+      }
+      return builder.build();
     }
-    return OrderByClause.plain("update_at DESC, create_at DESC");
+    return OrderSpec.plain("update_at DESC, create_at DESC");
   }
 
   @Override
-  public void setParameter(EntityMetadata metadata, PreparedStatement smt) throws SQLException {
-    int idx = 1;
+  public int setParameter(EntityMetadata metadata, PreparedStatement smt, int idx) throws SQLException {
     if (StringUtils.hasText(q)) {
       String string = '%' + q.trim() + '%';
       smt.setString(idx++, string);
       smt.setString(idx++, string);
+    }
+
+    if (StringUtils.hasText(title)) {
+      smt.setString(idx++, '%' + title.trim() + '%');
+    }
+
+    if (StringUtils.hasText(content)) {
+      smt.setString(idx++, '%' + content.trim() + '%');
     }
 
     if (StringUtils.hasText(category)) {
@@ -137,9 +151,9 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
 
     if (updateAt != null && updateAt.length == 2) {
       smt.setObject(idx++, updateAt[0]);
-      smt.setObject(idx, updateAt[1]);
+      smt.setObject(idx++, updateAt[1]);
     }
-
+    return idx;
   }
 
   @Override
@@ -172,9 +186,14 @@ public class ArticleConditionForm implements ConditionStatement, DebugDescriptiv
   public String toString() {
     return ToStringBuilder.forInstance(this)
             .append("q", q)
+            .append("title", title)
+            .append("content", content)
             .append("category", category)
             .append("status", status)
             .append("sort", sort)
+            .append("createAt", createAt)
+            .append("updateAt", updateAt)
             .toString();
   }
+
 }
