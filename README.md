@@ -173,12 +173,16 @@ cd blog-frontend/mobile && pnpm build
 
 ## 📚 API 文档
 
-项目暂未内置 Swagger/OpenAPI 自动生成文档。以下入口可供参考：
+项目提供 OpenAPI 3.0 规范文件，可直接导入 Swagger UI / Redoc 等工具浏览：
 
-- **代码即文档**：公开 API 位于 `blog-api/src/main/java/cn/taketoday/blog/web/http/`，管理后台 API 位于 `web/console/`（路径前缀 `/console/*`
-  ），直接阅读 `@RestController` 即可。
+- **规范文件**：`blog-api/docs/openapi.yaml`
+- **本地预览**：将文件导入 https://editor.swagger.io 或本地 Swagger UI 即可查看全部接口与鉴权说明。
+
+其余入口：
+
+- **代码即文档**：公开 API 位于 `blog-api/src/main/java/cn/taketoday/blog/web/http/`，管理后台 API 位于 `web/console/`（路径前缀 `/console/*`），直接阅读 `@RestController` 即可。
 - **Console 生成**：在 `blog-frontend/console` 下执行 `pnpm openapi`（umi openapi）可基于后端接口生成类型定义。
-- **鉴权**：登录 / 博主接口需要会话或 API Key，见下文「API Key」章节。
+- **鉴权**：登录 / 博主接口支持浏览器会话（`SESSION` Cookie，博主接口需博主账号）或 API Key，见下文「API Key」章节。
 
 ## 🔑 API Key
 

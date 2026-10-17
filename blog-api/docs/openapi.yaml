@@ -8,11 +8,11 @@ info:
     ## 鉴权
 
     - **公开接口**（`/api/*`）：无需登录即可访问。
-    - **用户接口**（`/api/auth` 中部分接口）：需要在请求头携带会话标识，
-      通过 `Authentication-Info` 请求头传递 Session Id。
+    - **用户接口**（`/api/auth` 中部分接口）：需要处于登录状态，
+      浏览器会话通过 `SESSION` Cookie 自动携带。
     - **管理后台接口**（`/api/console/*`、`/api/statistics/*`）：需要博主权限，
       支持以下两种方式之一：
-      1. 会话鉴权：请求头 `Authentication-Info` 携带已登录博主 Session Id；
+      1. 会话鉴权：浏览器登录会话（`SESSION` Cookie），需为博主账号；
       2. API Key 鉴权：请求头 `Authorization: <api-key>` 或 `X-API-Key: <api-key>`。
   version: "3.3-SNAPSHOT"
   contact:
@@ -233,7 +233,7 @@ paths:
       tags:
         - 认证
       summary: 获取当前登录用户信息
-      description: 需要登录用户会话（`Authentication-Info` 请求头）。
+      description: 获取当前登录用户信息。需要处于登录状态（浏览器请求自动携带 `SESSION` Cookie）。
       security:
         - AuthenticationInfo: []
       responses:
@@ -1816,9 +1816,11 @@ components:
   securitySchemes:
     AuthenticationInfo:
       type: apiKey
-      in: header
-      name: Authentication-Info
-      description: 登录会话标识（Session Id）。登录后由服务端签发，后续请求在请求头携带。
+      in: cookie
+      name: SESSION
+      description: |
+        登录会话标识（Session Id）。登录成功后由服务端在 `SESSION` Cookie 中下发，
+        浏览器会自动携带，无需手动添加。
     BloggerAuth:
       type: apiKey
       in: header
@@ -1826,7 +1828,7 @@ components:
       description: |
         博主权限认证。两种方式均可：
         - 请求头 `X-API-Key: <api-key>`；
-        - 请求头 `Authorization: <api-key>`（或携带登录会话 `Authentication-Info` 头）。
+        - 请求头 `Authorization: <api-key>`（或依赖已登录博主的 `SESSION` Cookie）。
 
   parameters:
     Page:
