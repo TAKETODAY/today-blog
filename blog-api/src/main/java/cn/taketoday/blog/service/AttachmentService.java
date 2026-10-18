@@ -165,6 +165,7 @@ public class AttachmentService {
 
   private File saveFile(Part file, String uploadUrl) throws IOException {
     File dest = attachmentConfig.getLocalFile(uploadUrl);
+    dest.getParentFile().mkdirs();
     file.transferTo(dest);
     return dest;
   }

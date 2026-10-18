@@ -27,6 +27,8 @@ server:
       max-header-list-size: 1024
       push-enabled: false
       connect-protocol-enabled: false
+  multipart:
+    field-size-threshold: 10MB
 
 datasource:
   username: root
@@ -41,6 +43,9 @@ datasource:
 site:
   #aliyun.oss.enable=false
   host: http://localhost:8080
+
+attachment:
+  outside-resource: ${user.home}/today-blog/data
 
 aliyun:
   oss:
