@@ -19,6 +19,7 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { Footer, Header } from './components';
+import RouteLoading from './components/RouteLoading';
 import { http } from 'core';
 import { Layout } from 'antd';
 import { ArticleLayout, SearchLayout } from './layouts';
@@ -60,7 +61,7 @@ export default () => {
       <Layout>
         <Header/>
         <Content>
-          <Suspense fallback={<div>页面加载中...</div>}>
+          <Suspense fallback={<RouteLoading />}>
             <Routes>
             <Route path="/login" element={<Login/>}/>
             <Route path="/BadRequest" element={<ErrorPage status='400'/>}/>
