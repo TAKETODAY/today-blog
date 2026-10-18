@@ -18,13 +18,15 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
+import { lazy } from 'react';
+
 import ArticleList from './ArticleList';
 import Breadcrumb from './Breadcrumb';
 import CategoriesListGroup from './CategoriesListGroup';
 import ArticleComment from './comment/ArticleComment';
 import CommentEdit from './comment/CommentEdit';
 import CommentList from './comment/List';
-import Editor from './Editor';
+const Editor = lazy(() => import('./Editor'));
 import Footer from './Footer';
 import Header from './Header';
 import Image from './Image';
@@ -57,4 +59,3 @@ export {
   AdminLink,
   ApiLink
 };
-

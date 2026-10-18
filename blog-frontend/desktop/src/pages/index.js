@@ -18,13 +18,15 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import ArticleDetail from './ArticleDetail';
-import CategoriesDetail from './CategoriesDetail';
-import Home from './Home';
-import LabelsDetail from './LabelsDetail';
-import Login from './Login';
-import ErrorPage from './ErrorPage';
-import Search from './Search';
+import { lazy } from 'react';
+
+const ArticleDetail = lazy(() => import('./ArticleDetail'));
+const CategoriesDetail = lazy(() => import('./CategoriesDetail'));
+const Home = lazy(() => import('./Home'));
+const LabelsDetail = lazy(() => import('./LabelsDetail'));
+const Login = lazy(() => import('./Login'));
+const ErrorPage = lazy(() => import('./ErrorPage'));
+const Search = lazy(() => import('./Search'));
 
 export {
   Login,

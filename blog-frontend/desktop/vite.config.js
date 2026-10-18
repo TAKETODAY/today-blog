@@ -32,9 +32,24 @@ export default defineConfig({
   },
   build: {
     outDir: 'build',
-    chunkSizeWarningLimit: 4096,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-redux', 'react-router-dom'],
+          antd: ['antd', '@ant-design/icons'],
+          editor: ['codemirror', 'codemirror-spell-checker', 'highlight.js', 'markdown-it', 'markdown-it-emoji'],
+        },
+      },
+    },
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/setupTests.js',
+    css: true,
   },
 })

@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { Footer, Header } from './components';
@@ -60,7 +60,8 @@ export default () => {
       <Layout>
         <Header/>
         <Content>
-          <Routes>
+          <Suspense fallback={<div>页面加载中...</div>}>
+            <Routes>
             <Route path="/login" element={<Login/>}/>
             <Route path="/BadRequest" element={<ErrorPage status='400'/>}/>
             <Route path="/bad-request" element={<ErrorPage status='400'/>}/>
@@ -88,11 +89,11 @@ export default () => {
                 </Routes>
               </ArticleLayout>
             }/>
-          </Routes>
+            </Routes>
+          </Suspense>
         </Content>
         <Footer/>
       </Layout>
     </>
   );
 }
-
