@@ -19,20 +19,24 @@
  */
 
 'use strict';
-require('codemirror/addon/edit/continuelist.js');
-require('./tablist');
-require('codemirror/addon/display/fullscreen.js');
-require('codemirror/mode/markdown/markdown.js');
-require('codemirror/addon/mode/overlay.js');
-require('codemirror/addon/display/placeholder.js');
-require('codemirror/addon/selection/mark-selection.js');
-require('codemirror/addon/search/searchcursor.js');
-require('codemirror/mode/gfm/gfm.js');
-require('codemirror/mode/xml/xml.js');
+import 'codemirror/addon/edit/continuelist.js';
+import './tablist';
+import 'codemirror/addon/display/fullscreen.js';
+import 'codemirror/mode/markdown/markdown.js';
+import 'codemirror/addon/mode/overlay.js';
+import 'codemirror/addon/display/placeholder.js';
+import 'codemirror/addon/selection/mark-selection.js';
+import 'codemirror/addon/search/searchcursor.js';
+import 'codemirror/mode/gfm/gfm.js';
+import 'codemirror/mode/xml/xml.js';
+import 'codemirror/lib/codemirror.css';
 
-const CodeMirror = require('codemirror');
-const { getSession, saveSession, getStorage, saveStorage } = require("core");
-const CodeMirrorSpellChecker = require('codemirror-spell-checker');
+import CodeMirror from 'codemirror';
+import { getSession, saveSession, getStorage, saveStorage } from "core";
+import CodeMirrorSpellChecker from 'codemirror-spell-checker';
+import hljs from 'highlight.js';
+import markdownIt from 'markdown-it';
+import emoji from 'markdown-it-emoji';
 
 // Some variables
 const isMac = /Mac/.test(navigator.platform);
@@ -1678,8 +1682,6 @@ function EasyMDE(options) {
 
   // markdownIt
   // -------------------------------------
-  var hljs = require('highlight.js')
-  var emoji = require('markdown-it-emoji')
   const renderingConfig = Object.assign({
     html: false,                // Enable HTML tags in source
     xhtmlOut: false,            // Use '/' to close single tags (<br />).This is only for full CommonMark compatibility.
@@ -1706,7 +1708,7 @@ function EasyMDE(options) {
       return '' // use external default escaping
     }
   }, options.renderingConfig || {})
-  this.markdownIt = require('markdown-it')(renderingConfig).use(emoji)
+  this.markdownIt = markdownIt(renderingConfig).use(emoji)
 
   if (options.uploadImage) {
     var self = this;
@@ -2565,4 +2567,4 @@ EasyMDE.prototype.toTextArea = function () {
   cm.toTextArea();
 };
 
-module.exports = EasyMDE;
+export default EasyMDE;

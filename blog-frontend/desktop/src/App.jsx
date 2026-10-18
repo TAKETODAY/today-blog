@@ -16,7 +16,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { Footer, Header } from './components';
 import { http } from 'core';
@@ -60,40 +60,35 @@ export default () => {
       <Layout>
         <Header/>
         <Content>
-          <Switch>
-            <Route path="/login" exact component={Login}/>
-            <Route path={['/BadRequest', "/bad-request"]} exact>
-              <ErrorPage status='400'/>
-            </Route>
-            <Route path={['/NotFound', "/not-found"]} exact>
-              <ErrorPage status='404'/>
-            </Route>
-            <Route path={['/AccessForbidden', "/access-forbidden"]} exact>
-              <ErrorPage status='403'/>
-            </Route>
-            <Route path={["/MethodNotAllowed", "/method-not-allowed"]} exact>
-              <ErrorPage status='405'/>
-            </Route>
-            <Route path={['/InternalServerError', "/internal-server-error"]} exact>
-              <ErrorPage status='500'/>
-            </Route>
-            <Route exact path="/search">
+          <Routes>
+            <Route path="/login" element={<Login/>}/>
+            <Route path="/BadRequest" element={<ErrorPage status='400'/>}/>
+            <Route path="/bad-request" element={<ErrorPage status='400'/>}/>
+            <Route path="/NotFound" element={<ErrorPage status='404'/>}/>
+            <Route path="/not-found" element={<ErrorPage status='404'/>}/>
+            <Route path="/AccessForbidden" element={<ErrorPage status='403'/>}/>
+            <Route path="/access-forbidden" element={<ErrorPage status='403'/>}/>
+            <Route path="/MethodNotAllowed" element={<ErrorPage status='405'/>}/>
+            <Route path="/method-not-allowed" element={<ErrorPage status='405'/>}/>
+            <Route path="/InternalServerError" element={<ErrorPage status='500'/>}/>
+            <Route path="/internal-server-error" element={<ErrorPage status='500'/>}/>
+            <Route path="/search" element={
               <SearchLayout>
                 <Search/>
               </SearchLayout>
-            </Route>
-            <Route>
+            }/>
+            <Route path="/*" element={
               <ArticleLayout>
-                <Switch>
-                  <Route exact path='/' component={Home}/>
-                  <Route exact path="/tags/:tagsId" component={LabelsDetail}/>
-                  <Route exact path="/articles/:articleId" component={ArticleDetail}/>
-                  <Route exact path="/categories/:categoryId" component={CategoriesDetail}/>
-                  <Redirect to="/not-found"/>
-                </Switch>
+                <Routes>
+                  <Route path="/" element={<Home/>}/>
+                  <Route path="/tags/:tagsId" element={<LabelsDetail/>}/>
+                  <Route path="/articles/:articleId" element={<ArticleDetail/>}/>
+                  <Route path="/categories/:categoryId" element={<CategoriesDetail/>}/>
+                  <Route path="*" element={<Navigate to="/not-found" replace/>}/>
+                </Routes>
               </ArticleLayout>
-            </Route>
-          </Switch>
+            }/>
+          </Routes>
         </Content>
         <Footer/>
       </Layout>

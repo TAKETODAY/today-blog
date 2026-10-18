@@ -1,4 +1,5 @@
 import * as React from "react"
+import markdown from "./markdown"
 import "./markdown.css"
 import "../../assets/css/github.css"
 
@@ -85,7 +86,6 @@ export default class Editor extends React.PureComponent {
   }
 
   createEditor = () => {
-    const markdown = require("./markdown")
     const initialOptions = {
       element: document.getElementById(this.id),
       autosave: {

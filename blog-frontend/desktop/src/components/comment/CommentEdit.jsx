@@ -20,7 +20,6 @@ import { connect } from "react-redux";
 import { Button, Form, Input, message } from 'antd';
 import { GlobalOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 
-import { withRouter } from "react-router-dom";
 import { commentService } from 'src/services';
 import { Editor, Image } from 'src/components';
 import { updateUserSession } from "src/redux/actions";
@@ -132,4 +131,4 @@ const CommentEdit = props => {
 
 export default connect(
     userSessionOptionsMapStateToProps, { updateUserSession }
-)(withRouter(CommentEdit))
+)(CommentEdit)

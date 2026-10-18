@@ -18,7 +18,7 @@
 import { LockOutlined } from '@ant-design/icons';
 import { Form, Input, message, Skeleton } from 'antd';
 import React, { useCallback } from 'react';
-import { Link, useHistory, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import zone from '../assets/images/share/zone.png';
 import { AdminLink, ArticleComment, HttpError } from 'src/components';
 import { articleService } from 'src/services';
@@ -61,7 +61,7 @@ function setSEO(article) {
 }
 
 export default () => {
-  const history = useHistory()
+  const navigate = useNavigate()
   const [, setNav] = useBreadcrumb()
   const [userSession] = useUserSession()
   const { key } = useQueryParams()
@@ -112,7 +112,7 @@ export default () => {
       }
 
       if (status === 404) {
-        history.push("/not-found")
+        navigate("/not-found")
       }
 
       if (err.response) {

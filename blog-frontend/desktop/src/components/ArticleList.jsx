@@ -20,11 +20,12 @@
 
 import { Empty, Skeleton } from 'antd';
 import React from 'react';
-import { Link, withRouter } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { arrayNotEquals, getRandLabel, isNotEmpty } from 'core';
 import { Image } from './';
 import { connect } from "react-redux";
+import { withRouter } from "../utils/withRouter";
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
 import HttpError from "./http/HttpError";
@@ -71,7 +72,7 @@ class ArticleList extends React.Component {
                 </span>
               }
               <span className="summary" dangerouslySetInnerHTML={{ __html: article.summary }}
-                    onClick={() => this.props.history.push(`/articles/${article.uri}`)}/>
+                    onClick={() => this.props.navigate(`/articles/${article.uri}`)}/>
               {isNotEmpty(article.cover) &&
                 <span className="img">
                   <Image alt={article.summary} src={article.cover} original={false}/>
