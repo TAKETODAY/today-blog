@@ -30,6 +30,7 @@ const { REACT_APP_ENV } = process.env;
 const production = process.env.NODE_ENV === 'production'
 
 export default defineConfig({
+  plugins: ['./config/plugins/e2e-temp'],
   // Umi 3 的 Pro preset 曾注入这些变量；Umi 4 需要显式定义浏览器替换值。
   define: {
     REACT_APP_ENV: REACT_APP_ENV || false,

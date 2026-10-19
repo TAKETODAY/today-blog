@@ -33,7 +33,7 @@ async function main() {
       env.E2E_BASE_URL = `http://localhost:${port}`;
       await new Promise((resolve, reject) => {
         server = spawn(process.execPath, [require.resolve('@umijs/max/bin/max'), 'dev'], {
-          env: { ...env, PORT: String(port), BROWSER: 'none', MOCK: 'none', UMI_ENV: 'dev' },
+          env: { ...env, CONSOLE_E2E: '1', PORT: String(port), BROWSER: 'none', MOCK: 'none', UMI_ENV: 'dev' },
           detached: process.platform !== 'win32',
           stdio: ['ignore', 'pipe', 'pipe'],
         });
