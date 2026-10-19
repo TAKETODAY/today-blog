@@ -28,6 +28,7 @@ import { extractData, getCacheable } from "@/utils";
 import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
 import Forbidden from "@/pages/403";
 import defaultSettings from '../config/defaultSettings';
+import { loadLayoutSettings } from '@/utils/layout-settings';
 
 /**
  * @see https://umijs.org/zh-CN/plugins/plugin-initial-state
@@ -53,13 +54,13 @@ export async function getInitialState(): Promise<{
     return {
       options,
       currentUser,
-      settings: {},
+      settings: loadLayoutSettings(),
       fetchUserInfo,
     };
   }
   return {
     options,
-    settings: {},
+    settings: loadLayoutSettings(),
     fetchUserInfo,
   };
 }

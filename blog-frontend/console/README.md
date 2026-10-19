@@ -21,6 +21,10 @@ pnpm tsc                 # TypeScript 检查
 `/blog-admin/`，路由仍使用 Hash 模式。服务端部署时需要保留完整的 dist 目录，包括异步分包。
 新工具链不再需要 `--openssl-legacy-provider`，不再支持 IE 11。
 
+开发服务运行期间避免同时执行 `max setup`、安装依赖或生产构建，这些操作可能重建 `.umi`，
+导致正在编译的服务短暂无法解析框架别名或生成模块。测试命令仅在生成文件缺失时执行 setup；
+修改框架配置后，先停止开发服务，再重新启动以生成最新配置。
+
 ## Umi 4 迁移说明
 
 单元测试集中放在 `tests/unit/`，按 `components/`、`utils/`、`umi/` 分类，不放入 `src/`。

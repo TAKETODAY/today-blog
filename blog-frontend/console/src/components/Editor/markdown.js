@@ -18,16 +18,17 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import('codemirror/addon/edit/continuelist.js');
-import('./tablist');
-import('codemirror/addon/display/fullscreen.js');
-import('codemirror/mode/markdown/markdown.js');
-import('codemirror/addon/mode/overlay.js');
-import('codemirror/addon/display/placeholder.js');
-import('codemirror/addon/selection/mark-selection.js');
-import('codemirror/addon/search/searchcursor.js');
-import('codemirror/mode/gfm/gfm.js');
-import('codemirror/mode/xml/xml.js');
+// 必需插件必须在构造编辑器之前完成注册，不能使用未等待的动态导入。
+import 'codemirror/addon/edit/continuelist.js';
+import './tablist';
+import 'codemirror/addon/display/fullscreen.js';
+import 'codemirror/mode/xml/xml.js';
+import 'codemirror/mode/markdown/markdown.js';
+import 'codemirror/addon/mode/overlay.js';
+import 'codemirror/addon/display/placeholder.js';
+import 'codemirror/addon/selection/mark-selection.js';
+import 'codemirror/addon/search/searchcursor.js';
+import 'codemirror/mode/gfm/gfm.js';
 
 import markdownIt from 'markdown-it'
 import CodeMirrorSpellChecker from 'codemirror-spell-checker'

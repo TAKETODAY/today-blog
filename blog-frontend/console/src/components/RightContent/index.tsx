@@ -2,6 +2,7 @@ import { Space, Tag } from 'antd';
 import React from 'react';
 import { SelectLang, useModel } from '@umijs/max';
 import Avatar from './AvatarDropdown';
+import LayoutSettings from '@/components/LayoutSettings';
 import styles from './index.less';
 
 const ENVTagColor = {
@@ -25,6 +26,7 @@ const GlobalHeaderRight: React.FC = () => {
   }
   return (
       <Space className={className}>
+        <LayoutSettings />
         <Avatar menu/>
         {REACT_APP_ENV && (
             <span>

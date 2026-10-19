@@ -30,9 +30,9 @@
     "start:no-ui": "cross-env UMI_UI=none UMI_ENV=dev max dev",
     "start:pre": "cross-env REACT_APP_ENV=pre UMI_ENV=dev max dev",
     "start:test": "cross-env REACT_APP_ENV=test MOCK=none UMI_ENV=dev max dev",
-    "test": "max setup && jest",
+    "test": "node tests/prepare-umi.js && jest",
     "test:e2e": "node ./tests/run-tests.js",
-    "test:component": "max setup && jest tests/unit/components",
+    "test:component": "node tests/prepare-umi.js && jest tests/unit/components",
     "tsc": "tsc --noEmit"
   },
   "lint-staged": {
