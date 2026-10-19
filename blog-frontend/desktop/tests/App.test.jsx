@@ -3,23 +3,23 @@ import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { createStore } from 'redux';
-import App from './App';
+import App from '../src/App';
 
-vi.mock('./components', () => ({
+vi.mock('../src/components', () => ({
   Footer: () => <footer>footer</footer>,
   Header: () => <header>header</header>,
 }));
 
-vi.mock('./components/hooks', () => ({
+vi.mock('../src/components/hooks', () => ({
   useUserSession: () => [null],
 }));
 
-vi.mock('./layouts', () => ({
+vi.mock('../src/layouts', () => ({
   ArticleLayout: ({ children }) => <section data-testid="article-layout">{children}</section>,
   SearchLayout: ({ children }) => <section data-testid="search-layout">{children}</section>,
 }));
 
-vi.mock('src/pages', () => ({
+vi.mock('../src/pages', () => ({
   ArticleDetail: () => <div>article detail</div>,
   CategoriesDetail: () => <div>category detail</div>,
   ErrorPage: ({ status }) => <div>error {status}</div>,

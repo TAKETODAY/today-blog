@@ -55,7 +55,17 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           react: ['react', 'react-dom', 'react-redux', 'react-router-dom'],
           antd: ['antd', '@ant-design/icons'],
-          editor: ['codemirror', 'codemirror-spell-checker', 'highlight.js', 'markdown-it', 'markdown-it-emoji'],
+          codemirror: [
+            'codemirror',
+            'codemirror-spell-checker',
+          ],
+          markdown: [
+            'markdown-it',
+            'markdown-it-emoji',
+          ],
+          highlight: [
+            'highlight.js',
+          ],
         },
       },
     },
