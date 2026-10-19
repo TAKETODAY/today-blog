@@ -87,7 +87,7 @@ const initStore = (store) => {
 }
 
 const consoleLog = (options) => {
-  console.log(`%cTODAY BLOG%c\n代码是我心中的一首诗\n\n${options['site.copyright']}\n`,
+  globalThis.console.log(`%cTODAY BLOG%c\n代码是我心中的一首诗\n\n${options['site.copyright']}\n`,
       "font-size:96px;text-shadow: 1px 1px 1px rgba(0,0,0,.2);",
       "font-size:12px;color:rgba(0,0,0,.38);")
 }

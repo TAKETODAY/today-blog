@@ -1,9 +1,26 @@
 import { fileURLToPath, URL } from 'node:url'
+import { gzipSync } from 'node:zlib'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig({
-  plugins: [react()],
+function gzipAssets() {
+  return {
+    name: 'gzip-assets',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      for (const [fileName, asset] of Object.entries(bundle)) {
+        if (asset.type !== 'asset' && asset.type !== 'chunk') continue
+        if (!/\.(js|css|svg)$/.test(fileName)) continue
+        const source = asset.type === 'chunk' ? asset.code : asset.source
+        if (Buffer.byteLength(source) < 1024) continue
+        this.emitFile({ type: 'asset', fileName: `${fileName}.gz`, source: gzipSync(source) })
+      }
+    },
+  }
+}
+
+export default defineConfig(({ mode }) => ({
+  plugins: [react(), gzipAssets()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -42,9 +59,12 @@ export default defineConfig({
         },
       },
     },
+    esbuild: {
+      drop: mode === 'production' ? ['console', 'debugger'] : [],
+    },
   },
   define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    'process.env.NODE_ENV': JSON.stringify(mode),
   },
   test: {
     environment: 'jsdom',
@@ -52,4 +72,4 @@ export default defineConfig({
     setupFiles: './src/setupTests.js',
     css: true,
   },
-})
+}))
