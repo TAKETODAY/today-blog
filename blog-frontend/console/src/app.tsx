@@ -18,21 +18,16 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import type { RequestConfig, RunTimeLayoutConfig } from 'umi';
-import { history } from 'umi';
+import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
+import { history } from '@umijs/max';
 import type { Settings as LayoutSettings } from '@ant-design/pro-layout';
-import { PageLoading } from '@ant-design/pro-layout';
 
 import Footer from '@/components/Footer';
 import RightContent from '@/components/RightContent';
 import { extractData, getCacheable } from "@/utils";
 import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
 import Forbidden from "@/pages/403";
-
-/** 获取用户信息比较慢的时候会展示一个 loading */
-export const initialStateConfig = {
-  loading: <PageLoading/>,
-}
+import defaultSettings from '../config/defaultSettings';
 
 /**
  * @see https://umijs.org/zh-CN/plugins/plugin-initial-state
@@ -72,6 +67,8 @@ export async function getInitialState(): Promise<{
 // https://umijs.org/zh-CN/plugins/plugin-layout
 export const layout: RunTimeLayoutConfig = ({ initialState }) => {
   return {
+    ...defaultSettings,
+    siderWidth: 208,
     rightContentRender: () => <RightContent/>,
     disableContentMargin: false,
     footerRender: () => <Footer/>,

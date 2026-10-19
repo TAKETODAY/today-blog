@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useParams } from '@umijs/max';
 import { BackTop, Button, message } from "antd";
 import MarkdownEditor from "@/components/Editor";
 import ImageChooserModal from "@/components/ImageChooserModal";
@@ -35,8 +36,8 @@ import { PageLoading } from "@ant-design/pro-layout";
 import { Attachment } from "@/components/Attachment/data";
 import { useCDN } from "@/components/hooks";
 
-export default (props: { match: { params: { id: string } } }) => {
-  const { id } = props.match.params
+export default () => {
+  const { id } = useParams<{ id: string }>()
   const articleCacheKey = "article_modify_md_" + id
 
   const cdn = useCDN()

@@ -1,6 +1,6 @@
 import { Space, Tag } from 'antd';
 import React from 'react';
-import { SelectLang, useModel } from 'umi';
+import { SelectLang, useModel } from '@umijs/max';
 import Avatar from './AvatarDropdown';
 import styles from './index.less';
 

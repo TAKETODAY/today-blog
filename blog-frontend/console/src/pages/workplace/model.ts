@@ -1,4 +1,4 @@
-import { Effect, Reducer } from 'umi';
+import { Effect, Reducer } from '@umijs/max';
 import { DashboardStatistics } from './data.d';
 import request from "umi-request";
 

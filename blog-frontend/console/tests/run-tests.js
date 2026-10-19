@@ -31,15 +31,14 @@ startServer.stdout.on('data', (data) => {
   console.log(data.toString());
   // hack code , wait umi
   if (
-    (!once && data.toString().indexOf('Compiled successfully') >= 0) ||
-    data.toString().indexOf('Theme generated successfully') >= 0
+    !once && /Compiled successfully|\[Webpack\] Compiled/.test(data.toString())
   ) {
     // eslint-disable-next-line
     once = true;
     console.log('Development server is started, ready to run tests.');
     const testCmd = spawn(
       /^win/.test(process.platform) ? 'npm.cmd' : 'npm',
-      ['test', '--', '--maxWorkers=1', '--runInBand'],
+       ['test', '--', '--config', 'jest.e2e.config.js', '--runInBand'],
       {
         stdio: 'inherit',
       },

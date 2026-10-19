@@ -28,7 +28,7 @@ import { format, isEmpty } from "@/utils";
 import { ArticleItem } from "./data.d";
 import { deleteArticle, getCategories, queryArticles, updateStatus } from "./service";
 import { PlusOutlined } from "@ant-design/icons/lib";
-import { Link } from "react-router-dom";
+import { Link } from '@umijs/max';
 import { ArticleLink } from "@/components/Article";
 import Image from "@/components/Image";
 import { CheckCircleOutlined, ExclamationCircleOutlined, SyncOutlined } from "@ant-design/icons";

@@ -38,7 +38,7 @@ const defaultOption = {
         let len = 10;
         while (len--) {
           res.unshift(now.toLocaleTimeString().replace(/^\D*/, ''));
-          now = new Date(now - 2000);
+          now = new Date(now.getTime() - 2000);
         }
         return res;
       })()
@@ -90,8 +90,7 @@ const defaultOption = {
   ]
 };
 
-var app = {};
-app.count = 11;
+const app = { count: 11 };
 
 const FieldStatistics: React.FC<{ data: { [key: string]: any } }> = (props) => {
   const [options, setOptions] = useState(defaultOption)
@@ -113,7 +112,7 @@ const FieldStatistics: React.FC<{ data: { [key: string]: any } }> = (props) => {
     data0.shift();
     data0.push(Math.round(Math.random() * 1000));
     data1.shift();
-    data1.push((Math.random() * 10 + 5).toFixed(1) - 0);
+    data1.push(Number((Math.random() * 10 + 5).toFixed(1)));
 
     // 移动
     newOption.xAxis[0].data.shift();

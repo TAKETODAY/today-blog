@@ -1,5 +1,5 @@
 import { http } from "@/utils";
-import { request } from 'umi';
+import { request } from '@umijs/max';
 
 export async function queryTags() {
   return request('/api/console/tags').then(data => ({ data }))
@@ -16,4 +16,3 @@ export async function update(tag) {
 export async function deleteLabel(tag) {
   return http.delete(`/api/console/tags/${ tag.id }`)
 }
-

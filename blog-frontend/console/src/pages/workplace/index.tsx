@@ -18,7 +18,7 @@
 import { Avatar, Card, Col, Row, Skeleton, Statistic, Table, Tag } from 'antd';
 import React, { useEffect } from 'react';
 
-import { connect, Dispatch, Link } from 'umi';
+import { connect, Dispatch, Link } from '@umijs/max';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import moment from 'moment';
 import { ModalState } from './model';

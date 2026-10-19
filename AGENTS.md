@@ -108,6 +108,12 @@ CREATE DATABASE IF NOT EXISTS today DEFAULT CHARACTER SET utf8mb4;
 Flyway 在启动时按顺序执行：`repair()` → `baseline()` → `migrate()`（在 `AppConfig` 中通过 `FlywayMigrationStrategy` Bean 配置）。
 Flyway 迁移文件位于 `src/main/resources/db/migration/`，基线版本 `3.1.0`。
 
+## 主题色规则
+
+- 公开博客、管理后台及后端生成的页面、模板统一使用 `#337ab7` 作为品牌主题色（Primary）。
+- 新增页面、调整样式或升级 UI 组件库时，保持主题配置、主按钮、链接及选中态的品牌主色一致；优先复用现有主题变量或设计 Token。
+- Hover、Active 等交互态可从该主色派生；成功、警告、错误等语义色独立保留。更换品牌主题色须经用户明确要求。
+
 ## 前端命令
 
 ```bash

@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useParams } from '@umijs/max';
 import { BackTop, Button, message } from "antd";
 import { extractData, getStorage, isEmpty, removeStorage, saveStorage, showHttpErrorMessage } from '@/utils'
 import articleService from '@/services/ArticleService'
@@ -32,8 +33,8 @@ import RichTextEditor from "../components/RichTextEditor";
 import { ArticleItem } from "../data";
 import { PageLoading } from "@ant-design/pro-layout";
 
-export default (props: { match: { params: { id: string } } }) => {
-  const { id } = props.match.params
+export default () => {
+  const { id } = useParams<{ id: string }>()
   const articleCacheKey = "article_modify_rich_" + id
 
   const [loading, setLoading] = useState<boolean>(true)

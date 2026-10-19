@@ -19,7 +19,7 @@
  */
 
 // https://umijs.org/config/
-import { defineConfig } from 'umi';
+import { defineConfig } from '@umijs/max';
 import defaultSettings from './defaultSettings';
 import proxy from './proxy';
 import routes from './routes';
@@ -29,17 +29,20 @@ const CompressionPlugin = require('compression-webpack-plugin')
 const { REACT_APP_ENV } = process.env;
 const production = process.env.NODE_ENV === 'production'
 
-export function isNotNull(object: any) {
-  return !(object === null || object === undefined)
-}
-
 export default defineConfig({
+  // Umi 3 的 Pro preset 曾注入这些变量；Umi 4 需要显式定义浏览器替换值。
+  define: {
+    REACT_APP_ENV: REACT_APP_ENV || false,
+    ANT_DESIGN_PRO_ONLY_DO_NOT_USE_IN_YOUR_PRODUCTION: false,
+  },
   hash: true, // 配置是否让生成的文件包含 hash 后缀，通常用于增量发布和避免浏览器加载缓存。
   antd: {},
 
-  dva: {
-    hmr: true,
-  },
+  dva: {},
+  model: {},
+  initialState: { loading: '@/components/InitialStateLoading' },
+  access: { strictMode: true },
+  request: {},
   title: 'TODAY BLOG',
   history: {
     type: 'hash'
@@ -62,7 +65,7 @@ export default defineConfig({
     baseNavigator: true,
   },
   targets: {
-    ie: 11,
+    chrome: 100,
   },
   // umi routes: https://umijs.org/docs/routing
   routes,
@@ -70,57 +73,13 @@ export default defineConfig({
   theme: {
     'primary-color': defaultSettings.primaryColor,
   },
-  // esbuild is father build tools
-  // https://umijs.org/plugins/plugin-esbuild
-  esbuild: false,
   ignoreMomentLocale: true,
   proxy: proxy[REACT_APP_ENV || 'dev'],
   manifest: {
     basePath: '/',
   },
-  // Fast Refresh 热更新
-  fastRefresh: {},
-  nodeModulesTransform: { type: 'none' },
   mfsu: false,
-  webpack5: {},
-  // exportStatic: {},
-  // chunks: ['vendors', 'umi'],
-  dynamicImport: {
-    loading: '@ant-design/pro-layout/es/PageLoading',
-  },
-  chainWebpack: function (config, { webpack }) {
-    if (isNotNull(this.dynamicImport)) {
-      if (production) {
-        console.log("dynamicImport", this.dynamicImport)
-        config.merge({
-          optimization: {
-            splitChunks: {
-              chunks: 'all',
-              minSize: 30000,
-              minChunks: 2,
-              automaticNameDelimiter: '.',
-              cacheGroups: {
-                vendor: {
-                  name: 'vendors',
-                  // @ts-ignore
-                  test({ resource }) {
-                    return /[\\/]node_modules[\\/]/.test(resource);
-                  },
-                  priority: 10,
-                },
-              },
-            },
-          }
-        })
-
-        config.plugin('LimitChunkCountPlugin').use(require("webpack").optimize.LimitChunkCountPlugin, [
-          {
-            maxChunks: 1,
-          },
-        ])
-      }
-    }
-
+  chainWebpack: function (config) {
     if (production) {
 
       //gzip压缩
