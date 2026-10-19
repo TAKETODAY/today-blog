@@ -22,6 +22,7 @@ import React from 'react';
 import { Modal } from 'antd';
 
 interface CreateFormProps {
+  children?: React.ReactNode;
   modalVisible: boolean;
   onCancel: () => void;
   title: string;

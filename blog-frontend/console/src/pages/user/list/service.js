@@ -16,7 +16,7 @@
  */
 
 import { http } from '@/utils'
-import { request } from "umi";
+import { request } from '@umijs/max';
 
 export async function queryUsers(params) {
   const { pageSize, current, ...rest } = params

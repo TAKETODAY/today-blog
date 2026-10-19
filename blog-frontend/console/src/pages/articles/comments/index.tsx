@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { articleMessage as t } from '@/utils/article-i18n';
 import { Divider, message, Popconfirm, Popover, Tag } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
@@ -32,11 +33,11 @@ import { ArticleLink } from "@/components/Article";
  * 更新
  */
 const handleUpdate = async (id: number, comment: CommentItem) => {
-  const hide = message.loading(`正在更新`)
+  const hide = message.loading(t('updating'))
   return update(id, comment)
       .finally(hide)
-      .then(() => message.success('更新信息成功', 1))
-      .catch(() => message.error('更新信息失败请重试！'))
+      .then(() => message.success(t('updateSuccess'), 1))
+      .catch(() => message.error(t('updateFailed')))
 }
 
 /**
@@ -45,42 +46,42 @@ const handleUpdate = async (id: number, comment: CommentItem) => {
  * @param comment
  */
 const handleRemove = async (comment: CommentItem) => {
-  const hide = message.loading(`正在删除`)
+  const hide = message.loading(t('deleting'))
   return deleteComment(comment)
       .finally(hide)
-      .then(() => message.success('删除成功，即将刷新', 1))
-      .catch(() => message.error('删除失败，请重试'))
+      .then(() => message.success(t('deleteSuccess'), 1))
+      .catch(() => message.error(t('deleteFailed')))
 }
 
 const renderStatusMenu = (comment: CommentItem, reload: () => void) => {
 
   const toggleStatus = async (status: string) => {
     return updateStatus(comment.id, status)
-        .then(() => message.success('状态更新成功', 0.75))
+        .then(() => message.success(t('statusSuccess'), 0.75))
         .then(reload)
-        .catch(() => message.error('状态更新失败，请重试'))
+        .catch(() => message.error(t('statusFailed')))
   }
 
   const renderCHECKED = () => {
     return (<>
-      <Popconfirm title="您确定要撤销审核该评论吗" placement="topLeft" onConfirm={() => toggleStatus('CHECKING')}>
-        <a href="#">撤销审核</a>
+      <Popconfirm title={t('confirmUnapprove')} placement="topLeft" onConfirm={() => toggleStatus('CHECKING')}>
+        <a href="#">{t('unapprove')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title="您确定要将该评论放进回收站吗" placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
-        <a href="#">回收</a>
+      <Popconfirm title={t('confirmRecycleComment')} placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
+        <a href="#">{t('recycle')}</a>
       </Popconfirm>
     </>)
   }
 
   const renderRECYCLE = () => {
     return (<>
-      <Popconfirm title="您确定要发布该文章吗" placement="topLeft" onConfirm={() => toggleStatus('CHECKED')}>
-        <a href="#">通过审核</a>
+      <Popconfirm title={t('confirmApprove')} placement="topLeft" onConfirm={() => toggleStatus('CHECKED')}>
+        <a href="#">{t('approve')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title="您确定要撤销审核该评论吗" placement="topLeft" onConfirm={() => toggleStatus('CHECKING')}>
-        <a href="#">撤销审核</a>
+      <Popconfirm title={t('confirmUnapprove')} placement="topLeft" onConfirm={() => toggleStatus('CHECKING')}>
+        <a href="#">{t('unapprove')}</a>
       </Popconfirm>
     </>)
   }
@@ -95,12 +96,12 @@ const renderStatusMenu = (comment: CommentItem, reload: () => void) => {
   // CHECKING
   return (
       <>
-        <Popconfirm title="您确定要审核通过该评论吗" placement="topLeft" onConfirm={() => toggleStatus('CHECKED')}>
-          <a href="#">通过审核</a>
+        <Popconfirm title={t('confirmApprove')} placement="topLeft" onConfirm={() => toggleStatus('CHECKED')}>
+          <a href="#">{t('approve')}</a>
         </Popconfirm>
         <Divider type="vertical"/>
-        <Popconfirm title="您确定要将该评论放进回收站吗" placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
-          <a href="#">回收</a>
+        <Popconfirm title={t('confirmRecycleComment')} placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
+          <a href="#">{t('recycle')}</a>
         </Popconfirm>
       </>
   )
@@ -123,11 +124,11 @@ export default () => {
 
   const columns: ProColumns<CommentItem>[] = useMemo(() => [
     {
-      title: '评论内容',
+      title: t('commentContent'),
       width: 250,
       hideInSearch: true,
       render: (_, comment) => (
-          <Popover title={`评论：《${comment.articleTitle}》`} trigger="hover"
+          <Popover title={t('commentTitle', { title: comment.articleTitle })} trigger="hover"
                    content={<div style={{ maxWidth: 1000, height: 'auto', overflowY: "auto" }}
                                  dangerouslySetInnerHTML={{ __html: comment.content }}/>}>
             <span>{computeSummary(comment.content)?.substring(0, 70)}</span>
@@ -135,37 +136,37 @@ export default () => {
       )
     },
     {
-      title: '状态',
+      title: t('status'),
       width: 80,
       dataIndex: 'status',
       valueEnum: {
-        "CHECKED": { text: "已审核" },
-        "CHECKING": { text: "未审核" },
-        "RECYCLE": { text: "回收站" }
+        "CHECKED": { text: t('checked') },
+        "CHECKING": { text: t('checking') },
+        "RECYCLE": { text: t('recycleBin') }
       },
       render: (_, comment: CommentItem) => {
-        const statusDesc = getCommentStatusDesc(comment.status)
+        const statusDesc = t(comment.status === 'CHECKED' ? 'checked' : comment.status === 'CHECKING' ? 'checking' : 'recycleBin')
         return <Tag title={statusDesc}>{statusDesc}</Tag>
       }
     },
     {
-      title: '昵称',
+      title: t('nickname'),
       width: 120,
       dataIndex: 'commenter',
     },
     {
-      title: '邮箱',
+      title: t('email'),
       width: 180,
       dataIndex: 'email',
     },
     {
-      title: '个人网站',
+      title: t('website'),
       width: 150,
       dataIndex: 'commenterSite',
       hideInForm: true
     },
     {
-      title: '文章',
+      title: t('article'),
       width: 200,
       hideInSearch: true,
       hideInForm: true,
@@ -178,13 +179,13 @@ export default () => {
       }
     },
     {
-      title: '时间',
+      title: t('time'),
       width: 180,
       hideInSearch: true,
       render: (_, comment: CommentItem) => (format(comment.createAt, "lll"))
     },
     {
-      title: '操作',
+      title: t('actions'),
       valueType: 'option',
       width: 220,
       fixed: 'right',
@@ -198,10 +199,10 @@ export default () => {
               setUpdateModalVisible(true)
               setUpdateComment({ ...record })
             }}
-            > 编辑</a>
+            >{t('edit')}</a>
             <Divider type="vertical"/>
-            <Popconfirm title="您确定要删除该评论吗？" onConfirm={() => remove(record)}>
-              <a href="#">删除</a>
+            <Popconfirm title={t('confirmDeleteComment')} onConfirm={() => remove(record)}>
+              <a href="#">{t('delete')}</a>
             </Popconfirm>
           </>
       ),
@@ -212,7 +213,7 @@ export default () => {
       <PageContainer>
         <ProTable<CommentItem>
             rowKey="id"
-            headerTitle="文章评论列表"
+            headerTitle={t('comments')}
             actionRef={actionRef}
             request={queryComments}
             columns={columns}

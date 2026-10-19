@@ -19,6 +19,7 @@
  */
 
 import React, { useState } from 'react'
+import { articleMessage as t } from '@/utils/article-i18n';
 import { Button, Form, Input, Modal } from 'antd'
 
 const FormItem = Form.Item
@@ -44,8 +45,8 @@ const UpdateForm = props => {
   const renderContent = () => {
     return (
         <>
-          <FormItem name="content" label="评论内容">
-            <Input placeholder="请输入"></Input>
+          <FormItem name="content" label={t('commentContent')}>
+            <Input placeholder={t('inputPlaceholder')}></Input>
           </FormItem>
         </>
     )
@@ -54,15 +55,15 @@ const UpdateForm = props => {
   const renderFooter = () => {
     return (
         <>
-          <Button onClick={hideUpdateModal}>取消</Button>
-          <Button type="primary" onClick={update}>更新</Button>
+          <Button onClick={hideUpdateModal}>{t('cancel')}</Button>
+          <Button type="primary" onClick={update}>{t('update')}</Button>
         </>
     )
   }
 
   return (
       <Modal
-          title="文章分类配置"
+          title={t('commentSettings')}
           width={800}
           destroyOnClose
           footer={renderFooter()}

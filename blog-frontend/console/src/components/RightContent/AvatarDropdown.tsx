@@ -21,7 +21,7 @@
 import React from 'react';
 import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 import { Avatar, Menu, Modal, Spin } from 'antd';
-import { history, Link, useModel } from 'umi';
+import { history, Link, useModel } from '@umijs/max';
 import HeaderDropdown from '../HeaderDropdown';
 import styles from './index.less';
 import { outLogin } from '@/services/ant-design-pro/login';

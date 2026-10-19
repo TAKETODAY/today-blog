@@ -1,5 +1,5 @@
 import { http } from "@/utils";
-import { request } from 'umi';
+import { request } from '@umijs/max';
 
 export async function queryCategories(params) {
   const { pageSize, current, ...rest } = params
@@ -18,4 +18,3 @@ export async function update(oldName, category) {
 export async function deleteCategory(category) {
   return http.delete(`/api/console/categories/${ category.name }`)
 }
-

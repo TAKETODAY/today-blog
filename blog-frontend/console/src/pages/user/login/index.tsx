@@ -19,7 +19,7 @@ import { LockOutlined, UserOutlined, } from '@ant-design/icons';
 import { Alert, message, Popconfirm } from 'antd';
 import React, { useState } from 'react';
 import { LoginForm, ProFormCheckbox, ProFormText } from '@ant-design/pro-form';
-import { FormattedMessage, history, SelectLang, useIntl, useModel } from 'umi';
+import { FormattedMessage, history, SelectLang, useIntl, useModel } from '@umijs/max';
 import Footer from '@/components/Footer';
 import { login } from '@/services/ant-design-pro/login';
 
@@ -47,9 +47,8 @@ const LoginMessage: React.FC<{ content?: string; }> = ({ content }) => (
 const goto = () => {
   if (!history) return;
   setTimeout(() => {
-    const { query } = history.location;
-    const { redirect } = query as { redirect: string };
-    history.push(redirect || '/');
+    const redirect = new URLSearchParams(history.location.search).get('redirect');
+    history.push(redirect?.startsWith('/') && !redirect.startsWith('//') ? redirect : '/');
   }, 10);
 };
 

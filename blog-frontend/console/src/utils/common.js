@@ -18,7 +18,7 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import { history } from 'umi';
+import { history } from '@umijs/max';
 import { isEmpty, isNotEmpty, isZero } from "@/utils/object"
 import moment from "moment";
 

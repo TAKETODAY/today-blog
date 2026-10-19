@@ -1,26 +1,21 @@
 {
+  "extends": "./src/.umi/tsconfig.json",
   "compilerOptions": {
     "outDir": "build/dist",
     "module": "esnext",
     "target": "esnext",
     "lib": ["esnext", "dom"],
     "sourceMap": true,
-    "baseUrl": ".",
     "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "allowJs": true,
     "skipLibCheck": true,
     "experimentalDecorators": true,
-    "strict": false,
-    "paths": {
-      "@/*": ["./src/*"],
-      "@@/*": ["./src/.umi/*"]
-    }
+    "strict": false
   },
   "include": [
     "mock/**/*",

@@ -15,12 +15,11 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { connect } from "react-redux";
 import { Button, Form, Input, message } from 'antd';
 import { GlobalOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 
-import { withRouter } from "react-router-dom";
 import { commentService } from 'src/services';
 import { Editor, Image } from 'src/components';
 import { updateUserSession } from "src/redux/actions";
@@ -103,8 +102,10 @@ const CommentEdit = props => {
       }
     </div>
 
-    <Editor placeholder={options['comment.placeholder']}
-            setEditor={setEditor} options={{ autofocus: false }}/>
+    <Suspense fallback={<div>编辑器加载中...</div>}>
+      <Editor placeholder={options['comment.placeholder']}
+              setEditor={setEditor} options={{ autofocus: false }}/>
+    </Suspense>
 
     <div className="comment-edit-footer">
       <Form layout="inline" form={form} initialValues={commenterInfo()} onFinish={createComment}>
@@ -132,4 +133,4 @@ const CommentEdit = props => {
 
 export default connect(
     userSessionOptionsMapStateToProps, { updateUserSession }
-)(withRouter(CommentEdit))
+)(CommentEdit)

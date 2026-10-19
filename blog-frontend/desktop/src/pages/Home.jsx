@@ -27,6 +27,7 @@ import { navigationsMapStateToProps } from "../redux/action-types";
 import { updateNavigations } from "../redux/actions";
 import { articleService } from '../services';
 import { setTitle } from "../utils/common"
+import { withRouter } from "../utils/withRouter"
 
 class Home extends React.Component {
 
@@ -101,4 +102,4 @@ class Home extends React.Component {
 
 export default connect(
     navigationsMapStateToProps, { updateNavigations }
-)(Home)
+)(withRouter(Home))

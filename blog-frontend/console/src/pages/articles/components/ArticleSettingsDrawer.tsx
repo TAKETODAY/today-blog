@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { articleMessage as t } from '@/utils/article-i18n';
 import { computeSummary, extractData, isEmpty, isNotEmpty, showHttpErrorMessageVoid } from "@/utils";
 import { Button, Col, DatePicker, Drawer, Form, Input, Row, Select } from "antd";
 import articleService from "@/services/ArticleService";
@@ -96,14 +97,14 @@ export default (props: any) => {
   return (
       <Drawer
           width={800}
-          title="配置文章属性"
+          title={t('settings')}
           onClose={onClose}
           open={visible}
           bodyStyle={{ paddingBottom: 80 }}
           footer={
             <div style={{ textAlign: "right" }}>
-              <Button onClick={onClose} style={{ marginRight: 8 }}>取消</Button>
-              <Button loading={publishing} onClick={onPublish} type="primary">确认发布</Button>
+              <Button onClick={onClose} style={{ marginRight: 8 }}>{t('cancel')}</Button>
+              <Button loading={publishing} onClick={onPublish} type="primary">{t('confirmPublishAction')}</Button>
             </div>
           }
       >
@@ -111,14 +112,14 @@ export default (props: any) => {
           <Row gutter={16}>
             {/*文章标题*/}
             <Col span={24}>
-              <Form.Item name="title" label="文章标题" rules={[{ required: true, message: "请填写文章标题！" }]}>
-                <Input placeholder="文章标题" className="article-title"/>
+              <Form.Item name="title" label={t('articleTitle')} rules={[{ required: true, message: t('titleRequired') }]}>
+                <Input placeholder={t('articleTitle')} className="article-title"/>
               </Form.Item>
             </Col>
             {/*文章封面*/}
             <Col span={24}>
-              <Form.Item name="cover" label="文章封面">
-                <ImageChooser placeholder="文章封面" placement="right" width="80%"/>
+              <Form.Item name="cover" label={t('articleCover')}>
+                <ImageChooser placeholder={t('articleCover')} placement="right" width="80%"/>
               </Form.Item>
             </Col>
           </Row>
@@ -126,10 +127,10 @@ export default (props: any) => {
           <Row gutter={16}>
             {/*文章分类*/}
             <Col span={12}>
-              <Form.Item label="文章分类" name="category" rules={[{ required: true, message: "请选择一个文章分类" }]}>
+              <Form.Item label={t('articleCategory')} name="category" rules={[{ required: true, message: t('chooseCategory') }]}>
                 <Select
                     loading={categoriesLoading}
-                    placeholder="请选择一个文章分类"
+                    placeholder={t('chooseCategory')}
                     onDropdownVisibleChange={loadCategories}>
                   {categories.map((category: PostCategory) =>
                       <Option key={category.name} value={category.name} title={category.description}>
@@ -141,8 +142,8 @@ export default (props: any) => {
             </Col>
             {/*文章标签*/}
             <Col span={12}>
-              <Form.Item name="labels" label="文章标签" initialValue={article.labels}>
-                <Select placeholder="请选择文章标签" loading={labelsLoading} mode="tags"
+              <Form.Item name="labels" label={t('labels')} initialValue={article.labels}>
+                <Select placeholder={t('chooseLabels')} loading={labelsLoading} mode="tags"
                         showArrow onDropdownVisibleChange={loadLabels}>
                   {labels.map((label: PostLabel) =>
                       <Option value={label.name} title={label.name}>{label.name}</Option>
@@ -154,13 +155,13 @@ export default (props: any) => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="password" label="访问密码" initialValue={article.password}>
-                <Input placeholder="请输入访问密码"/>
+              <Form.Item name="password" label={t('accessPassword')} initialValue={article.password}>
+                <Input placeholder={t('passwordPlaceholder')}/>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="uri" label="文章地址" initialValue={article.uri}>
-                <Input placeholder="请输入文章地址"/>
+              <Form.Item name="uri" label={t('uri')} initialValue={article.uri}>
+                <Input placeholder={t('uriPlaceholder')}/>
               </Form.Item>
             </Col>
           </Row>
@@ -168,18 +169,18 @@ export default (props: any) => {
           <Row gutter={16}>
             {/*发布日期*/}
             <Col span={12}>
-              <Form.Item name="createAt" label="发布日期">
+              <Form.Item name="createAt" label={t('createdAt')}>
                 {/*@ts-ignore*/}
                 <DatePicker showTime style={{ width: "100%" }} format="yyyy-MM-DD HH:mm:ss"/>
               </Form.Item>
             </Col>
             {/*文章状态*/}
             <Col span={12}>
-              <Form.Item name="status" label="文章状态" rules={[{ required: true, message: "请选择一个文章状态" }]}>
-                <Select placeholder="请选择文章状态">
-                  <Option value="DRAFT">草稿</Option>
-                  <Option value="RECYCLE">回收站</Option>
-                  <Option value="PUBLISHED">已发布</Option>
+              <Form.Item name="status" label={t('articleStatus')} rules={[{ required: true, message: t('chooseStatus') }]}>
+                <Select placeholder={t('chooseStatus')}>
+                  <Option value="DRAFT">{t('draft')}</Option>
+                  <Option value="RECYCLE">{t('recycleBin')}</Option>
+                  <Option value="PUBLISHED">{t('published')}</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -188,9 +189,9 @@ export default (props: any) => {
           <Row gutter={16}>
             {/*版权信息*/}
             <Col span={24}>
-              <Form.Item name="copyright" label="版权信息" rules={[{ required: true, message: "请输入版权信息" }]}
+              <Form.Item name="copyright" label={t('copyright')} rules={[{ required: true, message: t('copyrightPlaceholder') }]}
                          initialValue="本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。">
-                <Input placeholder="请输入版权信息"/>
+                <Input placeholder={t('copyrightPlaceholder')}/>
               </Form.Item>
             </Col>
           </Row>
@@ -198,8 +199,8 @@ export default (props: any) => {
           {/*文章摘要*/}
           <Row gutter={16}>
             <Col span={24}>
-              <Form.Item name="summary" label="文章摘要">
-                <TextArea rows={10} placeholder="请输入文章摘要"/>
+              <Form.Item name="summary" label={t('summary')}>
+                <TextArea rows={10} placeholder={t('summaryPlaceholder')}/>
               </Form.Item>
               <Button type="primary" onClick={
                 () => {
@@ -207,7 +208,7 @@ export default (props: any) => {
                   form.setFieldsValue({ summary })
                 }}
               >
-                <ReloadOutlined/> 自动生成摘要
+                <ReloadOutlined/> {t('generateSummary')}
               </Button>
             </Col>
           </Row>

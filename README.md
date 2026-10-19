@@ -7,16 +7,15 @@
 
 后台使用 https://github.com/TAKETODAY/today-infrastructure 作为基础框架，该项目也是其最佳实践。
 
-一个完整的多端博客系统，包含公开博客（PC / 移动端）与后台管理三套前端，以及一个自研框架驱动的 REST API 后端。
+一个完整的博客系统，包含公开 PC 博客、后台管理端，以及一个自研框架驱动的 REST API 后端。
 
 ## ✨ 技术栈
 
 - **后端**：Java 17+（推荐 JDK 25） + [TODAY Infrastructure](https://github.com/TAKETODAY/today-infrastructure)（自研框架，Netty
   嵌入式服务器、虚拟线程、Flyway 迁移、FreeMarker、Caffeine 缓存）、MySQL
 - **前端**：
-    1. PC 端使用 React（CRA + react-app-rewired）
-    2. 移动端使用 Vue 2（vue-cli-service）
-    3. 后台管理使用 React + Ant Design（UmiJS 3）
+    1. 公开 PC 博客使用 React + Vite
+    2. 后台管理使用 React + Ant Design（UmiJS 3）
 
 ## 📁 项目结构
 
@@ -26,7 +25,6 @@ today-blog-opensource
 ├── blog-frontend/             # 前端 monorepo（pnpm workspace）
 │   ├── console/               # 后台管理（React 17 + UmiJS 3 + Ant Design Pro 4）
 │   ├── desktop/               # PC 端公开博客（React 16 + CRA）
-│   ├── mobile/                # 移动端公开博客（Vue 2）
 │   └── common/                # 前端共享模块
 ├── buildSrc/                  # Gradle 自定义插件
 └── resources/                 # 站点静态资源
@@ -39,7 +37,7 @@ today-blog-opensource
 | JDK     | **17+**（最低），推荐 **25**（SDKMAN `25-librca`） | 后端编译与运行                                                      |
 | Gradle  | 随 wrapper 自动下载（9.8.x）                       | 无需手动安装，使用 `./gradlew`                                      |
 | MySQL   | 8.x                                                | 本地开发数据库，`localhost:3306`                                    |
-| Node.js | 16 及以上（建议 Node LTS）                         | 老版本 webpack，脚本已内置 `NODE_OPTIONS=--openssl-legacy-provider` |
+| Node.js | 18 及以上（建议 Node LTS）                         | Console 仍使用旧版 webpack，相关脚本已内置 `NODE_OPTIONS=--openssl-legacy-provider` |
 | pnpm    | 10.x                                               | 前端 monorepo 包管理（可用 Corepack 启用）                          |
 
 > 测试无需 MySQL：后端测试通过内嵌 **MariaDB4j**（端口 3307）运行。
@@ -88,7 +86,6 @@ cd blog-frontend && pnpm install
 |---------------------|-------------------------|--------------|-----------------------|----------------------------|
 | Console（管理后台） | `blog-frontend/console` | `pnpm dev`   | http://localhost:8000 | `/api` `/upload` → `:8080` |
 | Desktop（PC 博客）  | `blog-frontend/desktop` | `pnpm start` | http://localhost:3000 | → `:8080`                  |
-| Mobile（移动博客）  | `blog-frontend/mobile`  | `pnpm serve` | http://localhost:3001 | `/api` `/upload` → `:8080` |
 
 开发时请保持后端先运行于 `:8080`，前端通过代理转发请求。
 
@@ -167,8 +164,6 @@ find.sh      # 查看进程
 cd blog-frontend/console && pnpm build
 # desktop
 cd blog-frontend/desktop && pnpm build
-# mobile
-cd blog-frontend/mobile && pnpm build
 ```
 
 ## 📚 API 文档

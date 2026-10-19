@@ -152,12 +152,6 @@ class NavHeader extends React.Component {
                 : <Link to='/login' title="登录"><i className="fa fa-sign-in"/> 登录</Link>
               }
             </Menu.Item>
-
-            {/*    TODO        {window.shouldGotoMobile &&
-              <Menu.Item key="isMobile">
-                <a href={window.mobilePath}><i className="fa fa-mobile"/> 跳转到移动版本</a>
-              </Menu.Item>
-            } */}
           </Menu>
         </div>
       </Header>

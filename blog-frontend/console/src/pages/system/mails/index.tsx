@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { message, Modal, Popconfirm } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { request } from 'umi';
+import { request } from '@umijs/max';
 
 type MailItem = {
   id: number;

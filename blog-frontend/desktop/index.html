@@ -1,0 +1,45 @@
+<!--
+  ~ Copyright 2017 - 2026 the original author or authors.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program. If not, see [https://www.gnu.org/licenses/]
+  -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8"/>
+  <title>代码是我心中的一首诗 - TODAY BLOG</title>
+  <meta name="renderer" content="webkit">
+  <meta name="copyright" content="Copyright © TODAY & 2017 - 2024 All Rights Reserved."/>
+  <meta http-equiv="Content-Language" content="zh-cn"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="/manifest.json"/>
+</head>
+<body>
+<noscript>You need to enable JavaScript to run this app.</noscript>
+<div id="app"></div>
+<script type="module" src="/src/index.jsx"></script>
+<script type="text/javascript">
+  const stylesheet = url => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = url;
+    document.head.appendChild(link);
+  };
+
+  stylesheet('https://cdn.bootcdn.net/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css');
+</script>
+</body>
+</html>

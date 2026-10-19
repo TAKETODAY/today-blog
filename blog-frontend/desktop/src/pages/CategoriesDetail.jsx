@@ -27,6 +27,7 @@ import { updateNavigations } from "src/redux/actions";
 import { navigationsMapStateToProps } from "src/redux/action-types";
 import { applySEO, extractData, isNotEmpty, scrollTop } from 'core';
 import { setTitle } from "../utils/common"
+import { withRouter } from "../utils/withRouter"
 
 class CategoriesDetail extends React.Component {
 
@@ -121,5 +122,5 @@ class CategoriesDetail extends React.Component {
 
 export default connect(
     navigationsMapStateToProps, { updateNavigations }
-)(CategoriesDetail)
+)(withRouter(CategoriesDetail))
 
