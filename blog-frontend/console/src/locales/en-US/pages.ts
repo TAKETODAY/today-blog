@@ -1,8 +1,8 @@
 export default {
   'pages.layouts.userLayout.title':
-    'Ant Design is the most influential web design specification in Xihu district',
+    'Code is a poem in my heart',
   'pages.login.accountLogin.tab': 'Account Login',
-  'pages.login.accountLogin.errorMessage': 'Incorrect username/password（admin/ant.design)',
+  'pages.login.accountLogin.errorMessage': 'Incorrect username or password',
   'pages.login.username.placeholder': 'Username',
   'pages.login.username.required': 'Please input your username!',
   'pages.login.password.placeholder': 'Password',
@@ -16,7 +16,7 @@ export default {
   'pages.login.captcha.required': 'Please input verification code!',
   'pages.login.phoneLogin.getVerificationCode': 'Get Code',
   'pages.getCaptchaSecondText': 'sec(s)',
-  'pages.login.rememberMe': 'Remember me',
+  'pages.login.rememberMe': 'Remember email',
   'pages.login.forgotPassword': 'Forgot Password ?',
   'pages.login.submit': 'Login',
   'pages.login.loginWith': 'Login with :',

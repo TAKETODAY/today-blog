@@ -7,6 +7,8 @@ import settings from './zh-CN/settings';
 import pages from './zh-CN/pages';
 
 export default {
+  'app.layout.settings': '界面设置',
+  'app.layout.settings.saveFailed': '界面已更新，但浏览器未能保存设置，刷新后将恢复默认。',
   'navBar.lang': '语言',
   'layout.user.link.help': '帮助',
   'layout.user.link.privacy': '隐私',

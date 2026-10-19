@@ -7,6 +7,8 @@ import settings from './en-US/settings';
 import pages from './en-US/pages';
 
 export default {
+  'app.layout.settings': 'Interface settings',
+  'app.layout.settings.saveFailed': 'Settings applied, but could not be saved. Defaults will be restored after reloading.',
   'navBar.lang': 'Languages',
   'layout.user.link.help': 'Help',
   'layout.user.link.privacy': 'Privacy',

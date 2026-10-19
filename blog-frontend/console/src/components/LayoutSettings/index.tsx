@@ -2,17 +2,19 @@ import { useState } from 'react';
 import { Button, message } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
 import { SettingDrawer } from '@ant-design/pro-layout';
-import { useModel } from '@umijs/max';
+import { useIntl, useModel } from '@umijs/max';
 import { normalizeLayoutSettings, saveLayoutSettings } from '@/utils/layout-settings';
 import styles from './index.less';
 
 export default function LayoutSettings() {
   const [open, setOpen] = useState(false);
+  const intl = useIntl();
+  const title = intl.formatMessage({ id: 'app.layout.settings' });
   const { initialState, setInitialState } = useModel('@@initialState');
 
   return <div className={styles.settings}>
-    <Button type="text" icon={<SettingOutlined />} aria-label="界面设置"
-      title="界面设置" onClick={() => setOpen(true)} />
+    <Button type="text" icon={<SettingOutlined />} aria-label={title}
+      title={title} onClick={() => setOpen(true)} />
     {open && <SettingDrawer
       collapse={open}
       onCollapseChange={setOpen}
@@ -28,7 +30,7 @@ export default function LayoutSettings() {
           saveLayoutSettings(settings);
         }
         catch {
-          message.warning('界面已更新，但浏览器未能保存设置，刷新后将恢复默认。');
+          message.warning(intl.formatMessage({ id: 'app.layout.settings.saveFailed' }));
         }
       }}
     />}
