@@ -19,6 +19,7 @@
  */
 
 import { useRef, useState } from 'react';
+import { articleMessage as t } from '@/utils/article-i18n';
 import { Button, Divider, message, Popconfirm } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
@@ -36,16 +37,16 @@ import CreateForm from "@/pages/articles/components/CreateForm";
  * @param category
  */
 const handleUpdate = async (oldName: string, category: CategoryItem) => {
-  const hide = message.loading(`正在更新: ${oldName}`)
+  const hide = message.loading(t('updatingName', { name: oldName }))
   try {
     await update(oldName, category)
     hide()
-    message.success('更新信息成功', 1)
+    message.success(t('updateSuccess'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error('更新信息失败请重试！')
+    message.error(t('updateFailed'))
     return false
   }
 }
@@ -55,30 +56,30 @@ const handleUpdate = async (oldName: string, category: CategoryItem) => {
  * @param category
  */
 const handleRemove = async (category: CategoryItem) => {
-  const hide = message.loading(`正在删除: ${category.name}`)
+  const hide = message.loading(t('deletingName', { name: category.name }))
   try {
     await deleteCategory(category)
     hide()
-    message.success('删除成功，即将刷新', 1)
+    message.success(t('deleteSuccess'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error('删除失败，请重试')
+    message.error(t('deleteFailed'))
     return false
   }
 }
 const handleCreate = async (category: CategoryItem) => {
-  const hide = message.loading(`正在创建: ${category.name}`)
+  const hide = message.loading(t('creatingName', { name: category.name }))
   try {
     await create(category)
     hide()
-    message.success('创建文章分类成功，即将刷新', 1)
+    message.success(t('categoryCreated'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error('创建文章分类失败，请重试')
+    message.error(t('categoryCreateFailed'))
     return false
   }
 }
@@ -96,29 +97,29 @@ export default () => {
 
   const columns: ProColumns<CategoryItem>[] = [
     {
-      title: '名称',
+      title: t('name'),
       dataIndex: 'name',
       hideInSearch: true,
     },
     {
-      title: '排序',
+      title: t('order'),
       dataIndex: 'order',
       valueType: 'digit',
       hideInSearch: true,
     },
     {
-      title: '文章数',
+      title: t('count'),
       dataIndex: 'articleCount',
       hideInSearch: true,
       hideInForm: true
     },
     {
-      title: '描述',
+      title: t('description'),
       dataIndex: 'description',
       hideInSearch: true,
     },
     {
-      title: '操作',
+      title: t('actions'),
       valueType: 'option',
       render: (_, record) => (
           <>
@@ -126,10 +127,10 @@ export default () => {
               setUpdateModalVisible(true)
               setUpdateCategory({ ...record })
             }}
-            > 编辑</a>
+            >{t('edit')}</a>
             <Divider type="vertical"/>
-            <Popconfirm title="您确定要删除该文章吗" onConfirm={() => remove(record)}>
-              <a href="#">删除</a>
+            <Popconfirm title={t('confirmDeleteCategory')} onConfirm={() => remove(record)}>
+              <a href="#">{t('delete')}</a>
             </Popconfirm>
           </>
       ),
@@ -140,17 +141,17 @@ export default () => {
       <PageContainer>
         <ProTable<CategoryItem>
             rowKey="name"
-            headerTitle="文章分类列表"
+            headerTitle={t('categories')}
             actionRef={actionRef}
             request={queryCategories}
             columns={columns}
             toolBarRender={() => [
               <Button type="primary" onClick={() => setCreateModalVisible(true)}>
-                <PlusOutlined/> 新建
+                <PlusOutlined/> {t('create')}
               </Button>]
             }
         />
-        <CreateForm title="新建文章分类" onCancel={() => setCreateModalVisible(false)} modalVisible={createModalVisible}>
+        <CreateForm title={t('createCategory')} onCancel={() => setCreateModalVisible(false)} modalVisible={createModalVisible}>
           <ProTable<CategoryItem, CategoryItem>
               onSubmit={async (value) => {
                 if (await handleCreate(value)) {

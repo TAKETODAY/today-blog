@@ -19,6 +19,7 @@
  */
 
 import React, { useState } from 'react'
+import { articleMessage as t } from '@/utils/article-i18n';
 import { Button, Form, Input, InputNumber, Modal } from 'antd'
 
 const FormItem = Form.Item
@@ -44,14 +45,14 @@ const ArticleUpdateForm = props => {
   const renderContent = () => {
     return (
         <>
-          <FormItem name="order" label="排序" rules={[{ required: true, message: '请输入排序！' }]}>
-            <InputNumber min={0} max={128} placeholder="请输入"/>
+          <FormItem name="order" label={t('order')} rules={[{ required: true, message: t('orderRequired') }]}>
+            <InputNumber min={0} max={128} placeholder={t('inputPlaceholder')}/>
           </FormItem>
-          <FormItem name="name" label="分类名" rules={[{ required: true, message: '请输入分类名！' }]}>
-            <Input placeholder="请输入"/>
+          <FormItem name="name" label={t('categoryName')} rules={[{ required: true, message: t('categoryRequired') }]}>
+            <Input placeholder={t('inputPlaceholder')}/>
           </FormItem>
-          <FormItem name="description" label="描述" rules={[{ required: true, message: '请输入出描述！' }]}>
-            <Input placeholder="请输入"/>
+          <FormItem name="description" label={t('description')} rules={[{ required: true, message: t('descriptionRequired') }]}>
+            <Input placeholder={t('inputPlaceholder')}/>
           </FormItem>
         </>
     )
@@ -60,15 +61,15 @@ const ArticleUpdateForm = props => {
   const renderFooter = () => {
     return (
         <>
-          <Button onClick={hideUpdateModal}>取消</Button>
-          <Button type="primary" onClick={update}>更新</Button>
+          <Button onClick={hideUpdateModal}>{t('cancel')}</Button>
+          <Button type="primary" onClick={update}>{t('update')}</Button>
         </>
     )
   }
 
   return (
       <Modal
-          title="文章分类配置"
+          title={t('categorySettings')}
           width={800}
           destroyOnClose
           footer={renderFooter()}

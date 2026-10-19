@@ -19,6 +19,7 @@
  */
 
 import { useState } from 'react';
+import { articleMessage as t } from '@/utils/article-i18n';
 import { BackTop, Button, message } from "antd";
 import MarkdownEditor from "@/components/Editor";
 import ImageChooserModal from "@/components/ImageChooserModal";
@@ -80,9 +81,9 @@ export default () => {
           setModalVisible(true)
         },
         className: "fa fa-upload",
-        title: "选择附件",
+        title: t('chooseAttachment'),
       }, "|", "table", "horizontal-rule", "|", "guide", "undo", "redo", "|", "preview", "side-by-side", "fullscreen", "|", {
-        title: "保存",
+        title: t('save'),
         name: "updateArticle",
         action: showDrawer,
         className: "fa fa-save",
@@ -98,7 +99,7 @@ export default () => {
     articleService.create(article).then((_: AxiosResponse) => {
       setDrawerVisible(false)
       removeStorage(articleCacheKey)
-      return message.success("文章发布成功")
+      return message.success(t('publishSuccess'))
     }).catch(showHttpErrorMessage)
         .finally(onFinally)
   }
@@ -113,10 +114,10 @@ export default () => {
 
   return (<>
         <div className="container shadow-box" style={{ marginTop: 22 }}>
-          <div className="data-list-title" style={{ borderLeft: 'none' }}>发表文章</div>
+          <div className="data-list-title" style={{ borderLeft: 'none' }}>{t('write')}</div>
           <div className="data" style={{ marginTop: 10 }}>
             <input value={post.title} maxLength={80} autoFocus={true}
-                   autoComplete="off" placeholder="请输入标题" className="article-title"
+                   autoComplete="off" placeholder={t('titlePlaceholder')} className="article-title"
                    onChange={(e) => {
                      setTitle(e.target.value)
                    }}
@@ -130,7 +131,7 @@ export default () => {
 
             <div style={{ textAlign: 'center', padding: 10 }}>
               <Button type="primary" onClick={showDrawer}>
-                <PlusOutlined/> 保存文章
+                <PlusOutlined/> {t('saveArticle')}
               </Button>
             </div>
 

@@ -1,4 +1,5 @@
 import component from './en-US/component';
+import articles from './en-US/articles';
 import globalHeader from './en-US/globalHeader';
 import menu from './en-US/menu';
 import pwa from './en-US/pwa';
@@ -7,6 +8,7 @@ import settings from './en-US/settings';
 import pages from './en-US/pages';
 
 export default {
+  ...articles,
   'app.layout.settings': 'Interface settings',
   'app.layout.settings.saveFailed': 'Settings applied, but could not be saved. Defaults will be restored after reloading.',
   'navBar.lang': 'Languages',

@@ -19,6 +19,7 @@
  */
 
 import React, { useState } from 'react'
+import { articleMessage as t } from '@/utils/article-i18n';
 import { Button, Form, Input, InputNumber, Modal } from 'antd'
 
 const FormItem = Form.Item
@@ -41,19 +42,19 @@ export default props => {
 
   return (
       <Modal
-          title="文章标签更新"
+          title={t('tagSettings')}
           width={ 800 }
           destroyOnClose
           footer={ <>
-            <Button onClick={ hideUpdateModal }>取消</Button>
-            <Button type="primary" onClick={ update }>更新</Button>
+            <Button onClick={ hideUpdateModal }>{t('cancel')}</Button>
+            <Button type="primary" onClick={ update }>{t('update')}</Button>
           </> }
           open={ updateModalVisible }
           onCancel={ () => hideUpdateModal() }
       >
         <Form { ...formLayout } form={ form } initialValues={ { ...values } }>
-          <FormItem name="name" label="标签名" rules={ [{ required: true, message: '请输入标签名！' }] }>
-            <Input placeholder="请输入"/>
+          <FormItem name="name" label={t('tagName')} rules={ [{ required: true, message: t('tagRequired') }] }>
+            <Input placeholder={t('inputPlaceholder')}/>
           </FormItem>
         </Form>
       </Modal>

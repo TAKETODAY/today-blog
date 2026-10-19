@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { articleMessage as t } from '@/utils/article-i18n';
 import { Button, Divider, message, Popconfirm, Popover, Tag } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
@@ -39,42 +40,42 @@ import { CheckCircleOutlined, ExclamationCircleOutlined, SyncOutlined } from "@a
  * @param article
  */
 const handleRemove = async (article: ArticleItem) => {
-  const hide = message.loading(`正在删除: ${article.title}`)
+  const hide = message.loading(t('deletingName', { name: article.title }))
   return deleteArticle(article)
       .finally(hide)
-      .then(() => message.success('删除成功', 1))
-      .catch(() => message.error('删除失败，请重试'))
+      .then(() => message.success(t('deleteSuccess'), 1))
+      .catch(() => message.error(t('deleteFailed')))
 }
 
 const renderStatusMenu = (article: ArticleItem, reload: () => Promise<any>) => {
 
   const toggleStatus = async (status: string) => {
     return updateStatus(article.id, status)
-        .then(() => message.success('切换状态成功，即将刷新', 1))
-        .catch(() => message.error('切换状态失败，请重试'))
+        .then(() => message.success(t('statusSuccess'), 1))
+        .catch(() => message.error(t('statusFailed')))
         .then(reload)
   }
 
   const renderPublished = () => {
     return (<>
-      <Popconfirm title="您确定要将定该文章作为草稿吗" placement="topLeft" onConfirm={() => toggleStatus('DRAFT')}>
-        <a href="#">草稿</a>
+      <Popconfirm title={t('confirmDraft')} placement="topLeft" onConfirm={() => toggleStatus('DRAFT')}>
+        <a href="#">{t('draft')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title="您确定要回收该文章吗" placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
-        <a href="#">回收</a>
+      <Popconfirm title={t('confirmRecycle')} placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
+        <a href="#">{t('recycle')}</a>
       </Popconfirm>
     </>)
   }
 
   const renderDraft = () => {
     return (<>
-      <Popconfirm title="您确定要发布该文章吗" placement="topLeft" onConfirm={() => toggleStatus('PUBLISHED')}>
-        <a href="#">发布</a>
+      <Popconfirm title={t('confirmPublish')} placement="topLeft" onConfirm={() => toggleStatus('PUBLISHED')}>
+        <a href="#">{t('publish')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title="您确定要回收该文章吗" placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
-        <a href="#">回收</a>
+      <Popconfirm title={t('confirmRecycle')} placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
+        <a href="#">{t('recycle')}</a>
       </Popconfirm>
     </>)
   }
@@ -88,12 +89,12 @@ const renderStatusMenu = (article: ArticleItem, reload: () => Promise<any>) => {
 
   return (
       <>
-        <Popconfirm title="您确定要发布该文章吗" placement="topLeft" onConfirm={() => toggleStatus('PUBLISHED')}>
-          <a href="#">发布</a>
+        <Popconfirm title={t('confirmPublish')} placement="topLeft" onConfirm={() => toggleStatus('PUBLISHED')}>
+          <a href="#">{t('publish')}</a>
         </Popconfirm>
         <Divider type="vertical"/>
-        <Popconfirm title="您确定要将该文章作为草稿吗" placement="topLeft" onConfirm={() => toggleStatus('DRAFT')}>
-          <a href="#">草稿</a>
+        <Popconfirm title={t('confirmDraft')} placement="topLeft" onConfirm={() => toggleStatus('DRAFT')}>
+          <a href="#">{t('draft')}</a>
         </Popconfirm>
       </>
   )
@@ -102,11 +103,11 @@ const renderStatusMenu = (article: ArticleItem, reload: () => Promise<any>) => {
 const renderStatus = (article: ArticleItem) => {
   switch (article.status) {
     case 'DRAFT' :
-      return <Tag color='processing' icon={<ExclamationCircleOutlined/>}>草稿</Tag>
+      return <Tag color='processing' icon={<ExclamationCircleOutlined/>}>{t('draft')}</Tag>
     case 'PUBLISHED' :
-      return <Tag color='success' icon={<CheckCircleOutlined/>}>已发布</Tag>
+      return <Tag color='success' icon={<CheckCircleOutlined/>}>{t('published')}</Tag>
     default :
-      return <Tag color='error' icon={<SyncOutlined/>}>回收站</Tag>
+      return <Tag color='error' icon={<SyncOutlined/>}>{t('recycleBin')}</Tag>
   }
 }
 
@@ -147,11 +148,11 @@ export default () => {
     },
     {
       width: 200,
-      title: '标题',
+      title: t('title'),
       fixed: 'left',
       dataIndex: 'title',
       render: (_, article) => (
-          <Popover title="文章标题" content={<span dangerouslySetInnerHTML={{ __html: article.title }}/>}>
+          <Popover title={t('articleTitle')} content={<span dangerouslySetInnerHTML={{ __html: article.title }}/>}>
             <ArticleLink article={article}>
               {article.title?.length > 15 ? `${article.title.substring(0, 15)}...` : article.title}
             </ArticleLink>
@@ -159,7 +160,7 @@ export default () => {
       )
     },
     {
-      title: '封面',
+      title: t('cover'),
       width: 150,
       dataIndex: 'cover',
       hideInSearch: true,
@@ -168,7 +169,7 @@ export default () => {
       ),
     },
     {
-      title: '分类',
+      title: t('category'),
       width: 100,
       dataIndex: 'category',
       valueEnum: categories,
@@ -177,7 +178,7 @@ export default () => {
       ),
     },
     {
-      title: '内容',
+      title: t('content'),
       width: 250,
       dataIndex: 'content',
       render: (_, article) => (
@@ -189,23 +190,23 @@ export default () => {
       )
     },
     {
-      title: '浏览量',
+      title: t('views'),
       width: 80,
       dataIndex: 'pv',
       sorter: true,
       hideInSearch: true
     },
     {
-      title: '密码',
+      title: t('password'),
       width: 100,
       dataIndex: 'password',
       hideInSearch: true
     },
     {
-      title: '状态',
+      title: t('status'),
       width: 100,
       dataIndex: 'status',
-      valueEnum: { 'PUBLISHED': { text: '已发布' }, 'DRAFT': { text: '草稿' }, 'RECYCLE': { text: '已回收' } },
+      valueEnum: { 'PUBLISHED': { text: t('published') }, 'DRAFT': { text: t('draft') }, 'RECYCLE': { text: t('recycled') } },
       render: (_, record) => (
           <>
             {renderStatus(record)}
@@ -213,7 +214,7 @@ export default () => {
       ),
     },
     {
-      title: '发表日期',
+      title: t('createdAt'),
       dataIndex: 'createAt',
       width: 220,
       sorter: true,
@@ -226,7 +227,7 @@ export default () => {
     },
     {
       width: 220,
-      title: '最后更改',
+      title: t('updatedAt'),
       sorter: true,
       dataIndex: 'updateAt',
       valueType: 'dateTimeRange',
@@ -238,16 +239,16 @@ export default () => {
     },
     {
       width: 180,
-      title: '操作',
+      title: t('actions'),
       fixed: 'right',
       valueType: 'option',
       render: (_, record) => (
           <>
             <Link to={isEmpty(record.markdown) ? `/articles/${record.id}/modify-rich-text` : `/articles/${record.id}/modify`}
-                  target='_blank'>修改</Link>
+                  target='_blank'>{t('edit')}</Link>
             <Divider type="vertical"/>
-            <Popconfirm title="您确定要删除该文章吗" placement="topLeft" onConfirm={() => remove(record)}>
-              <a href="#">删除</a>
+            <Popconfirm title={t('confirmDelete')} placement="topLeft" onConfirm={() => remove(record)}>
+              <a href="#">{t('delete')}</a>
             </Popconfirm>
             <Divider type="vertical"/>
             {
@@ -262,7 +263,7 @@ export default () => {
       <PageContainer>
         <ProTable<ArticleItem>
             rowKey="id"
-            headerTitle="博客文章列表"
+            headerTitle={t('list')}
             actionRef={actionRef}
             request={queryArticles}
             columns={columns}
@@ -270,12 +271,12 @@ export default () => {
             toolBarRender={() => [
               <Button type="primary">
                 <Link to="/articles/write-rich-text" target="_blank">
-                  <PlusOutlined/> 富文本
+                  <PlusOutlined/> {t('richText')}
                 </Link>
               </Button>,
               <Button type="primary">
                 <Link to="/articles/write" target="_blank">
-                  <PlusOutlined/> Markdown 格式
+                  <PlusOutlined/> {t('markdown')}
                 </Link>
               </Button>
             ]}

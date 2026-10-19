@@ -19,6 +19,7 @@
  */
 
 import React from 'react';
+import { articleMessage as t } from '@/utils/article-i18n';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@/components/ckeditor';
 //import '@/components/ckeditor';
@@ -41,7 +42,7 @@ export default (props) => {
       }
     },
     extraPlugins: [UploadAdapterPlugin],
-    placeholder: '在此处输入或粘贴您的内容!',
+    placeholder: t('editorPlaceholder'),
   }
 
   return (
@@ -81,4 +82,3 @@ export default (props) => {
     />
   )
 }
-

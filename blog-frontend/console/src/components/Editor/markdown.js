@@ -35,6 +35,7 @@ import CodeMirrorSpellChecker from 'codemirror-spell-checker'
 import hljs from 'highlight.js'
 import emoji from 'markdown-it-emoji'
 import CodeMirror from 'codemirror';
+import { articleMessage } from '@/utils/article-i18n';
 
 import { getSession, getStorage, saveSession, saveStorage } from '@/utils'
 
@@ -171,7 +172,12 @@ function createToolbarButton(options, enableActions, enableTooltips, shortcuts, 
   }
 
   if (options.title && enableTooltips) {
-    el.title = createTooltip(options.title, options.action, shortcuts);
+    const builtIn = toolbarBuiltInButtons[options.name];
+    const localized = builtIn && options.title === builtIn.title
+      && ['bold', 'italic', 'strikethrough', 'heading', 'code', 'quote', 'unordered-list',
+        'ordered-list', 'link', 'image', 'table', 'horizontal-rule', 'preview',
+        'side-by-side', 'fullscreen', 'guide', 'undo', 'redo'].includes(options.name);
+    el.title = createTooltip(localized ? articleMessage(`toolbar.${options.name}`) : options.title, options.action, shortcuts);
 
     if (isMac) {
       el.title = el.title.replace('Ctrl', '⌘');

@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { articleMessage as t } from '@/utils/article-i18n';
 import { useParams } from '@umijs/max';
 import { BackTop, Button, message } from "antd";
 import { extractData, getStorage, isEmpty, removeStorage, saveStorage, showHttpErrorMessage } from '@/utils'
@@ -58,7 +59,7 @@ export default () => {
     articleService.updateById(id, article).then((res: AxiosResponse) => {
       setDrawerVisible(false)
       removeStorage(articleCacheKey)
-      return message.success("更新成功")
+      return message.success(t('updateSuccess'))
     }).catch(showHttpErrorMessage)
         .finally(onFinally)
   }
@@ -94,7 +95,7 @@ export default () => {
   return (<>
         <div className="container" style={{ marginTop: 22 }}>
           <div className="shadow-box">
-            <div className="data-list-title" style={{ borderLeft: 'none' }}>修改文章</div>
+            <div className="data-list-title" style={{ borderLeft: 'none' }}>{t('editArticle')}</div>
             <div className="data" style={{ marginTop: 10 }}>
 
               <div className="row">
@@ -105,7 +106,7 @@ export default () => {
                       maxLength={80}
                       autoFocus={true}
                       className="article-title"
-                      placeholder="请输入标题"
+                      placeholder={t('titlePlaceholder')}
                       onChange={(e) => {
                         setTitle(e.target.value)
                       }}
@@ -119,7 +120,7 @@ export default () => {
                       </div>
                       <div style={{ textAlign: 'center', padding: 10 }}>
                         <Button type="primary" onClick={showDrawer}>
-                          <PlusOutlined/> 更新文章
+                          <PlusOutlined/> {t('updateArticle')}
                         </Button>
                       </div>
                     </div>
