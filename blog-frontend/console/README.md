@@ -35,13 +35,21 @@ pnpm tsc                 # TypeScript 检查
 - `initialState`、model、access、request、locale、layout、Dva 插件均保留。
 - Umi 的 request 改为基于 Axios，默认仍返回响应体；现有 `@/utils/http` 请求封装继续保留。
 - 默认按路由分包，不再强制将生产代码合并成一个 chunk。
-- 单元测试与旧 Puppeteer E2E 分开配置；E2E 依赖本地 Chrome 和后端服务，尚未完成新版运行验证。
+- 单元测试与 Puppeteer E2E 分开配置，浏览器测试位于 `tests/e2e/`。
 
-### 已知遗留问题
+### 浏览器回归测试
 
-`pnpm tsc` 仍会报告未被业务页面引用的 `src/pages/workplace/components/Radar/index.tsx`
-缺少 `bizcharts` 和 `G2` 类型。这是旧模板组件的依赖缺失；本次保留其源码，不为无引用组件引入旧图表库。
-生产构建不包含该组件。
+运行 `pnpm test:e2e`，默认在随机端口启动开发服务并在结束后清理自己的服务进程。
+执行前请停止当前 Console 开发服务，避免两个进程共同重建 `.umi`。
+需要安装 Chrome，可用 `CHROME_PATH` 指定浏览器路径；也可用 `E2E_BASE_URL`
+连接已有的独立测试服务，此时不会启动或停止服务。
+
+测试拦截 API 并使用固定数据，不需要后端，不验证真实登录凭据或后端鉴权。
+当前覆盖独立登录页、匿名访问限制、Markdown 编辑器加载/输入/刷新，
+以及三种导航布局的设置切换、持久化和入口可用性；未预期 API 请求与页面异常会使测试失败。
+未引用的旧 Radar 模板已清理，类型检查不再依赖 BizCharts/G2。
+
+### 仍需业务联调
 
 升级后应联调：登录/退出、登录后返回原页面、权限、工作台统计、文章编辑与保存、上传、列表筛选分页，
 以及 `/blog-admin/#/...` 下的直接访问和刷新。

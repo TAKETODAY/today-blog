@@ -36,6 +36,7 @@ export default [
     path: '/articles',
     layout: false,
     access: 'isLoggedIn',
+    wrappers: ['@/wrappers/RequireLogin'],
     routes: [
       {
         title: '写文章',
