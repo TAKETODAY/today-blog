@@ -1,4 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -7,13 +9,15 @@ function gzipAssets() {
   return {
     name: 'gzip-assets',
     apply: 'build',
-    generateBundle(_options, bundle) {
+    async writeBundle(options, bundle) {
       for (const [fileName, asset] of Object.entries(bundle)) {
         if (asset.type !== 'asset' && asset.type !== 'chunk') continue
         if (!/\.(js|css|svg)$/.test(fileName)) continue
         const source = asset.type === 'chunk' ? asset.code : asset.source
         if (Buffer.byteLength(source) < 1024) continue
-        this.emitFile({ type: 'asset', fileName: `${fileName}.gz`, source: gzipSync(source) })
+        const gzipFile = resolve(options.dir, `${fileName}.gz`)
+        await mkdir(dirname(gzipFile), { recursive: true })
+        await writeFile(gzipFile, gzipSync(source))
       }
     },
   }
