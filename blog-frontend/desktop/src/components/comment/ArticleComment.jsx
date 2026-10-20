@@ -16,6 +16,9 @@
  */
 
 import { Empty, message, Skeleton } from 'antd';
+import 'antd/es/empty/style';
+import 'antd/es/message/style';
+import 'antd/es/skeleton/style';
 import React from 'react';
 import { commentService } from '../../services';
 import { extractData, isEmpty, isNotEmpty, scrollTo } from 'core';
@@ -109,4 +112,3 @@ export default class ArticleComment extends React.Component {
   }
 
 }
-

@@ -20,6 +20,7 @@
 
 import React from 'react';
 import { Pagination } from 'antd';
+import 'antd/es/pagination/style';
 import { connect } from "react-redux";
 import { articleService } from "../services";
 import ArticleList from '../components/ArticleList';

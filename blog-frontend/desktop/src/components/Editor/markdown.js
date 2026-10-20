@@ -34,7 +34,7 @@ import 'codemirror/lib/codemirror.css';
 import CodeMirror from 'codemirror';
 import { getSession, saveSession, getStorage, saveStorage } from "core";
 import CodeMirrorSpellChecker from 'codemirror-spell-checker';
-import hljs from 'highlight.js';
+import hljs from './highlight';
 import markdownIt from 'markdown-it';
 import emoji from 'markdown-it-emoji';
 

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Breadcrumb } from '../components';
+import Breadcrumb from '../components/Breadcrumb';
 import { Col, Row } from 'antd'
+import 'antd/es/grid/style';
 
 export default class SearchLayout extends React.Component {
 
@@ -17,4 +18,3 @@ export default class SearchLayout extends React.Component {
     </>)
   }
 }
-

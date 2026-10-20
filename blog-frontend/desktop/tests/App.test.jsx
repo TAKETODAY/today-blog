@@ -5,10 +5,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { createStore } from 'redux';
 import App from '../src/App';
 
-vi.mock('../src/components', () => ({
-  Footer: () => <footer>footer</footer>,
-  Header: () => <header>header</header>,
-}));
+vi.mock('../src/components/Footer', () => ({ default: () => <footer>footer</footer> }));
+vi.mock('../src/components/Header', () => ({ default: () => <header>header</header> }));
 
 vi.mock('../src/components/hooks', () => ({
   useUserSession: () => [null],

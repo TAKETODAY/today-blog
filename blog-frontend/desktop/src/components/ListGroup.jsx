@@ -1,4 +1,6 @@
 import { Result, Skeleton } from 'antd';
+import 'antd/es/result/style';
+import 'antd/es/skeleton/style';
 import React from 'react';
 import { arrayNotEquals, isEmpty } from 'core';
 import { connect } from "react-redux";
@@ -43,4 +45,3 @@ function popularArticlesError(state) {
 export default connect(popularArticlesError, {
   updateHttpErrorMessage
 })(ListGroup)
-

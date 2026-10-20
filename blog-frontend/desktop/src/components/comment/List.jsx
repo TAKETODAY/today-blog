@@ -16,6 +16,7 @@
  */
 
 import { Tooltip } from 'antd';
+import 'antd/es/tooltip/style';
 import React from 'react';
 
 import { format, fromNow, getGravatarURL, isEmpty, scrollTo } from 'core';

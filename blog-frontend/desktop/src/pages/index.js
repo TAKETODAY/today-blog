@@ -19,10 +19,10 @@
  */
 
 import { lazy } from 'react';
+import Home from './Home';
 
 const ArticleDetail = lazy(() => import('./ArticleDetail'));
 const CategoriesDetail = lazy(() => import('./CategoriesDetail'));
-const Home = lazy(() => import('./Home'));
 const LabelsDetail = lazy(() => import('./LabelsDetail'));
 const Login = lazy(() => import('./Login'));
 const ErrorPage = lazy(() => import('./ErrorPage'));

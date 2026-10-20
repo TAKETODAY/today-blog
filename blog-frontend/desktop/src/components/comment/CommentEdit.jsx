@@ -18,14 +18,20 @@
 import React, { Suspense, useState } from 'react';
 import { connect } from "react-redux";
 import { Button, Form, Input, message } from 'antd';
+import 'antd/es/button/style';
+import 'antd/es/form/style';
+import 'antd/es/input/style';
+import 'antd/es/message/style';
 import { GlobalOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 
 import { commentService } from 'src/services';
-import { Editor, Image } from 'src/components';
+import Image from '../Image';
 import { updateUserSession } from "src/redux/actions";
 import { userSessionOptionsMapStateToProps } from "src/redux/action-types";
 import { getGravatarURL, getStorage, isEmpty, saveStorage } from "core";
 
+
+const Editor = React.lazy(() => import('../Editor'));
 
 const CommentEdit = props => {
   const [editor, setEditor] = useState(null)

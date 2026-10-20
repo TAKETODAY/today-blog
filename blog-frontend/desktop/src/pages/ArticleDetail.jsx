@@ -17,10 +17,16 @@
 
 import { LockOutlined } from '@ant-design/icons';
 import { Form, Input, message, Skeleton } from 'antd';
+import 'antd/es/form/style';
+import 'antd/es/input/style';
+import 'antd/es/message/style';
+import 'antd/es/skeleton/style';
 import React, { useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import zone from '../assets/images/share/zone.png';
-import { AdminLink, ArticleComment, HttpError } from 'src/components';
+import AdminLink from '../components/AdminLink';
+import ArticleComment from '../components/comment/ArticleComment';
+import HttpError from '../components/http/HttpError';
 import { articleService } from 'src/services';
 import { applySEO, extractData, getArticleId, getRandLabel, getSummary, isEmpty, isNotEmpty, logging, scrollTop, shareQQZone } from 'core';
 
@@ -193,4 +199,3 @@ export default () => {
     <ArticleComment articleId={article.id}/>
   </>)
 }
-

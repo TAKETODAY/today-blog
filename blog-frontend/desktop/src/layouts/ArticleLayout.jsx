@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 // import hcSticky from 'hc-sticky';
-import { Breadcrumb, CategoriesListGroup, LabelsListGroup, PopularListGroup } from '../components';
+import Breadcrumb from '../components/Breadcrumb';
+import CategoriesListGroup from '../components/CategoriesListGroup';
+import LabelsListGroup from '../components/LabelsListGroup';
+import PopularListGroup from '../components/PopularListGroup';
 import { Affix, Col, Row } from 'antd'
+import 'antd/es/affix/style';
+import 'antd/es/grid/style';
 import { connect } from "react-redux";
 
 const RightNav = connect((state) => {

@@ -19,11 +19,13 @@
  */
 
 import { Empty, Skeleton } from 'antd';
+import 'antd/es/empty/style';
+import 'antd/es/skeleton/style';
 import React from 'react';
 import { Link } from "react-router-dom";
 
 import { arrayNotEquals, getRandLabel, isNotEmpty } from 'core';
-import { Image } from './';
+import Image from './Image';
 import { connect } from "react-redux";
 import { withRouter } from "../utils/withRouter";
 import { userSessionMapStateToProps } from "../redux/action-types";
@@ -75,7 +77,8 @@ class ArticleList extends React.Component {
                     onClick={() => this.props.navigate(`/articles/${article.uri}`)}/>
               {isNotEmpty(article.cover) &&
                 <span className="img">
-                  <Image alt={article.summary} src={article.cover} original={false}/>
+                  <Image alt={article.summary} src={article.cover} original={false}
+                         loading={idx === 0 ? 'eager' : 'lazy'} decoding="async"/>
                 </span>
               }
               <span className="info">

@@ -18,12 +18,20 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 import { Dropdown, Layout, Menu, message, Modal } from 'antd';
+import 'antd/es/dropdown/style';
+import 'antd/es/layout/style';
+import 'antd/es/menu/style';
+import 'antd/es/message/style';
+import 'antd/es/modal/style';
 import { ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
 import { connect } from "react-redux";
 
 import { userService } from 'src/services';
 import { updateUserSession } from "src/redux/actions";
-import { AdminLink, ApiLink, Image, Search } from 'src/components';
+import AdminLink from './AdminLink';
+import ApiLink from './ApiLink';
+import Image from './Image';
+import Search from './Search';
 
 const { confirm } = Modal;
 const MenuItem = Menu.Item

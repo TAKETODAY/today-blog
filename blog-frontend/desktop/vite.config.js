@@ -66,26 +66,8 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: 'build',
+    manifest: true,
     chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          react: ['react', 'react-dom', 'react-redux', 'react-router-dom'],
-          antd: ['antd', '@ant-design/icons'],
-          codemirror: [
-            'codemirror',
-            'codemirror-spell-checker',
-          ],
-          markdown: [
-            'markdown-it',
-            'markdown-it-emoji',
-          ],
-          highlight: [
-            'highlight.js',
-          ],
-        },
-      },
-    },
     esbuild: {
       drop: mode === 'production' ? ['console', 'debugger'] : [],
     },

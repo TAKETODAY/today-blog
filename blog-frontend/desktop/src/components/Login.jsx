@@ -17,10 +17,17 @@
 
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Button, Checkbox, Form, Input, message, Popconfirm } from 'antd';
+import 'antd/es/alert/style';
+import 'antd/es/button/style';
+import 'antd/es/checkbox/style';
+import 'antd/es/form/style';
+import 'antd/es/input/style';
+import 'antd/es/message/style';
+import 'antd/es/popconfirm/style';
 import React from 'react';
 import { userService } from '../services';
 import { getStorage, removeStorage, saveStorage } from 'core';
-import { Image } from './'
+import Image from './Image'
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
 import { connect } from "react-redux";

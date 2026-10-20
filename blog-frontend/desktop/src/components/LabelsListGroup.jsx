@@ -19,6 +19,7 @@
  */
 
 import { Skeleton } from 'antd';
+import 'antd/es/skeleton/style';
 import React from 'react';
 import { getRandLabel, isEmpty } from 'core';
 import { Link } from "react-router-dom";
@@ -64,4 +65,3 @@ function labelsError(state) {
 export default connect(labelsError, {
   updateHttpErrorMessage
 })(Labels)
-

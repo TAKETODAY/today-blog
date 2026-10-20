@@ -19,7 +19,7 @@
  */
 
 import React from 'react';
-import { Login } from '../components';
+import Login from '../components/Login';
 import { connect } from "react-redux";
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
@@ -40,4 +40,3 @@ class LoginPage extends React.Component {
 export default connect(
   userSessionMapStateToProps, { updateUserSession }
 )(LoginPage)
-

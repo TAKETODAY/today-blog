@@ -20,6 +20,8 @@
 
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, message } from 'antd';
+import 'antd/es/button/style';
+import 'antd/es/message/style';
 import Cropper from 'cropperjs';
 import React from 'react';
 import { Image } from '../';

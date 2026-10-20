@@ -1,4 +1,5 @@
 import { BackTop } from 'antd';
+import 'antd/es/back-top/style';
 import React from 'react';
 import qq from '../assets/images/share/qq.png';
 import weibo from '../assets/images/share/weibo.png';

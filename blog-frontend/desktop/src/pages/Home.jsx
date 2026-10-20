@@ -19,6 +19,7 @@
  */
 
 import { Pagination } from 'antd';
+import 'antd/es/pagination/style';
 import React from 'react';
 import ArticleList from '../components/ArticleList';
 import { applySEO, extractData, scrollTop } from 'core';

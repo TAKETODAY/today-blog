@@ -19,8 +19,10 @@
  */
 
 import { Input, Pagination } from 'antd';
+import 'antd/es/input/style';
+import 'antd/es/pagination/style';
 import React, { useEffect, useState } from 'react';
-import { ArticleList } from '../components';
+import ArticleList from '../components/ArticleList';
 import { extractData, getQuery, scrollTop } from 'core';
 import { articleService } from "../services";
 import { connect } from "react-redux";

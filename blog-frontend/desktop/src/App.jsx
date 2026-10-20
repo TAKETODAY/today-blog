@@ -18,10 +18,12 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
-import { Footer, Header } from './components';
+import Footer from './components/Footer';
+import Header from './components/Header';
 import RouteLoading from './components/RouteLoading';
 import { http } from 'core';
 import { Layout } from 'antd';
+import 'antd/es/layout/style';
 import { ArticleLayout, SearchLayout } from './layouts';
 import './App.css';
 import { ArticleDetail, CategoriesDetail, ErrorPage, Home, LabelsDetail, Login, Search } from 'src/pages';
