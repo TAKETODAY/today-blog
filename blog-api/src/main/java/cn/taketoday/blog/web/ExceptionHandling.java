@@ -87,8 +87,8 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(IllegalArgumentException.class)
-  public ErrorMessage illegalArgument() {
-    return illegalArgument;
+  public ErrorMessage illegalArgument(IllegalArgumentException e) {
+    return ErrorMessage.failed("参数错误: " + e.getMessage());
   }
 
   @ExceptionHandler(InternalServerException.class)
