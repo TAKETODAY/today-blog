@@ -6,6 +6,7 @@
   "author": "Harry Yang <taketoday@foxmail.com>",
   "license": "GPL v3",
   "dependencies": {
+    "@ant-design/icons": "^5.6.1",
     "ahooks": "^3.8.1",
     "antd": "^4.24.8",
     "axios": "1.12.0",

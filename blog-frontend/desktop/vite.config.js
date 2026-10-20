@@ -23,8 +23,21 @@ function gzipAssets() {
   }
 }
 
+function minifyHtml() {
+  return {
+    name: 'minify-html',
+    apply: 'build',
+    transformIndexHtml(html) {
+      return html
+        .replace(/<!--(?!\[if)[\s\S]*?-->/g, '')
+        .replace(/>\s+</g, '><')
+        .trim()
+    },
+  }
+}
+
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), gzipAssets()],
+  plugins: [react(), minifyHtml(), gzipAssets()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
