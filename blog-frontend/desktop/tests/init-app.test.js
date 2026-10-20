@@ -71,6 +71,28 @@ describe('initStore', () => {
     log.mockRestore()
   })
 
+  test('treats a 204 session probe as anonymous and clears stale storage', async () => {
+    const store = { dispatch: vi.fn() }
+    localStorage.setItem('session', '{"id":1}')
+    http.get.mockResolvedValue({ status: 204, data: '' })
+
+    initStore(store)
+
+    await vi.waitFor(() => expect(store.dispatch).toHaveBeenCalledTimes(5))
+    expect(localStorage.getItem('session')).toBeNull()
+    expect(store.dispatch).toHaveBeenCalledWith({ type: 'update-user-session', data: null })
+  })
+
+  test('handles a failed session probe without an unhandled rejection', async () => {
+    const store = { dispatch: vi.fn() }
+    http.get.mockRejectedValue(new Error('network unavailable'))
+
+    initStore(store)
+
+    await vi.waitFor(() => expect(store.dispatch).toHaveBeenCalledTimes(5))
+    expect(store.dispatch).toHaveBeenCalledWith({ type: 'update-user-session', data: null })
+  })
+
   test('dispatches an error for each failed content request', async () => {
     const store = { dispatch: vi.fn() }
     const errors = {

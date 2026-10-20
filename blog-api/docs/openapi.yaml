@@ -232,10 +232,13 @@ paths:
     get:
       tags:
         - 认证
-      summary: 获取当前登录用户信息
-      description: 获取当前登录用户信息。需要处于登录状态（浏览器请求自动携带 `SESSION` Cookie）。
-      security:
-        - AuthenticationInfo: []
+      summary: 查询当前登录状态
+      description: |
+        查询当前会话的登录用户信息。
+
+        - 已登录：返回 `200` 和当前用户信息；
+        - 未登录：返回 `204 No Content`，这是正常的匿名状态，不是错误；
+        - 如果请求显式携带无效的 API Key，仍可能返回 `401`。
       responses:
         '200':
           description: 当前登录用户
@@ -243,21 +246,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '204':
+          description: 当前会话未登录，无响应体
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: 请求携带的 API Key 无效或已撤销
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     delete:
       tags:
         - 认证
       summary: 退出登录
-      description: 使当前会话失效。需要登录用户会话。
-      security:
-        - AuthenticationInfo: []
+      description: 使当前会话失效。即使当前没有登录用户，也可以安全调用。
       responses:
         '200':
           description: 登出成功
-        '401':
-          $ref: '#/components/responses/Unauthorized'
 
     post:
       tags:
@@ -2105,7 +2110,7 @@ components:
 
     UserFrom:
       type: object
-      description: 登录请求体
+      description: 登录请求体。登录成功后服务端通过会话 Cookie 保存登录状态。
       required:
         - email
         - password
@@ -2113,48 +2118,59 @@ components:
         email:
           type: string
           format: email
+          description: 登录邮箱
         password:
           type: string
+          format: password
+          description: 登录密码
 
     InfoForm:
       type: object
-      description: 更新当前用户信息的请求体
+      description: 更新当前登录用户资料的请求体
       required:
         - name
       properties:
         name:
           type: string
+          description: 用户姓名或昵称
         site:
           type: string
           nullable: true
+          description: 个人站点地址
         introduce:
           type: string
-          description: 自我简介（最多 256 字符）
+          maxLength: 256
+          description: 自我简介（最多 256 个字符）
         notification:
           type: boolean
           default: false
+          description: 是否接收邮件通知
 
     ChangePasswordForm:
       type: object
-      description: 修改密码请求体
+      description: 修改当前登录用户密码的请求体
       required:
         - oldPassword
         - newPassword
       properties:
         oldPassword:
           type: string
+          format: password
+          description: 当前密码
         newPassword:
           type: string
+          format: password
           description: 新密码（6 - 48 个字符）
           minLength: 6
           maxLength: 48
         confirmNewPassword:
           type: string
+          format: password
           description: 确认新密码
 
     UserEmailForm:
       type: object
-      description: 修改邮箱请求体
+      description: 修改当前登录用户邮箱的请求体
       required:
         - email
         - password
@@ -2162,8 +2178,11 @@ components:
         email:
           type: string
           format: email
+          description: 新邮箱地址
         password:
           type: string
+          format: password
+          description: 当前登录密码，用于确认身份
 
     UserSettingsForm:
       type: object

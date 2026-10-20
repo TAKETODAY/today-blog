@@ -49,8 +49,17 @@ function dispatchHttpError(store, key, err) {
 const initStore = (store) => {
 
   http.get("/api/auth").then(res => {
-    localStorage.setItem('session', JSON.stringify(res.data))
-    store.dispatch(updateUserSession(res.data))
+    const session = res.status === 204 || !res.data ? null : res.data
+    if (session) {
+      localStorage.setItem('session', JSON.stringify(session))
+    }
+    else {
+      localStorage.removeItem('session')
+    }
+    store.dispatch(updateUserSession(session))
+  }).catch(() => {
+    localStorage.removeItem('session')
+    store.dispatch(updateUserSession(null))
   })
 
   getCacheable("/api/options").then(res => {
