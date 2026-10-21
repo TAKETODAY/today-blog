@@ -27,7 +27,7 @@ import { format, isEmpty } from "@/utils";
 
 
 import { ArticleItem } from "./data.d";
-import { deleteArticle, getCategories, queryArticles, updateStatus } from "./service";
+import { deleteArticle, getCategories, queryArticles, updateStatus, updatePinned } from "./service";
 import { PlusOutlined } from "@ant-design/icons/lib";
 import { Link } from '@umijs/max';
 import { ArticleLink } from "@/components/Article";
@@ -114,6 +114,8 @@ const renderStatus = (article: ArticleItem) => {
 export default () => {
   const actionRef = useRef<ActionType>()
   const [categories, setCategories] = useState({})
+  const [pinning, setPinning] = useState<number[]>([])
+  const pinningIds = useRef(new Set<number>())
 
   const reload = async (): Promise<any> => {
     return actionRef.current?.reload()
@@ -137,6 +139,24 @@ export default () => {
 
   }, [])
 
+  const togglePinned = async (article: ArticleItem) => {
+    if (pinningIds.current.has(article.id)) return
+    pinningIds.current.add(article.id)
+    setPinning([...pinningIds.current])
+    try {
+      await updatePinned(article.id, !article.pinnedAt)
+      message.success(t(article.pinnedAt ? 'unpinSuccess' : 'pinSuccess'))
+      await reload()
+    }
+    catch {
+      message.error(t('pinFailed'))
+    }
+    finally {
+      pinningIds.current.delete(article.id)
+      setPinning([...pinningIds.current])
+    }
+  }
+
 
   const columns: ProColumns<ArticleItem>[] = [
     {
@@ -154,6 +174,7 @@ export default () => {
       render: (_, article) => (
           <Popover title={t('articleTitle')} content={<span dangerouslySetInnerHTML={{ __html: article.title }}/>}>
             <ArticleLink article={article}>
+              {article.pinnedAt && <Tag color="#337ab7">{t('pinned')}</Tag>}
               {article.title?.length > 15 ? `${article.title.substring(0, 15)}...` : article.title}
             </ArticleLink>
           </Popover>
@@ -238,7 +259,7 @@ export default () => {
       ),
     },
     {
-      width: 180,
+      width: 260,
       title: t('actions'),
       fixed: 'right',
       valueType: 'option',
@@ -254,6 +275,13 @@ export default () => {
             {
               renderStatusMenu(record, reload)
             }
+            {record.status === 'PUBLISHED' && <>
+              <Divider type="vertical"/>
+              <Button type="link" size="small" loading={pinning.includes(record.id)}
+                      disabled={pinning.includes(record.id)} onClick={() => togglePinned(record)}>
+                {t(record.pinnedAt ? 'unpin' : 'pin')}
+              </Button>
+            </>}
           </>
       ),
     },

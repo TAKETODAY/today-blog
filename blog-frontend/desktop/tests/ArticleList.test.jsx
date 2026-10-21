@@ -27,3 +27,22 @@ test('keeps the first cover eager and defers subsequent covers', () => {
   expect(images[1]).toHaveAttribute('loading', 'lazy');
   images.forEach(image => expect(image).toHaveAttribute('decoding', 'async'));
 });
+
+test('shows pinned labels only on the home list without reordering articles', () => {
+  const store = createStore((state = { user: { session: null } }) => state);
+  const articles = [
+    { uri: 'normal', title: '普通文章', createAt: 0, pv: 0 },
+    { uri: 'pinned', title: '置顶文章', createAt: 0, pv: 0, pinnedAt: '2026-10-21T00:00:00Z' },
+  ];
+  const list = showPinned => (
+    <Provider store={store}>
+      <MemoryRouter><ArticleList articles={articles} showPinned={showPinned} /></MemoryRouter>
+    </Provider>
+  );
+  const { rerender } = render(list(false));
+  expect(screen.queryByText('置顶', { exact: true })).not.toBeInTheDocument();
+  rerender(list(true));
+  expect(screen.getByText('置顶', { exact: true })).toBeInTheDocument();
+  expect(screen.getAllByRole('heading').map(heading => heading.textContent))
+    .toEqual(['普通文章', '置顶置顶文章']);
+});

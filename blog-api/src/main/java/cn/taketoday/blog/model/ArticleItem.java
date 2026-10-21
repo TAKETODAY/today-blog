@@ -52,6 +52,8 @@ public class ArticleItem {
 
   public Instant createAt;
 
+  public Instant pinnedAt;
+
   public ArticleItem() {
   }
 
@@ -63,6 +65,7 @@ public class ArticleItem {
     this.cover = article.getCover();
     this.summary = article.getSummary();
     this.createAt = article.getCreateAt();
+    this.pinnedAt = article.getPinnedAt();
     this.tags = article.getLabels().stream().map(Label::getName).toList();
   }
 
@@ -78,12 +81,13 @@ public class ArticleItem {
             && Objects.equals(cover, that.cover)
             && Objects.equals(summary, that.summary)
             && Objects.equals(createAt, that.createAt)
+            && Objects.equals(pinnedAt, that.pinnedAt)
             && Objects.equals(tags, that.tags);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, pv, uri, title, cover, summary, tags, createAt);
+    return Objects.hash(id, pv, uri, title, cover, summary, tags, createAt, pinnedAt);
   }
 
   @Override

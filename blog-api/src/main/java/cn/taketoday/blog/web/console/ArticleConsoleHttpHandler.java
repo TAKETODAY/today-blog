@@ -39,6 +39,7 @@ import infra.web.annotation.PUT;
 import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
+import infra.web.annotation.RequestParam;
 import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestController;
 import lombok.CustomLog;
@@ -115,6 +116,13 @@ class ArticleConsoleHttpHandler {
   @Logging(title = "更新文章状态", content = "更新文章：《#{@articleService.getById(#id)?.title}》状态为：[#{#status.description}]")
   public void updateStatus(@PathVariable Long id, PostStatus status) {
     articleService.updateStatusById(status, id);
+  }
+
+  @PUT(path = "/{id}", params = "pinned")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Logging(title = "更新文章置顶", content = "文章: [#{#id}]，置顶: [#{#pinned}]")
+  public void updatePinned(@PathVariable long id, @RequestParam boolean pinned) {
+    articleService.setPinned(id, pinned);
   }
 
   /**

@@ -28,6 +28,7 @@ export interface ArticleItem {
   content: string;
   markdown: string;
   status: string;
+  pinnedAt?: string | null;
   uri: string;
   labels: LabelItem[];
 

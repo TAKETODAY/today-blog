@@ -84,7 +84,7 @@ class Home extends React.Component {
     return (<>
       <div className="shadow-box" id="test1">
         <div className="data-list-title">最新文章</div>
-        <ArticleList articles={articles.data} error={error} title="最新文章"/>
+        <ArticleList articles={articles.data} error={error} title="最新文章" showPinned/>
         <div align='center' style={{ padding: '20px' }}>
           <Pagination
               showQuickJumper

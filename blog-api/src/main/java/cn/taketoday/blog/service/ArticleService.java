@@ -45,6 +45,7 @@ import infra.beans.factory.InitializingBean;
 import infra.cache.annotation.CacheConfig;
 import infra.cache.annotation.CacheEvict;
 import infra.cache.annotation.Cacheable;
+import infra.http.HttpStatus;
 import infra.jdbc.JdbcConnection;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
@@ -103,9 +104,13 @@ public class ArticleService implements InitializingBean {
   public void update(Article article) {
     Assert.notNull(article, "文章不能为空");
     Assert.notNull(article.getId(), "文章ID不能为空");
-    Article oldArticle = obtainById(article.getId());
+    Article oldArticle = lockArticle(article.getId());
+    applyTags(oldArticle);
 
     entityManager.updateById(article, ArticleUpdateStrategy.instance);
+    if (article.getStatus() != null && article.getStatus() != PostStatus.PUBLISHED) {
+      clearPinned(article.getId());
+    }
 
     // update category
     if (!Objects.equals(article.getCategory(), oldArticle.getCategory())) {
@@ -208,7 +213,7 @@ public class ArticleService implements InitializingBean {
    */
   public List<ArticleItem> getMostPopularArticles(Pageable pageable) {
     try (var query = repository.createQuery("""
-            SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
+            SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`, `pinned_at`
             FROM article WHERE status = ? order by pv DESC LIMIT ?""")) {
       query.addParameter(PostStatus.PUBLISHED);
       query.addParameter(pageable.pageSize(20));
@@ -221,7 +226,7 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'home-'+#pageable.pageNumber()+'-'+#pageable.pageSize()")
   public Pagination<ArticleItem> getHomeArticles(Pageable pageable) {
-    return entityManager.page(ArticleItem.class, new ArticleStatus(PostStatus.PUBLISHED), pageable)
+    return entityManager.page(ArticleItem.class, new HomeArticles(), pageable)
             .peek(this::applyTags)
             .map(Pagination::from);
   }
@@ -262,7 +267,7 @@ public class ArticleService implements InitializingBean {
           return Pagination.empty();
         }
         try (var dataQuery = connection.createNamedQuery("""
-                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`
+                SELECT `id`, `uri`, `title`, `cover`, `summary`, `pv`, `create_at`, `pinned_at`
                 FROM article LEFT JOIN article_label ON article.id = article_label.article_id
                 WHERE article.status = :status
                   AND article_label.label_id IN (
@@ -399,14 +404,55 @@ public class ArticleService implements InitializingBean {
   @CacheEvict(allEntries = true)
   public void updateStatusById(PostStatus status, long id) {
     Assert.notNull(status, "status is required");
-    Article findById = obtainById(id);
 
     txOperations.executeWithoutResult(txStatus -> {
+      Article findById = lockArticle(id);
       entityManager.updateById(new ArticleStatus(status), id);
+      if (status != PostStatus.PUBLISHED) {
+        clearPinned(id);
+      }
       categoryService.updateArticleCount(findById.getCategory());
     });
 
     refreshFeedArticles();
+  }
+
+  /**
+   * 设置首页置顶状态；重复置顶不改变原有顺序。
+   */
+  @Transactional
+  @CacheEvict(allEntries = true)
+  public void setPinned(long id, boolean pinned) {
+    Article article = lockArticle(id);
+    if (pinned && article.getStatus() != PostStatus.PUBLISHED) {
+      throw ErrorMessageException.failed("仅已发布文章可以置顶", HttpStatus.CONFLICT);
+    }
+    if (pinned) {
+      try (var query = repository.createQuery("update article set pinned_at = CURRENT_TIMESTAMP(6) where id = ? and pinned_at is null")) {
+        query.addParameter(id);
+        query.executeUpdate();
+      }
+    }
+    else {
+      clearPinned(id);
+    }
+  }
+
+  private Article lockArticle(long id) {
+    try (var query = repository.createQuery("select * from article where id = ? for update")) {
+      query.addParameter(id);
+      List<Article> articles = query.fetch(Article.class);
+      Article article = articles.isEmpty() ? null : articles.get(0);
+      ErrorMessageException.notNull(article, "该文章不存在或已删除不能操作");
+      return article;
+    }
+  }
+
+  private void clearPinned(long id) {
+    try (var query = repository.createQuery("update article set pinned_at = null where id = ?")) {
+      query.addParameter(id);
+      query.executeUpdate();
+    }
   }
 
   /**
@@ -525,6 +571,12 @@ public class ArticleService implements InitializingBean {
     }
   }
 
+  @OrderByClause("pinned_at DESC, create_at DESC, id DESC")
+  @EntityRef(Article.class)
+  static class HomeArticles {
+    public final PostStatus status = PostStatus.PUBLISHED;
+  }
+
   static class FeedArticles extends SimpleSelectQueryStatement {
 
     @Transient
@@ -557,6 +609,9 @@ public class ArticleService implements InitializingBean {
     @Override
     public boolean shouldUpdate(Object entity, EntityProperty property) {
       String name = property.getName();
+      if (name.equals("pinnedAt")) {
+        return false;
+      }
       if (allowNullValues.contains(name)) {
         return true;
       }

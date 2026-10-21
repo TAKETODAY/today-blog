@@ -17,6 +17,7 @@
 
 package cn.taketoday.blog.model;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 
@@ -45,6 +46,9 @@ public class Article extends BasicModel {
   private Integer pv;
 
   private PostStatus status;
+
+  /** 首页置顶时间，null 表示未置顶。 */
+  private Instant pinnedAt;
 
   private String summary;
 
@@ -78,6 +82,7 @@ public class Article extends BasicModel {
             .append("title", title)
             .append("pv", pv)
             .append("status", status)
+            .append("pinnedAt", pinnedAt)
             .append("summary", summary != null ? StringUtils.truncate(summary, 10) : null)
             .append("password", password)
             .append("createAt", createAt)
@@ -97,6 +102,7 @@ public class Article extends BasicModel {
       return false;
     return Objects.equals(pv, article.pv)
             && status == article.status
+            && Objects.equals(pinnedAt, article.pinnedAt)
             && Objects.equals(id, article.id)
             && Objects.equals(uri, article.uri)
             && Objects.equals(cover, article.cover)
@@ -115,6 +121,6 @@ public class Article extends BasicModel {
   @Override
   public int hashCode() {
     return Objects.hash(id, cover, title, pv, status, summary, content, markdown,
-            password, createAt, updateAt, uri, category, copyright, labels);
+            password, createAt, updateAt, uri, category, copyright, labels, pinnedAt);
   }
 }

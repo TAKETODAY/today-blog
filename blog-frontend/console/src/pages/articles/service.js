@@ -41,6 +41,10 @@ export async function updateStatus(id, status) {
   return http.put(`/api/console/articles/${id}?status=${status}`)
 }
 
+export async function updatePinned(id, pinned) {
+  return http.put(`/api/console/articles/${id}?pinned=${pinned}`)
+}
+
 export async function deleteArticle(article) {
   return http.delete(`/api/console/articles/${article.id}`)
 }

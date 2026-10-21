@@ -36,6 +36,7 @@ class ArticleList extends React.Component {
 
   shouldComponentUpdate(nextProps, nextState) {
     return arrayNotEquals(this.props.articles, nextProps.articles)
+      || this.props.showPinned !== nextProps.showPinned
   }
 
   render() {
@@ -65,6 +66,8 @@ class ArticleList extends React.Component {
           return (
             <div key={article.uri} className="article-list">
               <h2>
+                {this.props.showPinned && article.pinnedAt &&
+                  <span style={{ color: '#337ab7', fontSize: 13, marginRight: 8 }}>置顶</span>}
                 <Link to={`/articles/${article.uri}`} dangerouslySetInnerHTML={{ __html: article.title }}/>
               </h2>
               {isNotEmpty(article.tags) &&
