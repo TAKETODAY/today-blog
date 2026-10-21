@@ -19,6 +19,7 @@
  */
 
 import { Empty, Skeleton } from 'antd';
+import { PushpinFilled } from '@ant-design/icons';
 import 'antd/es/empty/style';
 import 'antd/es/skeleton/style';
 import React from 'react';
@@ -66,8 +67,11 @@ class ArticleList extends React.Component {
           return (
             <div key={article.uri} className="article-list">
               <h2>
-                {this.props.showPinned && article.pinnedAt &&
-                  <span style={{ color: '#337ab7', fontSize: 13, marginRight: 8 }}>置顶</span>}
+                {this.props.showPinned && article.pinnedAt != null &&
+                  <span className="article-pinned-badge">
+                    <PushpinFilled aria-hidden="true"/>置顶
+                  </span>
+                }
                 <Link to={`/articles/${article.uri}`} dangerouslySetInnerHTML={{ __html: article.title }}/>
               </h2>
               {isNotEmpty(article.tags) &&

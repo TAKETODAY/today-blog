@@ -27,7 +27,7 @@ import { format, isEmpty } from "@/utils";
 
 
 import { ArticleItem } from "./data.d";
-import { deleteArticle, getCategories, queryArticles, updateStatus, updatePinned } from "./service";
+import { deleteArticle, getCategories, queryArticles, updatePinned, updateStatus } from "./service";
 import { PlusOutlined } from "@ant-design/icons/lib";
 import { Link } from '@umijs/max';
 import { ArticleLink } from "@/components/Article";
@@ -100,6 +100,8 @@ const renderStatusMenu = (article: ArticleItem, reload: () => Promise<any>) => {
   )
 }
 
+const isPinned = (article: ArticleItem): boolean => article.pinnedAt != null
+
 const renderStatus = (article: ArticleItem) => {
   switch (article.status) {
     case 'DRAFT' :
@@ -143,9 +145,10 @@ export default () => {
     if (pinningIds.current.has(article.id)) return
     pinningIds.current.add(article.id)
     setPinning([...pinningIds.current])
+    const pinned = !isPinned(article)
     try {
-      await updatePinned(article.id, !article.pinnedAt)
-      message.success(t(article.pinnedAt ? 'unpinSuccess' : 'pinSuccess'))
+      await updatePinned(article.id, pinned)
+      message.success(t(pinned ? 'pinSuccess' : 'unpinSuccess'))
       await reload()
     }
     catch {
@@ -174,8 +177,8 @@ export default () => {
       render: (_, article) => (
           <Popover title={t('articleTitle')} content={<span dangerouslySetInnerHTML={{ __html: article.title }}/>}>
             <ArticleLink article={article}>
-              {article.pinnedAt && <Tag color="#337ab7">{t('pinned')}</Tag>}
               {article.title?.length > 15 ? `${article.title.substring(0, 15)}...` : article.title}
+              {isPinned(article) && <Tag color="red">{t('pinned')}</Tag>}
             </ArticleLink>
           </Popover>
       )
@@ -259,7 +262,7 @@ export default () => {
       ),
     },
     {
-      width: 260,
+      width: 300,
       title: t('actions'),
       fixed: 'right',
       valueType: 'option',
@@ -279,7 +282,7 @@ export default () => {
               <Divider type="vertical"/>
               <Button type="link" size="small" loading={pinning.includes(record.id)}
                       disabled={pinning.includes(record.id)} onClick={() => togglePinned(record)}>
-                {t(record.pinnedAt ? 'unpin' : 'pin')}
+                {t(isPinned(record) ? 'unpin' : 'pin')}
               </Button>
             </>}
           </>
