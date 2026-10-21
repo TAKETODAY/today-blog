@@ -68,8 +68,15 @@ export default defineConfig(({ mode }) => ({
     outDir: 'build',
     manifest: true,
     chunkSizeWarningLimit: 1000,
-    esbuild: {
-      drop: mode === 'production' ? ['console', 'debugger'] : [],
+    rolldownOptions: {
+      output: {
+        minify: {
+          compress: {
+            dropConsole: mode === 'production',
+            dropDebugger: mode === 'production',
+          },
+        },
+      },
     },
   },
   define: {
