@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.model;
 
+import org.jspecify.annotations.Nullable;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -43,7 +45,7 @@ public class ArticleItem {
 
   public String title;
 
-  public String cover;
+  public @Nullable String cover;
 
   public String summary;
 
@@ -52,7 +54,10 @@ public class ArticleItem {
 
   public Instant createAt;
 
-  public Instant pinnedAt;
+  public @Nullable Instant pinnedAt;
+
+  @Transient
+  public boolean pinned;
 
   public ArticleItem() {
   }
@@ -66,6 +71,7 @@ public class ArticleItem {
     this.summary = article.getSummary();
     this.createAt = article.getCreateAt();
     this.pinnedAt = article.getPinnedAt();
+    this.pinned = this.pinnedAt != null;
     this.tags = article.getLabels().stream().map(Label::getName).toList();
   }
 
@@ -100,6 +106,7 @@ public class ArticleItem {
             .append("summary", StringUtils.truncate(summary, 10))
             .append("createAt", createAt)
             .append("uri", uri)
+            .append("pinned", pinned)
             .toString();
   }
 }
