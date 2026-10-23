@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,14 +17,16 @@
 
 package cn.taketoday.blog.model;
 
+import org.jspecify.annotations.Nullable;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
 import cn.taketoday.blog.util.StringUtils;
 import infra.core.style.ToStringBuilder;
-import infra.persistence.EntityRef;
-import infra.persistence.Transient;
+import infra.persistence.annotation.EntityRef;
+import infra.persistence.annotation.Transient;
 
 /**
  * 文章列表项
@@ -43,7 +45,7 @@ public class ArticleItem {
 
   public String title;
 
-  public String cover;
+  public @Nullable String cover;
 
   public String summary;
 
@@ -52,7 +54,13 @@ public class ArticleItem {
 
   public Instant createAt;
 
-  public ArticleItem() { }
+  public @Nullable Instant pinnedAt;
+
+  @Transient
+  public boolean pinned;
+
+  public ArticleItem() {
+  }
 
   public ArticleItem(Article article) {
     this.id = article.getId();
@@ -62,6 +70,8 @@ public class ArticleItem {
     this.cover = article.getCover();
     this.summary = article.getSummary();
     this.createAt = article.getCreateAt();
+    this.pinnedAt = article.getPinnedAt();
+    this.pinned = this.pinnedAt != null;
     this.tags = article.getLabels().stream().map(Label::getName).toList();
   }
 
@@ -77,12 +87,13 @@ public class ArticleItem {
             && Objects.equals(cover, that.cover)
             && Objects.equals(summary, that.summary)
             && Objects.equals(createAt, that.createAt)
+            && Objects.equals(pinnedAt, that.pinnedAt)
             && Objects.equals(tags, that.tags);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, pv, uri, title, cover, summary, tags, createAt);
+    return Objects.hash(id, pv, uri, title, cover, summary, tags, createAt, pinnedAt);
   }
 
   @Override
@@ -95,6 +106,7 @@ public class ArticleItem {
             .append("summary", StringUtils.truncate(summary, 10))
             .append("createAt", createAt)
             .append("uri", uri)
+            .append("pinned", pinned)
             .toString();
   }
 }

@@ -18,22 +18,24 @@
  * along with this program.  If not, see [http://www.gnu.org/licenses/]
  */
 
-import('codemirror/addon/edit/continuelist.js');
-import('./tablist');
-import('codemirror/addon/display/fullscreen.js');
-import('codemirror/mode/markdown/markdown.js');
-import('codemirror/addon/mode/overlay.js');
-import('codemirror/addon/display/placeholder.js');
-import('codemirror/addon/selection/mark-selection.js');
-import('codemirror/addon/search/searchcursor.js');
-import('codemirror/mode/gfm/gfm.js');
-import('codemirror/mode/xml/xml.js');
+// 必需插件必须在构造编辑器之前完成注册，不能使用未等待的动态导入。
+import 'codemirror/addon/edit/continuelist.js';
+import './tablist';
+import 'codemirror/addon/display/fullscreen.js';
+import 'codemirror/mode/xml/xml.js';
+import 'codemirror/mode/markdown/markdown.js';
+import 'codemirror/addon/mode/overlay.js';
+import 'codemirror/addon/display/placeholder.js';
+import 'codemirror/addon/selection/mark-selection.js';
+import 'codemirror/addon/search/searchcursor.js';
+import 'codemirror/mode/gfm/gfm.js';
 
 import markdownIt from 'markdown-it'
 import CodeMirrorSpellChecker from 'codemirror-spell-checker'
 import hljs from 'highlight.js'
 import emoji from 'markdown-it-emoji'
 import CodeMirror from 'codemirror';
+import { articleMessage } from '@/utils/article-i18n';
 
 import { getSession, getStorage, saveSession, saveStorage } from '@/utils'
 
@@ -170,7 +172,12 @@ function createToolbarButton(options, enableActions, enableTooltips, shortcuts, 
   }
 
   if (options.title && enableTooltips) {
-    el.title = createTooltip(options.title, options.action, shortcuts);
+    const builtIn = toolbarBuiltInButtons[options.name];
+    const localized = builtIn && options.title === builtIn.title
+      && ['bold', 'italic', 'strikethrough', 'heading', 'code', 'quote', 'unordered-list',
+        'ordered-list', 'link', 'image', 'table', 'horizontal-rule', 'preview',
+        'side-by-side', 'fullscreen', 'guide', 'undo', 'redo'].includes(options.name);
+    el.title = createTooltip(localized ? articleMessage(`toolbar.${options.name}`) : options.title, options.action, shortcuts);
 
     if (isMac) {
       el.title = el.title.replace('Ctrl', '⌘');

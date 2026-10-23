@@ -19,6 +19,7 @@
  */
 
 import { Result } from 'antd';
+import 'antd/es/result/style';
 import React from 'react';
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 

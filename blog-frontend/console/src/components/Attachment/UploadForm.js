@@ -27,7 +27,7 @@ const { Dragger } = Upload;
 const draggerProps = {
   name: 'file',
   multiple: true,
-  action: '/api/attachments',
+  action: '/api/console/attachments',
   onChange(info) {
     const { status } = info.file;
     if (status === 'done') {

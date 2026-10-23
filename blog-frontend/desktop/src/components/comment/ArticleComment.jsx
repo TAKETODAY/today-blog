@@ -16,7 +16,11 @@
  */
 
 import { Empty, message, Skeleton } from 'antd';
+import 'antd/es/empty/style';
+import 'antd/es/message/style';
+import 'antd/es/skeleton/style';
 import React from 'react';
+import { CommentOutlined } from '@ant-design/icons';
 import { commentService } from '../../services';
 import { extractData, isEmpty, isNotEmpty, scrollTo } from 'core';
 import { CommentEdit, CommentList } from '..';
@@ -41,27 +45,24 @@ export default class ArticleComment extends React.Component {
   intersectionObserver = null
 
   componentDidMount() {
-
-    if (typeof window !== undefined && this.intersectionObserver === null) {
-      this.intersectionObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.intersectionRatio <= 0) {// If intersectionRatio is 0, the target is out of view and we do not need to do anything.
-            return
-          }
-          if (!this.state.commentsLoaded) {
-            this.loadComment(1)
-            console.log('正在加载评论')
-          }
-        })
-      }, { threshold: [1] })
-    }
-  }
-
-  componentDidUpdate() {
-    if (typeof window !== undefined && this.intersectionObserver !== null) {
+    if (this.intersectionObserver) {
       this.intersectionObserver.disconnect()
-      this.intersectionObserver.observe(document.getElementById("comments"))
+      this.intersectionObserver = null
     }
+
+    this.intersectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.intersectionRatio <= 0) {// If intersectionRatio is 0, the target is out of view and we do not need to do anything.
+          return
+        }
+        if (!this.state.commentsLoaded) {
+          this.loadComment(1)
+        }
+      })
+    }, {
+      threshold: 1
+    })
+    this.intersectionObserver.observe(document.getElementById("comments"))
   }
 
   componentWillUnmount() {
@@ -74,7 +75,6 @@ export default class ArticleComment extends React.Component {
       .then(extractData)
       .then(comments => {
         scrollTo('div#comments.data_list.markdown')
-        console.log(comments)
         this.setState({ comments, commentsLoaded: true })
       })
       .catch(res => {
@@ -94,7 +94,7 @@ export default class ArticleComment extends React.Component {
       </div>
       <div className="shadow-box markdown" id="comments">
         <div className="data-list-title" style={{ border: 'none' }}>
-          <i className="fa fa-commenting-o"/> 评论
+          <CommentOutlined aria-hidden="true"/> 评论
           {commentsLoaded
             ? isEmpty(comments) && <Empty description="暂无评论"/>
             : <Skeleton active/>
@@ -113,4 +113,3 @@ export default class ArticleComment extends React.Component {
   }
 
 }
-

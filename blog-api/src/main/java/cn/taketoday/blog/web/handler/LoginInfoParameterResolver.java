@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,16 @@ package cn.taketoday.blog.web.handler;
 
 import org.jspecify.annotations.Nullable;
 
-import java.util.Optional;
-import java.util.function.Function;
-
+import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import infra.session.Session;
-import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.bind.resolver.ParameterResolvingStrategy;
-import infra.web.handler.method.ResolvableMethodParameter;
+import infra.web.handler.method.HandlerParameter;
 
 /**
  * 登录信息参数解析
@@ -56,77 +52,32 @@ import infra.web.handler.method.ResolvableMethodParameter;
 @Component
 class LoginInfoParameterResolver implements ParameterResolvingStrategy {
 
-  private final SessionManagerOperations sessionManagerOperations;
+  private final UserSessionResolver identities;
 
-  LoginInfoParameterResolver(SessionManagerOperations sessionManagerOperations) {
-    this.sessionManagerOperations = sessionManagerOperations;
+  LoginInfoParameterResolver(UserSessionResolver identities) {
+    this.identities = identities;
   }
 
   @Override
-  public boolean supportsParameter(ResolvableMethodParameter parameter) {
+  public boolean supportsParameter(HandlerParameter parameter) {
     return parameter.is(User.class)
             || parameter.is(Blogger.class)
             || parameter.is(LoginInfo.class);
   }
 
   @Override
-  public @Nullable Object resolveArgument(RequestContext context, ResolvableMethodParameter parameter) {
-    Session session = sessionManagerOperations.getSession(context, false);
-    if (session != null) {
-      if (parameter.is(User.class)) {
-        return getAttribute(parameter, session, User::find);
+  public @Nullable Object resolveArgument(HttpContext context, HandlerParameter parameter) throws Exception {
+    LoginInfo identity = identities.resolve(context);
+    if (parameter.is(LoginInfo.class)) {
+      if (parameter.hasParameterAnnotation(RequiresUser.class) && !identity.isLoggedIn()) {
+        throw new UnauthorizedException();
       }
-      else if (parameter.is(Blogger.class)) {
-        return getAttribute(parameter, session, Blogger::find);
-      }
-      else {
-        // 使用了 LoginInfo 并且有 RequiresUser ，在没有登录情况下会抛出异常 UnauthorizedException
-        LoginInfo info = new LoginInfo();
-        User loginUser = User.find(session);
-        if (loginUser != null) {
-          info.setLoginUser(loginUser);
-        }
-        else if (parameter.hasParameterAnnotation(RequiresUser.class)) {
-          throw new UnauthorizedException();
-        }
-        Blogger blogger = Blogger.find(session);
-        if (blogger != null) {
-          info.setBlogger(blogger);
-        }
-        return info;
-      }
+      return identity;
     }
-
-    // session is null
-
-    if (parameter.is(Optional.class)) {
-      return Optional.empty();
+    Object value = parameter.is(User.class) ? identity.getLoginUser() : identity.getBlogger();
+    if (value != null || parameter.isNotRequired()) {
+      return value;
     }
-
-    if (parameter.is(User.class) || parameter.is(Blogger.class)) {
-      if (parameter.isNotRequired()) {
-        return null;
-      }
-      throw new UnauthorizedException();
-    }
-
-    if (parameter.hasParameterAnnotation(RequiresUser.class)) {
-      throw new UnauthorizedException();
-    }
-
-    return new LoginInfo();
-  }
-
-  private static <T> @Nullable T getAttribute(ResolvableMethodParameter parameter,
-          Session session, Function<Session, @Nullable T> finder) {
-    T attribute = finder.apply(session);
-    if (attribute != null) {
-      return attribute;
-    }
-    else if (parameter.isNotRequired()) {
-      return null;
-    }
-
     throw new UnauthorizedException();
   }
 

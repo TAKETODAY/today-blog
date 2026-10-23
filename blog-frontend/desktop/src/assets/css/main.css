@@ -47,6 +47,27 @@
   padding: 10px;
 }
 
+.article-list > h2 > a {
+  vertical-align: middle;
+}
+
+.article-list .article-pinned-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+  padding: 2px 7px;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+  background-color: #fff2f0;
+  color: #cf1322;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 .article-list > hr {
   border-top: 1px dashed #c8dde4;
   border-bottom: 0;
@@ -72,6 +93,23 @@
 
 .article-list .read-num {
   color: #999
+}
+
+/* Keep each cover's natural proportions without enlarging small images. */
+.article-list .article-cover > .ant-image {
+  max-width: 100%;
+}
+
+.article-list .article-cover .ant-image-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.article-list .article-cover .ant-image-placeholder img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .article-list .info {

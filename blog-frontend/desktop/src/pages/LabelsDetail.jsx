@@ -20,6 +20,7 @@
 
 import React from 'react';
 import { Pagination } from 'antd';
+import 'antd/es/pagination/style';
 import { connect } from "react-redux";
 import { articleService } from "../services";
 import ArticleList from '../components/ArticleList';
@@ -27,6 +28,7 @@ import { updateNavigations } from "../redux/actions";
 import { navigationsMapStateToProps } from "../redux/action-types";
 import { applySEO, extractData, isNotEmpty, scrollTop } from 'core';
 import { setTitle } from "../utils/common"
+import { withRouter } from "../utils/withRouter"
 
 class LabelsDetail extends React.Component {
 
@@ -119,4 +121,4 @@ class LabelsDetail extends React.Component {
 
 export default connect(
     navigationsMapStateToProps, { updateNavigations }
-)(LabelsDetail)
+)(withRouter(LabelsDetail))

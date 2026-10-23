@@ -19,12 +19,16 @@
  */
 
 import { Empty, Skeleton } from 'antd';
+import { PushpinFilled } from '@ant-design/icons';
+import 'antd/es/empty/style';
+import 'antd/es/skeleton/style';
 import React from 'react';
-import { Link, withRouter } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { arrayNotEquals, getRandLabel, isNotEmpty } from 'core';
-import { Image } from './';
+import Image from './Image';
 import { connect } from "react-redux";
+import { withRouter } from "../utils/withRouter";
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
 import HttpError from "./http/HttpError";
@@ -33,6 +37,7 @@ class ArticleList extends React.Component {
 
   shouldComponentUpdate(nextProps, nextState) {
     return arrayNotEquals(this.props.articles, nextProps.articles)
+      || this.props.showPinned !== nextProps.showPinned
   }
 
   render() {
@@ -62,6 +67,11 @@ class ArticleList extends React.Component {
           return (
             <div key={article.uri} className="article-list">
               <h2>
+                {this.props.showPinned && article.pinnedAt != null &&
+                  <span className="article-pinned-badge">
+                    <PushpinFilled aria-hidden="true"/>置顶
+                  </span>
+                }
                 <Link to={`/articles/${article.uri}`} dangerouslySetInnerHTML={{ __html: article.title }}/>
               </h2>
               {isNotEmpty(article.tags) &&
@@ -71,10 +81,11 @@ class ArticleList extends React.Component {
                 </span>
               }
               <span className="summary" dangerouslySetInnerHTML={{ __html: article.summary }}
-                    onClick={() => this.props.history.push(`/articles/${article.uri}`)}/>
+                    onClick={() => this.props.navigate(`/articles/${article.uri}`)}/>
               {isNotEmpty(article.cover) &&
-                <span className="img">
-                  <Image alt={article.summary} src={article.cover} original={false}/>
+                <span className="img article-cover">
+                  <Image alt={article.summary} src={article.cover} original={false}
+                         loading={idx === 0 ? 'eager' : 'lazy'} decoding="async"/>
                 </span>
               }
               <span className="info">

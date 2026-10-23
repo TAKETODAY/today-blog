@@ -19,14 +19,21 @@
  */
 
 import { Result } from 'antd';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { showLoginDialog } from '@/utils/error-handler';
 
-const Forbidden: React.FC = () => (
+const Forbidden: React.FC = () => {
+  useEffect(() => {
+    showLoginDialog();
+  }, []);
+
+  return (
     <Result
         status="403"
         title="403"
         subTitle="对不起，你没有所访问页面的权限"
     />
-);
+  );
+};
 
 export default Forbidden;

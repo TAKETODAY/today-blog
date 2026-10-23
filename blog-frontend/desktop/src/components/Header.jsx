@@ -18,162 +18,144 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 import { Dropdown, Layout, Menu, message, Modal } from 'antd';
-import { ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
-import { connect } from "react-redux";
+import 'antd/es/dropdown/style';
+import 'antd/es/layout/style';
+import 'antd/es/menu/style';
+import 'antd/es/message/style';
+import 'antd/es/modal/style';
+import { ExclamationCircleOutlined, FolderFilled, HomeFilled, LoginOutlined, LogoutOutlined, TagFilled } from '@ant-design/icons';
+import RssIcon from './RssIcon';
+import { useDispatch, useSelector } from "react-redux";
 
 import { userService } from 'src/services';
 import { updateUserSession } from "src/redux/actions";
-import { AdminLink, ApiLink, Image, Search } from 'src/components';
+import AdminLink from './AdminLink';
+import ApiLink from './ApiLink';
+import Image from './Image';
+import Search from './Search';
 
-const { confirm } = Modal;
-const MenuItem = Menu.Item
-
-const { SubMenu } = Menu
 
 const { Header } = Layout;
 
-class NavHeader extends React.Component {
+export default function NavHeader() {
+  const dispatch = useDispatch()
+  const userSession = useSelector(state => state.user.session)
+  const categories = useSelector(state => state.article.categories)
+  const labels = useSelector(state => state.article.labels)
 
-  // shouldComponentUpdate(nextProps, nextState) {
-  //   return this.props.userSession !== nextProps.userSession
-  // }
-
-  state = {
-    current: 'mail',
-    collapsed: false,
-    mode: 'horizontal'
-  };
-
-  logout = () => {
-    userService.logout().then(res => {
-      message.info('登出成功!')
-      this.props.updateUserSession(null)
-    }).catch(resp => {
-
-    })
+  async function logout() {
+    try {
+      await userService.logout()
+      dispatch(updateUserSession(null))
+      message.success('登出成功!')
+    }
+    catch (error) {
+      message.error('退出失败，请稍后重试')
+      throw error
+    }
   }
 
-  showLogoutConfirm = () => {
-    confirm({
+  function showLogoutConfirm() {
+    Modal.confirm({
       title: '安全退出',
       icon: <ExclamationCircleOutlined/>,
       content: '您确认要安全退出系统吗？',
-      onOk: this.logout,
+      onOk: logout,
     })
   }
 
-  renderAdmin = () => {
-    return this.props.userSession.blogger &&
-      <SubMenu title="管理员">
-        <MenuItem key="write" style={{ width: '200px' }}>
-          <AdminLink href="/articles/write" target="_blank">写文章</AdminLink>
-        </MenuItem>
-        <MenuItem key="admin">
-          <AdminLink to="/" target="_blank">后台管理</AdminLink>
-        </MenuItem>
-      </SubMenu>
+  function renderAdmin() {
+    return userSession.blogger ? [
+      {
+        key: 'write',
+        style: { width: '200px' },
+        label: <AdminLink href="/articles/write" target="_blank">写文章</AdminLink>,
+      },
+      {
+        key: 'admin',
+        label: <AdminLink to="/" target="_blank">后台管理</AdminLink>,
+      },
+    ] : []
   }
 
-  renderUserMenu = () => {
-    return (
-      <Menu style={{ width: '200px', top: '15px', left: '5px' }}>
-        <MenuItem>
-          <Link to="/user/info" title="个人主页">个人主页</Link>
-        </MenuItem>
-        <MenuItem>
-          <Link to="/user/settings" title="设置">设置</Link>
-        </MenuItem>
-        {this.renderAdmin()}
-        <Menu.Divider/>
-        <MenuItem>
-          <a onClick={this.showLogoutConfirm} title="安全退出">
-            安全退出 <LogoutOutlined/>
-          </a>
-        </MenuItem>
-      </Menu>
-    )
-  }
-
-  handleClick = e => {
-    this.setState({ current: e.key });
-  }
-
-  render() {
-    const { userSession, categories, labels } = this.props
-
-    return (<>
-      <Header className='navbar'>
-        <div className="navbar-brand">
-          <a href='/' title="首页">
-            <img width="69" height="40" alt="Logo" src="/logo.svg" style={{ margin: "-6px" }}/>
-          </a>
-        </div>
-        <div className="navbar-right">
-          <Menu style={{ borderBottom: 'none', marginTop: 4 }}
-                onClick={this.handleClick} mode="horizontal" defaultSelectedKeys={['home']}>
-            <Menu.Item key="home">
-              <Link to='/' title="首页"> <i className="fa fa-home"/> 首页 </Link>
-            </Menu.Item>
-            <SubMenu key="categories" icon={<i className="fa fa-folder"/>} title="分类">
-              <Menu.ItemGroup title="全部分类">
-                {categories && categories.map((category, idx) => {
-                  return (
-                    <MenuItem key={`${category.name}-${idx}`}>
-                      <Link to={`/categories/${category.name}`} title={category.description}>
-                        {category.name}({category.articleCount})
-                      </Link>
-                    </MenuItem>
-                  )
-                })}
-              </Menu.ItemGroup>
-            </SubMenu>
-            <SubMenu key="tags" icon={<i className="fa fa-tag"/>} title="标签">
-              <Menu.ItemGroup title="全部标签">
-                {labels && labels.map((tag, idx) => {
-                  return (
-                    <MenuItem key={`${tag.name}-${idx}`}>
-                      <Link to={`/tags/${tag.name}`} title={tag.name}>{tag.name}</Link>
-                    </MenuItem>
-                  )
-                })}
-              </Menu.ItemGroup>
-            </SubMenu>
-            <Menu.Item key="atom">
-              <ApiLink target='_blank' href='/feed.atom' title="订阅"> <i className="fa fa-rss"/> 订阅 </ApiLink>
-            </Menu.Item>
-            <Menu.Item key="search">
-              <Search/>
-            </Menu.Item>
-            <Menu.Item key="userSession">
-              {userSession ?
-                <Dropdown overlay={this.renderUserMenu()} placement="bottomRight" trigger='click'>
-                  <Image original width="30" src={userSession.avatar} className="avatar"/>
-                </Dropdown>
-                : <Link to='/login' title="登录"><i className="fa fa-sign-in"/> 登录</Link>
-              }
-            </Menu.Item>
-
-{/*    TODO        {window.shouldGotoMobile &&
-              <Menu.Item key="isMobile">
-                <a href={window.mobilePath}><i className="fa fa-mobile"/> 跳转到移动版本</a>
-              </Menu.Item>
-            } */}
-          </Menu>
-        </div>
-      </Header>
-    </>)
-  }
-}
-
-export default connect(
-  (state) => {
+  function renderUserMenu() {
     return {
-      userSession: state.user.session,
-      windowWidth: state.options.windowWidth,
-      ...state.article
+      style: { width: '200px', top: '15px', left: '5px' },
+      items: [
+        ...renderAdmin(),
+        { type: 'divider', key: 'divider' },
+        {
+          key: 'logout',
+          onClick: showLogoutConfirm,
+          label: <span title="安全退出">安全退出 <LogoutOutlined/></span>,
+        },
+      ],
     }
-  },
-  {
-    updateUserSession
   }
-)(NavHeader)
+
+  const items = [
+    {
+      key: 'home',
+      label: <Link to='/' title="首页"><HomeFilled aria-hidden="true"/> 首页</Link>,
+    },
+    {
+      key: 'categories',
+      icon: <FolderFilled aria-hidden="true"/>,
+      label: '分类',
+      children: [{
+        type: 'group',
+        key: 'all-categories',
+        label: '全部分类',
+        children: (categories || []).map((category, idx) => ({
+          key: `${category.name}-${idx}`,
+          label: <Link to={`/categories/${category.name}`} title={category.description}>
+            {category.name}({category.articleCount})
+          </Link>,
+        })),
+      }],
+    },
+    {
+      key: 'tags',
+      icon: <TagFilled aria-hidden="true"/>,
+      label: '标签',
+      children: [{
+        type: 'group',
+        key: 'all-tags',
+        label: '全部标签',
+        children: (labels || []).map((tag, idx) => ({
+          key: `${tag.name}-${idx}`,
+          label: <Link to={`/tags/${tag.name}`} title={tag.name}>{tag.name}</Link>,
+        })),
+      }],
+    },
+    {
+      key: 'atom',
+      label: <ApiLink target='_blank' href='/feed.atom' title="订阅"><RssIcon/> 订阅</ApiLink>,
+    },
+    { key: 'search', label: <Search/> },
+    {
+      key: 'userSession',
+      label: userSession ?
+        <Dropdown menu={renderUserMenu()} placement="bottomLeft" trigger={['click']}>
+          <span>
+            <Image original width="30" src={userSession.avatar} className="avatar"/>
+          </span>
+        </Dropdown>
+        : <Link to='/login' title="登录"><LoginOutlined aria-hidden="true"/> 登录</Link>,
+    },
+  ]
+
+  return (<>
+    <Header className='navbar'>
+      <div className="navbar-brand">
+        <a href='/' title="首页">
+          <img width="69" height="40" alt="Logo" src="/logo.svg" style={{ margin: "-6px" }}/>
+        </a>
+      </div>
+      <div className="navbar-right">
+        <Menu style={{ borderBottom: 'none', marginTop: 4 }}
+              mode="horizontal" defaultSelectedKeys={['home']} items={items}/>
+      </div>
+    </Header>
+  </>)
+}

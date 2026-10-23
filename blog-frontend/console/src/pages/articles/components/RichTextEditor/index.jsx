@@ -19,9 +19,10 @@
  */
 
 import React from 'react';
+import { articleMessage as t } from '@/utils/article-i18n';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-// import ClassicEditor from '@/components/ckeditor';
-import '@/components/ckeditor';
+import ClassicEditor from '@/components/ckeditor';
+//import '@/components/ckeditor';
 import { message } from 'antd'
 
 import UploadAdapterPlugin from './UploadAdapterPlugin'
@@ -35,13 +36,13 @@ export default (props) => {
     toolbar,
     upload: {
       // setIsUploading,
-      url: '/api/attachments',
+      url: '/api/console/attachments',
       onUploadError: error => {
         return message.error(error.message)
       }
     },
     extraPlugins: [UploadAdapterPlugin],
-    placeholder: '在此处输入或粘贴您的内容!',
+    placeholder: t('editorPlaceholder'),
   }
 
   return (
@@ -81,4 +82,3 @@ export default (props) => {
     />
   )
 }
-

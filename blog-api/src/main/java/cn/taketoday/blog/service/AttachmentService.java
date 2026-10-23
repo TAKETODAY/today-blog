@@ -127,7 +127,7 @@ public class AttachmentService {
         ossOperations.removeFile(location);
       }
       catch (RuntimeException e) {
-        throw InternalServerException.failed("OSS 删除失败", e);
+        throw new InternalServerException("OSS 删除失败", e);
       }
     }
 
@@ -165,6 +165,7 @@ public class AttachmentService {
 
   private File saveFile(Part file, String uploadUrl) throws IOException {
     File dest = attachmentConfig.getLocalFile(uploadUrl);
+    dest.getParentFile().mkdirs();
     file.transferTo(dest);
     return dest;
   }

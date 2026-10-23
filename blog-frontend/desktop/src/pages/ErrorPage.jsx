@@ -21,6 +21,7 @@
 import React from 'react';
 import head from '../assets/images/404/head.png';
 import { Button } from "antd";
+import 'antd/es/button/style';
 
 const errors = {
   '400': { msg: '400 Bad Request !', desc: '错误请求 !' },
@@ -50,5 +51,4 @@ export default props => {
     </div>
   </>)
 }
-
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package cn.taketoday.blog.service;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
 import cn.taketoday.blog.model.Category;
 import infra.app.context.event.ApplicationStartedEvent;
@@ -29,7 +28,6 @@ import infra.jdbc.NamedQuery;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
 import infra.persistence.EntityManager;
-import infra.persistence.Order;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -47,15 +45,25 @@ public class CategoryService {
   private final RepositoryManager repository;
 
   public void persist(Category category) {
-    entityManager.persist(category, false);
+    entityManager.persist(category);
   }
 
-  public List<Category> getAllCategories() {
-    return entityManager.find(Category.class, Map.of("order", Order.ASC));
+  /**
+   * 获取所有分类，并按排序字段升序排列
+   *
+   * @return 分类列表
+   */
+  public List<Category> getOrderedCategories() {
+    return entityManager.find(Category.class);
   }
 
-  @Nullable
-  public Category getCategory(String name) {
+  /**
+   * 根据名称获取分类
+   *
+   * @param name 分类名称
+   * @return 分类对象，如果不存在则返回 null
+   */
+  public @Nullable Category findCategory(String name) {
     return entityManager.findById(Category.class, name);
   }
 

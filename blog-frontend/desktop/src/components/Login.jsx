@@ -17,11 +17,17 @@
 
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Button, Checkbox, Form, Input, message, Popconfirm } from 'antd';
+import 'antd/es/alert/style';
+import 'antd/es/button/style';
+import 'antd/es/checkbox/style';
+import 'antd/es/form/style';
+import 'antd/es/input/style';
+import 'antd/es/message/style';
+import 'antd/es/popconfirm/style';
 import React from 'react';
 import { userService } from '../services';
 import { getStorage, removeStorage, saveStorage } from 'core';
-import { Link } from "react-router-dom";
-import { Image } from './'
+import Image from './Image'
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
 import { connect } from "react-redux";
@@ -75,9 +81,7 @@ class Login extends React.PureComponent {
         <>
           <div className="login_avatar">
             <h2>已登录</h2>
-            <Link to="/user/info" title={userSession.name}>
-              <Image alt="头像" className="img-responsive info_avatar" src={userSession.avatar}/>
-            </Link>
+            <Image alt="头像" className="img-responsive info_avatar" src={userSession.avatar}/>
           </div>
           <Popconfirm title="确认先退出再登录其他账号吗？" onConfirm={this.loginOther}>
             <Button type="primary" title="登录其他账号" block>登录其他账号</Button>

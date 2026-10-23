@@ -15,18 +15,24 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { connect } from "react-redux";
 import { Button, Form, Input, message } from 'antd';
-import { GlobalOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
+import 'antd/es/button/style';
+import 'antd/es/form/style';
+import 'antd/es/input/style';
+import 'antd/es/message/style';
+import { EditOutlined, GlobalOutlined, MailOutlined, RollbackOutlined, UserOutlined } from '@ant-design/icons';
 
-import { withRouter } from "react-router-dom";
 import { commentService } from 'src/services';
-import { Editor, Image } from 'src/components';
+import Image from '../Image';
 import { updateUserSession } from "src/redux/actions";
 import { userSessionOptionsMapStateToProps } from "src/redux/action-types";
 import { getGravatarURL, getStorage, isEmpty, saveStorage } from "core";
+import './CommentEdit.css';
 
+
+const Editor = React.lazy(() => import('../Editor'));
 
 const CommentEdit = props => {
   const [editor, setEditor] = useState(null)
@@ -61,7 +67,7 @@ const CommentEdit = props => {
 
   function renderReply(comment) {
     return (<>
-      <i className='fa fa-reply fa-flip-horizontal'/>
+      <RollbackOutlined aria-hidden="true" style={{ transform: 'scaleX(-1)' }}/>
       <div className='comment_user_info' style={{ display: 'inline', marginLeft: '5px' }}>
         <a href={comment.commenterSite}>
           <Image className='comment_avatar' alt={comment.commenter}
@@ -99,12 +105,14 @@ const CommentEdit = props => {
     <div className="data-list-title" style={{ border: 'none' }}>
       {replying
           ? renderReply(replying)
-          : <><i className="fa fa-edit"/> 发表评论</>
+          : <><EditOutlined aria-hidden="true"/> 发表评论</>
       }
     </div>
 
-    <Editor placeholder={options['comment.placeholder']}
-            setEditor={setEditor} options={{ autofocus: false }}/>
+    <Suspense fallback={<div>编辑器加载中...</div>}>
+      <Editor placeholder={options['comment.placeholder']}
+              setEditor={setEditor} options={{ autofocus: false }}/>
+    </Suspense>
 
     <div className="comment-edit-footer">
       <Form layout="inline" form={form} initialValues={commenterInfo()} onFinish={createComment}>
@@ -117,7 +125,7 @@ const CommentEdit = props => {
         <Form.Item name="commenterSite">
           <Input prefix={<GlobalOutlined/>} placeholder="个人网站"/>
         </Form.Item>
-        <Form.Item shouldUpdate>
+        <Form.Item className="comment-edit-submit" shouldUpdate>
           {() => (
               <Button type="primary" htmlType="submit">提交评论</Button>
           )}
@@ -132,4 +140,4 @@ const CommentEdit = props => {
 
 export default connect(
     userSessionOptionsMapStateToProps, { updateUserSession }
-)(withRouter(CommentEdit))
+)(CommentEdit)

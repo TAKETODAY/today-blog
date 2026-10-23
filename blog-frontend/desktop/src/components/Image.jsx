@@ -20,6 +20,7 @@
 
 import React from 'react';
 import { Image } from 'antd';
+import 'antd/es/image/style';
 import { isTrue } from "core";
 import loading from 'src/assets/images/loading.gif'
 import fallback from 'src/assets/images/fallback.png'

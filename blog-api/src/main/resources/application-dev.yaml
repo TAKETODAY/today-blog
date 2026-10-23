@@ -19,7 +19,7 @@ server:
     http2-graceful-shutdown-timeout: 29s
     auto-read: ${server.http2.enabled}
 
-  use-virtual-thread-service-executor: true
+  use-virtual-threads: true
 
   http2:
     enabled: false
@@ -27,6 +27,8 @@ server:
       max-header-list-size: 1024
       push-enabled: false
       connect-protocol-enabled: false
+  multipart:
+    field-size-threshold: 10MB
 
 datasource:
   username: root
@@ -36,12 +38,14 @@ datasource:
   driver-class-name: com.mysql.cj.jdbc.Driver
   hikari:
     maximum-pool-size: 20
-    max-lifetime: 120000
     connection-test-query: 'select 1'
 
 site:
   #aliyun.oss.enable=false
   host: http://localhost:8080
+
+attachment:
+  outside-resource: ${user.home}/today-blog/data
 
 aliyun:
   oss:
@@ -54,12 +58,11 @@ web:
   mvc:
     log-request-details: true
 
-infra:
-  task:
-    execution:
-      thread-name-prefix: app-pool-
-      pool:
-        max-size: 100
+task:
+  execution:
+    thread-name-prefix: app-pool-
+    pool:
+      max-size: 100
 
 app:
   main:
@@ -70,6 +73,10 @@ logging:
     netty: info
     nettyLogging: info
     web: debug
-    sql: info
+    sql: debug
+    infra:
+      app:
+        availability: debug
+
   pattern:
     dateformat: 'yyyy-MM-dd HH:mm:ss.SSS'

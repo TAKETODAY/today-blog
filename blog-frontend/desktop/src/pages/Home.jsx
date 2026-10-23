@@ -1,6 +1,6 @@
 /*
  * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
- * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ * Copyright © TODAY & 2017 - 2026 All Rights Reserved.
  *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
  *
@@ -19,86 +19,106 @@
  */
 
 import { Pagination } from 'antd';
-import React from 'react';
+import 'antd/es/pagination/style';
+import React, { useEffect, useState } from 'react';
 import ArticleList from '../components/ArticleList';
 import { applySEO, extractData, scrollTop } from 'core';
-import { connect } from "react-redux";
-import { navigationsMapStateToProps } from "../redux/action-types";
+import { useDispatch } from "react-redux";
+import { useLocation, useNavigate } from 'react-router-dom';
 import { updateNavigations } from "../redux/actions";
 import { articleService } from '../services';
 import { setTitle } from "../utils/common"
 
-class Home extends React.Component {
-
-  state = {
-    articles: {
-      all: 0,
-      current: 1,
-      num: 0,
-      size: 8,
-      data: []
-    }
-  }
-
-  updateArticles(page = 1, size = 10) {
-    scrollTop()
-
-    const { articles } = this.state
-    articles['data'] = undefined
-
-    super.setState({ articles })
-    articleService.fetchHomeArticles(page, size)
-        .then(extractData)
-        .then(articles => {
-          super.setState({ articles });
-        })
-        .catch(error => {
-          const err = {
-            status: error.response ? error.response.status : 500,
-            subTitle: error.message
-          };
-          super.setState({ error: err })
-        })
-  }
-
-  componentDidMount() {
-    setTitle("代码是我心中的一首诗")
-    applySEO()
-    this.updateArticles()
-    this.props.updateNavigations(null)
-  }
-
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.match.params.categoryId) {
-      const { categoryId } = this.props.match.params
-      if (categoryId !== nextProps.match.params.categoryId) {
-        this.updateArticles(nextProps)
-      }
-    }
-  }
-
-  render() {
-    const { articles, error } = this.state
-    return (<>
-      <div className="shadow-box" id="test1">
-        <div className="data-list-title">最新文章</div>
-        <ArticleList articles={articles.data} error={error} title="最新文章"/>
-        <div align='center' style={{ padding: '20px' }}>
-          <Pagination
-              showQuickJumper
-              showSizeChanger
-              total={articles.total}
-              onChange={this.updateArticles.bind(this)}
-              onShowSizeChange={this.updateArticles.bind(this)}
-              current={articles.current}
-              showTotal={n => <><b className='red'>{n}</b>篇文章</>}
-          />
-        </div>
-      </div>
-    </>);
-  }
+function positiveInteger(value, fallback) {
+  const number = Number(value);
+  return Number.isSafeInteger(number) && number > 0 ? number : fallback;
 }
 
-export default connect(
-    navigationsMapStateToProps, { updateNavigations }
-)(Home)
+export default function Home() {
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const page = positiveInteger(params.get('page'), 1);
+  const size = positiveInteger(params.get('size'), 10);
+  const [articles, setArticles] = useState({ total: 0, current: page, size, data: [] });
+  const [error, setError] = useState();
+
+  useEffect(() => {
+    setTitle("代码是我心中的一首诗");
+    applySEO();
+    dispatch(updateNavigations(null));
+  }, [dispatch]);
+
+  useEffect(() => {
+    let active = true;
+    //scrollTop();
+    setError(undefined);
+    setArticles(previous => ({ ...previous, data: undefined }));
+    articleService.fetchHomeArticles(page, size)
+      .then(extractData)
+      .then(result => {
+        if (active) {
+          setArticles(result);
+        }
+      })
+      .catch(error => {
+        if (active) {
+          setError({
+            status: error.response ? error.response.status : 500,
+            subTitle: error.message,
+          });
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [page, size]);
+
+  function pageURL(page, size) {
+    const params = new URLSearchParams(location.search);
+    params.set('page', page);
+    params.set('size', size);
+    return `${location.pathname}?${params}`;
+  }
+
+  function changePage(page, size) {
+    navigate(pageURL(page, size));
+  }
+
+  function renderPageItem(page, type, element) {
+    if (type !== 'page' && type !== 'jump-prev' && type !== 'jump-next') {
+      return element;
+    }
+    return React.cloneElement(element, {
+      href: pageURL(page, size),
+      rel: undefined,
+      onClick: event => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) {
+          event.stopPropagation();
+          return;
+        }
+        event.preventDefault();
+      },
+    });
+  }
+
+  return <>
+    <div className="shadow-box" id="test1">
+      <div className="data-list-title">最新文章</div>
+      <ArticleList articles={articles.data} error={error} title="最新文章" showPinned/>
+      <div align='center' style={{ padding: '20px' }}>
+        <Pagination
+          showQuickJumper
+          showSizeChanger
+          total={articles.total}
+          onChange={changePage}
+          itemRender={renderPageItem}
+          pageSize={size}
+          current={page}
+          showTotal={n => <><b className='red'>{n}</b>篇文章</>}
+        />
+      </div>
+    </div>
+  </>
+}

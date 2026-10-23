@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,12 +34,12 @@ import infra.http.HttpStatus;
 import infra.util.StringUtils;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
-import infra.web.annotation.PATCH;
 import infra.web.annotation.POST;
 import infra.web.annotation.PUT;
 import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
+import infra.web.annotation.RequestParam;
 import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestController;
 import lombok.CustomLog;
@@ -65,6 +65,14 @@ class ArticleConsoleHttpHandler {
   private final ApplicationEventPublisher eventPublisher;
 
   /**
+   * 查询 文章列表 API
+   */
+  @GET
+  public Pagination<Article> articles(ArticleConditionForm from, Pageable pageable) {
+    return articleService.search(from, pageable);
+  }
+
+  /**
    * 创建文章 API
    */
   @POST
@@ -81,7 +89,7 @@ class ArticleConsoleHttpHandler {
       log.debug("创建新文章: [{}]", form.title);
     }
 
-    articleService.saveArticle(article);
+    articleService.createArticle(article);
   }
 
   /**
@@ -101,17 +109,6 @@ class ArticleConsoleHttpHandler {
 
   /**
    * 更新状态 API
-   */
-  @Deprecated
-  @PATCH(path = "/{id}", params = "status")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Logging(title = "更新文章状态", content = "更新文章：[#{#id}]状态为：[#{#status}]")
-  public void updateStatusDeprecated(@PathVariable Long id, PostStatus status) {
-    articleService.updateStatusById(status, id);
-  }
-
-  /**
-   * 更新状态 API
    *
    * @since 3.2
    */
@@ -119,6 +116,13 @@ class ArticleConsoleHttpHandler {
   @Logging(title = "更新文章状态", content = "更新文章：《#{@articleService.getById(#id)?.title}》状态为：[#{#status.description}]")
   public void updateStatus(@PathVariable Long id, PostStatus status) {
     articleService.updateStatusById(status, id);
+  }
+
+  @PUT(path = "/{id}", params = "pinned")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Logging(title = "更新文章置顶", content = "文章: [#{#id}]，置顶: [#{#pinned}]")
+  public void updatePinned(@PathVariable long id, @RequestParam boolean pinned) {
+    articleService.setPinned(id, pinned);
   }
 
   /**
@@ -129,14 +133,6 @@ class ArticleConsoleHttpHandler {
   @Logging(title = "删除文章", content = "删除文章: [#{#id}]")
   public void delete(@PathVariable Long id) {
     articleService.deleteById(id);
-  }
-
-  /**
-   * 查询 文章列表 API
-   */
-  @GET
-  public Pagination<Article> articles(ArticleConditionForm from, Pageable pageable) {
-    return articleService.search(from, pageable);
   }
 
 }

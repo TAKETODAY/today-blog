@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import cn.taketoday.blog.model.Comment;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2025/3/5 22:13
  */
-public class CommentCreatedEvent extends BlogEvent {
+public class CommentCreatedEvent extends BlogApplicationEvent {
 
   private final Comment comment;
 

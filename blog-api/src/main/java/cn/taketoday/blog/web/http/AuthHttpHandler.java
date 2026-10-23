@@ -38,12 +38,12 @@ import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
-import infra.beans.support.BeanProperties;
+import infra.beans.support.BeanPropertyUtils;
 import infra.http.HttpStatus;
+import infra.http.ResponseEntity;
 import infra.session.Session;
-import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
@@ -60,6 +60,11 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.CustomLog;
 
 /**
+ * 当前用户认证与账户资料 HTTP 接口。
+ *
+ * <p>登录状态通过会话维护。{@code GET /api/auth} 是登录状态探测接口：已登录时返回当前用户，
+ * 未登录时返回 {@code 204 No Content}；修改账户资料的接口则要求当前会话已认证。</p>
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-09-15 20:27
  */
@@ -78,8 +83,7 @@ class AuthHttpHandler {
 
   private final SessionManagerOperations sessionManagerOperations;
 
-  public AuthHttpHandler(SessionManager sessionManager, UserService userService,
-          BloggerService bloggerService, AttachmentService attachmentService,
+  public AuthHttpHandler(UserService userService, BloggerService bloggerService, AttachmentService attachmentService,
           SessionManagerOperations sessionManagerOperations, PasswordEncoder passwordEncoder) {
     this.userService = userService;
     this.bloggerService = bloggerService;
@@ -88,11 +92,28 @@ class AuthHttpHandler {
     this.passwordEncoder = passwordEncoder;
   }
 
+  /**
+   * 查询当前会话的登录用户。
+   *
+   * <p>该接口用于前端探测登录状态，匿名访问属于正常流程，不会返回 401。</p>
+   *
+   * @param loginUser 当前会话用户；未登录时为 {@code null}
+   * @return {@code 200 OK} 和当前用户，或未登录时的 {@code 204 No Content}
+   */
   @GET
-  public User getLoginUser(User loginUser) {
-    return loginUser;
+  public ResponseEntity<@Nullable User> getLoginUser(@Nullable User loginUser) {
+    return loginUser != null
+            ? ResponseEntity.ok(loginUser)
+            : ResponseEntity.noContent().build();
   }
 
+  /**
+   * 退出当前会话。
+   *
+   * <p>调用后当前会话立即失效，后续需要认证的请求将被拒绝。</p>
+   *
+   * @param session 当前 HTTP 会话
+   */
   @DELETE
   public void logout(Session session) {
     session.invalidate();
@@ -101,10 +122,12 @@ class AuthHttpHandler {
   @NullUnmarked
   static class UserFrom {
 
+    /** 登录邮箱。 */
     @NotEmpty(message = "邮箱不能为空")
     @Email(message = "请您输入正确格式的邮箱")
     public String email;
 
+    /** 登录密码。 */
     @NotEmpty(message = "密码不能为空")
     public String password;
   }
@@ -115,25 +138,19 @@ class AuthHttpHandler {
   }
 
   /**
-   * 登录
-   * <pre> {@code
-   * {
-   *   "id": 1544107262149,
-   *   "status": "NORMAL",
-   *   "name": "TAKETODAY",
-   *   "email": "taketoday@foxmail.com",
-   *   "site": "https://taketoday.cn",
-   *   "type": "master",
-   *   "avatar": "/upload/2019/4/9/6cd520c4-509a-4d35-9028-2485a87bd5c6.png",
-   *   "introduce": "代码是我心中的一首诗",
-   *   "background": "/upload/2019/4/9/eb785277-0aef-4e42-85f3-2f9280fc6c58.png",
-   * }
-   * } </pre>
+   * 使用邮箱和密码登录。
+   *
+   * <p>登录成功后将用户绑定到当前会话并返回用户信息。与博主账号匹配时，
+   * 同时绑定博主身份。登录接口每分钟最多允许尝试 5 次。</p>
+   *
+   * @param from 邮箱和密码
+   * @param request 当前 HTTP 请求，用于获取或创建会话
+   * @return 登录成功后的用户信息
    */
   @POST(params = "v2")
   @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
   @Logging(title = "登录", content = "邮箱:[#{#from.email}]登录")
-  public User loginV2(@Valid @RequestBody UserFrom from, RequestContext request) {
+  public User loginV2(@Valid @RequestBody UserFrom from, HttpContext request) {
     User loginUser = userService.getByEmail(from.email);
     if (loginUser == null) {
       throw ErrorMessageException.failed(from.email + " 账号不存在!");
@@ -181,23 +198,30 @@ class AuthHttpHandler {
 
   @NullUnmarked
   public static class InfoForm {
+    /** 用户姓名或昵称。 */
     @NotBlank(message = "请输入姓名或昵称")
     public String name;
 
+    /** 个人站点地址。 */
     @Nullable
     public String site;
 
+    /** 个人简介，最多 256 个字符。 */
     @Length(max = 256, message = "介绍最多256个字符")
     public String introduce;
 
+    /** 是否接收邮件通知。 */
     public boolean notification = false;
   }
 
   /**
-   * 当前登录用户信息
+   * 更新当前登录用户的资料。
    *
-   * @param loginUser 登录用户
-   * @param form 表单
+   * <p>如果提交内容与当前资料完全一致，将返回业务错误。</p>
+   *
+   * @param loginUser 当前登录用户
+   * @param form 用户资料
+   * @return 更新后的用户信息
    */
   @PUT
   @RequestLimit(count = 2, unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次用户信息")
@@ -227,26 +251,32 @@ class AuthHttpHandler {
     userService.updateById(user);
 
     // update to session
-    BeanProperties.copy(user, loginUser);
+    BeanPropertyUtils.copy(user, loginUser);
     return loginUser;
   }
 
+  @NullUnmarked
   public static class ChangePasswordForm {
 
+    /** 当前密码。 */
     @NotBlank(message = "旧密码不能为空")
     public String oldPassword;
 
+    /** 新密码，长度为 6 至 48 个字符。 */
     @Length(min = 6, max = 48, message = "新密码至少输入6个字符，最多48个字符")
     public String newPassword;
 
+    /** 新密码确认值，必须与 {@link #newPassword} 一致。 */
     public String confirmNewPassword;
   }
 
   /**
-   * 修改用户密码
+   * 修改当前登录用户的密码。
    *
-   * @param loginUser 登录用户
-   * @param form 表单
+   * <p>修改成功返回 {@code 204 No Content}。</p>
+   *
+   * @param loginUser 当前登录用户
+   * @param form 旧密码、新密码及确认密码
    */
   @PUT(params = "password")
   @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -285,18 +315,21 @@ class AuthHttpHandler {
   @NullUnmarked
   public static class UserEmailForm {
 
+    /** 新邮箱地址。 */
     @NotEmpty(message = "请输入新邮箱")
     public String email;
 
+    /** 当前登录密码，用于确认身份。 */
     @NotEmpty(message = "请输入密码")
     public String password;
-
-//    @NotEmpty(message = "请输入手机号")
-//    public String mobilePhone;
   }
 
   /**
-   * Change User's Email
+   * 修改当前登录用户的邮箱。
+   *
+   * @param loginUser 当前登录用户
+   * @param form 新邮箱和当前登录密码
+   * @return 更新后的用户信息
    */
   @PUT(params = "email-mobile-phone")
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次邮箱或手机")
@@ -325,7 +358,11 @@ class AuthHttpHandler {
   }
 
   /**
-   * change image
+   * 修改当前登录用户的头像。
+   *
+   * @param loginUser 当前登录用户
+   * @param avatar 新头像文件
+   * @return 更新后的用户信息
    */
   @PUT(params = "avatar")
   @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改1次头像")
@@ -348,9 +385,11 @@ class AuthHttpHandler {
   }
 
   /**
-   * Change background image
+   * 修改当前用户的背景图片。
    *
-   * @param loginUser login user
+   * @param loginUser 当前会话用户
+   * @param background 新背景图片文件
+   * @return 更新后的用户信息
    */
   @PUT(params = "background")
   @Logging(title = "用户修改背景", content =

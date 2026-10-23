@@ -17,30 +17,39 @@
 
 package cn.taketoday.blog.web.interceptor;
 
+import java.io.IOException;
+
 import cn.taketoday.blog.UnauthorizedException;
-import cn.taketoday.blog.model.User;
-import infra.session.SessionManagerOperations;
+import cn.taketoday.blog.config.UserSessionResolver;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
 import infra.web.HandlerInterceptor;
-import infra.web.RequestContext;
+import infra.web.HttpContext;
 import infra.web.resource.ResourceHttpRequestHandler;
 
 /**
+ * 登录拦截器，用于验证用户会话状态。
+ * <p>
+ * 如果用户未登录且请求的不是静态资源，则抛出 {@link UnauthorizedException} 异常。
+ * 如果请求的是静态资源且用户未登录，则返回 404 状态码。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-30 20:36
  */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)
 final class LoginInterceptor implements HandlerInterceptor {
 
   // Authorization
 
-  private final SessionManagerOperations sessionManagerOperations;
+  private final UserSessionResolver identities;
 
-  LoginInterceptor(SessionManagerOperations sessionManagerOperations) {
-    this.sessionManagerOperations = sessionManagerOperations;
+  LoginInterceptor(UserSessionResolver identities) {
+    this.identities = identities;
   }
 
   @Override
-  public boolean preProcessing(RequestContext request, Object handler) throws Throwable {
-    if (User.isPresent(sessionManagerOperations.getSession(request, false))) {
+  public boolean preProcessing(HttpContext request, Object handler) throws IOException {
+    if (identities.getLoginUser(request) != null) {
       return true;
     }
 

@@ -21,7 +21,13 @@
 import React from 'react';
 import { LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { Dropdown, Empty, Input, Menu, message, Spin } from 'antd';
-import { Link, withRouter } from "react-router-dom";
+import 'antd/es/dropdown/style';
+import 'antd/es/empty/style';
+import 'antd/es/input/style';
+import 'antd/es/menu/style';
+import 'antd/es/message/style';
+import 'antd/es/spin/style';
+import { Link } from "react-router-dom";
 import debounce from 'lodash/debounce';
 
 import { articleService } from 'src/services';
@@ -140,5 +146,4 @@ class SearchComponent extends React.Component {
   }
 }
 
-export default withRouter(SearchComponent)
-
+export default SearchComponent

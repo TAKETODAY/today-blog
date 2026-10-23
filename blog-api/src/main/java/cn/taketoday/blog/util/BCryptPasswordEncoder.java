@@ -22,9 +22,9 @@ import org.jspecify.annotations.Nullable;
 import java.security.SecureRandom;
 import java.util.regex.Pattern;
 
-import infra.lang.Assert;
 import infra.logging.Logger;
 import infra.logging.LoggerFactory;
+import infra.util.Assert;
 
 /**
  * Implementation of PasswordEncoder that uses the BCrypt strong hashing function. Clients

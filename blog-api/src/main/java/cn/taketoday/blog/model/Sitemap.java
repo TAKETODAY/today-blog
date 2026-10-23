@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,26 +22,21 @@ import org.jspecify.annotations.Nullable;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.Objects;
 
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-04-08 08:22
  */
-@Getter
-@Setter
 public class Sitemap implements Serializable {
-  static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
   @Serial
   private static final long serialVersionUID = 1L;
 
-  //	always hourly daily weekly monthly yearly never
+  // always hourly daily weekly monthly yearly never
 
   private final LinkedList<SiteURL> urls = new LinkedList<>();
 
@@ -67,11 +62,16 @@ public class Sitemap implements Serializable {
     }
 
     String lastModify = updateAt.toString();
-    return newURL(0.9f, "/articles/" + article.getUri(), lastModify, "daily");
+    String cover = article.getCover();
+    return newURL(0.9f, "/articles/" + article.getUri(), lastModify, "daily", cover);
   }
 
-  public static SiteURL newURL(float priority, String location, String lastModify, String changeFreq) {
-    return new SiteURL(location, priority, lastModify, changeFreq);
+  public LinkedList<SiteURL> getUrls() {
+    return urls;
+  }
+
+  public static SiteURL newURL(float priority, String location, String lastModify, String changeFreq, String cover) {
+    return new SiteURL(location, priority, lastModify, changeFreq, cover);
   }
 
   @Getter
@@ -86,11 +86,18 @@ public class Sitemap implements Serializable {
 
     private final String changeFreq;// 更新频率
 
-    public SiteURL(String loc, float priority, @Nullable String lastModify, String changeFreq) {
+    private final @Nullable String cover;
+
+    public SiteURL(String loc, float priority, @Nullable String lastModify, String changeFreq, @Nullable String cover) {
       this.loc = loc;
       this.priority = priority;
       this.lastModify = lastModify;
       this.changeFreq = changeFreq;
+      this.cover = cover;
+    }
+
+    public boolean hasCover() {
+      return cover != null;
     }
   }
 

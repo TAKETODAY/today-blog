@@ -49,8 +49,17 @@ function dispatchHttpError(store, key, err) {
 const initStore = (store) => {
 
   http.get("/api/auth").then(res => {
-    localStorage.setItem('session', JSON.stringify(res.data))
-    store.dispatch(updateUserSession(res.data))
+    const session = res.status === 204 || !res.data ? null : res.data
+    if (session) {
+      localStorage.setItem('session', JSON.stringify(session))
+    }
+    else {
+      localStorage.removeItem('session')
+    }
+    store.dispatch(updateUserSession(session))
+  }).catch(() => {
+    localStorage.removeItem('session')
+    store.dispatch(updateUserSession(null))
   })
 
   getCacheable("/api/options").then(res => {
@@ -87,7 +96,7 @@ const initStore = (store) => {
 }
 
 const consoleLog = (options) => {
-  console.log(`%cTODAY BLOG%c\n代码是我心中的一首诗\n\n${options['site.copyright']}\n`,
+  globalThis.console.log(`%cTODAY BLOG%c\n代码是我心中的一首诗\n\n${options['site.copyright']}\n`,
       "font-size:96px;text-shadow: 1px 1px 1px rgba(0,0,0,.2);",
       "font-size:12px;color:rgba(0,0,0,.38);")
 }

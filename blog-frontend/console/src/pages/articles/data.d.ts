@@ -28,6 +28,7 @@ export interface ArticleItem {
   content: string;
   markdown: string;
   status: string;
+  pinnedAt?: string | null;
   uri: string;
   labels: LabelItem[];
 
@@ -68,15 +69,4 @@ export interface CommentItem {
 export interface LabelItem {
   id: number;
   name: string;
-}
-
-export interface TableListPagination {
-  total: number;
-  pageSize: number;
-  current: number;
-}
-
-export interface TableListData {
-  list: ArticleItem[];
-  pagination: Partial<TableListPagination>;
 }

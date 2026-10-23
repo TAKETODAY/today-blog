@@ -25,7 +25,6 @@ export default function access(initialState: { currentUser?: API.CurrentUser | u
   const { currentUser } = initialState || {};
   return {
     none: true,
-    strictMode: true,
-    isLoggedIn: currentUser != null && currentUser.blogger,
+    isLoggedIn: currentUser != null && currentUser.blogger === true,
   };
 }

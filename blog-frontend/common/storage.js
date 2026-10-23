@@ -1,5 +1,3 @@
-import { message } from 'antd';
-
 function saveSession(key, obj) {
   sessionStorage.setItem(key, JSON.stringify(obj));
 }
@@ -11,7 +9,6 @@ function getSession(key) {
 function clearStorage() {
   localStorage.clear();
   sessionStorage.clear();
-  message.message.success("缓存清除成功")
 }
 
 function removeSession(key) {

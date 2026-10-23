@@ -1,45 +1,14 @@
-/* eslint-disable global-require */
-/* eslint-disable import/no-extraneous-dependencies */
-const findChrome = require('carlo/lib/find_chrome');
+const puppeteer = require('puppeteer-core');
+const { findBrowser } = require('./browser-path');
 
-const getBrowser = async () => {
-  try {
-    // eslint-disable-next-line import/no-unresolved
-    const puppeteer = require('puppeteer');
-    const browser = await puppeteer.launch({
-      args: [
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--no-first-run',
-        '--no-zygote',
-        '--no-sandbox',
-      ],
-    });
-    return browser;
-  } catch (error) {
-    // console.log(error)
-  }
-
-  try {
-    // eslint-disable-next-line import/no-unresolved
-    const puppeteer = require('puppeteer-core');
-    const findChromePath = await findChrome({});
-    const { executablePath } = findChromePath;
-    const browser = await puppeteer.launch({
-      executablePath,
-      args: [
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--no-first-run',
-        '--no-zygote',
-        '--no-sandbox',
-      ],
-    });
-    return browser;
-  } catch (error) {
-    console.log('🧲 no find chrome');
-  }
-  throw new Error('no find puppeteer');
+module.exports = async () => {
+  return puppeteer.launch({
+    executablePath: findBrowser(),
+    headless: true,
+    args: [
+      '--no-first-run',
+      ...(process.platform === 'linux' ? ['--disable-dev-shm-usage'] : []),
+      ...(process.env.E2E_NO_SANDBOX === '1' ? ['--no-sandbox'] : []),
+    ],
+  });
 };
-
-module.exports = getBrowser;

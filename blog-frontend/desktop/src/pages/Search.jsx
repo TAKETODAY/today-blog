@@ -19,14 +19,16 @@
  */
 
 import { Input, Pagination } from 'antd';
+import 'antd/es/input/style';
+import 'antd/es/pagination/style';
 import React, { useEffect, useState } from 'react';
-import { ArticleList } from '../components';
+import ArticleList from '../components/ArticleList';
 import { extractData, getQuery, scrollTop } from 'core';
 import { articleService } from "../services";
 import { connect } from "react-redux";
 import { navigationsMapStateToProps } from "../redux/action-types";
 import { updateNavigations } from "../redux/actions";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { setTitle } from "../utils/common"
 
 const { Search } = Input;
@@ -35,7 +37,7 @@ export default connect(
     navigationsMapStateToProps, { updateNavigations }
 )(props => {
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const location = useLocation();
 
   const [error, setError] = useState(null)
@@ -88,7 +90,7 @@ export default connect(
     updateNavigations()
     updateArticles()
     setValue(query)
-    history.push(`/search?q=${query}`);
+    navigate(`/search?q=${query}`);
   }, [query])
 
   const renderSearch = () => (

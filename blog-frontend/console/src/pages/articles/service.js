@@ -34,11 +34,15 @@ export async function queryArticles(params, sort) {
 }
 
 export async function getCategories() {
-  return http.get('/api/categories')
+  return http.get('/api/console/categories')
 }
 
 export async function updateStatus(id, status) {
   return http.put(`/api/console/articles/${id}?status=${status}`)
+}
+
+export async function updatePinned(id, pinned) {
+  return http.put(`/api/console/articles/${id}?pinned=${pinned}`)
 }
 
 export async function deleteArticle(article) {

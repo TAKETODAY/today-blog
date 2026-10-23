@@ -28,6 +28,9 @@ export default class UserService {
     let session = store.getState().user.session;
     if (session == null || currentTimeMillis() - session.expired >= DEFAULT_SESSION_TIMEOUT) {
       session = await http.get('/api/auth').then((res) => {
+        if (res.status === 204 || !res.data) {
+          return null
+        }
         res.data['expired'] = currentTimeMillis()
         return res.data
       }).catch((res) => null)
@@ -38,7 +41,6 @@ export default class UserService {
 
   async isLoggedIn() {
     const session = await this.getSession()
-    console.log('isLoggedIn', session !== null)
     return session !== null
   }
 

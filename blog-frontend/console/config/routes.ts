@@ -20,6 +20,12 @@
 
 export default [
   {
+    path: '/user/login',
+    component: './user/login',
+    layout: false,
+    access: 'none',
+  },
+  {
     path: '/workplace',
     name: 'workplace',
     icon: 'smile',
@@ -30,6 +36,7 @@ export default [
     path: '/articles',
     layout: false,
     access: 'isLoggedIn',
+    wrappers: ['@/wrappers/RequireLogin'],
     routes: [
       {
         title: '写文章',
@@ -106,12 +113,6 @@ export default [
     access: 'isLoggedIn',
     routes: [
       {
-        layout: false,
-        access: 'none',
-        path: '/user/login',
-        component: './user/login',
-      },
-      {
         name: 'list',
         icon: 'user',
         path: '/user/list',
@@ -132,6 +133,11 @@ export default [
         component: './system/account',
       },
       {
+        name: 'mails',
+        path: '/system/mails',
+        component: './system/mails',
+      },
+      {
         name: 'logging',
         icon: 'log',
         path: '/system/logging',
@@ -142,6 +148,11 @@ export default [
         icon: 'options',
         path: '/system/options',
         component: './system/options',
+      },
+      {
+        name: 'api-keys',
+        path: '/system/api-keys',
+        component: './system/api-keys',
       },
     ],
   },
@@ -156,7 +167,7 @@ export default [
     component: './404',
   },
   {
-    path: '/**',
+    path: '*',
     redirect: '/not-found',
   },
 

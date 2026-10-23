@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2024 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,15 @@ package cn.taketoday.blog;
 
 import infra.app.Application;
 import infra.app.InfraApplication;
+import infra.context.annotation.ReflectiveScan;
+import infra.scheduling.annotation.EnableScheduling;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2019-01-12 21:01
  */
+@ReflectiveScan("cn.taketoday.blog")
+@EnableScheduling
 @InfraApplication(proxyBeanMethods = false)
 public class BlogApplication {
 
