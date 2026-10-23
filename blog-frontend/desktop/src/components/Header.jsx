@@ -34,10 +34,6 @@ import ApiLink from './ApiLink';
 import Image from './Image';
 import Search from './Search';
 
-const { confirm } = Modal;
-const MenuItem = Menu.Item
-
-const { SubMenu } = Menu
 
 const { Header } = Layout;
 
@@ -63,7 +59,7 @@ class NavHeader extends React.Component {
   }
 
   showLogoutConfirm = () => {
-    confirm({
+    Modal.confirm({
       title: '安全退出',
       icon: <ExclamationCircleOutlined/>,
       content: '您确认要安全退出系统吗？',
@@ -72,35 +68,32 @@ class NavHeader extends React.Component {
   }
 
   renderAdmin = () => {
-    return this.props.userSession.blogger &&
-      <>
-        <MenuItem key="write" style={{ width: '200px' }}>
-          <AdminLink href="/articles/write" target="_blank">写文章</AdminLink>
-        </MenuItem>
-        <MenuItem key="admin">
-          <AdminLink to="/" target="_blank">后台管理</AdminLink>
-        </MenuItem>
-      </>
+    return this.props.userSession.blogger ? [
+      {
+        key: 'write',
+        style: { width: '200px' },
+        label: <AdminLink href="/articles/write" target="_blank">写文章</AdminLink>,
+      },
+      {
+        key: 'admin',
+        label: <AdminLink to="/" target="_blank">后台管理</AdminLink>,
+      },
+    ] : []
   }
 
   renderUserMenu = () => {
-    return (
-      <Menu style={{ width: '200px', top: '15px', left: '5px' }}>
-     {/*    <MenuItem>
-          <Link to="/user/info" title="个人主页">个人主页</Link>
-        </MenuItem> */}
-   {/*      <MenuItem>
-          <Link to="/user/settings" title="设置">设置</Link>
-        </MenuItem> */}
-        {this.renderAdmin()}
-        <Menu.Divider/>
-        <MenuItem>
-          <a onClick={this.showLogoutConfirm} title="安全退出">
-            安全退出 <LogoutOutlined/>
-          </a>
-        </MenuItem>
-      </Menu>
-    )
+    return {
+      style: { width: '200px', top: '15px', left: '5px' },
+      items: [
+        ...this.renderAdmin(),
+        { type: 'divider', key: 'divider' },
+        {
+          key: 'logout',
+          onClick: this.showLogoutConfirm,
+          label: <span title="安全退出">安全退出 <LogoutOutlined/></span>,
+        },
+      ],
+    }
   }
 
   handleClick = e => {
@@ -109,6 +102,55 @@ class NavHeader extends React.Component {
 
   render() {
     const { userSession, categories, labels } = this.props
+    const items = [
+      {
+        key: 'home',
+        label: <Link to='/' title="首页"><HomeFilled aria-hidden="true"/> 首页</Link>,
+      },
+      {
+        key: 'categories',
+        icon: <FolderFilled aria-hidden="true"/>,
+        label: '分类',
+        children: [{
+          type: 'group',
+          key: 'all-categories',
+          label: '全部分类',
+          children: (categories || []).map((category, idx) => ({
+            key: `${category.name}-${idx}`,
+            label: <Link to={`/categories/${category.name}`} title={category.description}>
+              {category.name}({category.articleCount})
+            </Link>,
+          })),
+        }],
+      },
+      {
+        key: 'tags',
+        icon: <TagFilled aria-hidden="true"/>,
+        label: '标签',
+        children: [{
+          type: 'group',
+          key: 'all-tags',
+          label: '全部标签',
+          children: (labels || []).map((tag, idx) => ({
+            key: `${tag.name}-${idx}`,
+            label: <Link to={`/tags/${tag.name}`} title={tag.name}>{tag.name}</Link>,
+          })),
+        }],
+      },
+      {
+        key: 'atom',
+        label: <ApiLink target='_blank' href='/feed.atom' title="订阅"><RssIcon/> 订阅</ApiLink>,
+      },
+      { key: 'search', label: <Search/> },
+      {
+        key: 'userSession',
+        label: userSession ?
+          <Dropdown menu={this.renderUserMenu()} placement="bottomRight" trigger={['click']}>
+            <Image original width="30" src={userSession.avatar} className="avatar"/>
+          </Dropdown>
+          : <Link to='/login' title="登录"><LoginOutlined aria-hidden="true"/> 登录</Link>,
+      },
+    ]
 
     return (<>
       <Header className='navbar'>
@@ -119,49 +161,7 @@ class NavHeader extends React.Component {
         </div>
         <div className="navbar-right">
           <Menu style={{ borderBottom: 'none', marginTop: 4 }}
-                onClick={this.handleClick} mode="horizontal" defaultSelectedKeys={['home']}>
-            <Menu.Item key="home">
-              <Link to='/' title="首页"> <HomeFilled aria-hidden="true"/> 首页 </Link>
-            </Menu.Item>
-            <SubMenu key="categories" icon={<FolderFilled aria-hidden="true"/>} title="分类">
-              <Menu.ItemGroup title="全部分类">
-                {categories && categories.map((category, idx) => {
-                  return (
-                    <MenuItem key={`${category.name}-${idx}`}>
-                      <Link to={`/categories/${category.name}`} title={category.description}>
-                        {category.name}({category.articleCount})
-                      </Link>
-                    </MenuItem>
-                  )
-                })}
-              </Menu.ItemGroup>
-            </SubMenu>
-            <SubMenu key="tags" icon={<TagFilled aria-hidden="true"/>} title="标签">
-              <Menu.ItemGroup title="全部标签">
-                {labels && labels.map((tag, idx) => {
-                  return (
-                    <MenuItem key={`${tag.name}-${idx}`}>
-                      <Link to={`/tags/${tag.name}`} title={tag.name}>{tag.name}</Link>
-                    </MenuItem>
-                  )
-                })}
-              </Menu.ItemGroup>
-            </SubMenu>
-            <Menu.Item key="atom">
-              <ApiLink target='_blank' href='/feed.atom' title="订阅"> <RssIcon/> 订阅 </ApiLink>
-            </Menu.Item>
-            <Menu.Item key="search">
-              <Search/>
-            </Menu.Item>
-            <Menu.Item key="userSession">
-              {userSession ?
-                <Dropdown overlay={this.renderUserMenu()} placement="bottomRight" trigger='click'>
-                  <Image original width="30" src={userSession.avatar} className="avatar"/>
-                </Dropdown>
-                : <Link to='/login' title="登录"><LoginOutlined aria-hidden="true"/> 登录</Link>
-              }
-            </Menu.Item>
-          </Menu>
+                onClick={this.handleClick} mode="horizontal" defaultSelectedKeys={['home']} items={items}/>
         </div>
       </Header>
     </>)
