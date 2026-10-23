@@ -19,13 +19,15 @@ initApplication.forEach(init => {
 
 moment.locale('zh-cn');
 
-const root = createRoot(document.getElementById('app'));
-root.render((
-    <BrowserRouter>
-      <ConfigProvider locale={ zhCN }>
-        <Provider store={ store }>
-          <App/>
-        </Provider>
-      </ConfigProvider>
-    </BrowserRouter>
+createRoot(document.getElementById('app')).render((
+  <BrowserRouter future={{
+    v7_startTransition: true,
+    v7_relativeSplatPath: true
+  }}>
+    <ConfigProvider locale={zhCN}>
+      <Provider store={store}>
+        <App/>
+      </Provider>
+    </ConfigProvider>
+  </BrowserRouter>
 ));

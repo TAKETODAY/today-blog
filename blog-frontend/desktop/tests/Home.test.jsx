@@ -22,7 +22,7 @@ function renderHome(path = '/') {
   articleService.fetchHomeArticles.mockImplementation((page = 1, size = 10) => Promise.resolve({
     data: { total: 200, current: page, size, data: [] },
   }));
-  return render(<Provider store={store}><MemoryRouter initialEntries={[path]}><Home /></MemoryRouter></Provider>);
+  return render(<Provider store={store}><MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[path]}><Home /></MemoryRouter></Provider>);
 }
 
 beforeEach(() => {

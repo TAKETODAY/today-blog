@@ -17,7 +17,7 @@ test('keeps the first cover eager and defers subsequent covers', () => {
   }));
   render(
     <Provider store={store}>
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ArticleList articles={articles} />
       </MemoryRouter>
     </Provider>
@@ -41,7 +41,7 @@ test('shows pinned labels only on the home list without reordering articles', ()
   ];
   const list = showPinned => (
     <Provider store={store}>
-      <MemoryRouter><ArticleList articles={articles} showPinned={showPinned} /></MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><ArticleList articles={articles} showPinned={showPinned} /></MemoryRouter>
     </Provider>
   );
   const { rerender } = render(list(false));

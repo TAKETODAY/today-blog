@@ -35,7 +35,7 @@ function renderApp(path) {
   const store = createStore((state = {}) => state);
   return render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={[path]}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[path]}>
         <App />
       </MemoryRouter>
     </Provider>

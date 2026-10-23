@@ -13,7 +13,7 @@ function renderHeader(session = null) {
     user: { session }, options: {},
     article: { categories: [{ name: '后端', articleCount: 3 }], labels: [{ name: 'Java' }] },
   }) => state);
-  return render(<Provider store={store}><MemoryRouter><Header/></MemoryRouter></Provider>);
+  return render(<Provider store={store}><MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><Header/></MemoryRouter></Provider>);
 }
 
 test('renders navigation without the deprecated Menu children API', async () => {
