@@ -18,6 +18,7 @@
 import { Tooltip } from 'antd';
 import 'antd/es/tooltip/style';
 import React from 'react';
+import { RollbackOutlined } from '@ant-design/icons';
 
 import { format, fromNow, getGravatarURL, isEmpty, scrollTo } from 'core';
 import { Image } from '../index';
@@ -67,9 +68,7 @@ export default class CommentList extends React.Component {
                        onClick={() => {
                          this.onReply(reply)
                        }}>
-                      <i className='fa fa-reply'>
-                        <span> 回复 </span>
-                      </i>
+                      <RollbackOutlined aria-hidden="true"/><span> 回复 </span>
                     </a>
                   </div>
                 </div>
@@ -111,9 +110,7 @@ export default class CommentList extends React.Component {
               <div className='replyOper'>
                 <a className='replyBtn' title={`回复 ${comment.commenter}`}
                    onClick={() => this.onReply(comment)}>
-                  <i className='fa fa-reply'>
-                    <span> 回复 </span>
-                  </i>
+                  <RollbackOutlined aria-hidden="true"/><span> 回复 </span>
                 </a>
               </div>
             </div>

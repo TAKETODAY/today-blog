@@ -23,7 +23,8 @@ import 'antd/es/layout/style';
 import 'antd/es/menu/style';
 import 'antd/es/message/style';
 import 'antd/es/modal/style';
-import { ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, FolderFilled, HomeFilled, LoginOutlined, LogoutOutlined, TagFilled } from '@ant-design/icons';
+import RssIcon from './RssIcon';
 import { connect } from "react-redux";
 
 import { userService } from 'src/services';
@@ -120,9 +121,9 @@ class NavHeader extends React.Component {
           <Menu style={{ borderBottom: 'none', marginTop: 4 }}
                 onClick={this.handleClick} mode="horizontal" defaultSelectedKeys={['home']}>
             <Menu.Item key="home">
-              <Link to='/' title="首页"> <i className="fa fa-home"/> 首页 </Link>
+              <Link to='/' title="首页"> <HomeFilled aria-hidden="true"/> 首页 </Link>
             </Menu.Item>
-            <SubMenu key="categories" icon={<i className="fa fa-folder"/>} title="分类">
+            <SubMenu key="categories" icon={<FolderFilled aria-hidden="true"/>} title="分类">
               <Menu.ItemGroup title="全部分类">
                 {categories && categories.map((category, idx) => {
                   return (
@@ -135,7 +136,7 @@ class NavHeader extends React.Component {
                 })}
               </Menu.ItemGroup>
             </SubMenu>
-            <SubMenu key="tags" icon={<i className="fa fa-tag"/>} title="标签">
+            <SubMenu key="tags" icon={<TagFilled aria-hidden="true"/>} title="标签">
               <Menu.ItemGroup title="全部标签">
                 {labels && labels.map((tag, idx) => {
                   return (
@@ -147,7 +148,7 @@ class NavHeader extends React.Component {
               </Menu.ItemGroup>
             </SubMenu>
             <Menu.Item key="atom">
-              <ApiLink target='_blank' href='/feed.atom' title="订阅"> <i className="fa fa-rss"/> 订阅 </ApiLink>
+              <ApiLink target='_blank' href='/feed.atom' title="订阅"> <RssIcon/> 订阅 </ApiLink>
             </Menu.Item>
             <Menu.Item key="search">
               <Search/>
@@ -157,7 +158,7 @@ class NavHeader extends React.Component {
                 <Dropdown overlay={this.renderUserMenu()} placement="bottomRight" trigger='click'>
                   <Image original width="30" src={userSession.avatar} className="avatar"/>
                 </Dropdown>
-                : <Link to='/login' title="登录"><i className="fa fa-sign-in"/> 登录</Link>
+                : <Link to='/login' title="登录"><LoginOutlined aria-hidden="true"/> 登录</Link>
               }
             </Menu.Item>
           </Menu>

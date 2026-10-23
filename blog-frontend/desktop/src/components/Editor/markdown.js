@@ -37,6 +37,7 @@ import CodeMirrorSpellChecker from 'codemirror-spell-checker';
 import hljs from './highlight';
 import markdownIt from 'markdown-it';
 import emoji from 'markdown-it-emoji';
+import { toolbarIcon } from './icons';
 
 // Some variables
 const isMac = /Mac/.test(navigator.platform);
@@ -192,28 +193,17 @@ function createToolbarButton(options, enableActions, enableTooltips, shortcuts, 
     classNameParts = options.className.split(' ');
   }
 
-  // Provide backwards compatibility with simple-markdown-editor by adding custom classes to the button.
-  var iconClasses = [];
+  // Preserve custom button classes; icon markup is handled separately below.
   for (var classNameIndex = 0; classNameIndex < classNameParts.length; classNameIndex++) {
     var classNamePart = classNameParts[classNameIndex];
-    // Split icon classes from the button.
-    // Regex will detect "fa", "fas", "fa-something" and "fa-some-icon-1", but not "fanfare".
-    if (classNamePart.match(/^fa([srlb]|(-[\w-]*)|$)/)) {
-      iconClasses.push(classNamePart);
-    } else {
-      el.classList.add(classNamePart);
-    }
+    if (classNamePart) el.classList.add(classNamePart);
   }
 
   el.tabIndex = -1;
 
-  // Create icon element and append as a child to the button
-  var icon = document.createElement('i');
-  for (var iconClassIndex = 0; iconClassIndex < iconClasses.length; iconClassIndex++) {
-    var iconClass = iconClasses[iconClassIndex];
-    icon.classList.add(iconClass);
-  }
-  el.appendChild(icon);
+  // Built-in icons are inline SVG; custom icon markup still takes precedence.
+  el.innerHTML = toolbarIcon(options.name);
+  el.setAttribute('aria-label', options.title || options.name);
 
   // If there is a custom icon markup set, use that
   if (typeof options.icon !== 'undefined') {
@@ -1310,58 +1300,54 @@ var toolbarBuiltInButtons = {
   'bold': {
     name: 'bold',
     action: toggleBold,
-    className: 'fa fa-bold',
     title: '加粗 (Bold)',
     default: true,
   },
   'italic': {
     name: 'italic',
     action: toggleItalic,
-    className: 'fa fa-italic',
     title: '斜体 (Italic)',
     default: true,
   },
   'strikethrough': {
     name: 'strikethrough',
     action: toggleStrikethrough,
-    className: 'fa fa-strikethrough',
     title: '删除线 (Strikethrough)',
   },
   'heading': {
     name: 'heading',
     action: toggleHeadingSmaller,
-    className: 'fa fa-header fa-heading',
     title: '标题 (Heading)',
     default: true,
   },
   'heading-smaller': {
     name: 'heading-smaller',
     action: toggleHeadingSmaller,
-    className: 'fa fa-header fa-heading header-smaller',
+    className: 'header-smaller',
     title: '更小的标题 (Smaller Heading)',
   },
   'heading-bigger': {
     name: 'heading-bigger',
     action: toggleHeadingBigger,
-    className: 'fa fa-header fa-heading header-bigger',
+    className: 'header-bigger',
     title: '更大的标题 (Bigger Heading)',
   },
   'heading-1': {
     name: 'heading-1',
     action: toggleHeading1,
-    className: 'fa fa-header fa-heading header-1',
+    className: 'header-1',
     title: '大标题 (Big Heading)',
   },
   'heading-2': {
     name: 'heading-2',
     action: toggleHeading2,
-    className: 'fa fa-header fa-heading header-2',
+    className: 'header-2',
     title: '中等标题 (Medium Heading)',
   },
   'heading-3': {
     name: 'heading-3',
     action: toggleHeading3,
-    className: 'fa fa-header fa-heading header-3',
+    className: 'header-3',
     title: '小标题 (Small Heading)',
   },
   'separator-1': {
@@ -1370,34 +1356,29 @@ var toolbarBuiltInButtons = {
   'code': {
     name: 'code',
     action: toggleCodeBlock,
-    className: 'fa fa-code',
     title: '代码 (Code)',
   },
   'quote': {
     name: 'quote',
     action: toggleBlockquote,
-    className: 'fa fa-quote-left',
     title: '引用 (Quote)',
     default: true,
   },
   'unordered-list': {
     name: 'unordered-list',
     action: toggleUnorderedList,
-    className: 'fa fa-list-ul',
     title: '无序列表 (Generic List)',
     default: true,
   },
   'ordered-list': {
     name: 'ordered-list',
     action: toggleOrderedList,
-    className: 'fa fa-list-ol',
     title: '有序列表 (Numbered List)',
     default: true,
   },
   'clean-block': {
     name: 'clean-block',
     action: cleanBlock,
-    className: 'fa fa-eraser',
     title: '清除块 (Clean block)',
   },
   'separator-2': {
@@ -1406,33 +1387,28 @@ var toolbarBuiltInButtons = {
   'link': {
     name: 'link',
     action: drawLink,
-    className: 'fa fa-link',
     title: '超链接 (Create Link)',
     default: true,
   },
   'image': {
     name: 'image',
     action: drawImage,
-    className: 'fa fa-image',
     title: '插入图片 (Insert Image)',
     default: true,
   },
   'upload-image': {
     name: 'upload-image',
     action: drawUploadedImage,
-    className: 'fa fa-image',
     title: '上传图片 (Import an image)',
   },
   'table': {
     name: 'table',
     action: drawTable,
-    className: 'fa fa-table',
     title: '插入表格 (Insert Table)',
   },
   'horizontal-rule': {
     name: 'horizontal-rule',
     action: drawHorizontalRule,
-    className: 'fa fa-minus',
     title: '插入水平线 (Insert Horizontal Line)',
   },
   'separator-3': {
@@ -1441,7 +1417,6 @@ var toolbarBuiltInButtons = {
   'preview': {
     name: 'preview',
     action: togglePreview,
-    className: 'fa fa-eye',
     noDisable: true,
     title: '切换预览 (Toggle Preview)',
     default: true,
@@ -1449,7 +1424,6 @@ var toolbarBuiltInButtons = {
   'side-by-side': {
     name: 'side-by-side',
     action: toggleSideBySide,
-    className: 'fa fa-columns',
     noDisable: true,
     noMobile: true,
     title: '并排切换 (Toggle Side by Side)',
@@ -1458,7 +1432,6 @@ var toolbarBuiltInButtons = {
   'fullscreen': {
     name: 'fullscreen',
     action: toggleFullScreen,
-    className: 'fa fa-arrows-alt',
     noDisable: true,
     noMobile: true,
     title: '切换全屏 (Toggle Fullscreen)',
@@ -1470,7 +1443,6 @@ var toolbarBuiltInButtons = {
   'guide': {
     name: 'guide',
     action: 'https://www.markdownguide.org/basic-syntax/',
-    className: 'fa fa-question-circle',
     noDisable: true,
     title: 'Markdown 教程 (Markdown Guide)',
     default: true,
@@ -1481,14 +1453,12 @@ var toolbarBuiltInButtons = {
   'undo': {
     name: 'undo',
     action: undo,
-    className: 'fa fa-undo',
     noDisable: true,
     title: '撤消 (Undo)',
   },
   'redo': {
     name: 'redo',
     action: redo,
-    className: 'fa fa-repeat fa-redo',
     noDisable: true,
     title: '恢复 (Redo)',
   },
@@ -1554,29 +1524,6 @@ function EasyMDE(options) {
   options = options || {};
   // Used later to refer to it"s parent
   options.parent = this;
-  // Check if Font Awesome needs to be auto downloaded
-  var autoDownloadFA = true;
-  if (options.autoDownloadFontAwesome === false) {
-    autoDownloadFA = false;
-  }
-  if (options.autoDownloadFontAwesome !== true) {
-    var styleSheets = document.styleSheets;
-    for (var i = 0; i < styleSheets.length; i++) {
-      if (!styleSheets[i].href)
-        continue;
-
-      if (styleSheets[i].href.indexOf('/font-awesome/') > -1) {
-        autoDownloadFA = false;
-      }
-    }
-  }
-
-  if (autoDownloadFA) {
-    var link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
-    document.getElementsByTagName('head')[0].appendChild(link);
-  }
   // Find the textarea to use
   if (options.element) {
     this.element = options.element;

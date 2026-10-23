@@ -96,7 +96,6 @@ export default class Editor extends React.PureComponent {
 
       },
       initialValue: this.props.value,
-      autoDownloadFontAwesome: false,
       status: ["lines", "words"],
       tabSize: 4,
       promptURLs: true,

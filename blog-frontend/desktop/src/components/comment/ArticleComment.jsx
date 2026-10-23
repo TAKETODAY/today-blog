@@ -20,6 +20,7 @@ import 'antd/es/empty/style';
 import 'antd/es/message/style';
 import 'antd/es/skeleton/style';
 import React from 'react';
+import { CommentOutlined } from '@ant-design/icons';
 import { commentService } from '../../services';
 import { extractData, isEmpty, isNotEmpty, scrollTo } from 'core';
 import { CommentEdit, CommentList } from '..';
@@ -93,7 +94,7 @@ export default class ArticleComment extends React.Component {
       </div>
       <div className="shadow-box markdown" id="comments">
         <div className="data-list-title" style={{ border: 'none' }}>
-          <i className="fa fa-commenting-o"/> 评论
+          <CommentOutlined aria-hidden="true"/> 评论
           {commentsLoaded
             ? isEmpty(comments) && <Empty description="暂无评论"/>
             : <Skeleton active/>

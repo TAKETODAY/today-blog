@@ -22,7 +22,7 @@ import 'antd/es/button/style';
 import 'antd/es/form/style';
 import 'antd/es/input/style';
 import 'antd/es/message/style';
-import { GlobalOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
+import { EditOutlined, GlobalOutlined, MailOutlined, RollbackOutlined, UserOutlined } from '@ant-design/icons';
 
 import { commentService } from 'src/services';
 import Image from '../Image';
@@ -66,7 +66,7 @@ const CommentEdit = props => {
 
   function renderReply(comment) {
     return (<>
-      <i className='fa fa-reply fa-flip-horizontal'/>
+      <RollbackOutlined aria-hidden="true" style={{ transform: 'scaleX(-1)' }}/>
       <div className='comment_user_info' style={{ display: 'inline', marginLeft: '5px' }}>
         <a href={comment.commenterSite}>
           <Image className='comment_avatar' alt={comment.commenter}
@@ -104,7 +104,7 @@ const CommentEdit = props => {
     <div className="data-list-title" style={{ border: 'none' }}>
       {replying
           ? renderReply(replying)
-          : <><i className="fa fa-edit"/> 发表评论</>
+          : <><EditOutlined aria-hidden="true"/> 发表评论</>
       }
     </div>
 
