@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
@@ -32,6 +33,7 @@ test('renders navigation without the deprecated Menu children API', async () => 
 
 test.each([true, false])('preserves user menu permissions and logout for blogger=%s', async blogger => {
   const confirm = vi.spyOn(Modal, 'confirm').mockImplementation(() => ({}));
+  const findDOMNode = vi.spyOn(ReactDOM, 'findDOMNode');
   try {
     renderHeader({ blogger, avatar: '/avatar.png' });
     fireEvent.click(screen.getByAltText('pic'));
@@ -40,6 +42,10 @@ test.each([true, false])('preserves user menu permissions and logout for blogger
     expect(screen.queryByText('后台管理') !== null).toBe(blogger);
     fireEvent.click(screen.getByText('安全退出'));
     expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ title: '安全退出' }));
+    expect(findDOMNode).not.toHaveBeenCalled();
   }
-  finally { confirm.mockRestore(); }
+  finally {
+    confirm.mockRestore();
+    findDOMNode.mockRestore();
+  }
 });

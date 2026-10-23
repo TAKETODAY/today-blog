@@ -136,8 +136,10 @@ export default function NavHeader() {
     {
       key: 'userSession',
       label: userSession ?
-        <Dropdown menu={renderUserMenu()} placement="bottomRight" trigger={['click']}>
-          <Image original width="30" src={userSession.avatar} className="avatar"/>
+        <Dropdown menu={renderUserMenu()} placement="bottomLeft" trigger={['click']}>
+          <span>
+            <Image original width="30" src={userSession.avatar} className="avatar"/>
+          </span>
         </Dropdown>
         : <Link to='/login' title="登录"><LoginOutlined aria-hidden="true"/> 登录</Link>,
     },
