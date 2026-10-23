@@ -29,6 +29,7 @@ import Image from '../Image';
 import { updateUserSession } from "src/redux/actions";
 import { userSessionOptionsMapStateToProps } from "src/redux/action-types";
 import { getGravatarURL, getStorage, isEmpty, saveStorage } from "core";
+import './CommentEdit.css';
 
 
 const Editor = React.lazy(() => import('../Editor'));
@@ -124,7 +125,7 @@ const CommentEdit = props => {
         <Form.Item name="commenterSite">
           <Input prefix={<GlobalOutlined/>} placeholder="个人网站"/>
         </Form.Item>
-        <Form.Item shouldUpdate>
+        <Form.Item className="comment-edit-submit" shouldUpdate>
           {() => (
               <Button type="primary" htmlType="submit">提交评论</Button>
           )}
