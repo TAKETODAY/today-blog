@@ -37,9 +37,49 @@ class Home extends React.Component {
       all: 0,
       current: 1,
       num: 0,
-      size: 8,
+      size: 10,
       data: []
     }
+  }
+
+  getPagination() {
+    const params = new URLSearchParams(this.props.location.search);
+    const positiveInteger = (value, fallback) => {
+      const number = Number(value);
+      return Number.isSafeInteger(number) && number > 0 ? number : fallback;
+    };
+    return {
+      page: positiveInteger(params.get('page'), 1),
+      size: positiveInteger(params.get('size'), 10),
+    };
+  }
+
+  pageURL(page, size) {
+    const params = new URLSearchParams(this.props.location.search);
+    params.set('page', page);
+    params.set('size', size);
+    return `${this.props.location.pathname}?${params}`;
+  }
+
+  changePage = (page, size) => {
+    this.props.navigate(this.pageURL(page, size));
+  }
+
+  renderPageItem = (page, type, element) => {
+    if (type !== 'page' && type !== 'jump-prev' && type !== 'jump-next') {
+      return element;
+    }
+    return React.cloneElement(element, {
+      href: this.pageURL(page, this.getPagination().size),
+      rel: undefined,
+      onClick: event => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) {
+          event.stopPropagation();
+          return;
+        }
+        event.preventDefault();
+      },
+    });
   }
 
   updateArticles(page = 1, size = 10) {
@@ -66,16 +106,15 @@ class Home extends React.Component {
   componentDidMount() {
     setTitle("代码是我心中的一首诗")
     applySEO()
-    this.updateArticles()
+    const { page, size } = this.getPagination();
+    this.updateArticles(page, size)
     this.props.updateNavigations(null)
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.match.params.categoryId) {
-      const { categoryId } = this.props.match.params
-      if (categoryId !== nextProps.match.params.categoryId) {
-        this.updateArticles(nextProps)
-      }
+  componentDidUpdate(prevProps) {
+    if (prevProps.location.search !== this.props.location.search) {
+      const { page, size } = this.getPagination();
+      this.updateArticles(page, size);
     }
   }
 
@@ -90,8 +129,9 @@ class Home extends React.Component {
               showQuickJumper
               showSizeChanger
               total={articles.total}
-              onChange={this.updateArticles.bind(this)}
-              onShowSizeChange={this.updateArticles.bind(this)}
+              onChange={this.changePage}
+              itemRender={this.renderPageItem}
+              pageSize={this.getPagination().size}
               current={articles.current}
               showTotal={n => <><b className='red'>{n}</b>篇文章</>}
           />
