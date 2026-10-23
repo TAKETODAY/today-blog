@@ -26,6 +26,11 @@ test('keeps the first cover eager and defers subsequent covers', () => {
   expect(images[0]).toHaveAttribute('loading', 'eager');
   expect(images[1]).toHaveAttribute('loading', 'lazy');
   images.forEach(image => expect(image).toHaveAttribute('decoding', 'async'));
+  images.forEach(image => {
+    expect(image).not.toHaveAttribute('width');
+    expect(image).not.toHaveAttribute('height');
+    expect(image.closest('.article-cover')).not.toBeNull();
+  });
 });
 
 test('shows pinned labels only on the home list without reordering articles', () => {

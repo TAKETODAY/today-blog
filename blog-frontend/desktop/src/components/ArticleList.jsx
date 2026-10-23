@@ -83,7 +83,7 @@ class ArticleList extends React.Component {
               <span className="summary" dangerouslySetInnerHTML={{ __html: article.summary }}
                     onClick={() => this.props.navigate(`/articles/${article.uri}`)}/>
               {isNotEmpty(article.cover) &&
-                <span className="img">
+                <span className="img article-cover">
                   <Image alt={article.summary} src={article.cover} original={false}
                          loading={idx === 0 ? 'eager' : 'lazy'} decoding="async"/>
                 </span>

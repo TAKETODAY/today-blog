@@ -95,6 +95,23 @@
   color: #999
 }
 
+/* Keep each cover's natural proportions without enlarging small images. */
+.article-list .article-cover > .ant-image {
+  max-width: 100%;
+}
+
+.article-list .article-cover .ant-image-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.article-list .article-cover .ant-image-placeholder img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
 .article-list .info {
   color: #6b6b6b;
   display: block;
