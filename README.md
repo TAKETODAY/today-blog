@@ -225,3 +225,7 @@ API Key 每个请求重新验证，仅设置当前请求身份，不创建或修
 ## 📄 开源协议
 
 使用 [GPLv3](https://github.com/TAKETODAY/today-infrastructure/blob/master/LICENSE) 开源协议
+
+# 部署与在线升级
+
+完整签名包构建、systemd 首次部署和后台升级说明见 [部署文档](src/docs/deployment.md)。

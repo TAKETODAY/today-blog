@@ -33,3 +33,4 @@
 yarn.lock
 pnpm-lock.yaml
 .codegraph
+/dist/

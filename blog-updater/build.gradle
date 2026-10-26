@@ -1,0 +1,28 @@
+plugins {
+  id 'java-library'
+}
+
+description = 'TODAY BLOG standalone updater'
+
+tasks.withType(JavaCompile).configureEach {
+  options.release = 17
+}
+
+// 生产代码只依赖 JDK；API 通过项目依赖复用包校验和磁盘协议。
+dependencies {
+  testImplementation platform('org.junit:junit-bom:5.14.2')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+  testImplementation 'org.assertj:assertj-core:3.27.7'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+jar {
+  archiveFileName = 'today-blog-updater.jar'
+  manifest {
+    attributes 'Main-Class': 'cn.taketoday.blog.updater.BlogUpdaterApplication'
+  }
+}
+
+test {
+  useJUnitPlatform()
+}
