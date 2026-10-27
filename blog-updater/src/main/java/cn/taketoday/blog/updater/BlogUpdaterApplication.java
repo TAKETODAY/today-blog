@@ -45,10 +45,9 @@ public final class BlogUpdaterApplication {
     UpgradeFiles.checkId(args[0]);
     Path root = Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
     Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
-    Path key = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_PUBLIC_KEY", "/etc/today-blog/upgrade-public.pem"));
     String health = System.getenv().getOrDefault("BLOG_HEALTH_URL", "http://127.0.0.1:8080/api/internal/health");
     try {
-      run(root, state, key, args[0], new SystemdControl(URI.create(health)));
+      run(root, state, args[0], new SystemdControl(URI.create(health)));
     }
     catch (Exception error) {
       Path result = state.resolve("results").resolve(args[0] + ".properties");
@@ -65,7 +64,7 @@ public final class BlogUpdaterApplication {
     boolean healthy(long build) throws Exception;
   }
 
-  public static void run(Path root, Path state, Path key, String id, ServiceControl service) throws Exception {
+  public static void run(Path root, Path state, String id, ServiceControl service) throws Exception {
     UpgradeFiles.checkId(id);
     Path results = state.resolve("results");
     Files.createDirectories(root.resolve("releases"));
@@ -109,7 +108,7 @@ public final class BlogUpdaterApplication {
           if (copied == 0)
             throw new IOException("升级包为空");
         }
-        var manifest = UpgradePackage.verify(archive, key);
+        var manifest = UpgradePackage.verify(archive);
         Path highWaterPath = root.resolve("highest-build.properties");
         long highest = Files.exists(highWaterPath)
                 ? Long.parseLong(UpgradeFiles.read(highWaterPath).getProperty("build")) : oldBuild;

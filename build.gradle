@@ -44,3 +44,5 @@ configure(allprojects) {
 configure(rootProject) {
   description = "TODAY BLOG"
 }
+
+apply from: 'gradle/release.gradle'

@@ -1,0 +1,124 @@
+import cn.taketoday.blog.release.ReleaseManifest
+
+import java.util.regex.Pattern
+
+apply plugin: 'distribution-base'
+
+def projectVersion = version.toString()
+def releaseBuild = providers.gradleProperty('buildNumber')
+    .orElse(providers.environmentVariable('BUILD_NUMBER'))
+    .orElse(providers.provider {
+      java.time.format.DateTimeFormatter.ofPattern('yyyyMMddHHmmss')
+          .withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.now())
+    })
+
+def frontend = layout.projectDirectory.dir('blog-frontend')
+def nodeOptions = providers.environmentVariable('NODE_OPTIONS').orElse('')
+def releasePath = providers.environmentVariable('PATH').orElse('').get()
+def pnpmCommand = providers.gradleProperty('pnpmExecutable')
+    .orElse(providers.environmentVariable('PNPM_EXECUTABLE')).getOrNull()
+if (pnpmCommand == null) {
+  def candidates = releasePath.split(Pattern.quote(File.pathSeparator))
+      .collect { directory ->
+        new File(directory, 'pnpm')
+      }
+  pnpmCommand = candidates.find { candidate ->
+    candidate.isFile() && candidate.canExecute()
+  }?.absolutePath ?: 'pnpm'
+}
+
+def pnpmDirectory = new File(pnpmCommand).absoluteFile.parent
+def frontendPath = pnpmDirectory + File.pathSeparator + releasePath
+
+def validateRelease = tasks.register('validateRelease') {
+  group = 'distribution'
+  description = '校验发行版本和构建编号。'
+  doLast {
+    if (!(projectVersion ==~ /[A-Za-z0-9][A-Za-z0-9._-]{0,99}/)
+        || !(releaseBuild.get() ==~ /[1-9][0-9]{0,17}/)) {
+      throw new GradleException('发行版本或构建编号格式错误')
+    }
+  }
+}
+
+def installFrontend = tasks.register('installReleaseFrontend', Exec) {
+  dependsOn validateRelease
+  workingDir frontend
+  environment 'PATH', frontendPath
+  commandLine pnpmCommand, 'install', '--frozen-lockfile'
+}
+
+def buildConsole = tasks.register('buildReleaseConsole', Exec) {
+  dependsOn installFrontend
+  workingDir frontend.dir('console')
+  environment 'NODE_OPTIONS', nodeOptions.get() + ' --openssl-legacy-provider'
+  environment 'PATH', frontendPath
+  commandLine pnpmCommand, 'build'
+}
+
+def buildDesktop = tasks.register('buildReleaseDesktop', Exec) {
+  dependsOn installFrontend
+  workingDir frontend.dir('desktop')
+  environment 'NODE_OPTIONS', nodeOptions.get() + ' --openssl-legacy-provider'
+  environment 'PATH', frontendPath
+  commandLine pnpmCommand, 'build'
+}
+
+def stageRelease = tasks.register('stageRelease', Sync) {
+  dependsOn validateRelease, ':blog-api:installDist', buildConsole, buildDesktop
+  into layout.buildDirectory.dir('release/payload')
+  from(project(':blog-api').layout.buildDirectory.dir('install/blog-api')) {
+    include 'bin/**', 'lib/**'
+    into 'api'
+  }
+  from(frontend.dir('console/dist')) {
+    into 'console'
+  }
+  from(frontend.dir('desktop/build')) {
+    into 'desktop'
+  }
+  exclude '**/.DS_Store', '**/__MACOSX/**'
+}
+
+def manifest = tasks.register('releaseManifest', ReleaseManifest) {
+  dependsOn stageRelease
+  payloadDirectory = layout.buildDirectory.dir('release/payload')
+  manifestFile = layout.buildDirectory.file('release/metadata/upgrade.properties')
+  productVersion = projectVersion
+  buildNumber = releaseBuild
+}
+
+distributions.create('release') {
+  distributionBaseName = 'today-blog'
+  contents {
+    // 使用绝对 CopySpec 路径，覆盖插件默认的版本化归档根目录。
+    into '/today-blog'
+    from(stageRelease)
+    from(manifest) {
+      into 'META-INF'
+    }
+  }
+}
+
+['releaseDistZip', 'releaseDistTar'].each { taskName ->
+  tasks.named(taskName, AbstractArchiveTask) {
+    destinationDirectory = layout.buildDirectory
+    archiveFileName = releaseBuild.zip(archiveExtension) { build, extension ->
+      "today-blog-${projectVersion}-${build}.${extension}"
+    }.get()
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+  }
+}
+
+def updater = tasks.register('releaseUpdater', Copy) {
+  dependsOn ':blog-updater:jar'
+  from project(':blog-updater').layout.buildDirectory.file('libs/today-blog-updater.jar')
+  into layout.projectDirectory.dir('dist')
+}
+
+tasks.register('release') {
+  group = 'distribution'
+  description = '构建后端、Console、Desktop，生成无签名升级包和独立 updater。'
+  dependsOn tasks.named('releaseDistZip'), updater
+}

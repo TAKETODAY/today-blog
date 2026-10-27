@@ -49,7 +49,6 @@ class UpgradeHttpHandler {
 
   private final Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
 
-  private final Path key = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_PUBLIC_KEY", "/etc/today-blog/upgrade-public.pem"));
 
   @GET("/current")
   public Properties current() throws Exception {
@@ -85,7 +84,7 @@ class UpgradeHttpHandler {
           output.write(buffer, 0, count);
         }
       }
-      var manifest = UpgradePackage.verify(temp, key);
+      var manifest = UpgradePackage.verify(temp);
       long currentBuild = Long.parseLong(current().getProperty("build"));
       if (manifest.build() <= currentBuild) {
         throw ErrorMessageException.failed("禁止重复安装或降级");
@@ -97,7 +96,7 @@ class UpgradeHttpHandler {
       metadata.setProperty("build", Long.toString(manifest.build()));
       metadata.setProperty("operatorId", String.valueOf(user.getId()));
       metadata.setProperty("status", "READY");
-      metadata.setProperty("message", "签名与文件校验通过，等待确认升级");
+      metadata.setProperty("message", "文件完整性校验通过（未验证来源），等待确认升级");
       UpgradeFiles.write(task.resolve("metadata.properties"), metadata);
       return metadata;
     }
@@ -148,8 +147,8 @@ class UpgradeHttpHandler {
   }
 
   private void enabled() {
-    if (System.getenv("BLOG_RELEASE_PATH") == null || !Files.isRegularFile(key)) {
-      throw ErrorMessageException.failed("请先完成 systemd 部署和升级公钥配置");
+    if (System.getenv("BLOG_RELEASE_PATH") == null) {
+      throw ErrorMessageException.failed("请先完成 systemd 部署配置");
     }
   }
 }

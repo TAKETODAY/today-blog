@@ -21,11 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.KeyFactory;
 import java.security.MessageDigest;
-import java.security.Signature;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.HexFormat;
@@ -35,7 +31,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-/** API 与升级器共用的完整发行包校验。所有可安装文件必须出现在已签名清单中。 */
+/** 完整发行包校验。摘要仅检查完整性，不验证发布者身份；所有安装文件必须列入清单。 */
 public final class UpgradePackage {
 
   public static final long MAX_PACKAGE_BYTES = 512L * 1024 * 1024;
@@ -43,28 +39,19 @@ public final class UpgradePackage {
   private static final int MAX_ENTRIES = 20000;
   private static final String PREFIX = "today-blog/";
   private static final String MANIFEST = PREFIX + "META-INF/upgrade.properties";
-  private static final String SIGNATURE = PREFIX + "META-INF/upgrade.sig";
 
-  private UpgradePackage() { }
+  private UpgradePackage() {
+  }
 
-  public record Manifest(String version, long build, Map<String, String> hashes) { }
+  public record Manifest(String version, long build, Map<String, String> hashes) {
+  }
 
-  public static Manifest verify(Path archive, Path publicKey) throws Exception {
+  public static Manifest verify(Path archive) throws Exception {
     if (Files.size(archive) > MAX_PACKAGE_BYTES) {
       throw new IOException("升级包不得超过 512 MiB");
     }
     try (ZipFile zip = new ZipFile(archive.toFile())) {
       byte[] metadata = read(zip, MANIFEST, 4 * 1024 * 1024);
-      byte[] signature = read(zip, SIGNATURE, 16 * 1024);
-      String pem = Files.readString(publicKey).replace("-----BEGIN PUBLIC KEY-----", "")
-              .replace("-----END PUBLIC KEY-----", "").replaceAll("\\s", "");
-      var key = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(pem)));
-      Signature verifier = Signature.getInstance("SHA256withRSA");
-      verifier.initVerify(key);
-      verifier.update(metadata);
-      if (!verifier.verify(Base64.getMimeDecoder().decode(signature))) {
-        throw new IOException("升级包签名无效");
-      }
       Properties properties = new Properties();
       properties.load(new java.io.ByteArrayInputStream(metadata));
       if (!"today-blog".equals(properties.getProperty("product"))
@@ -79,16 +66,14 @@ public final class UpgradePackage {
       if (build <= 0 || Runtime.version().feature() < Integer.parseInt(properties.getProperty("minimumJava", "17"))) {
         throw new IOException("构建编号或 Java 版本不符合要求");
       }
-      if (!"true".equals(properties.getProperty("rollbackSafe"))) {
-        throw new IOException("仅支持声明数据库向后兼容的在线升级包，请人工部署不可逆迁移");
-      }
       Map<String, String> hashes = new HashMap<>();
       for (String name : properties.stringPropertyNames()) {
         if (name.startsWith("sha256.")) {
           String path = name.substring(7);
           checkPath(path);
           String hash = properties.getProperty(name);
-          if (!hash.matches("[0-9a-f]{64}")) throw new IOException("文件摘要格式错误");
+          if (!hash.matches("[0-9a-f]{64}"))
+            throw new IOException("文件摘要格式错误");
           hashes.put(path, hash);
         }
       }
@@ -103,15 +88,19 @@ public final class UpgradePackage {
       while (enumeration.hasMoreElements()) {
         ZipEntry entry = enumeration.nextElement();
         String name = entry.getName();
-        if (!entries.add(name) || entries.size() > MAX_ENTRIES) throw new IOException("重复文件或文件数量超限");
+        if (!entries.add(name) || entries.size() > MAX_ENTRIES)
+          throw new IOException("重复文件或文件数量超限");
         if (!name.startsWith(PREFIX) || name.contains("\\") || name.contains("..") || name.startsWith("/")) {
           throw new IOException("升级包包含非法路径");
         }
-        if (entry.isDirectory()) continue;
-        if (name.equals(MANIFEST) || name.equals(SIGNATURE)) continue;
+        if (entry.isDirectory())
+          continue;
+        if (name.equals(MANIFEST))
+          continue;
         String path = name.substring(PREFIX.length());
         checkPath(path);
-        if (!hashes.containsKey(path)) throw new IOException("存在未签名文件: " + path);
+        if (!hashes.containsKey(path))
+          throw new IOException("存在未列入清单的文件: " + path);
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         long size = 0;
         try (InputStream input = zip.getInputStream(entry)) {
@@ -120,7 +109,8 @@ public final class UpgradePackage {
           while ((count = input.read(buffer)) != -1) {
             size += count;
             total += count;
-            if (size > MAX_PACKAGE_BYTES || total > MAX_EXPANDED_BYTES) throw new IOException("解压大小超限");
+            if (size > MAX_PACKAGE_BYTES || total > MAX_EXPANDED_BYTES)
+              throw new IOException("解压大小超限");
             digest.update(buffer, 0, count);
           }
         }
@@ -129,7 +119,8 @@ public final class UpgradePackage {
         }
         checked.add(path);
       }
-      if (!checked.equals(hashes.keySet())) throw new IOException("清单中存在缺失文件");
+      if (!checked.equals(hashes.keySet()))
+        throw new IOException("清单中存在缺失文件");
       return new Manifest(version, build, Map.copyOf(hashes));
     }
   }
@@ -157,10 +148,12 @@ public final class UpgradePackage {
 
   private static byte[] read(ZipFile zip, String name, int max) throws IOException {
     ZipEntry entry = zip.getEntry(name);
-    if (entry == null || entry.isDirectory()) throw new IOException("缺少签名或清单文件");
+    if (entry == null || entry.isDirectory())
+      throw new IOException("缺少清单文件");
     try (InputStream input = zip.getInputStream(entry)) {
       byte[] result = input.readNBytes(max + 1);
-      if (result.length > max) throw new IOException("清单或签名过大");
+      if (result.length > max)
+        throw new IOException("清单过大");
       return result;
     }
   }

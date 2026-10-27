@@ -2,7 +2,7 @@
 # 首次安装，在 Linux 服务器以 root 执行。不保存数据库密码，不覆盖现有配置。
 set -Eeuo pipefail
 [[ $EUID == 0 ]] || { echo '请以 root 执行'; exit 1; }
-[[ $# == 3 ]] || { echo '用法: install-server.sh package.zip updater.jar public.pem'; exit 1; }
+[[ $# == 2 ]] || { echo '用法: install-server.sh package.zip updater.jar'; exit 1; }
 ROOT=/opt/today-blog
 STATE=/var/lib/today-blog-upgrade
 [[ ! -e "$ROOT/current" ]] || { echo '已有安装，请使用后台升级'; exit 1; }
@@ -11,8 +11,7 @@ install -d -m 755 "$ROOT/releases" "$STATE/results" /etc/today-blog /usr/local/l
 install -d -m 700 -o today -g today "$STATE/incoming"
 chown today:today /var/lib/today-blog
 install -m 644 "$2" /usr/local/lib/today-blog/updater.jar
-install -m 644 "$3" /etc/today-blog/upgrade-public.pem
-# 首次包仍须验证签名，再安装；不运行上传包内的任何 root 脚本。
+# 首次包校验文件完整性后安装；包必须来自可信渠道，不运行包内的任何 root 脚本。
 WORK="$(mktemp -d "$ROOT/releases/.initial-XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 cp "$1" "$WORK/package.zip"
@@ -21,7 +20,7 @@ jshell --class-path /usr/local/lib/today-blog/updater.jar - <<EOF
 import java.nio.file.*;
 import cn.taketoday.blog.updater.*;
 try {
- var manifest = UpgradePackage.verify(Path.of("$WORK/package.zip"), Path.of("/etc/today-blog/upgrade-public.pem"));
+ var manifest = UpgradePackage.verify(Path.of("$WORK/package.zip"));
  var target = Files.createDirectory(Path.of("$WORK/release"));
  UpgradePackage.extract(Path.of("$WORK/package.zip"), target, manifest);
  var properties = new java.util.Properties();

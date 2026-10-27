@@ -70,7 +70,7 @@ export default function SystemUpgrade() {
       setTask(response.data);
       setId(response.data.id);
       localStorage.setItem(taskKey, response.data.id);
-      message.success('升级包签名与文件校验通过');
+      message.success('升级包文件完整性校验通过（未验证来源）');
     }
     catch (error) {
       /* 通用 HTTP 拦截器负责错误提示。 */
@@ -100,7 +100,7 @@ export default function SystemUpgrade() {
   }
 
   return (
-      <PageContainer title="系统升级" subTitle="上传完整签名发行包，确认后开始升级">
+      <PageContainer title="系统升级" subTitle="上传完整发行包，确认后开始升级">
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Alert type="warning" showIcon message="升级前请备份数据库"
                  description="升级不覆盖附件、生产配置或日志。服务重启期间连接暂时中断，页面会继续查询；请勿重复发起任务。"/>
@@ -111,7 +111,7 @@ export default function SystemUpgrade() {
               </Upload>
               <Button type="primary" disabled={task?.status !== 'READY' || busy} onClick={start}>开始升级</Button>
             </Space>
-            <p style={{ color: '#666', marginTop: 16 }}>仅支持 TODAY BLOG 签名 ZIP，最大 512 MiB。私钥不应上传至服务器。</p>
+            <p style={{ color: '#666', marginTop: 16 }}>仅支持 TODAY BLOG ZIP，最大 512 MiB。当前仅校验文件完整性，不验证来源，请只上传自己构建的可信安装包。</p>
           </Card>
           {disconnected &&
             <Alert type="info" showIcon message="暂时无法连接，正在重试"

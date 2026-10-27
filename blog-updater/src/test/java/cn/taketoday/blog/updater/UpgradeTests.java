@@ -17,18 +17,13 @@
 
 package cn.taketoday.blog.updater;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
-import java.security.Signature;
-import java.util.Base64;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,24 +40,10 @@ class UpgradeTests {
   @TempDir
   Path temp;
 
-  KeyPair keys;
-
-  Path publicKey;
-
-  @BeforeEach
-  void keyPair() throws Exception {
-    var generator = KeyPairGenerator.getInstance("RSA");
-    generator.initialize(2048);
-    keys = generator.generateKeyPair();
-    publicKey = temp.resolve("public.pem");
-    Files.writeString(publicKey, "-----BEGIN PUBLIC KEY-----\n"
-            + Base64.getEncoder().encodeToString(keys.getPublic().getEncoded()) + "\n-----END PUBLIC KEY-----\n");
-  }
-
   @Test
-  void acceptsCompleteSignedPackageAndExtracts() throws Exception {
+  void acceptsPackageWithoutSignatureAndExtracts() throws Exception {
     Path archive = archive(null, false, false);
-    var manifest = UpgradePackage.verify(archive, publicKey);
+    var manifest = UpgradePackage.verify(archive);
     Path destination = Files.createDirectory(temp.resolve("extracted"));
     UpgradePackage.extract(archive, destination, manifest);
     assertThat(manifest.version()).isEqualTo("3.4");
@@ -70,20 +51,20 @@ class UpgradeTests {
   }
 
   @Test
-  void rejectsInvalidSignature() throws Exception {
-    assertThatThrownBy(() -> UpgradePackage.verify(archive(null, true, false), publicKey)).hasMessageContaining("签名");
+  void rejectsMissingManifest() throws Exception {
+    assertThatThrownBy(() -> UpgradePackage.verify(archive(null, true, false))).hasMessageContaining("缺少清单");
   }
 
   @Test
   void rejectsTamperedFile() throws Exception {
-    assertThatThrownBy(() -> UpgradePackage.verify(archive(null, false, true), publicKey)).hasMessageContaining("摘要不匹配");
+    assertThatThrownBy(() -> UpgradePackage.verify(archive(null, false, true))).hasMessageContaining("摘要不匹配");
   }
 
   @Test
-  void rejectsUnsignedFileAndTraversal() throws Exception {
-    assertThatThrownBy(() -> UpgradePackage.verify(archive("console/extra.js", false, false), publicKey))
-            .hasMessageContaining("未签名文件");
-    assertThatThrownBy(() -> UpgradePackage.verify(archive("../outside", false, false), publicKey))
+  void rejectsUnlistedFileAndTraversal() throws Exception {
+    assertThatThrownBy(() -> UpgradePackage.verify(archive("console/extra.js", false, false)))
+            .hasMessageContaining("未列入清单");
+    assertThatThrownBy(() -> UpgradePackage.verify(archive("../outside", false, false)))
             .hasMessageContaining("非法路径");
   }
 
@@ -91,7 +72,7 @@ class UpgradeTests {
   void installsAndVerifiesNewRelease() throws Exception {
     Scenario scenario = scenario();
     FakeService service = new FakeService(false, false);
-    BlogUpdaterApplication.run(scenario.root, scenario.state, publicKey, scenario.id, service);
+    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service);
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("3.4-2");
     assertThat(result(scenario)).isEqualTo("SUCCESS");
     assertThat(service.restarts).isEqualTo(1);
@@ -102,7 +83,7 @@ class UpgradeTests {
   void failedHealthCheckRestoresOldRelease() throws Exception {
     Scenario scenario = scenario();
     FakeService service = new FakeService(true, false);
-    BlogUpdaterApplication.run(scenario.root, scenario.state, publicKey, scenario.id, service);
+    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service);
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("old");
     assertThat(result(scenario)).isEqualTo("ROLLED_BACK");
     assertThat(service.restarts).isEqualTo(2);
@@ -111,7 +92,7 @@ class UpgradeTests {
   @Test
   void failedRollbackIsReportedAsFailure() throws Exception {
     Scenario scenario = scenario();
-    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, publicKey, scenario.id,
+    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id,
             new FakeService(true, true))).hasMessageContaining("健康检查失败");
     assertThat(result(scenario)).isEqualTo("FAILED");
   }
@@ -123,7 +104,7 @@ class UpgradeTests {
     highest.setProperty("build", "2");
     UpgradeFiles.write(scenario.root.resolve("highest-build.properties"), highest);
     FakeService service = new FakeService(false, false);
-    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, publicKey, scenario.id, service))
+    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service))
             .hasMessageContaining("降级");
     assertThat(service.restarts).isZero();
     assertThat(result(scenario)).isEqualTo("FAILED");
@@ -169,26 +150,20 @@ class UpgradeTests {
     public boolean healthy(long build) { return build == 2 ? !failNew : !failOld; }
   }
 
-  private Path archive(String extra, boolean badSignature, boolean corruptFile) throws Exception {
+  private Path archive(String extra, boolean missingManifest, boolean corruptFile) throws Exception {
     Map<String, String> files = new LinkedHashMap<>();
     files.put("api/bin/blog-api", "#!/bin/sh\n");
     files.put("api/lib/app.jar", "jar");
     files.put("console/index.html", "console");
     files.put("desktop/index.html", "desktop");
-    StringBuilder metadata = new StringBuilder("format=1\nproduct=today-blog\nversion=3.4\nbuild=2\nminimumJava=17\nrollbackSafe=true\n");
+    StringBuilder metadata = new StringBuilder("format=1\nproduct=today-blog\nversion=3.4\nbuild=2\nminimumJava=17\n");
     for (var file : files.entrySet()) {
       metadata.append("sha256.").append(file.getKey()).append('=')
               .append(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(file.getValue().getBytes(StandardCharsets.UTF_8))))
               .append('\n');
     }
-    Signature signer = Signature.getInstance("SHA256withRSA");
-    signer.initSign(keys.getPrivate());
-    signer.update(metadata.toString().getBytes(StandardCharsets.UTF_8));
-    byte[] signature = signer.sign();
-    if (badSignature)
-      signature[0] ^= 1;
-    files.put("META-INF/upgrade.properties", metadata.toString());
-    files.put("META-INF/upgrade.sig", Base64.getEncoder().encodeToString(signature));
+    if (!missingManifest)
+      files.put("META-INF/upgrade.properties", metadata.toString());
     if (corruptFile)
       files.put("api/lib/app.jar", "modified");
     if (extra != null)
