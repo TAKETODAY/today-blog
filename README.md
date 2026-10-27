@@ -32,13 +32,13 @@ today-blog-opensource
 
 ## 🧰 环境要求
 
-| 依赖    | 版本                                               | 说明                                                                |
-|---------|----------------------------------------------------|---------------------------------------------------------------------|
-| JDK     | **17+**（最低），推荐 **25**（SDKMAN `25-librca`） | 后端编译与运行                                                      |
-| Gradle  | 随 wrapper 自动下载（9.8.x）                       | 无需手动安装，使用 `./gradlew`                                      |
-| MySQL   | 8.x                                                | 本地开发数据库，`localhost:3306`                                    |
+| 依赖    | 版本                                               | 说明                                                                                |
+|---------|----------------------------------------------------|-------------------------------------------------------------------------------------|
+| JDK     | **17+**（最低），推荐 **25**（SDKMAN `25-librca`） | 后端编译与运行                                                                      |
+| Gradle  | 随 wrapper 自动下载（9.8.x）                       | 无需手动安装，使用 `./gradlew`                                                      |
+| MySQL   | 8.x                                                | 本地开发数据库，`localhost:3306`                                                    |
 | Node.js | 18 及以上（建议 Node LTS）                         | Console 仍使用旧版 webpack，相关脚本已内置 `NODE_OPTIONS=--openssl-legacy-provider` |
-| pnpm    | 10.x                                               | 前端 monorepo 包管理（可用 Corepack 启用）                          |
+| pnpm    | 10.x                                               | 前端 monorepo 包管理（可用 Corepack 启用）                                          |
 
 > 测试无需 MySQL：后端测试通过内嵌 **MariaDB4j**（端口 3307）运行。
 
@@ -175,7 +175,8 @@ cd blog-frontend/desktop && pnpm build
 
 其余入口：
 
-- **代码即文档**：公开 API 位于 `blog-api/src/main/java/cn/taketoday/blog/web/http/`，管理后台 API 位于 `web/console/`（路径前缀 `/console/*`），直接阅读 `@RestController` 即可。
+- **代码即文档**：公开 API 位于 `blog-api/src/main/java/cn/taketoday/blog/web/http/`，管理后台 API 位于 `web/console/`（路径前缀 `/console/*`
+  ），直接阅读 `@RestController` 即可。
 - **Console 生成**：在 `blog-frontend/console` 下执行 `pnpm openapi`（umi openapi）可基于后端接口生成类型定义。
 - **鉴权**：登录 / 博主接口支持浏览器会话（`SESSION` Cookie，博主接口需博主账号）或 API Key，见下文「API Key」章节。
 
@@ -228,4 +229,4 @@ API Key 每个请求重新验证，仅设置当前请求身份，不创建或修
 
 # 部署与在线升级
 
-完整签名包构建、systemd 首次部署和后台升级说明见 [部署文档](src/docs/deployment.md)。
+完整发行包构建、systemd 首次部署和后台升级说明见 [部署文档](src/docs/deployment.md)。当前版本仅校验文件完整性，不验证安装包来源。
