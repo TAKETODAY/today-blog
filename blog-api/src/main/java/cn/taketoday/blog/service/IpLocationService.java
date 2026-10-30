@@ -70,16 +70,13 @@ public class IpLocationService {
       }
     }
 
-    try {
-      var response = client.ipLocation(ip);
+    try (var response = client.ipLocation(ip)) {
       if (response.getStatusCode().is2xxSuccessful()) {
-        Body body = response.bodyTo(Body.class);
-        if (body != null) {
-          BodyData bodyData = body.data.get(ip);
-          if (bodyData != null) {
-            // todo area
-            return new IpLocation(bodyData.nation, bodyData.province, bodyData.city, null, bodyData.isp);
-          }
+        Body body = response.getContentAs(Body.class);
+        BodyData bodyData = body.data.get(ip);
+        if (bodyData != null) {
+          // todo area
+          return new IpLocation(bodyData.nation, bodyData.province, bodyData.city, null, bodyData.isp);
         }
       }
       else {
