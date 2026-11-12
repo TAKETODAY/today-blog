@@ -15,47 +15,31 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.model;
+package cn.taketoday.blog.snapshot;
 
-import infra.persistence.annotation.Id;
-import infra.persistence.annotation.Table;
-import lombok.Getter;
-import lombok.Setter;
+import infra.lang.Enumerable;
 
 /**
- * 应用快照元信息。
+ * 应用操作类型，枚举名即数据库存储值。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
-@Getter
-@Setter
-@Table("t_app_snapshot")
-public class AppSnapshot {
+public enum AppOperationType implements Enumerable<String> {
 
-  @Id
-  private String id;
+  /** 系统更新 */
+  UPGRADE,
 
-  private String name;
+  /** 创建快照 */
+  SNAPSHOT_CREATE,
 
-  private String status;
+  /** 恢复快照 */
+  SNAPSHOT_RESTORE,
 
-  private String version;
+  /** 删除快照 */
+  SNAPSHOT_DELETE,
 
-  private String build;
-
-  private Long operatorId;
-
-  private String createdAt;
-
-  private boolean protectedSnapshot;
-
-  private String manifestSha256;
-
-  private long totalBytes;
-
-  private String sourceOperationId;
-
-  private String metadata;
+  /** 修改快照保护状态 */
+  SNAPSHOT_PROTECT
 
 }

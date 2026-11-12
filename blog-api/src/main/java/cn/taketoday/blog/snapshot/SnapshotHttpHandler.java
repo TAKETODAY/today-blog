@@ -15,15 +15,11 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.console;
+package cn.taketoday.blog.snapshot;
 
 import java.util.List;
 import java.util.Map;
 
-import cn.taketoday.blog.service.SnapshotService;
-import cn.taketoday.blog.service.SnapshotService.OperationView;
-import cn.taketoday.blog.service.SnapshotService.SnapshotDetail;
-import cn.taketoday.blog.service.SnapshotService.SnapshotView;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.web.annotation.DELETE;
@@ -52,7 +48,7 @@ class SnapshotHttpHandler {
   }
 
   @GET
-  public List<SnapshotView> list() {
+  public List<SnapshotService.SnapshotView> list() {
     return snapshots.snapshots();
   }
 
@@ -62,12 +58,12 @@ class SnapshotHttpHandler {
   }
 
   @GET("/operations")
-  public List<OperationView> operations() {
+  public List<SnapshotService.OperationView> operations() {
     return snapshots.operations();
   }
 
   @GET("/{id}")
-  public SnapshotDetail detail(@PathVariable String id) {
+  public SnapshotService.SnapshotDetail detail(@PathVariable String id) {
     return snapshots.snapshot(id);
   }
 

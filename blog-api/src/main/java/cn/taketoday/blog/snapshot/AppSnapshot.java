@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.model;
+package cn.taketoday.blog.snapshot;
 
 import infra.persistence.annotation.Id;
 import infra.persistence.annotation.Table;
@@ -23,32 +23,38 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 应用升级和快照操作记录。
+ * 应用快照元信息。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
 @Getter
 @Setter
-@Table("t_app_operation")
-public class AppOperation {
+@Table("t_app_snapshot")
+public class AppSnapshot {
 
   @Id
   private String id;
 
-  private String operationType;
+  private String name;
 
-  private String status;
+  private AppSnapshotStatus status;
+
+  private String version;
+
+  private String build;
 
   private Long operatorId;
 
   private String createdAt;
 
-  private String finishedAt;
+  private boolean protectedSnapshot;
 
-  private String snapshotId;
+  private String manifestSha256;
 
-  private String protectionSnapshotId;
+  private long totalBytes;
+
+  private String sourceOperationId;
 
   private String metadata;
 

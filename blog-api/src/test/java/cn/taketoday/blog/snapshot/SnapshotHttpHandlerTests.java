@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.console;
+package cn.taketoday.blog.snapshot;
 
 import org.junit.jupiter.api.Test;
 
@@ -24,9 +24,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-import cn.taketoday.blog.model.AppOperation;
-import cn.taketoday.blog.model.AppSnapshot;
-import cn.taketoday.blog.service.SnapshotService;
 import cn.taketoday.blog.web.WebAPITest;
 import infra.beans.factory.annotation.Autowired;
 import infra.core.ParameterizedTypeReference;
@@ -63,7 +60,7 @@ class SnapshotHttpHandlerTests {
     AppSnapshot inserted = new AppSnapshot();
     inserted.setId(id);
     inserted.setName("升级前保护点");
-    inserted.setStatus("AVAILABLE");
+    inserted.setStatus(AppSnapshotStatus.AVAILABLE);
     inserted.setVersion("3.4");
     inserted.setBuild("123");
     inserted.setCreatedAt("2026-11-12T00:00:00Z");
@@ -101,10 +98,10 @@ class SnapshotHttpHandlerTests {
     String related = UUID.randomUUID().toString();
     String protectedBy = UUID.randomUUID().toString();
     String unrelated = UUID.randomUUID().toString();
-    insertOperation(created, "SNAPSHOT_CREATE", null, null, "2026-11-12T00:00:02Z");
-    insertOperation(related, "UPGRADE", "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1001", null, "2026-11-12T00:00:03Z");
-    insertOperation(protectedBy, "UPGRADE", null, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1002", "2026-11-12T00:00:01Z");
-    insertOperation(unrelated, "UPGRADE", null, null, "2026-11-12T00:00:04Z");
+    insertOperation(created, AppOperationType.SNAPSHOT_CREATE, null, null, "2026-11-12T00:00:02Z");
+    insertOperation(related, AppOperationType.UPGRADE, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1001", null, "2026-11-12T00:00:03Z");
+    insertOperation(protectedBy, AppOperationType.UPGRADE, null, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1002", "2026-11-12T00:00:01Z");
+    insertOperation(unrelated, AppOperationType.UPGRADE, null, null, "2026-11-12T00:00:04Z");
 
     mvc.get().uri("/api/console/snapshots/operations")
             .assertThat().hasStatusOk().bodyJson()
@@ -141,24 +138,24 @@ class SnapshotHttpHandlerTests {
     AppSnapshot snapshot = new AppSnapshot();
     snapshot.setId(id);
     snapshot.setName(name);
-    snapshot.setStatus("AVAILABLE");
+    snapshot.setStatus(AppSnapshotStatus.AVAILABLE);
     snapshot.setCreatedAt(createdAt);
     snapshot.setMetadata(metadataText.toString());
     entityManager.persist(snapshot);
   }
 
-  private void insertOperation(String id, String type, String snapshotId, String protectionSnapshotId,
+  private void insertOperation(String id, AppOperationType type, String snapshotId, String protectionSnapshotId,
           String createdAt) throws Exception {
     Properties metadata = new Properties();
     metadata.setProperty("id", id);
-    metadata.setProperty("status", "SUCCESS");
+    metadata.setProperty("status", AppOperationStatus.SUCCESS.name());
     metadata.setProperty("createdAt", createdAt);
     StringWriter metadataText = new StringWriter();
     metadata.store(metadataText, null);
     AppOperation operation = new AppOperation();
     operation.setId(id);
     operation.setOperationType(type);
-    operation.setStatus("SUCCESS");
+    operation.setStatus(AppOperationStatus.SUCCESS);
     operation.setCreatedAt(createdAt);
     operation.setSnapshotId(snapshotId);
     operation.setProtectionSnapshotId(protectionSnapshotId);

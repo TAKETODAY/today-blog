@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.service;
+package cn.taketoday.blog.snapshot;
 
 import org.jspecify.annotations.Nullable;
 
@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import cn.taketoday.blog.model.AppOperation;
-import cn.taketoday.blog.model.AppSnapshot;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.ErrorMessageException;
 import infra.http.HttpStatus;
@@ -124,8 +122,11 @@ public class SnapshotService {
   static class SnapshotOperations {
 
     @In
-    public final List<String> operationType = List.of(
-            "SNAPSHOT_CREATE", "SNAPSHOT_RESTORE", "SNAPSHOT_DELETE", "SNAPSHOT_PROTECT");
+    public final List<AppOperationType> operationType = List.of(
+            AppOperationType.SNAPSHOT_CREATE,
+            AppOperationType.SNAPSHOT_RESTORE,
+            AppOperationType.SNAPSHOT_DELETE,
+            AppOperationType.SNAPSHOT_PROTECT);
 
     @OR
     @WhereIsNull(not = true)
@@ -142,7 +143,7 @@ public class SnapshotService {
   public record SnapshotView(
           String id,
           String name,
-          String status,
+          AppSnapshotStatus status,
           String version,
           String build,
           Long operatorId,
@@ -179,8 +180,8 @@ public class SnapshotService {
    */
   public record OperationView(
           String id,
-          String type,
-          String status,
+          AppOperationType type,
+          AppOperationStatus status,
           Long operatorId,
           String createdAt,
           String finishedAt,

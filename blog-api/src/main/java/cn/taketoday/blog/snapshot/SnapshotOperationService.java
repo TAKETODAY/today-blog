@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.service;
+package cn.taketoday.blog.snapshot;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import cn.taketoday.blog.model.AppOperation;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeStore;
 import infra.beans.factory.annotation.Autowired;
@@ -62,7 +61,7 @@ public class SnapshotOperationService {
   public synchronized List<Properties> upgradeHistory() throws IOException {
     // 恢复数据库会回退索引，按固定 UUID 补齐，不能仅依赖内存同步游标。
     for (Properties record : upgrades.history()) {
-      save(record, "UPGRADE");
+      save(record, AppOperationType.UPGRADE);
     }
 
     List<AppOperation> records = entityManager.find(AppOperation.class, new UpgradeOperations());
@@ -76,7 +75,7 @@ public class SnapshotOperationService {
 
   public synchronized Properties upgrade(String id) throws IOException {
     UpgradeFiles.checkId(id);
-    save(upgrades.task(id), "UPGRADE");
+    save(upgrades.task(id), AppOperationType.UPGRADE);
     AppOperation record = entityManager.findById(AppOperation.class, id);
     if (record == null) {
       throw new IllegalStateException("更新记录不存在：" + id);
@@ -86,16 +85,16 @@ public class SnapshotOperationService {
 
   public synchronized void recordUpgrade(String id) throws IOException {
     UpgradeFiles.checkId(id);
-    save(upgrades.task(id), "UPGRADE");
+    save(upgrades.task(id), AppOperationType.UPGRADE);
   }
 
-  void save(Properties record, String type) throws IOException {
+  void save(Properties record, AppOperationType type) throws IOException {
     String id = record.getProperty("id");
     UpgradeFiles.checkId(id);
     AppOperation operation = new AppOperation();
     operation.setId(id);
     operation.setOperationType(type);
-    operation.setStatus(record.getProperty("status"));
+    operation.setStatus(AppOperationStatus.of(record.getProperty("status")));
     operation.setOperatorId(parseOperatorId(record.getProperty("operatorId")));
     operation.setCreatedAt(record.getProperty("createdAt", record.getProperty("startedAt", "")));
     operation.setFinishedAt(record.getProperty("finishedAt"));
@@ -140,7 +139,7 @@ public class SnapshotOperationService {
   @EntityRef(AppOperation.class)
   static class UpgradeOperations {
 
-    public final String operationType = "UPGRADE";
+    public final AppOperationType operationType = AppOperationType.UPGRADE;
   }
 
 }

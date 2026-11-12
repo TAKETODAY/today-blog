@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.service;
+package cn.taketoday.blog.snapshot;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,8 +24,6 @@ import java.nio.file.Path;
 import java.util.Properties;
 import java.util.UUID;
 
-import cn.taketoday.blog.model.AppOperation;
-import cn.taketoday.blog.model.AppSnapshot;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeStore;
 import cn.taketoday.blog.web.WebAPITest;
@@ -60,7 +58,7 @@ class AppOperationPersistenceTests {
     AppSnapshot snapshot = new AppSnapshot();
     snapshot.setId(id);
     snapshot.setName("升级前保护点");
-    snapshot.setStatus("AVAILABLE");
+    snapshot.setStatus(AppSnapshotStatus.AVAILABLE);
     snapshot.setCreatedAt("2026-11-12T00:00:00Z");
     snapshot.setProtectedSnapshot(true);
     snapshot.setMetadata(SnapshotOperationService.encode(metadata));
@@ -87,18 +85,18 @@ class AppOperationPersistenceTests {
     String id = UUID.randomUUID().toString();
     Properties metadata = new Properties();
     metadata.setProperty("id", id);
-    metadata.setProperty("status", "STARTING");
+    metadata.setProperty("status", AppOperationStatus.STARTING.name());
     metadata.setProperty("operatorId", "42");
     metadata.setProperty("createdAt", "2026-11-12T00:00:00Z");
     metadata.setProperty("note", "中文更新记录");
     UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), metadata);
     SnapshotOperationService service = new SnapshotOperationService(entityManager, new UpgradeStore(temp));
     assertThat(service.upgradeHistory()).anySatisfy(record -> assertThat(record).isEqualTo(metadata));
-    UpgradeFiles.status(temp.resolve("results"), id, "SUCCESS", "更新成功");
+    UpgradeFiles.status(temp.resolve("results"), id, AppOperationStatus.SUCCESS.name(), "更新成功");
     service.upgradeHistory();
     service.upgradeHistory();
     assertThat(entityManager.count(AppOperation.class, new AppOperationId(id))).isEqualTo(1L);
-    assertThat(service.upgrade(id).getProperty("status")).isEqualTo("SUCCESS");
+    assertThat(service.upgrade(id).getProperty("status")).isEqualTo(AppOperationStatus.SUCCESS.name());
     // 模拟业务数据库恢复后丢失操作索引，磁盘日志不随业务库回退。
     entityManager.delete(AppOperation.class, id);
     service.upgradeHistory();

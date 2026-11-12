@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.service;
+package cn.taketoday.blog.snapshot;
 
 import java.nio.file.Path;
 import java.util.Properties;
@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 
-import cn.taketoday.blog.model.AppOperation;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeStore;
 import infra.persistence.EntityManager;
@@ -59,7 +58,7 @@ class SnapshotOperationServiceTests {
     Properties record = new Properties();
     String id = UUID.randomUUID().toString();
     record.setProperty("id", id);
-    record.setProperty("status", "READY");
+    record.setProperty("status", AppOperationStatus.READY.name());
     record.setProperty("createdAt", "2026-11-12T00:00:00Z");
     UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), record);
     service.upgradeHistory();
@@ -69,8 +68,8 @@ class SnapshotOperationServiceTests {
     verify(entityManager, times(2)).persist(saved.capture());
     assertThat(saved.getAllValues()).allSatisfy(operation -> {
       assertThat(operation.getId()).isEqualTo(id);
-      assertThat(operation.getOperationType()).isEqualTo("UPGRADE");
-      assertThat(operation.getStatus()).isEqualTo("READY");
+      assertThat(operation.getOperationType()).isEqualTo(AppOperationType.UPGRADE);
+      assertThat(operation.getStatus()).isEqualTo(AppOperationStatus.READY);
       assertThat(operation.getCreatedAt()).isEqualTo("2026-11-12T00:00:00Z");
       assertThat(operation.getOperatorId()).isNull();
       assertThat(operation.getFinishedAt()).isNull();
@@ -86,7 +85,7 @@ class SnapshotOperationServiceTests {
     Properties record = new Properties();
     String id = UUID.randomUUID().toString();
     record.setProperty("id", id);
-    record.setProperty("status", "SUCCESS");
+    record.setProperty("status", AppOperationStatus.SUCCESS.name());
     record.setProperty("operatorId", "42");
     UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), record);
     when(entityManager.findById(AppOperation.class, id)).thenReturn(new AppOperation());
