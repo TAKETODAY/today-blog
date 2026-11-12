@@ -17,21 +17,24 @@
 
 package cn.taketoday.blog.service;
 
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
+import cn.taketoday.blog.model.AppOperation;
+import cn.taketoday.blog.model.AppSnapshot;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeStore;
 import cn.taketoday.blog.web.WebAPITest;
 import infra.beans.factory.annotation.Autowired;
-import infra.jdbc.core.JdbcTemplate;
 import infra.persistence.EntityManager;
+import infra.persistence.annotation.EntityRef;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * 操作记录在真实数据库中的持久化行为测试。
@@ -41,9 +44,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @WebAPITest
 class AppOperationPersistenceTests {
-
-  @Autowired
-  JdbcTemplate jdbc;
 
   @Autowired
   EntityManager entityManager;
@@ -57,10 +57,14 @@ class AppOperationPersistenceTests {
     Properties metadata = new Properties();
     metadata.setProperty("scope", "程序、数据库、本地附件、配置");
     metadata.setProperty("password", "must-not-leak");
-    jdbc.update("""
-            INSERT INTO t_app_snapshot (id, name, status, created_at, protected_snapshot, metadata)
-            VALUES (?, ?, 'AVAILABLE', '2026-11-12T00:00:00Z', true, ?)
-            """, id, "升级前保护点", SnapshotOperationService.encode(metadata));
+    AppSnapshot snapshot = new AppSnapshot();
+    snapshot.setId(id);
+    snapshot.setName("升级前保护点");
+    snapshot.setStatus("AVAILABLE");
+    snapshot.setCreatedAt("2026-11-12T00:00:00Z");
+    snapshot.setProtectedSnapshot(true);
+    snapshot.setMetadata(SnapshotOperationService.encode(metadata));
+    entityManager.persist(snapshot);
     SnapshotService service = new SnapshotService(entityManager);
     assertThat(service.snapshots()).anySatisfy(record -> {
       assertThat(record.id()).isEqualTo(id);
@@ -71,13 +75,10 @@ class AppOperationPersistenceTests {
     assertThat(detail.snapshot().id()).isEqualTo(id);
     // metadata 中的敏感字段不得进入对外视图。
     assertThat(detail.toString()).doesNotContain("must-not-leak");
-    org.assertj.core.api.Assertions.assertThatThrownBy(service::requireExecutor)
-            .hasMessageContaining("未执行任何快照操作");
+    assertThatThrownBy(service::requireExecutor).hasMessageContaining("未执行任何快照操作");
     assertThat(service.capabilities()).containsEntry("create", false).containsEntry("restore", false);
-    org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.snapshot(UUID.randomUUID().toString()))
-            .hasMessageContaining("不存在");
-    org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.snapshot("../outside"))
-            .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> service.snapshot(UUID.randomUUID().toString())).hasMessageContaining("不存在");
+    assertThatThrownBy(() -> service.snapshot("../outside")).isInstanceOf(IllegalArgumentException.class);
     assertThat(service.snapshot(id).snapshot().protectedSnapshot()).isTrue();
   }
 
@@ -96,12 +97,25 @@ class AppOperationPersistenceTests {
     UpgradeFiles.status(temp.resolve("results"), id, "SUCCESS", "更新成功");
     service.upgradeHistory();
     service.upgradeHistory();
-    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM t_app_operation WHERE id = ?", Long.class, id)).isEqualTo(1L);
+    assertThat(entityManager.count(AppOperation.class, new AppOperationId(id))).isEqualTo(1L);
     assertThat(service.upgrade(id).getProperty("status")).isEqualTo("SUCCESS");
     // 模拟业务数据库恢复后丢失操作索引，磁盘日志不随业务库回退。
-    jdbc.update("DELETE FROM t_app_operation WHERE id = ?", id);
+    entityManager.delete(AppOperation.class, id);
     service.upgradeHistory();
     assertThat(service.upgrade(id).getProperty("note")).isEqualTo("中文更新记录");
-    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM t_app_operation WHERE id = ?", Long.class, id)).isEqualTo(1L);
+    assertThat(entityManager.count(AppOperation.class, new AppOperationId(id))).isEqualTo(1L);
+  }
+
+  /**
+   * 按主键统计操作记录数量。
+   */
+  @EntityRef(AppOperation.class)
+  static class AppOperationId {
+
+    public final String id;
+
+    AppOperationId(String id) {
+      this.id = id;
+    }
   }
 }
