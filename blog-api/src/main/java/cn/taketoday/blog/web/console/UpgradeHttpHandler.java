@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.User;
+import cn.taketoday.blog.service.SnapshotOperationService;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
 import cn.taketoday.blog.updater.UpgradeOptions;
@@ -56,6 +57,12 @@ class UpgradeHttpHandler {
 
   private final UpgradeStore store = new UpgradeStore(state);
 
+  private final SnapshotOperationService operations;
+
+  UpgradeHttpHandler(SnapshotOperationService operations) {
+    this.operations = operations;
+  }
+
   private UpgradeOptions options(Properties values) {
     try {
       return UpgradeOptions.from(values);
@@ -81,7 +88,7 @@ class UpgradeHttpHandler {
 
   @GET("/history")
   public java.util.List<Properties> history() throws Exception {
-    return store.history();
+    return operations.upgradeHistory();
   }
 
   @GET("/environment")
@@ -190,6 +197,8 @@ class UpgradeHttpHandler {
     }
     store.snapshot(id, options, user.getId(), current());
     try {
+      // 数据库记录失败时不派发高权限任务，磁盘记录仍保留供核对。
+      operations.recordUpgrade(id);
       Process process = new ProcessBuilder("/usr/bin/sudo", "-n", "/usr/bin/systemctl", "start", "--no-block",
             "today-blog-updater@" + id + ".service").redirectErrorStream(true)
             .redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
@@ -212,7 +221,7 @@ class UpgradeHttpHandler {
 
   @GET("/{id}")
   public Properties status(@PathVariable String id) throws Exception {
-    return store.task(id);
+    return operations.upgrade(id);
   }
 
   private void enabled() {
