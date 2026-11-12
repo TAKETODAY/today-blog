@@ -159,6 +159,11 @@ export default [
         path: '/system/upgrade',
         component: './system/upgrade',
       },
+      {
+        name: '应用快照',
+        path: '/system/snapshots',
+        component: './system/snapshots',
+      },
     ],
   },
   {
