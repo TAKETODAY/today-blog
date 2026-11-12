@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.service;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -127,11 +129,11 @@ public class SnapshotService {
 
     @OR
     @WhereIsNull(not = true)
-    public final String snapshotId = null;
+    public final @Nullable String snapshotId = null;
 
     @OR
     @WhereIsNull(not = true)
-    public final String protectionSnapshotId = null;
+    public final @Nullable String protectionSnapshotId = null;
   }
 
   /**
