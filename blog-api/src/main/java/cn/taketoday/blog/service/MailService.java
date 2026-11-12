@@ -23,6 +23,7 @@ import java.io.StringWriter;
 import java.util.Map;
 
 import cn.taketoday.blog.model.Mail;
+import cn.taketoday.blog.model.enums.MailStatus;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import infra.persistence.EntityManager;
@@ -81,7 +82,7 @@ public class MailService {
     mail.setSubject(subject);
     mail.setContent(content);
     mail.setAttachment(attachment);
-    mail.setStatus("PENDING");
+    mail.setStatus(MailStatus.PENDING);
     mail.setAttempts(0);
     entityManager.persist(mail);
   }

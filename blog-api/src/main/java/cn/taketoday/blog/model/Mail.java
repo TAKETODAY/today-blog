@@ -19,8 +19,9 @@ package cn.taketoday.blog.model;
 
 import java.time.Instant;
 
-import infra.persistence.annotation.Table;
+import cn.taketoday.blog.model.enums.MailStatus;
 import infra.persistence.annotation.Column;
+import infra.persistence.annotation.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -44,8 +45,8 @@ public class Mail extends BasicModel {
 
   private Instant sentAt;
 
-  /** PENDING / SENDING / SENT / FAILED */
-  private String status;
+  /** 发送状态，见 {@link MailStatus} */
+  private MailStatus status;
 
   private Integer attempts;
 
