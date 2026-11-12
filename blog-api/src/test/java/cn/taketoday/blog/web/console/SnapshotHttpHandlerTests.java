@@ -17,18 +17,20 @@
 
 package cn.taketoday.blog.web.console;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
-
+import cn.taketoday.blog.model.AppOperation;
+import cn.taketoday.blog.model.AppSnapshot;
 import cn.taketoday.blog.service.SnapshotService;
 import cn.taketoday.blog.web.WebAPITest;
 import infra.beans.factory.annotation.Autowired;
 import infra.core.ParameterizedTypeReference;
-import infra.jdbc.core.JdbcTemplate;
+import infra.persistence.EntityManager;
 import infra.test.web.mock.assertj.MockMvcTester;
 import infra.transaction.annotation.Transactional;
 
@@ -48,7 +50,7 @@ class SnapshotHttpHandlerTests {
   private MockMvcTester mvc;
 
   @Autowired
-  private JdbcTemplate jdbc;
+  private EntityManager entityManager;
 
   @Test
   void listAndDetailReturnTypedContractWithoutMetadata() throws Exception {
@@ -58,11 +60,17 @@ class SnapshotHttpHandlerTests {
     metadata.setProperty("password", "must-not-leak");
     StringWriter metadataText = new StringWriter();
     metadata.store(metadataText, null);
-    jdbc.update("""
-            INSERT INTO t_app_snapshot
-              (id, name, status, version, build, created_at, protected_snapshot, total_bytes, metadata)
-            VALUES (?, ?, 'AVAILABLE', '3.4', '123', '2026-11-12T00:00:00Z', true, 1048576, ?)
-            """, id, "升级前保护点", metadataText.toString());
+    AppSnapshot inserted = new AppSnapshot();
+    inserted.setId(id);
+    inserted.setName("升级前保护点");
+    inserted.setStatus("AVAILABLE");
+    inserted.setVersion("3.4");
+    inserted.setBuild("123");
+    inserted.setCreatedAt("2026-11-12T00:00:00Z");
+    inserted.setProtectedSnapshot(true);
+    inserted.setTotalBytes(1048576L);
+    inserted.setMetadata(metadataText.toString());
+    entityManager.persist(inserted);
 
     mvc.get().uri("/api/console/snapshots")
             .assertThat().hasStatusOk().bodyJson()
@@ -130,10 +138,13 @@ class SnapshotHttpHandlerTests {
     metadata.setProperty("id", id);
     StringWriter metadataText = new StringWriter();
     metadata.store(metadataText, null);
-    jdbc.update("""
-            INSERT INTO t_app_snapshot (id, name, status, created_at, metadata)
-            VALUES (?, ?, 'AVAILABLE', ?, ?)
-            """, id, name, createdAt, metadataText.toString());
+    AppSnapshot snapshot = new AppSnapshot();
+    snapshot.setId(id);
+    snapshot.setName(name);
+    snapshot.setStatus("AVAILABLE");
+    snapshot.setCreatedAt(createdAt);
+    snapshot.setMetadata(metadataText.toString());
+    entityManager.persist(snapshot);
   }
 
   private void insertOperation(String id, String type, String snapshotId, String protectionSnapshotId,
@@ -144,11 +155,15 @@ class SnapshotHttpHandlerTests {
     metadata.setProperty("createdAt", createdAt);
     StringWriter metadataText = new StringWriter();
     metadata.store(metadataText, null);
-    jdbc.update("""
-            INSERT INTO t_app_operation
-              (id, operation_type, status, created_at, finished_at, snapshot_id, protection_snapshot_id, metadata)
-            VALUES (?, ?, 'SUCCESS', ?, NULL, ?, ?, ?)
-            """, id, type, createdAt, snapshotId, protectionSnapshotId, metadataText.toString());
+    AppOperation operation = new AppOperation();
+    operation.setId(id);
+    operation.setOperationType(type);
+    operation.setStatus("SUCCESS");
+    operation.setCreatedAt(createdAt);
+    operation.setSnapshotId(snapshotId);
+    operation.setProtectionSnapshotId(protectionSnapshotId);
+    operation.setMetadata(metadataText.toString());
+    entityManager.persist(operation);
   }
 
 }
