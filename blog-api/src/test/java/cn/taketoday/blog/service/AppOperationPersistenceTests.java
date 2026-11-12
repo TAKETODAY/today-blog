@@ -29,14 +29,24 @@ import cn.taketoday.blog.updater.UpgradeStore;
 import cn.taketoday.blog.web.WebAPITest;
 import infra.beans.factory.annotation.Autowired;
 import infra.jdbc.core.JdbcTemplate;
+import infra.persistence.EntityManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 操作记录在真实数据库中的持久化行为测试。
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0 2026/11/12
+ */
 @WebAPITest
 class AppOperationPersistenceTests {
 
   @Autowired
   JdbcTemplate jdbc;
+
+  @Autowired
+  EntityManager entityManager;
 
   @TempDir
   Path temp;
@@ -51,14 +61,16 @@ class AppOperationPersistenceTests {
             INSERT INTO t_app_snapshot (id, name, status, created_at, protected_snapshot, metadata)
             VALUES (?, ?, 'AVAILABLE', '2026-11-12T00:00:00Z', true, ?)
             """, id, "升级前保护点", SnapshotOperationService.encode(metadata));
-    SnapshotService service = new SnapshotService(jdbc);
+    SnapshotService service = new SnapshotService(entityManager);
     assertThat(service.snapshots()).anySatisfy(record -> {
-      assertThat(record.getProperty("id")).isEqualTo(id);
-      assertThat(record.getProperty("protected")).isEqualTo("true");
+      assertThat(record.id()).isEqualTo(id);
+      assertThat(record.protectedSnapshot()).isTrue();
     });
-    Properties detail = service.snapshot(id);
-    assertThat(detail.getProperty("scope")).contains("数据库");
-    assertThat(detail).doesNotContainKey("password");
+    SnapshotService.SnapshotDetail detail = service.snapshot(id);
+    assertThat(detail.scope()).contains("数据库");
+    assertThat(detail.snapshot().id()).isEqualTo(id);
+    // metadata 中的敏感字段不得进入对外视图。
+    assertThat(detail.toString()).doesNotContain("must-not-leak");
     org.assertj.core.api.Assertions.assertThatThrownBy(service::requireExecutor)
             .hasMessageContaining("未执行任何快照操作");
     assertThat(service.capabilities()).containsEntry("create", false).containsEntry("restore", false);
@@ -66,7 +78,7 @@ class AppOperationPersistenceTests {
             .hasMessageContaining("不存在");
     org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.snapshot("../outside"))
             .isInstanceOf(IllegalArgumentException.class);
-    assertThat(service.snapshot(id).getProperty("protected")).isEqualTo("true");
+    assertThat(service.snapshot(id).snapshot().protectedSnapshot()).isTrue();
   }
 
   @Test
@@ -79,7 +91,7 @@ class AppOperationPersistenceTests {
     metadata.setProperty("createdAt", "2026-11-12T00:00:00Z");
     metadata.setProperty("note", "中文更新记录");
     UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), metadata);
-    SnapshotOperationService service = new SnapshotOperationService(jdbc, new UpgradeStore(temp));
+    SnapshotOperationService service = new SnapshotOperationService(entityManager, new UpgradeStore(temp));
     assertThat(service.upgradeHistory()).anySatisfy(record -> assertThat(record).isEqualTo(metadata));
     UpgradeFiles.status(temp.resolve("results"), id, "SUCCESS", "更新成功");
     service.upgradeHistory();

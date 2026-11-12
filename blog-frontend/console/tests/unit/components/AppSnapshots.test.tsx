@@ -13,7 +13,8 @@ describe('AppSnapshots', () => {
   let root = createRoot(document.createElement('div'));
   const snapshot = {
     id: '86d25e56-e760-48df-bf3d-6a75e9635026', name: '更新前恢复点', status: 'AVAILABLE',
-    version: '3.4', build: '123', protected: 'true', totalBytes: '1048576', createdAt: '2026-11-12T00:00:00Z',
+    version: '3.4', build: '123', protectedSnapshot: true, totalBytes: 1048576, createdAt: '2026-11-12T00:00:00Z',
+    operatorId: 42, manifestSha256: 'abc', sourceOperationId: null,
   };
 
   beforeAll(() => {
@@ -35,7 +36,7 @@ describe('AppSnapshots', () => {
       if (url.endsWith('/operations')) {
         return { data: [] };
       }
-      return { data: url.endsWith('/snapshots') ? [snapshot] : snapshot };
+      return { data: url.endsWith('/snapshots') ? [snapshot] : { snapshot, scope: '程序、数据库', restoreVerifiedAt: null } };
     });
     container = document.createElement('div');
     document.body.appendChild(container);

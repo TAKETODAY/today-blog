@@ -21,110 +21,181 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import cn.taketoday.blog.model.AppOperation;
+import cn.taketoday.blog.model.AppSnapshot;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.ErrorMessageException;
 import infra.http.HttpStatus;
-import infra.jdbc.core.JdbcTemplate;
+import infra.persistence.EntityManager;
+import infra.persistence.Pageable;
+import infra.persistence.annotation.EntityRef;
+import infra.persistence.annotation.In;
+import infra.persistence.annotation.OR;
+import infra.persistence.annotation.OrderByClause;
+import infra.persistence.annotation.WhereIsNull;
 import infra.stereotype.Service;
 
 /**
  * 快照管理查询不将数据库索引等同于可恢复的磁盘备份。
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0 2026/11/12
  */
 @Service
 public class SnapshotService {
 
-  private final JdbcTemplate jdbc;
+  private static final int LIST_LIMIT = 500;
 
-  public SnapshotService(JdbcTemplate jdbc) {
-    this.jdbc = jdbc;
+  private final EntityManager entityManager;
+
+  public SnapshotService(EntityManager entityManager) {
+    this.entityManager = entityManager;
   }
 
   public Map<String, Object> capabilities() {
     // 在独立执行器具备完整校验和停写能力之前，后端也必须拒绝危险操作。
-    return Map.of("create", false, "restore", false, "delete", false, "protect", false,
-            "reason", "完整快照执行器尚未接通，暂不能创建、保护、删除或恢复快照。数据库备份不等于完整应用快照。");
+    return Map.of("create", false,
+            "restore", false,
+            "delete", false,
+            "protect", false,
+            "reason", "完整快照执行器尚未接通，暂不能创建、保护、删除或恢复快照。数据库备份不等于完整应用快照。"
+    );
   }
 
-  public List<Properties> snapshots() {
-    return jdbc.query("""
-            SELECT id, name, status, version, build, operator_id, created_at, protected_snapshot,
-              manifest_sha256, total_bytes, source_operation_id
-            FROM t_app_snapshot ORDER BY created_at DESC, id DESC LIMIT 500
-            """, (rs, row) -> {
-      Properties result = new Properties();
-      result.setProperty("id", rs.getString("id"));
-      result.setProperty("name", rs.getString("name"));
-      result.setProperty("status", rs.getString("status"));
-      result.setProperty("version", rs.getString("version") == null ? "" : rs.getString("version"));
-      result.setProperty("build", rs.getString("build") == null ? "" : rs.getString("build"));
-      result.setProperty("operatorId", rs.getString("operator_id") == null ? "" : rs.getString("operator_id"));
-      result.setProperty("createdAt", rs.getString("created_at"));
-      result.setProperty("protected", Boolean.toString(rs.getBoolean("protected_snapshot")));
-      result.setProperty("totalBytes", Long.toString(rs.getLong("total_bytes")));
-      result.setProperty("manifestSha256", rs.getString("manifest_sha256") == null ? "" : rs.getString("manifest_sha256"));
-      result.setProperty("sourceOperationId", rs.getString("source_operation_id") == null ? "" : rs.getString("source_operation_id"));
-      return result;
-    });
+  public List<SnapshotView> snapshots() {
+    return entityManager.slice(AppSnapshot.class, new LatestSnapshots(), Pageable.of(1, LIST_LIMIT))
+            .rows()
+            .stream()
+            .map(SnapshotView::from)
+            .toList();
   }
 
-  public Properties snapshot(String id) {
+  public SnapshotDetail snapshot(String id) {
     UpgradeFiles.checkId(id);
-    List<Properties> records = jdbc.query("""
-            SELECT metadata, id, name, status, version, build, protected_snapshot, total_bytes,
-              manifest_sha256, source_operation_id, created_at, operator_id
-            FROM t_app_snapshot WHERE id = ?
-            """, (rs, row) -> {
-      Properties metadata = SnapshotOperationService.decode(rs.getString("metadata"));
-      Properties result = new Properties();
-      for (String field : List.of("scope", "restoreVerifiedAt")) {
-        String value = metadata.getProperty(field);
-        if (value != null) {
-          result.setProperty(field, value);
-        }
-      }
-      // 核心字段以结构化列为准，不允许旧 metadata 覆盖保护和状态。
-      result.setProperty("id", rs.getString("id"));
-      result.setProperty("name", rs.getString("name"));
-      result.setProperty("status", rs.getString("status"));
-      result.setProperty("protected", Boolean.toString(rs.getBoolean("protected_snapshot")));
-      result.setProperty("totalBytes", Long.toString(rs.getLong("total_bytes")));
-      for (String[] field : new String[][] {
-              { "version", "version" }, { "build", "build" }, { "createdAt", "created_at" },
-              { "operatorId", "operator_id" }, { "manifestSha256", "manifest_sha256" },
-              { "sourceOperationId", "source_operation_id" } }) {
-        String value = rs.getString(field[1]);
-        result.setProperty(field[0], value == null ? "" : value);
-      }
-      return result;
-    }, id);
-    if (records.isEmpty()) {
+    AppSnapshot record = entityManager.findById(AppSnapshot.class, id);
+    if (record == null) {
       throw ErrorMessageException.failed("应用快照不存在", HttpStatus.NOT_FOUND);
     }
-    return records.getFirst();
+    // 核心字段取结构化列，metadata 只补充不属于列的展示信息，旧记录不能覆盖保护状态。
+    Properties metadata = decodeMetadata(record.getMetadata());
+    return new SnapshotDetail(
+            SnapshotView.from(record),
+            metadata.getProperty("scope"),
+            metadata.getProperty("restoreVerifiedAt"));
   }
 
-  public List<Properties> operations() {
-    return jdbc.query("""
-            SELECT id, operation_type, status, operator_id, created_at, finished_at,
-              snapshot_id, protection_snapshot_id
-            FROM t_app_operation
-            WHERE operation_type IN ('SNAPSHOT_CREATE', 'SNAPSHOT_RESTORE', 'SNAPSHOT_DELETE', 'SNAPSHOT_PROTECT')
-              OR snapshot_id IS NOT NULL OR protection_snapshot_id IS NOT NULL
-            ORDER BY created_at DESC, id DESC LIMIT 500
-            """, (rs, row) -> {
-      Properties result = new Properties();
-      for (String[] field : new String[][] {
-              { "id", "id" }, { "type", "operation_type" }, { "status", "status" },
-              { "operatorId", "operator_id" }, { "createdAt", "created_at" }, { "finishedAt", "finished_at" },
-              { "snapshotId", "snapshot_id" }, { "protectionSnapshotId", "protection_snapshot_id" } }) {
-        String value = rs.getString(field[1]);
-        result.setProperty(field[0], value == null ? "" : value);
-      }
-      return result;
-    });
+  public List<OperationView> operations() {
+    return entityManager.slice(AppOperation.class, new SnapshotOperations(), Pageable.of(1, LIST_LIMIT))
+            .rows()
+            .stream()
+            .map(OperationView::from)
+            .toList();
   }
 
   public void requireExecutor() {
     throw ErrorMessageException.failed("完整快照执行器尚未接通，未执行任何快照操作", HttpStatus.SERVICE_UNAVAILABLE);
   }
+
+  private static Properties decodeMetadata(String value) {
+    try {
+      return SnapshotOperationService.decode(value);
+    }
+    catch (IllegalStateException ex) {
+      throw new IllegalStateException("快照元数据格式错误", ex);
+    }
+  }
+
+  /**
+   * 最近快照：只声明排序，不产生 WHERE 条件。
+   */
+  @OrderByClause("created_at DESC, id DESC")
+  @EntityRef(AppSnapshot.class)
+  static class LatestSnapshots {
+
+  }
+
+  /**
+   * 快照相关操作记录：快照操作类型，或关联了快照、保护快照的系统更新。
+   */
+  @OrderByClause("created_at DESC, id DESC")
+  @EntityRef(AppOperation.class)
+  static class SnapshotOperations {
+
+    @In
+    public final List<String> operationType = List.of(
+            "SNAPSHOT_CREATE", "SNAPSHOT_RESTORE", "SNAPSHOT_DELETE", "SNAPSHOT_PROTECT");
+
+    @OR
+    @WhereIsNull(not = true)
+    public final String snapshotId = null;
+
+    @OR
+    @WhereIsNull(not = true)
+    public final String protectionSnapshotId = null;
+  }
+
+  /**
+   * 快照列表和详情共用的只读视图，不暴露存储列 metadata。
+   */
+  public record SnapshotView(
+          String id,
+          String name,
+          String status,
+          String version,
+          String build,
+          Long operatorId,
+          String createdAt,
+          boolean protectedSnapshot,
+          long totalBytes,
+          String manifestSha256,
+          String sourceOperationId) {
+
+    static SnapshotView from(AppSnapshot snapshot) {
+      return new SnapshotView(
+              snapshot.getId(),
+              snapshot.getName(),
+              snapshot.getStatus(),
+              snapshot.getVersion(),
+              snapshot.getBuild(),
+              snapshot.getOperatorId(),
+              snapshot.getCreatedAt(),
+              snapshot.isProtectedSnapshot(),
+              snapshot.getTotalBytes(),
+              snapshot.getManifestSha256(),
+              snapshot.getSourceOperationId());
+    }
+  }
+
+  /**
+   * 快照详情在基础视图之外补充 metadata 中的展示字段。
+   */
+  public record SnapshotDetail(SnapshotView snapshot, String scope, String restoreVerifiedAt) {
+  }
+
+  /**
+   * 快照操作记录视图，字段名与前端契约一致。
+   */
+  public record OperationView(
+          String id,
+          String type,
+          String status,
+          Long operatorId,
+          String createdAt,
+          String finishedAt,
+          String snapshotId,
+          String protectionSnapshotId) {
+
+    static OperationView from(AppOperation operation) {
+      return new OperationView(
+              operation.getId(),
+              operation.getOperationType(),
+              operation.getStatus(),
+              operation.getOperatorId(),
+              operation.getCreatedAt(),
+              operation.getFinishedAt(),
+              operation.getSnapshotId(),
+              operation.getProtectionSnapshotId());
+    }
+  }
+
 }

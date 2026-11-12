@@ -23,16 +23,30 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 
+import cn.taketoday.blog.model.AppOperation;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeStore;
-import infra.jdbc.core.JdbcTemplate;
+import infra.persistence.EntityManager;
+import infra.persistence.PropertyUpdateStrategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
+/**
+ * 快照与更新记录索引的写入、覆盖与回放测试。
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0 2026/11/12
+ */
 class SnapshotOperationServiceTests {
 
   @TempDir
@@ -40,8 +54,8 @@ class SnapshotOperationServiceTests {
 
   @Test
   void reimportsDiskHistoryAfterEveryDatabaseRollback() throws Exception {
-    JdbcTemplate jdbc = mock(JdbcTemplate.class);
-    SnapshotOperationService service = new SnapshotOperationService(jdbc, new UpgradeStore(temp));
+    EntityManager entityManager = mock(EntityManager.class);
+    SnapshotOperationService service = new SnapshotOperationService(entityManager, new UpgradeStore(temp));
     Properties record = new Properties();
     String id = UUID.randomUUID().toString();
     record.setProperty("id", id);
@@ -50,8 +64,38 @@ class SnapshotOperationServiceTests {
     UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), record);
     service.upgradeHistory();
     service.upgradeHistory();
-    verify(jdbc, times(2)).update(contains("ON DUPLICATE KEY UPDATE"), eq(id), eq("UPGRADE"), eq("READY"),
-            isNull(), eq("2026-11-12T00:00:00Z"), isNull(), isNull(), isNull(), anyString());
+
+    ArgumentCaptor<AppOperation> saved = ArgumentCaptor.forClass(AppOperation.class);
+    verify(entityManager, times(2)).persist(saved.capture());
+    assertThat(saved.getAllValues()).allSatisfy(operation -> {
+      assertThat(operation.getId()).isEqualTo(id);
+      assertThat(operation.getOperationType()).isEqualTo("UPGRADE");
+      assertThat(operation.getStatus()).isEqualTo("READY");
+      assertThat(operation.getCreatedAt()).isEqualTo("2026-11-12T00:00:00Z");
+      assertThat(operation.getOperatorId()).isNull();
+      assertThat(operation.getFinishedAt()).isNull();
+      assertThat(operation.getMetadata()).contains("status=READY");
+    });
+    verify(entityManager, never()).updateById(any(AppOperation.class), any(PropertyUpdateStrategy.class));
+  }
+
+  @Test
+  void overwritesExistingIndexRowOnReimport() throws Exception {
+    EntityManager entityManager = mock(EntityManager.class);
+    SnapshotOperationService service = new SnapshotOperationService(entityManager, new UpgradeStore(temp));
+    Properties record = new Properties();
+    String id = UUID.randomUUID().toString();
+    record.setProperty("id", id);
+    record.setProperty("status", "SUCCESS");
+    record.setProperty("operatorId", "42");
+    UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), record);
+    when(entityManager.findById(AppOperation.class, id)).thenReturn(new AppOperation());
+    service.upgradeHistory();
+
+    ArgumentCaptor<AppOperation> updated = ArgumentCaptor.forClass(AppOperation.class);
+    verify(entityManager).updateById(updated.capture(), any(PropertyUpdateStrategy.class));
+    assertThat(updated.getValue().getOperatorId()).isEqualTo(42L);
+    verify(entityManager, never()).persist(any(AppOperation.class));
   }
 
   @Test
@@ -64,9 +108,10 @@ class SnapshotOperationServiceTests {
 
   @Test
   void invalidIdentifiersNeverReachDatabase() {
-    JdbcTemplate jdbc = mock(JdbcTemplate.class);
-    SnapshotOperationService service = new SnapshotOperationService(jdbc, new UpgradeStore(temp));
+    EntityManager entityManager = mock(EntityManager.class);
+    SnapshotOperationService service = new SnapshotOperationService(entityManager, new UpgradeStore(temp));
     assertThatThrownBy(() -> service.upgrade("../outside")).isInstanceOf(IllegalArgumentException.class);
-    verifyNoInteractions(jdbc);
+    verifyNoInteractions(entityManager);
   }
+
 }

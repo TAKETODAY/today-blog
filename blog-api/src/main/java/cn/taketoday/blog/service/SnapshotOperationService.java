@@ -21,33 +21,41 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import cn.taketoday.blog.model.AppOperation;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeStore;
 import infra.beans.factory.annotation.Autowired;
-import infra.jdbc.core.JdbcTemplate;
+import infra.persistence.EntityManager;
+import infra.persistence.PropertyUpdateStrategy;
+import infra.persistence.annotation.EntityRef;
+import infra.persistence.annotation.OrderByClause;
 import infra.stereotype.Service;
 
 /**
  * 数据库保存查询索引，磁盘协议保留独立执行和恢复依据。
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0 2026/11/12
  */
 @Service
 public class SnapshotOperationService {
 
-  private final JdbcTemplate jdbc;
+  private final EntityManager entityManager;
 
   private final UpgradeStore upgrades;
 
   @Autowired
-  public SnapshotOperationService(JdbcTemplate jdbc) {
-    this(jdbc, new UpgradeStore(Path.of(System.getenv().getOrDefault(
+  public SnapshotOperationService(EntityManager entityManager) {
+    this(entityManager, new UpgradeStore(Path.of(System.getenv().getOrDefault(
             "BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"))));
   }
 
-  SnapshotOperationService(JdbcTemplate jdbc, UpgradeStore upgrades) {
-    this.jdbc = jdbc;
+  SnapshotOperationService(EntityManager entityManager, UpgradeStore upgrades) {
+    this.entityManager = entityManager;
     this.upgrades = upgrades;
   }
 
@@ -56,15 +64,24 @@ public class SnapshotOperationService {
     for (Properties record : upgrades.history()) {
       save(record, "UPGRADE");
     }
-    return jdbc.query("SELECT metadata FROM t_app_operation WHERE operation_type = 'UPGRADE' ORDER BY created_at DESC",
-            (rs, row) -> decode(rs.getString(1)));
+
+    List<AppOperation> records = entityManager.find(AppOperation.class, new UpgradeOperations());
+
+    List<Properties> history = new ArrayList<>(records.size());
+    for (AppOperation record : records) {
+      history.add(decode(record.getMetadata()));
+    }
+    return history;
   }
 
   public synchronized Properties upgrade(String id) throws IOException {
     UpgradeFiles.checkId(id);
     save(upgrades.task(id), "UPGRADE");
-    return jdbc.queryForObject("SELECT metadata FROM t_app_operation WHERE id = ? AND operation_type = 'UPGRADE'",
-            (rs, row) -> decode(rs.getString(1)), id);
+    AppOperation record = entityManager.findById(AppOperation.class, id);
+    if (record == null) {
+      throw new IllegalStateException("更新记录不存在：" + id);
+    }
+    return decode(record.getMetadata());
   }
 
   public synchronized void recordUpgrade(String id) throws IOException {
@@ -75,16 +92,24 @@ public class SnapshotOperationService {
   void save(Properties record, String type) throws IOException {
     String id = record.getProperty("id");
     UpgradeFiles.checkId(id);
-    jdbc.update("""
-            INSERT INTO t_app_operation
-              (id, operation_type, status, operator_id, created_at, finished_at, snapshot_id, protection_snapshot_id, metadata)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE status = VALUES(status), operator_id = VALUES(operator_id),
-              created_at = VALUES(created_at), finished_at = VALUES(finished_at), snapshot_id = VALUES(snapshot_id),
-              protection_snapshot_id = VALUES(protection_snapshot_id), metadata = VALUES(metadata)
-            """, id, type, record.getProperty("status"), record.getProperty("operatorId"),
-            record.getProperty("createdAt", record.getProperty("startedAt", "")), record.getProperty("finishedAt"),
-            record.getProperty("snapshotId"), record.getProperty("protectionSnapshotId"), encode(record));
+    AppOperation operation = new AppOperation();
+    operation.setId(id);
+    operation.setOperationType(type);
+    operation.setStatus(record.getProperty("status"));
+    operation.setOperatorId(parseOperatorId(record.getProperty("operatorId")));
+    operation.setCreatedAt(record.getProperty("createdAt", record.getProperty("startedAt", "")));
+    operation.setFinishedAt(record.getProperty("finishedAt"));
+    operation.setSnapshotId(record.getProperty("snapshotId"));
+    operation.setProtectionSnapshotId(record.getProperty("protectionSnapshotId"));
+    operation.setMetadata(encode(record));
+    // 恢复数据库会丢失索引，磁盘记录需要重新补齐，因此按主键覆盖已有行。
+    if (entityManager.findById(AppOperation.class, id) == null) {
+      entityManager.persist(operation);
+    }
+    else {
+      // 覆盖整行，避免数据库保留磁盘记录中已不存在的旧状态。
+      entityManager.updateById(operation, PropertyUpdateStrategy.always());
+    }
   }
 
   static String encode(Properties properties) throws IOException {
@@ -93,14 +118,29 @@ public class SnapshotOperationService {
     return writer.toString();
   }
 
-  static Properties decode(String value) throws java.sql.SQLException {
+  static Properties decode(String value) {
     Properties properties = new Properties();
     try {
       properties.load(new StringReader(value));
       return properties;
     }
     catch (IOException | IllegalArgumentException invalid) {
-      throw new java.sql.SQLException("操作记录格式错误", invalid);
+      throw new IllegalStateException("操作记录格式错误", invalid);
     }
   }
+
+  private static Long parseOperatorId(String value) {
+    return value == null || value.isBlank() ? null : Long.valueOf(value);
+  }
+
+  /**
+   * 系统更新记录，按创建时间倒序。
+   */
+  @OrderByClause("created_at DESC")
+  @EntityRef(AppOperation.class)
+  static class UpgradeOperations {
+
+    public final String operationType = "UPGRADE";
+  }
+
 }

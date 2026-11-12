@@ -19,9 +19,11 @@ package cn.taketoday.blog.web.console;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import cn.taketoday.blog.service.SnapshotService;
+import cn.taketoday.blog.service.SnapshotService.OperationView;
+import cn.taketoday.blog.service.SnapshotService.SnapshotDetail;
+import cn.taketoday.blog.service.SnapshotService.SnapshotView;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.web.annotation.DELETE;
@@ -34,6 +36,9 @@ import infra.web.annotation.RestController;
 
 /**
  * 应用快照管理接口，所有操作均要求博主身份。
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0 2026/11/12
  */
 @RestController
 @RequiresBlogger
@@ -47,7 +52,7 @@ class SnapshotHttpHandler {
   }
 
   @GET
-  public List<Properties> list() {
+  public List<SnapshotView> list() {
     return snapshots.snapshots();
   }
 
@@ -57,12 +62,12 @@ class SnapshotHttpHandler {
   }
 
   @GET("/operations")
-  public List<Properties> operations() {
+  public List<OperationView> operations() {
     return snapshots.operations();
   }
 
   @GET("/{id}")
-  public Properties detail(@PathVariable String id) {
+  public SnapshotDetail detail(@PathVariable String id) {
     return snapshots.snapshot(id);
   }
 
