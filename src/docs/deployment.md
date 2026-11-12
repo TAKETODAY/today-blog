@@ -75,8 +75,81 @@ curl --fail http://127.0.0.1:8080/api/internal/health
 
 ## 后台升级
 
-系统 → 系统升级 → 上传 ZIP → 校验通过 → 开始升级。
+系统 → 系统更新 → 执行更新 → 上传 ZIP → 校验通过 → 确认参数 → 开始更新。
 任务 ID 保存在浏览器本地，重载页面后继续查询。重启可能导致登录失效，需重新登录。
+
+### 数据库备份配置
+
+默认启用更新前数据库备份。旧安装必须先通过 SSH 更新固定的 updater JAR、systemd unit，
+再使用新页面；在线发行 ZIP 不会更新这些受信任组件。
+
+安装与备份环境检查仅验证配置、工具和空间，数据库连接和权限在实际备份时验证。
+未配置备份时默认禁止更新；如明确关闭本次备份，页面会要求二次确认风险。
+
+服务器安装 `mysqldump` 或与生产数据库版本兼容的 `mariadb-dump`。
+创建 root 所有、不可被其他用户写入的 `/etc/today-blog/upgrade.properties`（建议 0644；不含密码）：
+
+```properties
+dumpExecutable=/usr/bin/mysqldump
+defaultsFile=/etc/today-blog/backup.cnf
+backupRoot=/var/backups/today-blog
+database=today
+```
+
+创建 root:root、0600 的 `/etc/today-blog/backup.cnf`，不要将实际密码放入仓库：
+
+```ini
+[client]
+host=127.0.0.1
+port=3306
+user=blog_backup
+password=由运维安全配置
+```
+
+备份账号仅授予目标数据库导出所需权限。普通表和视图通常需要 SELECT、SHOW VIEW，
+触发器、事件、存储过程另需对应权限；具体要求依 MySQL/MariaDB 版本而异，须用实际版本演练。
+当前导出包含 routines、events、triggers，不应通过授予数据库管理权限来绕过配置问题。
+
+备份根目录及全部父目录必须由 root 管理，且不可被组或其他用户写入；建议根目录 0755，
+升级器为每个任务建立 0700 子目录，SQL 临时文件及 gzip 文件使用 0600。
+API 只读取非敏感配置和凭据文件元信息，不读取数据库密码或备份内容。
+若配置文件设为 0600，API 无法检查环境，会显示未就绪；密码必须单独保存在 0600 的 defaultsFile 中。
+
+现有服务器更新升级 unit 时，应同步设置：
+
+```ini
+[Service]
+TimeoutStartSec=5400
+ReadWritePaths=/opt/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog
+```
+
+修改 unit 后执行 `systemctl daemon-reload`。使用自定义备份目录时必须预先创建目录，
+并同步修改 `ReadWritePaths`；目录不可放在 release 下。
+
+备份在解压准备完成后、切换 current 和启动新版本之前执行；失败或超时不会重启旧服务。
+导出先写私有临时 SQL，再压缩为 `database.sql.gz`，成功后才发布备份文件与元信息。
+超时覆盖导出及压缩，失败删除临时数据，任务仅显示脱敏错误。默认备份超时 600 秒，
+可配置 30–3600 秒；健康检查默认 90 秒，可配置 10–600 秒；备注最多 500 字。
+安装盘至少预留 3 GiB，备份盘至少 256 MiB；这些只是最低门槛，运维须额外预留
+完整 SQL 和压缩文件同时存在的空间。磁盘写满时备份失败并阻止切换。
+
+在线一致性备份仅适用于 InnoDB 等事务表，备份期间禁止并发 DDL；非事务表不能保证快照一致性。
+备份不包含附件，也不包含快照之后的新写入，不代表整个网站的全量一致性备份。
+首次启用前应在隔离数据库导入 SQL 并验证关键数据，定期执行恢复演练及异地备份，参见议题 #22。
+不要直接向生产数据库导入；本功能不提供自动数据库恢复。
+
+### 设置与记录
+
+“更新设置”保存默认参数；“执行更新”可覆盖本次参数。启动时写入任务参数快照，
+后续修改默认值不影响已提交任务。开启自动程序回滚仅适用于向后兼容的迁移。
+`ROLLED_BACK` 表示本次更新失败、已恢复旧程序，而不是新版本发布成功。
+
+默认设置位于 `incoming/settings.properties`，任务参数位于 `incoming/<UUID>/options.properties`，
+任务元信息和 root 写入的结果文件共同组成历史记录，不新增业务数据库表。
+结果记录保留阶段时间、备份标识/大小/摘要/完成时间和任务结束时间，不提供 SQL 下载。
+备份内的 `backup.properties` 可通过任务 ID 与版本记录关联。历史记录、上传包和备份不会自动清理。
+存在未完成任务时不允许再次派发；若升级器被强杀等原因遗留运行状态，应先确认 unit 已停止、
+检查 current、数据库迁移和健康状态，再由管理员修正结果记录，不可直接删除记录后重复发布。
 
 目录与权限：
 

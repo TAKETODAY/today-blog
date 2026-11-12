@@ -40,14 +40,18 @@ public final class BlogUpdaterApplication {
   }
 
   public static void main(String[] args) throws Exception {
-    if (args.length != 1)
+    if (args.length != 1) {
       throw new IllegalArgumentException("需要一个升级任务 ID");
+    }
     UpgradeFiles.checkId(args[0]);
     Path root = Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
     Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
     String health = System.getenv().getOrDefault("BLOG_HEALTH_URL", "http://127.0.0.1:8080/api/internal/health");
+
     try {
-      run(root, state, args[0], new SystemdControl(URI.create(health)));
+      UpgradeOptions options = UpgradeOptions.from(UpgradeFiles.read(state.resolve("incoming").resolve(args[0]).resolve("options.properties")));
+      run(root, state, args[0], new SystemdControl(URI.create(health), options.healthTimeoutSeconds()),
+              options, (id, timeout) -> DatabaseBackup.configured().create(id, timeout));
     }
     catch (Exception error) {
       Path result = state.resolve("results").resolve(args[0] + ".properties");
@@ -66,6 +70,19 @@ public final class BlogUpdaterApplication {
 
   public static void run(Path root, Path state, String id, ServiceControl service) throws Exception {
     UpgradeFiles.checkId(id);
+    Path options = state.resolve("incoming").resolve(id).resolve("options.properties");
+    run(root, state, id, service, UpgradeOptions.from(UpgradeFiles.read(options)),
+            (task, timeout) -> DatabaseBackup.configured().create(task, timeout));
+  }
+
+  @FunctionalInterface
+  public interface BackupControl {
+    Properties create(String id, int timeoutSeconds) throws Exception;
+  }
+
+  public static void run(Path root, Path state, String id, ServiceControl service,
+          UpgradeOptions options, BackupControl backup) throws Exception {
+    UpgradeFiles.checkId(id);
     Path results = state.resolve("results");
     Files.createDirectories(root.resolve("releases"));
     Files.createDirectories(results);
@@ -74,6 +91,9 @@ public final class BlogUpdaterApplication {
       if (lock == null) {
         UpgradeFiles.status(results, id, "FAILED", "已有升级任务运行");
         return;
+      }
+      if (Files.exists(results.resolve(id + ".properties"))) {
+        throw new IOException("任务已有执行记录，不可重复运行");
       }
       Path current = root.resolve("current");
       Path oldRelease = current.toRealPath();
@@ -88,54 +108,90 @@ public final class BlogUpdaterApplication {
         Path archive = task.resolve("package.zip");
         Path upload = state.resolve("incoming").resolve(id).resolve("package.zip");
         if (!Files.isRegularFile(upload, java.nio.file.LinkOption.NOFOLLOW_LINKS)
-                || Files.size(upload) > UpgradePackage.MAX_PACKAGE_BYTES)
+                || Files.size(upload) > UpgradePackage.MAX_PACKAGE_BYTES) {
           throw new IOException("升级包不存在或过大");
+        }
+        if (Files.getFileStore(root).getUsableSpace() < 3L * 1024 * 1024 * 1024) {
+          throw new IOException("安装磁盘可用空间不足 3 GiB");
+        }
         try (var input = Files.newInputStream(upload); var output = Files.newOutputStream(archive)) {
           long copied = input.transferTo(new java.io.OutputStream() {
             long total;
 
             @Override
-            public void write(int value) throws IOException { write(new byte[] { (byte) value }, 0, 1); }
+            public void write(int value) throws IOException {
+              write(new byte[] { (byte) value }, 0, 1);
+            }
 
             @Override
             public void write(byte[] bytes, int off, int len) throws IOException {
               total += len;
-              if (total > UpgradePackage.MAX_PACKAGE_BYTES)
+              if (total > UpgradePackage.MAX_PACKAGE_BYTES) {
                 throw new IOException("升级包过大");
+              }
               output.write(bytes, off, len);
             }
           });
-          if (copied == 0)
+          if (copied == 0) {
             throw new IOException("升级包为空");
+          }
         }
         var manifest = UpgradePackage.verify(archive);
         Path highWaterPath = root.resolve("highest-build.properties");
         long highest = Files.exists(highWaterPath)
                 ? Long.parseLong(UpgradeFiles.read(highWaterPath).getProperty("build")) : oldBuild;
-        if (manifest.build() <= Math.max(oldBuild, highest))
+        if (manifest.build() <= Math.max(oldBuild, highest)) {
           throw new IOException("禁止重复安装或降级");
+        }
         String releaseName = manifest.version() + "-" + manifest.build();
         Path release = root.resolve("releases").resolve(releaseName);
-        if (Files.exists(release))
+        if (Files.exists(release)) {
           throw new IOException("版本目录已存在");
+        }
         UpgradeFiles.status(results, id, "INSTALLING", "准备新版本");
         Path unpacked = Files.createDirectory(task.resolve("release"));
         UpgradePackage.extract(archive, unpacked, manifest);
-        if (!unpacked.resolve("api/bin/blog-api").toFile().setExecutable(true, false))
+        if (!unpacked.resolve("api/bin/blog-api").toFile().setExecutable(true, false)) {
           throw new IOException("无法设置启动权限");
+        }
 
         Properties metadata = new Properties();
         metadata.setProperty("version", manifest.version());
         metadata.setProperty("build", Long.toString(manifest.build()));
         UpgradeFiles.write(unpacked.resolve("release.properties"), metadata);
+        Properties details = UpgradeFiles.read(results.resolve(id + ".properties"));
+        details.putAll(options.properties());
+        details.setProperty("oldVersion", oldMetadata.getProperty("version", ""));
+        details.setProperty("oldBuild", Long.toString(oldBuild));
+        details.setProperty("backupStatus", options.backupEnabled() ? "RUNNING" : "SKIPPED");
+        UpgradeFiles.write(results.resolve(id + ".properties"), details);
+        if (options.backupEnabled()) {
+          UpgradeFiles.status(results, id, "BACKING_UP", "备份数据库，尚未切换版本");
+          try {
+            Properties saved = backup.create(id, options.backupTimeoutSeconds());
+            if (!"SUCCESS".equals(saved.getProperty("backupStatus"))) {
+              throw new IOException("数据库备份未成功完成");
+            }
+            details = UpgradeFiles.read(results.resolve(id + ".properties"));
+            details.putAll(saved);
+            UpgradeFiles.write(results.resolve(id + ".properties"), details);
+          }
+          catch (Exception failure) {
+            details = UpgradeFiles.read(results.resolve(id + ".properties"));
+            details.setProperty("backupStatus", "FAILED");
+            UpgradeFiles.write(results.resolve(id + ".properties"), details);
+            throw new IOException("数据库备份失败或超时，未切换版本；请检查服务器备份配置", failure);
+          }
+        }
         Files.move(unpacked, release, StandardCopyOption.ATOMIC_MOVE);
         UpgradeFiles.status(results, id, "RESTARTING", "切换版本并重启 API");
         switchRelease(root, release);
         switched = true;
         service.restart();
         UpgradeFiles.status(results, id, "HEALTH_CHECKING", "等待新版本健康检查");
-        if (!service.healthy(manifest.build()))
+        if (!service.healthy(manifest.build())) {
           throw new IOException("新版本健康检查失败");
+        }
         UpgradeFiles.write(highWaterPath, metadata);
         UpgradeFiles.status(results, id, "SUCCESS", "升级成功: " + manifest.version());
       }
@@ -145,8 +201,9 @@ public final class BlogUpdaterApplication {
             UpgradeFiles.status(results, id, "ROLLING_BACK", "新版本失败，恢复旧版本");
             switchRelease(root, oldRelease);
             service.restart();
-            if (!service.healthy(oldBuild))
+            if (!service.healthy(oldBuild)) {
               throw new IOException("旧版本健康检查失败");
+            }
             UpgradeFiles.status(results, id, "ROLLED_BACK", "已恢复旧版本；不撤销数据库迁移。原因: " + error.getMessage());
           }
           catch (Exception rollbackError) {
@@ -155,15 +212,18 @@ public final class BlogUpdaterApplication {
             UpgradeFiles.status(results, id, "FAILED", "回滚失败，需要人工处理: " + rollbackError.getMessage());
           }
         }
-        else
+        else {
           UpgradeFiles.status(results, id, "FAILED", error.toString());
-        if (!switched || rollbackFailed)
+        }
+        if (!switched || rollbackFailed) {
           throw error;
+        }
       }
       finally {
         try (var paths = Files.walk(task)) {
-          for (Path path : paths.sorted(java.util.Comparator.reverseOrder()).toList())
+          for (Path path : paths.sorted(java.util.Comparator.reverseOrder()).toList()) {
             Files.deleteIfExists(path);
+          }
         }
       }
     }
@@ -175,10 +235,12 @@ public final class BlogUpdaterApplication {
       Files.createSymbolicLink(link, target.toAbsolutePath());
       Files.move(link, root.resolve("current"), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
-    finally { Files.deleteIfExists(link); }
+    finally {
+      Files.deleteIfExists(link);
+    }
   }
 
-  private record SystemdControl(URI healthUrl) implements ServiceControl {
+  private record SystemdControl(URI healthUrl, int timeoutSeconds) implements ServiceControl {
 
     @Override
     public void restart() throws Exception {
@@ -187,8 +249,9 @@ public final class BlogUpdaterApplication {
         process.destroyForcibly();
         throw new IOException("重启服务超时");
       }
-      if (process.exitValue() != 0)
+      if (process.exitValue() != 0) {
         throw new IOException("systemd 重启失败");
+      }
     }
 
     @Override
@@ -197,15 +260,17 @@ public final class BlogUpdaterApplication {
         throw new IOException("健康检查必须使用本机 HTTP 地址");
       }
       HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
-      long deadline = System.nanoTime() + Duration.ofSeconds(90).toNanos();
+      long deadline = System.nanoTime() + Duration.ofSeconds(timeoutSeconds).toNanos();
       while (System.nanoTime() < deadline) {
         try {
           var response = client.send(HttpRequest.newBuilder(healthUrl).timeout(Duration.ofSeconds(3)).GET().build(),
                   HttpResponse.BodyHandlers.ofString());
-          if (response.statusCode() == 200 && response.body().trim().equals("UP:" + build))
+          if (response.statusCode() == 200 && response.body().trim().equals("UP:" + build)) {
             return true;
+          }
         }
-        catch (IOException ignored) { }
+        catch (IOException ignored) {
+        }
         Thread.sleep(2000);
       }
       return false;

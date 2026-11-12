@@ -23,10 +23,13 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Properties;
 
-/** API 与独立升级模块之间的磁盘协议。 */
+/**
+ * API 与独立升级模块之间的磁盘协议。
+ */
 public final class UpgradeFiles {
 
-  private UpgradeFiles() { }
+  private UpgradeFiles() {
+  }
 
   public static void checkId(String id) {
     if (!id.matches("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}")) {
@@ -46,20 +49,30 @@ public final class UpgradeFiles {
     Files.createDirectories(path.getParent());
     Path temp = Files.createTempFile(path.getParent(), ".status-", ".tmp");
     try {
-      try (var output = Files.newOutputStream(temp)) { properties.store(output, null); }
+      try (var output = Files.newOutputStream(temp)) {
+        properties.store(output, null);
+      }
       temp.toFile().setReadable(true, false);
       Files.move(temp, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
-    finally { Files.deleteIfExists(temp); }
+    finally {
+      Files.deleteIfExists(temp);
+    }
   }
 
   public static void status(Path results, String id, String state, String message) throws IOException {
     checkId(id);
-    Properties properties = new Properties();
+    Path path = results.resolve(id + ".properties");
+    Properties properties = Files.exists(path) ? read(path) : new Properties();
     properties.setProperty("id", id);
     properties.setProperty("status", state);
     properties.setProperty("message", message);
-    properties.setProperty("updatedAt", java.time.Instant.now().toString());
-    write(results.resolve(id + ".properties"), properties);
+    String now = java.time.Instant.now().toString();
+    properties.setProperty("updatedAt", now);
+    properties.setProperty("stage." + state, now);
+    if (java.util.Set.of("SUCCESS", "FAILED", "ROLLED_BACK").contains(state)) {
+      properties.setProperty("finishedAt", now);
+    }
+    write(path, properties);
   }
 }

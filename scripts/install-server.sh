@@ -8,6 +8,7 @@ STATE=/var/lib/today-blog-upgrade
 [[ ! -e "$ROOT/current" ]] || { echo '已有安装，请使用后台升级'; exit 1; }
 id today >/dev/null 2>&1 || useradd --system --home /var/lib/today-blog --shell /usr/sbin/nologin today
 install -d -m 755 "$ROOT/releases" "$STATE/results" /etc/today-blog /usr/local/lib/today-blog /var/lib/today-blog
+install -d -m 755 /var/backups/today-blog
 install -d -m 700 -o today -g today "$STATE/incoming"
 chown today:today /var/lib/today-blog
 install -m 644 "$2" /usr/local/lib/today-blog/updater.jar
@@ -74,11 +75,11 @@ Description=TODAY Blog upgrade %i
 Type=oneshot
 UMask=0022
 ExecStart=/usr/bin/java -jar /usr/local/lib/today-blog/updater.jar %i
-TimeoutStartSec=600
+TimeoutStartSec=5400
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadWritePaths=/opt/today-blog /var/lib/today-blog-upgrade/results
+ReadWritePaths=/opt/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog
 EOF
 # sudo >= 1.9.10 支持参数正则；固定命令与 UUID，不允许任意路径或 shell。
 SUDOERS="$(mktemp)"

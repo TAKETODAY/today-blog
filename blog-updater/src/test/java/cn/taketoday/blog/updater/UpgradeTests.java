@@ -41,6 +41,42 @@ class UpgradeTests {
   Path temp;
 
   @Test
+  void backupRunsBeforeSwitchAndIsRecorded() throws Exception {
+    Scenario scenario = scenario();
+    FakeService service = new FakeService(false, false);
+    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service,
+            UpgradeOptions.defaults(), (id, timeout) -> {
+              assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("old");
+              assertThat(service.restarts).isZero();
+              assertThat(timeout).isEqualTo(600);
+              Properties backup = new Properties();
+              backup.setProperty("backupStatus", "SUCCESS");
+              backup.setProperty("backupId", id);
+              return backup;
+            });
+    Properties result = UpgradeFiles.read(scenario.state.resolve("results").resolve(scenario.id + ".properties"));
+    assertThat(result.getProperty("backupId")).isEqualTo(scenario.id);
+    assertThat(result.getProperty("stage.BACKING_UP")).isNotBlank();
+    assertThat(result.getProperty("finishedAt")).isNotBlank();
+    assertThat(result.getProperty("status")).isEqualTo("SUCCESS");
+  }
+
+  @Test
+  void backupFailureNeverSwitchesOrRestarts() throws Exception {
+    Scenario scenario = scenario();
+    FakeService service = new FakeService(false, false);
+    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service,
+            UpgradeOptions.defaults(), (id, timeout) -> {
+              throw new java.io.IOException("sensitive detail");
+            })).hasMessageContaining("未切换版本").hasMessageNotContaining("sensitive");
+    assertThat(service.restarts).isZero();
+    assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("old");
+    Properties result = UpgradeFiles.read(scenario.state.resolve("results").resolve(scenario.id + ".properties"));
+    assertThat(result.getProperty("backupStatus")).isEqualTo("FAILED");
+    assertThat(result.getProperty("message")).doesNotContain("sensitive");
+  }
+
+  @Test
   void acceptsPackageWithoutSignatureAndExtracts() throws Exception {
     Path archive = archive(null, false, false);
     var manifest = UpgradePackage.verify(archive);
@@ -127,6 +163,7 @@ class UpgradeTests {
     String id = UUID.randomUUID().toString();
     Path incoming = Files.createDirectories(state.resolve("incoming").resolve(id));
     Files.copy(archive(null, false, false), incoming.resolve("package.zip"));
+    UpgradeFiles.write(incoming.resolve("options.properties"), new UpgradeOptions(false, 600, 90, "").properties());
     return new Scenario(root, state, id);
   }
 
@@ -134,20 +171,28 @@ class UpgradeTests {
     return UpgradeFiles.read(scenario.state.resolve("results").resolve(scenario.id + ".properties")).getProperty("status");
   }
 
-  private record Scenario(Path root, Path state, String id) { }
+  private record Scenario(Path root, Path state, String id) {
+  }
 
   private static class FakeService implements BlogUpdaterApplication.ServiceControl {
     final boolean failNew;
     final boolean failOld;
     int restarts;
 
-    FakeService(boolean failNew, boolean failOld) { this.failNew = failNew; this.failOld = failOld; }
+    FakeService(boolean failNew, boolean failOld) {
+      this.failNew = failNew;
+      this.failOld = failOld;
+    }
 
     @Override
-    public void restart() { restarts++; }
+    public void restart() {
+      restarts++;
+    }
 
     @Override
-    public boolean healthy(long build) { return build == 2 ? !failNew : !failOld; }
+    public boolean healthy(long build) {
+      return build == 2 ? !failNew : !failOld;
+    }
   }
 
   private Path archive(String extra, boolean missingManifest, boolean corruptFile) throws Exception {

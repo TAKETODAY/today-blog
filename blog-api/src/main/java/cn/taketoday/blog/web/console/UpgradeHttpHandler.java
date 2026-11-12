@@ -29,11 +29,16 @@ import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
+import cn.taketoday.blog.updater.UpgradeOptions;
+import cn.taketoday.blog.updater.UpgradeStore;
+import cn.taketoday.blog.updater.DatabaseBackup;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.http.HttpStatus;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
+import infra.web.annotation.PUT;
+import infra.web.annotation.RequestBody;
 import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
@@ -49,6 +54,54 @@ class UpgradeHttpHandler {
 
   private final Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
 
+  private final UpgradeStore store = new UpgradeStore(state);
+
+  private UpgradeOptions options(Properties values) {
+    try {
+      return UpgradeOptions.from(values);
+    }
+    catch (IllegalArgumentException invalid) {
+      throw ErrorMessageException.failed("更新参数无效：备份超时 30–3600 秒，健康检查 10–600 秒，备注最多 500 字");
+    }
+  }
+
+  @GET("/settings")
+  public Properties settings() throws Exception {
+    return store.settings().properties();
+  }
+
+  @PUT("/settings")
+  @Logging(title = "修改更新设置", content = "操作人: [#{#user.id}]")
+  public synchronized Properties settings(@RequestBody Properties values, User user) throws Exception {
+    enabled();
+    UpgradeOptions options = options(values);
+    store.saveSettings(options);
+    return options.properties();
+  }
+
+  @GET("/history")
+  public java.util.List<Properties> history() throws Exception {
+    return store.history();
+  }
+
+  @GET("/environment")
+  public Map<String, Object> environment() throws Exception {
+    boolean backupReady;
+    long backupFreeBytes = 0;
+    try {
+      backupFreeBytes = DatabaseBackup.configured().usableSpace();
+      backupReady = true;
+    }
+    catch (Exception unavailable) {
+      backupReady = false;
+    }
+    Path root = Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
+    boolean updaterReady = System.getenv("BLOG_RELEASE_PATH") != null
+            && Files.isRegularFile(Path.of("/usr/local/lib/today-blog/updater.jar"))
+            && Files.isRegularFile(Path.of("/etc/systemd/system/today-blog-updater@.service"));
+    return Map.of("updaterReady", updaterReady, "backupReady", backupReady, "backupFreeBytes", backupFreeBytes,
+            "installFreeBytes", Files.exists(root) ? Files.getFileStore(root).getUsableSpace() : 0);
+  }
 
   @GET("/current")
   public Properties current() throws Exception {
@@ -92,6 +145,8 @@ class UpgradeHttpHandler {
       Files.move(temp, task.resolve("package.zip"), StandardCopyOption.ATOMIC_MOVE);
       Properties metadata = new Properties();
       metadata.setProperty("id", id);
+      metadata.setProperty("createdAt", java.time.Instant.now().toString());
+      metadata.setProperty("packageBytes", Long.toString(Files.size(task.resolve("package.zip"))));
       metadata.setProperty("version", manifest.version());
       metadata.setProperty("build", Long.toString(manifest.build()));
       metadata.setProperty("operatorId", String.valueOf(user.getId()));
@@ -111,23 +166,43 @@ class UpgradeHttpHandler {
 
   @POST("/{id}/start")
   @Logging(title = "启动系统升级", content = "任务: [#{#id}]，操作人: [#{#user.id}]")
-  public synchronized Map<String, String> start(@PathVariable String id, User user) throws Exception {
+  public synchronized Map<String, String> start(@PathVariable String id, @RequestBody Properties values, User user) throws Exception {
     enabled();
     UpgradeFiles.checkId(id);
-    Path metadataPath = state.resolve("incoming").resolve(id).resolve("metadata.properties");
-    Properties metadata = UpgradeFiles.read(metadataPath);
-    if (!"READY".equals(metadata.getProperty("status"))) {
+    UpgradeOptions options = options(values);
+    Map<String, Object> environment = environment();
+    if (!Boolean.TRUE.equals(environment.get("updaterReady"))
+            || (options.backupEnabled() && !Boolean.TRUE.equals(environment.get("backupReady")))) {
+      throw ErrorMessageException.failed("升级器或数据库备份配置未就绪");
+    }
+    if ((long) environment.get("installFreeBytes") < 3L * 1024 * 1024 * 1024
+            || (options.backupEnabled() && (long) environment.get("backupFreeBytes") < 256L * 1024 * 1024)) {
+      throw ErrorMessageException.failed("安装盘或备份盘可用空间不足");
+    }
+    for (Properties task : store.history()) {
+      if (java.util.Set.of("STARTING", "VALIDATING", "INSTALLING", "BACKING_UP", "RESTARTING", "HEALTH_CHECKING", "ROLLING_BACK")
+              .contains(task.getProperty("status", ""))) {
+        throw ErrorMessageException.failed("已有更新任务运行，请先确认其结果", HttpStatus.CONFLICT);
+      }
+    }
+    if (!"READY".equals(store.task(id).getProperty("status"))) {
       throw ErrorMessageException.failed("该任务已提交，不可重复启动", HttpStatus.CONFLICT);
     }
-    metadata.setProperty("status", "STARTING");
-    metadata.setProperty("message", "任务已提交，请等待升级器启动");
-    UpgradeFiles.write(metadataPath, metadata);
-    Process process = new ProcessBuilder("/usr/bin/sudo", "-n", "/usr/bin/systemctl", "start", "--no-block",
+    store.snapshot(id, options, user.getId(), current());
+    try {
+      Process process = new ProcessBuilder("/usr/bin/sudo", "-n", "/usr/bin/systemctl", "start", "--no-block",
             "today-blog-updater@" + id + ".service").redirectErrorStream(true)
             .redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
-    if (!process.waitFor(10, TimeUnit.SECONDS) || process.exitValue() != 0) {
-      process.destroyForcibly();
+      if (!process.waitFor(10, TimeUnit.SECONDS) || process.exitValue() != 0) {
+        process.destroyForcibly();
+        throw new java.io.IOException("无法启动升级服务");
+      }
+    }
+    catch (Exception failure) {
+      Path metadataPath = state.resolve("incoming").resolve(id).resolve("metadata.properties");
+      Properties metadata = UpgradeFiles.read(metadataPath);
       metadata.setProperty("status", "FAILED");
+      metadata.setProperty("finishedAt", java.time.Instant.now().toString());
       metadata.setProperty("message", "无法启动升级服务，请检查 sudoers 和 systemd 日志");
       UpgradeFiles.write(metadataPath, metadata);
       throw ErrorMessageException.failed(metadata.getProperty("message"));
@@ -137,13 +212,7 @@ class UpgradeHttpHandler {
 
   @GET("/{id}")
   public Properties status(@PathVariable String id) throws Exception {
-    UpgradeFiles.checkId(id);
-    Properties result = UpgradeFiles.read(state.resolve("incoming").resolve(id).resolve("metadata.properties"));
-    Path status = state.resolve("results").resolve(id + ".properties");
-    if (Files.exists(status)) {
-      result.putAll(UpgradeFiles.read(status));
-    }
-    return result;
+    return store.task(id);
   }
 
   private void enabled() {
