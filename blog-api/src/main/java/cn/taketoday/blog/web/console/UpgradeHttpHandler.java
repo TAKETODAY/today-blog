@@ -28,19 +28,19 @@ import java.util.concurrent.TimeUnit;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.service.SnapshotOperationService;
-import cn.taketoday.blog.updater.UpgradeFiles;
-import cn.taketoday.blog.updater.UpgradePackage;
-import cn.taketoday.blog.updater.UpgradeOptions;
-import cn.taketoday.blog.updater.UpgradeStore;
 import cn.taketoday.blog.updater.DatabaseBackup;
+import cn.taketoday.blog.updater.UpgradeFiles;
+import cn.taketoday.blog.updater.UpgradeOptions;
+import cn.taketoday.blog.updater.UpgradePackage;
+import cn.taketoday.blog.updater.UpgradeStore;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.http.HttpStatus;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
 import infra.web.annotation.PUT;
-import infra.web.annotation.RequestBody;
 import infra.web.annotation.PathVariable;
+import infra.web.annotation.RequestBody;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
 import infra.web.multipart.Part;
@@ -106,7 +106,9 @@ class UpgradeHttpHandler {
     boolean updaterReady = System.getenv("BLOG_RELEASE_PATH") != null
             && Files.isRegularFile(Path.of("/usr/local/lib/today-blog/updater.jar"))
             && Files.isRegularFile(Path.of("/etc/systemd/system/today-blog-updater@.service"));
-    return Map.of("updaterReady", updaterReady, "backupReady", backupReady, "backupFreeBytes", backupFreeBytes,
+    return Map.of("updaterReady", updaterReady,
+            "backupReady", backupReady,
+            "backupFreeBytes", backupFreeBytes,
             "installFreeBytes", Files.exists(root) ? Files.getFileStore(root).getUsableSpace() : 0);
   }
 
@@ -200,8 +202,8 @@ class UpgradeHttpHandler {
       // 数据库记录失败时不派发高权限任务，磁盘记录仍保留供核对。
       operations.recordUpgrade(id);
       Process process = new ProcessBuilder("/usr/bin/sudo", "-n", "/usr/bin/systemctl", "start", "--no-block",
-            "today-blog-updater@" + id + ".service").redirectErrorStream(true)
-            .redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
+              "today-blog-updater@" + id + ".service").redirectErrorStream(true)
+              .redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
       if (!process.waitFor(10, TimeUnit.SECONDS) || process.exitValue() != 0) {
         process.destroyForcibly();
         throw new java.io.IOException("无法启动升级服务");
