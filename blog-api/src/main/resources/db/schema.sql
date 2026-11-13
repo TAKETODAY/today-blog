@@ -1,4 +1,3 @@
--- 截至 Flyway v3.9 的完整业务表结构，不包含初始化数据和 Flyway 历史表。
 create database if not exists `today`;
 
 use `today`;
