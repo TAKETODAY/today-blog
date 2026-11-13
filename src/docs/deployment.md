@@ -100,6 +100,18 @@ curl --fail http://127.0.0.1:8080/api/internal/health
 升级流程只清除自己写入的状态；管理员手动开启（`source=manual`）的状态不会被升级器自动删除。
 健康检查仍返回 `UP:<build>`，因此维护状态不会阻止新版本验收。
 
+运行用户必须能创建并写入该目录，否则接口会返回「无法写入维护状态文件」而不是停留在维护状态。
+从旧版本升级的服务器需要补充运行时目录和 unit 权限：
+
+```bash
+sudo install -d -m 755 -o today -g today /var/lib/today-blog
+sudo systemctl daemon-reload
+sudo systemctl restart today-blog
+```
+
+升级 unit 的 `ReadWritePaths` 必须包含 `/var/lib/today-blog`；仅配置目录属主而没有该行时，
+`ProtectSystem=strict` 仍会阻止写入。
+
 若升级器被强制终止导致长期停留在维护状态，确认 `current` 指向正确版本且健康检查正常后，执行
 `sudo rm /var/lib/today-blog/maintenance.properties` 恢复服务；回滚失败时不要删除该文件。
 状态文件路径可通过 `BLOG_MAINTENANCE_FILE` 覆盖；文件存在即表示维护中，内容中的

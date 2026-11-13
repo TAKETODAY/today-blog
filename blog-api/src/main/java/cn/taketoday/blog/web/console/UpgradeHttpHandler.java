@@ -17,6 +17,7 @@
 
 package cn.taketoday.blog.web.console;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -209,7 +210,7 @@ class UpgradeHttpHandler {
    * 手动切换维护状态。手动开启的状态不会被升级流程自动清除。
    */
   @PUT("/maintenance")
-  @Logging(title = "切换维护状态", content = "维护: [#{#values.enabled}]")
+  @Logging(title = "切换维护状态", content = "维护: [#{#values.getProperty('enabled')}]")
   public synchronized Map<String, Object> maintenance(@RequestBody Properties values) throws Exception {
     String enabled = values.getProperty("enabled");
     if (!"true".equals(enabled) && !"false".equals(enabled)) {
@@ -220,13 +221,33 @@ class UpgradeHttpHandler {
       if (message.isBlank()) {
         message = MaintenanceState.DEFAULT_MESSAGE;
       }
-      maintenance.enable(message, retryAfter(values.getProperty("retryAfter")),
+      enableMaintenance(message, retryAfter(values.getProperty("retryAfter")),
               MaintenanceState.Source.MANUAL);
     }
     else {
-      maintenance.disable();
+      disableMaintenance();
     }
     return maintenance();
+  }
+
+  private void enableMaintenance(String message, int retryAfterSeconds, MaintenanceState.Source source) {
+    try {
+      maintenance.enable(message, retryAfterSeconds, source);
+    }
+    catch (IOException failure) {
+      throw ErrorMessageException.failed("无法写入维护状态文件 " + maintenance.file()
+              + "，请确认运行用户对所在目录有写权限");
+    }
+  }
+
+  private void disableMaintenance() {
+    try {
+      maintenance.disable();
+    }
+    catch (IOException failure) {
+      throw ErrorMessageException.failed("无法删除维护状态文件 " + maintenance.file()
+              + "，请确认运行用户对所在目录有写权限");
+    }
   }
 
   private static int retryAfter(String value) {
@@ -273,7 +294,7 @@ class UpgradeHttpHandler {
     boolean maintenanceEnabled = maintenance.exists();
     if (!maintenanceEnabled) {
       // 管理端一提交升级就停止接收新请求，覆盖备份、切换和重启整个过程。
-      maintenance.enable(MaintenanceState.DEFAULT_MESSAGE,
+      enableMaintenance(MaintenanceState.DEFAULT_MESSAGE,
               MaintenanceState.DEFAULT_RETRY_AFTER_SECONDS, MaintenanceState.Source.UPGRADE);
     }
     try {

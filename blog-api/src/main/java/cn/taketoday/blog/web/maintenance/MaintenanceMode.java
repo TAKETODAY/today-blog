@@ -80,6 +80,13 @@ public final class MaintenanceMode {
   }
 
   /**
+   * 维护状态文件路径。
+   */
+  public Path file() {
+    return marker;
+  }
+
+  /**
    * 直接检查状态文件是否存在，跳过请求路径使用的短缓存。
    */
   public boolean exists() {

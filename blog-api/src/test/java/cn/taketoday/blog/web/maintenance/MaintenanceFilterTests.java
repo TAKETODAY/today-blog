@@ -77,6 +77,28 @@ class MaintenanceFilterTests {
   }
 
   @Test
+  void allowsMaintenanceToggle() throws Exception {
+    Path marker = temp.resolve("maintenance.properties");
+    UpgradeFiles.write(marker, new Properties());
+    MaintenanceFilter filter = new MaintenanceFilter(new MaintenanceMode(marker));
+    String toggle = MaintenanceFilter.UPGRADE_PATH + "/maintenance";
+
+    AtomicBoolean queried = new AtomicBoolean();
+    filter.doFilter(request("GET", toggle), ignored -> queried.set(true));
+    assertThat(queried).isTrue();
+
+    AtomicBoolean updated = new AtomicBoolean();
+    filter.doFilter(request("PUT", toggle), ignored -> updated.set(true));
+    assertThat(updated).isTrue();
+
+    MockHttpContext rejected = request("GET", "/api/articles");
+    filter.doFilter(rejected, ignored -> {
+    });
+    assertThat(rejected.getStatus()).isEqualTo(503);
+    assertThat(rejected.responseHeaders().getFirst("Cache-Control")).isEqualTo("no-store");
+  }
+
+  @Test
   void servesNormallyWithoutMarker() throws Exception {
     Path marker = temp.resolve("maintenance.properties");
     MaintenanceFilter filter = new MaintenanceFilter(new MaintenanceMode(marker));
