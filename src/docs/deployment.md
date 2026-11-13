@@ -78,6 +78,33 @@ curl --fail http://127.0.0.1:8080/api/internal/health
 系统 → 系统更新 → 执行更新 → 上传 ZIP → 校验通过 → 确认参数 → 开始更新。
 任务 ID 保存在浏览器本地，重载页面后继续查询。重启可能导致登录失效，需重新登录。
 
+### 升级期间拒绝请求
+
+管理端提交升级（`POST /api/console/upgrade/{id}/start`）后立即进入维护状态，无需等待升级器
+执行到切换步骤。API 进程不退出，但对新的业务请求返回 `503 Service Unavailable` 和
+`Retry-After`；等待约 2 秒让已进入处理的请求完成后再重启 API。新版本通过健康检查
+（或回滚版本恢复健康）后升级器删除状态文件，站点自动恢复服务。
+
+维护期间仍可访问：
+
+- `GET /api/internal/health`：升级器健康检查使用。
+- `GET /api/console/upgrade/**`：管理端继续轮询升级进度。
+- `GET /api/console/upgrade/maintenance`：查询当前维护状态。
+- `PUT /api/console/upgrade/maintenance`：管理员手动开启或关闭维护，请求体为
+  `{"enabled":true,"message":"维护中","retryAfter":120}`。
+
+管理端「系统更新 → 当前环境」会显示维护状态并提供「开启维护 / 关闭维护」按钮；
+升级任务运行期间按钮禁用，避免中途关闭保护。手动维护不会在升级完成后自动关闭。
+
+管理端通过 HTTP 开启的状态会写入 `${BLOG_RUNTIME_PATH:-/var/lib/today-blog}/maintenance.properties`，
+升级流程只清除自己写入的状态；管理员手动开启（`source=manual`）的状态不会被升级器自动删除。
+健康检查仍返回 `UP:<build>`，因此维护状态不会阻止新版本验收。
+
+若升级器被强制终止导致长期停留在维护状态，确认 `current` 指向正确版本且健康检查正常后，执行
+`sudo rm /var/lib/today-blog/maintenance.properties` 恢复服务；回滚失败时不要删除该文件。
+状态文件路径可通过 `BLOG_MAINTENANCE_FILE` 覆盖；文件存在即表示维护中，内容中的
+`message` 和 `retryAfter` 分别控制提示文本和客户端重试间隔。
+
 ### 数据库备份配置
 
 默认启用更新前数据库备份。旧安装必须先通过 SSH 更新固定的 updater JAR、systemd unit，
@@ -120,7 +147,7 @@ API 只读取非敏感配置和凭据文件元信息，不读取数据库密码�
 ```ini
 [Service]
 TimeoutStartSec=5400
-ReadWritePaths=/opt/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog
+ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog
 ```
 
 修改 unit 后执行 `systemctl daemon-reload`。使用自定义备份目录时必须预先创建目录，
@@ -149,13 +176,11 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog-upgrade/results /var/backups/
 `t_backup_operation`，再通过数据库查询更新列表和详情。派发前也会写入数据库，写入失败不启动更新。
 恢复数据库后再次查询会从磁盘补齐记录；数据库索引不是恢复执行器的唯一依据。
 `t_backup` 为备份元信息表；完整备份创建和恢复尚未开放。
-Flyway v3.7 将旧表 `t_app_snapshot` 重命名为 `t_backup`，保留已有记录。
+Flyway v3.6 直接创建 `t_backup` 和 `t_backup_operation`，统一使用 `backup` 命名，不保留旧快照表迁移。
 管理后台「系统管理 → 备份管理」（`/system/backups`）提供备份索引列表、详情和关联操作记录查询。
 接口统一使用 `/api/console/backups`；旧页面 `/system/snapshots` 重定向到新入口，
 旧接口 `/api/console/snapshots` 已移除，不再提供兼容。操作类型使用 `BACKUP_*`，
 详情和关联字段使用 `backup`、`protectedBackup`、`backupId` 和 `protectionBackupId`，前后端需一同更新。
-Flyway v3.8 重命名保护状态、备份关联列并转换历史操作类型，不删除已有记录。
-Flyway v3.9 将旧表 `t_app_operation` 及其索引重命名为备份操作命名，保留已有备份和更新记录。
 所有接口要求博主身份；详情只返回允许展示的元信息，不返回任意清单字段、配置凭据或备份内容。
 当前管理入口为只读：完整执行器接通前，创建、保护、删除和恢复按钮均禁用，
 对应后端写接口返回服务不可用且不修改记录或备份文件。不能使用此页面创建实际恢复点。
@@ -188,6 +213,7 @@ Flyway v3.9 将旧表 `t_app_operation` 及其索引重命名为备份操作命�
   incoming/<UUID>/                      today 写，上传包与元信息
   results/<UUID>.properties             root 写，API 读
 /var/lib/today-blog/                     today 写，业务运行数据
+  maintenance.properties               存在时 API 拒绝新业务请求
 ```
 
 API 只能 sudo 启动 UUID 命名的升级 unit，没有 shell/java/任意 systemctl 权限。

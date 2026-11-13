@@ -53,7 +53,7 @@ class UpgradeTests {
               backup.setProperty("backupStatus", "SUCCESS");
               backup.setProperty("backupId", id);
               return backup;
-            });
+            }, scenario.maintenance);
     Properties result = UpgradeFiles.read(scenario.state.resolve("results").resolve(scenario.id + ".properties"));
     assertThat(result.getProperty("backupId")).isEqualTo(scenario.id);
     assertThat(result.getProperty("stage.BACKING_UP")).isNotBlank();
@@ -68,12 +68,23 @@ class UpgradeTests {
     assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service,
             UpgradeOptions.defaults(), (id, timeout) -> {
               throw new java.io.IOException("sensitive detail");
-            })).hasMessageContaining("未切换版本").hasMessageNotContaining("sensitive");
+            }, scenario.maintenance)).hasMessageContaining("未切换版本").hasMessageNotContaining("sensitive");
     assertThat(service.restarts).isZero();
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("old");
     Properties result = UpgradeFiles.read(scenario.state.resolve("results").resolve(scenario.id + ".properties"));
     assertThat(result.getProperty("backupStatus")).isEqualTo("FAILED");
     assertThat(result.getProperty("message")).doesNotContain("sensitive");
+  }
+
+  @Test
+  void clearsUpgradeMaintenanceAfterPreSwitchFailure() throws Exception {
+    Scenario scenario = scenario();
+    MaintenanceState.enable(scenario.maintenance, "升级中", MaintenanceState.Source.UPGRADE);
+    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id,
+            new FakeService(false, false), UpgradeOptions.defaults(), (id, timeout) -> {
+              throw new java.io.IOException("backup failed");
+            }, scenario.maintenance)).hasMessageContaining("未切换版本");
+    assertThat(MaintenanceState.enabled(scenario.maintenance)).isFalse();
   }
 
   @Test
@@ -108,10 +119,11 @@ class UpgradeTests {
   void installsAndVerifiesNewRelease() throws Exception {
     Scenario scenario = scenario();
     FakeService service = new FakeService(false, false);
-    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service);
+    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service, scenario.maintenance);
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("3.4-2");
     assertThat(result(scenario)).isEqualTo("SUCCESS");
     assertThat(service.restarts).isEqualTo(1);
+    assertThat(MaintenanceState.enabled(scenario.maintenance)).isFalse();
     assertThat(UpgradeFiles.read(scenario.root.resolve("highest-build.properties")).getProperty("build")).isEqualTo("2");
   }
 
@@ -119,18 +131,30 @@ class UpgradeTests {
   void failedHealthCheckRestoresOldRelease() throws Exception {
     Scenario scenario = scenario();
     FakeService service = new FakeService(true, false);
-    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service);
+    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service, scenario.maintenance);
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("old");
     assertThat(result(scenario)).isEqualTo("ROLLED_BACK");
     assertThat(service.restarts).isEqualTo(2);
+    assertThat(MaintenanceState.enabled(scenario.maintenance)).isFalse();
   }
 
   @Test
   void failedRollbackIsReportedAsFailure() throws Exception {
     Scenario scenario = scenario();
     assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id,
-            new FakeService(true, true))).hasMessageContaining("健康检查失败");
+            new FakeService(true, true), scenario.maintenance)).hasMessageContaining("健康检查失败");
     assertThat(result(scenario)).isEqualTo("FAILED");
+    assertThat(MaintenanceState.enabled(scenario.maintenance)).isTrue();
+  }
+
+  @Test
+  void preservesMaintenanceEnabledBeforeUpgrade() throws Exception {
+    Scenario scenario = scenario();
+    MaintenanceState.enable(scenario.maintenance, "人工维护中", MaintenanceState.Source.MANUAL);
+    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, new FakeService(false, false),
+            scenario.maintenance);
+    assertThat(result(scenario)).isEqualTo("SUCCESS");
+    assertThat(MaintenanceState.enabled(scenario.maintenance)).isTrue();
   }
 
   @Test
@@ -140,7 +164,8 @@ class UpgradeTests {
     highest.setProperty("build", "2");
     UpgradeFiles.write(scenario.root.resolve("highest-build.properties"), highest);
     FakeService service = new FakeService(false, false);
-    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service))
+    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id, service,
+            scenario.maintenance))
             .hasMessageContaining("降级");
     assertThat(service.restarts).isZero();
     assertThat(result(scenario)).isEqualTo("FAILED");
@@ -164,14 +189,14 @@ class UpgradeTests {
     Path incoming = Files.createDirectories(state.resolve("incoming").resolve(id));
     Files.copy(archive(null, false, false), incoming.resolve("package.zip"));
     UpgradeFiles.write(incoming.resolve("options.properties"), new UpgradeOptions(false, 600, 90, "").properties());
-    return new Scenario(root, state, id);
+    return new Scenario(root, state, id, temp.resolve("maintenance.properties"));
   }
 
   private String result(Scenario scenario) throws Exception {
     return UpgradeFiles.read(scenario.state.resolve("results").resolve(scenario.id + ".properties")).getProperty("status");
   }
 
-  private record Scenario(Path root, Path state, String id) {
+  private record Scenario(Path root, Path state, String id, Path maintenance) {
   }
 
   private static class FakeService implements BlogUpdaterApplication.ServiceControl {

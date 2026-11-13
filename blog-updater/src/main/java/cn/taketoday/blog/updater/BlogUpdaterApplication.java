@@ -69,10 +69,14 @@ public final class BlogUpdaterApplication {
   }
 
   public static void run(Path root, Path state, String id, ServiceControl service) throws Exception {
+    run(root, state, id, service, MaintenanceState.defaultFile());
+  }
+
+  public static void run(Path root, Path state, String id, ServiceControl service, Path maintenanceFile) throws Exception {
     UpgradeFiles.checkId(id);
     Path options = state.resolve("incoming").resolve(id).resolve("options.properties");
     run(root, state, id, service, UpgradeOptions.from(UpgradeFiles.read(options)),
-            (task, timeout) -> DatabaseBackup.configured().create(task, timeout));
+            (task, timeout) -> DatabaseBackup.configured().create(task, timeout), maintenanceFile);
   }
 
   @FunctionalInterface
@@ -82,6 +86,11 @@ public final class BlogUpdaterApplication {
 
   public static void run(Path root, Path state, String id, ServiceControl service,
           UpgradeOptions options, BackupControl backup) throws Exception {
+    run(root, state, id, service, options, backup, MaintenanceState.defaultFile());
+  }
+
+  public static void run(Path root, Path state, String id, ServiceControl service,
+          UpgradeOptions options, BackupControl backup, Path maintenanceFile) throws Exception {
     UpgradeFiles.checkId(id);
     Path results = state.resolve("results");
     Files.createDirectories(root.resolve("releases"));
@@ -102,6 +111,9 @@ public final class BlogUpdaterApplication {
       Path task = Files.createTempDirectory(root.resolve("releases"), ".upgrade-");
       boolean switched = false;
       boolean rollbackFailed = false;
+      boolean manualMaintenance = MaintenanceState.source(maintenanceFile) == MaintenanceState.Source.MANUAL;
+      boolean maintenanceEnabled = MaintenanceState.enabled(maintenanceFile);
+      boolean maintenanceOwned = maintenanceEnabled && !manualMaintenance;
       try {
         UpgradeFiles.status(results, id, "VALIDATING", "校验升级包");
         // 先复制到仅 updater 可写的目录，之后校验和安装均使用同一份文件。
@@ -184,6 +196,13 @@ public final class BlogUpdaterApplication {
           }
         }
         Files.move(unpacked, release, StandardCopyOption.ATOMIC_MOVE);
+        if (!maintenanceEnabled) {
+          // 管理端开始升级时通常已写入维护状态；此处兜底，确保切换版本期间不再接收新请求。
+          MaintenanceState.enable(maintenanceFile, MaintenanceState.DEFAULT_MESSAGE,
+                  MaintenanceState.Source.UPGRADE);
+          maintenanceEnabled = true;
+          maintenanceOwned = true;
+        }
         UpgradeFiles.status(results, id, "RESTARTING", "切换版本并重启 API");
         switchRelease(root, release);
         switched = true;
@@ -225,6 +244,15 @@ public final class BlogUpdaterApplication {
             Files.deleteIfExists(path);
           }
         }
+        // 回滚失败时保留维护状态，避免把用户暴露在损坏的版本上；人工修复后再删除状态文件。
+        if (maintenanceOwned && !rollbackFailed) {
+          try {
+            MaintenanceState.disable(maintenanceFile);
+          }
+          catch (IOException ignored) {
+            // 维护状态清理失败不应覆盖升级结果，下一次升级或人工处理时再删除。
+          }
+        }
       }
     }
   }
@@ -244,6 +272,8 @@ public final class BlogUpdaterApplication {
 
     @Override
     public void restart() throws Exception {
+      // 维护状态在 API 侧最多 1 秒生效，等待已进入处理的请求完成后再重启。
+      Thread.sleep(2000);
       Process process = new ProcessBuilder("/usr/bin/systemctl", "restart", "today-blog.service").inheritIO().start();
       if (!process.waitFor(60, TimeUnit.SECONDS)) {
         process.destroyForcibly();

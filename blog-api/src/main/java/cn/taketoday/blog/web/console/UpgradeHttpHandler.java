@@ -21,23 +21,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import cn.taketoday.blog.backup.BackupOperationService;
+import cn.taketoday.blog.backup.BackupOperationStatus;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.backup.BackupOperationStatus;
-import cn.taketoday.blog.backup.BackupOperationService;
 import cn.taketoday.blog.updater.DatabaseBackup;
+import cn.taketoday.blog.updater.MaintenanceState;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeOptions;
 import cn.taketoday.blog.updater.UpgradePackage;
 import cn.taketoday.blog.updater.UpgradeStore;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
+import cn.taketoday.blog.web.maintenance.MaintenanceMode;
 import infra.http.HttpStatus;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
@@ -74,8 +77,11 @@ class UpgradeHttpHandler {
 
   private final BackupOperationService operations;
 
-  UpgradeHttpHandler(BackupOperationService operations) {
+  private final MaintenanceMode maintenance;
+
+  UpgradeHttpHandler(BackupOperationService operations, MaintenanceMode maintenance) {
     this.operations = operations;
+    this.maintenance = maintenance;
   }
 
   private UpgradeOptions options(Properties values) {
@@ -102,7 +108,7 @@ class UpgradeHttpHandler {
   }
 
   @GET("/history")
-  public java.util.List<Properties> history() throws Exception {
+  public List<Properties> history() throws Exception {
     return operations.upgradeHistory();
   }
 
@@ -188,6 +194,57 @@ class UpgradeHttpHandler {
     }
   }
 
+  @GET("/maintenance")
+  public Map<String, Object> maintenance() {
+    MaintenanceMode.Status status = maintenance.status();
+    Map<String, Object> result = new java.util.LinkedHashMap<>();
+    result.put("enabled", status.enabled());
+    result.put("message", status.message());
+    result.put("retryAfterSeconds", status.retryAfterSeconds());
+    result.put("source", status.source() == null ? null : status.source().value());
+    return result;
+  }
+
+  /**
+   * 手动切换维护状态。手动开启的状态不会被升级流程自动清除。
+   */
+  @PUT("/maintenance")
+  @Logging(title = "切换维护状态", content = "维护: [#{#values.enabled}]")
+  public synchronized Map<String, Object> maintenance(@RequestBody Properties values) throws Exception {
+    String enabled = values.getProperty("enabled");
+    if (!"true".equals(enabled) && !"false".equals(enabled)) {
+      throw ErrorMessageException.failed("维护状态必须为 true 或 false");
+    }
+    if (Boolean.parseBoolean(enabled)) {
+      String message = values.getProperty("message", MaintenanceState.DEFAULT_MESSAGE);
+      if (message.isBlank()) {
+        message = MaintenanceState.DEFAULT_MESSAGE;
+      }
+      maintenance.enable(message, retryAfter(values.getProperty("retryAfter")),
+              MaintenanceState.Source.MANUAL);
+    }
+    else {
+      maintenance.disable();
+    }
+    return maintenance();
+  }
+
+  private static int retryAfter(String value) {
+    if (value == null) {
+      return MaintenanceState.DEFAULT_RETRY_AFTER_SECONDS;
+    }
+    try {
+      int seconds = Integer.parseInt(value);
+      if (seconds < 1 || seconds > 86400) {
+        throw ErrorMessageException.failed("重试等待时间必须在 1 至 86400 秒之间");
+      }
+      return seconds;
+    }
+    catch (NumberFormatException invalid) {
+      throw ErrorMessageException.failed("重试等待时间必须是整数秒");
+    }
+  }
+
   @POST("/{id}/start")
   @Logging(title = "启动系统升级", content = "任务: [#{#id}]，操作人: [#{#user.id}]")
   public synchronized Map<String, String> start(@PathVariable String id, @RequestBody Properties values, User user) throws Exception {
@@ -213,6 +270,12 @@ class UpgradeHttpHandler {
       throw ErrorMessageException.failed("该任务已提交，不可重复启动", HttpStatus.CONFLICT);
     }
     store.snapshot(id, options, user.getId(), current());
+    boolean maintenanceEnabled = maintenance.exists();
+    if (!maintenanceEnabled) {
+      // 管理端一提交升级就停止接收新请求，覆盖备份、切换和重启整个过程。
+      maintenance.enable(MaintenanceState.DEFAULT_MESSAGE,
+              MaintenanceState.DEFAULT_RETRY_AFTER_SECONDS, MaintenanceState.Source.UPGRADE);
+    }
     try {
       // 数据库记录失败时不派发高权限任务，磁盘记录仍保留供核对。
       operations.recordUpgrade(id);
@@ -225,6 +288,14 @@ class UpgradeHttpHandler {
       }
     }
     catch (Exception failure) {
+      if (!maintenanceEnabled) {
+        try {
+          maintenance.disable();
+        }
+        catch (Exception ignored) {
+          // 保留原始派发失败原因，维护状态可在确认后手动关闭。
+        }
+      }
       Path metadataPath = state.resolve("incoming").resolve(id).resolve("metadata.properties");
       Properties metadata = UpgradeFiles.read(metadataPath);
       metadata.setProperty("status", BackupOperationStatus.FAILED.name());

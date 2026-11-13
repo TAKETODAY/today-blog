@@ -79,7 +79,7 @@ TimeoutStartSec=5400
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadWritePaths=/opt/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog
+ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog
 EOF
 # sudo >= 1.9.10 支持参数正则；固定命令与 UUID，不允许任意路径或 shell。
 SUDOERS="$(mktemp)"
