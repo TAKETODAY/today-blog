@@ -11,9 +11,9 @@ describe('Backups', () => {
   const previous = globalThis.IS_REACT_ACT_ENVIRONMENT;
   let container: HTMLDivElement;
   let root = createRoot(document.createElement('div'));
-  const snapshot = {
+  const backup = {
     id: '86d25e56-e760-48df-bf3d-6a75e9635026', name: '更新前恢复点', status: 'AVAILABLE',
-    version: '3.4', build: '123', protectedSnapshot: true, totalBytes: 1048576, createdAt: '2026-11-12T00:00:00Z',
+    version: '3.4', build: '123', protectedBackup: true, totalBytes: 1048576, createdAt: '2026-11-12T00:00:00Z',
     operatorId: 42, manifestSha256: 'abc', sourceOperationId: null,
   };
 
@@ -36,7 +36,7 @@ describe('Backups', () => {
       if (url.endsWith('/operations')) {
         return { data: [] };
       }
-      return { data: url.endsWith('/backups') ? [snapshot] : { snapshot, scope: '程序、数据库', restoreVerifiedAt: null } };
+      return { data: url.endsWith('/backups') ? [backup] : { backup, scope: '程序、数据库', restoreVerifiedAt: null } };
     });
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -58,7 +58,7 @@ describe('Backups', () => {
     }
     const detail = Array.from(container.querySelectorAll('button')).find(item => item.textContent === '详情');
     await act(async () => detail?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-    expect(http.get).toHaveBeenCalledWith(`/api/console/backups/${snapshot.id}`);
+    expect(http.get).toHaveBeenCalledWith(`/api/console/backups/${backup.id}`);
     expect(document.body.textContent).toContain('已保护，禁止删除');
     expect(http.post).not.toHaveBeenCalled();
   });

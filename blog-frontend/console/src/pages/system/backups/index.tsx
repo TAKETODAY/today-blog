@@ -13,7 +13,7 @@ interface Backup {
   version: string | null;
   build: string | null;
   createdAt: string;
-  protectedSnapshot: boolean;
+  protectedBackup: boolean;
   totalBytes: number;
   operatorId: number | null;
   manifestSha256: string | null;
@@ -21,7 +21,7 @@ interface Backup {
 }
 
 interface BackupDetail {
-  snapshot: Backup;
+  backup: Backup;
   scope: string | null;
   restoreVerifiedAt: string | null;
 }
@@ -32,8 +32,8 @@ interface Operation {
   status: string;
   createdAt: string;
   finishedAt: string | null;
-  snapshotId: string | null;
-  protectionSnapshotId: string | null;
+  backupId: string | null;
+  protectionBackupId: string | null;
   operatorId: number | null;
 }
 
@@ -42,8 +42,8 @@ const statusNames: Record<string, string> = {
   STARTING: '已提交', SUCCESS: '成功', RESTORING: '恢复中', MAINTENANCE_REQUIRED: '需人工处理',
 };
 const typeNames: Record<string, string> = {
-  SNAPSHOT_CREATE: '创建备份', SNAPSHOT_RESTORE: '恢复备份', SNAPSHOT_DELETE: '删除备份',
-  SNAPSHOT_PROTECT: '修改保护', UPGRADE: '系统更新',
+  BACKUP_CREATE: '创建备份', BACKUP_RESTORE: '恢复备份', BACKUP_DELETE: '删除备份',
+  BACKUP_PROTECT: '修改保护', UPGRADE: '系统更新',
 };
 
 function status(value: string) {
@@ -143,7 +143,7 @@ export default function Backups() {
         <Tabs items={[
           {
             key: 'backups', label: '备份列表', children: <>
-              <div className="snapshot-toolbar">
+              <div className="backup-toolbar">
                 <Input.Search aria-label="搜索备份" placeholder="搜索名称、版本或备份 ID" allowClear value={query}
                               onChange={event => setQuery(event.target.value)} style={{ maxWidth: 360 }}/>
                 <Space>
@@ -161,7 +161,7 @@ export default function Backups() {
                   title: '备份', key: 'name', width: 230, render: (_, item) => <Space direction="vertical" size={0}>
                     <Button type="link" style={{ padding: 0, height: 'auto', whiteSpace: 'normal', textAlign: 'left' }}
                             onClick={() => setDetailId(item.id)}>{item.name}</Button>
-                    <span className="snapshot-secondary">{item.version || '—'} / {item.build || '—'}</span>
+                    <span className="backup-secondary">{item.version || '—'} / {item.build || '—'}</span>
                   </Space>
                 },
                 { title: '状态', dataIndex: 'status', render: status, width: 110 },
@@ -169,25 +169,25 @@ export default function Backups() {
                 { title: '大小', dataIndex: 'totalBytes', render: bytes, width: 100 },
                 {
                   title: '保护',
-                  dataIndex: 'protectedSnapshot',
+                  dataIndex: 'protectedBackup',
                   width: 100,
                   render: value => value ? <Tag icon={<LockOutlined/>}>已保护</Tag> : '未保护'
                 },
                 {
                   title: '操作', key: 'actions', width: 270, render: (_, item) => <Space size={0}>
                     <Button type="link" onClick={() => setDetailId(item.id)}>详情</Button>
-                    {unavailable(item.protectedSnapshot ? '取消保护' : '保护')}
+                    {unavailable(item.protectedBackup ? '取消保护' : '保护')}
                     {unavailable('恢复')}
                     {unavailable('删除', true)}
                   </Space>
                 },
               ]}/>
-              <span className="snapshot-secondary">最多展示最近 500 份备份。列表记录不代表备份已通过完整性校验或恢复演练。</span>
+              <span className="backup-secondary">最多展示最近 500 份备份。列表记录不代表备份已通过完整性校验或恢复演练。</span>
             </>,
           },
           {
             key: 'operations', label: '操作记录', children: <>
-              <div className="snapshot-toolbar"><span>创建、恢复、保护和删除的操作记录，以及关联备份的系统更新</span><Button onClick={refresh}
+              <div className="backup-toolbar"><span>创建、恢复、保护和删除的操作记录，以及关联备份的系统更新</span><Button onClick={refresh}
                                                                                                                           loading={loading}>刷新记录</Button>
               </div>
               <Table<Operation> rowKey="id" loading={loading} dataSource={operations} scroll={{ x: 1100 }}
@@ -199,19 +199,19 @@ export default function Backups() {
                 { title: '结束时间', dataIndex: 'finishedAt', render: value => value || '—' },
                 {
                   title: '目标备份',
-                  dataIndex: 'snapshotId',
+                  dataIndex: 'backupId',
                   render: value => value ? <Button type="link" onClick={() => setDetailId(value)}>查看备份</Button> : '—'
                 },
                 {
                   title: '保护备份',
-                  dataIndex: 'protectionSnapshotId',
+                  dataIndex: 'protectionBackupId',
                   render: value => value ? <Button type="link" onClick={() => setDetailId(value)}>查看保护备份</Button> : '—'
                 },
               ]} expandable={{
                 expandedRowRender: item => <Descriptions column={1}>
                   <Descriptions.Item label="操作 ID">{item.id}</Descriptions.Item>
-                  <Descriptions.Item label="目标备份 ID">{item.snapshotId || '—'}</Descriptions.Item>
-                  <Descriptions.Item label="保护备份 ID">{item.protectionSnapshotId || '—'}</Descriptions.Item>
+                  <Descriptions.Item label="目标备份 ID">{item.backupId || '—'}</Descriptions.Item>
+                  <Descriptions.Item label="保护备份 ID">{item.protectionBackupId || '—'}</Descriptions.Item>
                 </Descriptions>
               }}/>
             </>,
@@ -219,7 +219,7 @@ export default function Backups() {
         ]}/>
       </Card>
     </Space>
-    <Drawer className="snapshot-detail-drawer" title="备份详情" open={Boolean(detailId)} onClose={() => setDetailId('')} width={640}
+    <Drawer className="backup-detail-drawer" title="备份详情" open={Boolean(detailId)} onClose={() => setDetailId('')} width={640}
             contentWrapperStyle={{ maxWidth: '100vw' }}>
       {detailError && <Alert type="error" showIcon message="无法读取备份详情" description="备份可能已移除或连接中断，请关闭后重试。"/>}
       {detailLoading && <Card loading bordered={false}/>}
@@ -227,20 +227,20 @@ export default function Backups() {
         <Alert type="info" showIcon message="恢复前仍需重新校验"
                description="元信息不能代替文件摘要检查。创建成功也不代表已经通过恢复演练。"/>
         <Descriptions column={1} bordered size="small">
-          <Descriptions.Item label="名称">{detail.snapshot.name}</Descriptions.Item>
-          <Descriptions.Item label="备份 ID"><span className="snapshot-id">{detail.snapshot.id}</span></Descriptions.Item>
-          <Descriptions.Item label="状态">{status(detail.snapshot.status)}</Descriptions.Item>
-          <Descriptions.Item label="程序版本">{detail.snapshot.version || '—'} / {detail.snapshot.build || '—'}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">{detail.snapshot.createdAt}</Descriptions.Item>
-          <Descriptions.Item label="操作人 ID">{detail.snapshot.operatorId ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="保护状态">{detail.snapshot.protectedSnapshot ? '已保护，禁止删除' : '未保护'}</Descriptions.Item>
-          <Descriptions.Item label="大小">{bytes(detail.snapshot.totalBytes)}</Descriptions.Item>
+          <Descriptions.Item label="名称">{detail.backup.name}</Descriptions.Item>
+          <Descriptions.Item label="备份 ID"><span className="backup-id">{detail.backup.id}</span></Descriptions.Item>
+          <Descriptions.Item label="状态">{status(detail.backup.status)}</Descriptions.Item>
+          <Descriptions.Item label="程序版本">{detail.backup.version || '—'} / {detail.backup.build || '—'}</Descriptions.Item>
+          <Descriptions.Item label="创建时间">{detail.backup.createdAt}</Descriptions.Item>
+          <Descriptions.Item label="操作人 ID">{detail.backup.operatorId ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="保护状态">{detail.backup.protectedBackup ? '已保护，禁止删除' : '未保护'}</Descriptions.Item>
+          <Descriptions.Item label="大小">{bytes(detail.backup.totalBytes)}</Descriptions.Item>
           <Descriptions.Item label="覆盖范围">{detail.scope || '尚未记录，不可据此判断为完整备份'}</Descriptions.Item>
           <Descriptions.Item label="清单摘要"><span
-            className="snapshot-id">{detail.snapshot.manifestSha256 || '—'}</span></Descriptions.Item>
+            className="backup-id">{detail.backup.manifestSha256 || '—'}</span></Descriptions.Item>
           <Descriptions.Item label="恢复演练">{detail.restoreVerifiedAt || '尚无恢复验证记录'}</Descriptions.Item>
           <Descriptions.Item label="来源任务"><span
-            className="snapshot-id">{detail.snapshot.sourceOperationId || '手动创建或未关联任务'}</span></Descriptions.Item>
+            className="backup-id">{detail.backup.sourceOperationId || '手动创建或未关联任务'}</span></Descriptions.Item>
         </Descriptions>
         <Button onClick={() => history.push('/system/upgrade')}>前往系统更新</Button>
       </Space>}
