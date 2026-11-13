@@ -160,9 +160,14 @@ export default [
         component: './system/upgrade',
       },
       {
-        name: '应用快照',
+        name: '备份管理',
+        path: '/system/backups',
+        component: './system/backups',
+      },
+      {
         path: '/system/snapshots',
-        component: './system/snapshots',
+        redirect: '/system/backups',
+        hideInMenu: true,
       },
     ],
   },

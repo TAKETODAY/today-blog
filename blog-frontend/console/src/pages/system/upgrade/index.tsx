@@ -236,7 +236,7 @@ export default function SystemUpgrade() {
   return <PageContainer className="system-update-page" title="系统更新" subTitle="发布新版本，保留可追溯的备份与更新记录">
     <Space direction="vertical" size="large" style={{width: '100%'}}>
       <Alert type="warning" showIcon message="程序回滚不等于数据库恢复"
-             description="仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份快照之后的新数据；更新期间不得并发修改表结构。"/>
+             description="仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份时间点之后的新数据；更新期间不得并发修改表结构。"/>
       {disconnected && <Alert type="info" showIcon message={needsLogin ? '登录已失效，请重新登录后查看任务' : '连接暂时中断，正在自动重试'}
                               description="任务在服务器独立运行，请勿重复提交。长时间未恢复时请通过 SSH 检查 systemd 日志。"/>}
       <Tabs activeKey={tab} onChange={setTab} items={[
