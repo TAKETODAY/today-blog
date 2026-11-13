@@ -20,26 +20,26 @@ package cn.taketoday.blog.backup;
 import infra.lang.Enumerable;
 
 /**
- * 应用操作类型，枚举名即数据库存储值。
+ * 备份状态，枚举名即数据库存储值。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
-public enum AppOperationType implements Enumerable<String> {
+public enum BackupStatus implements Enumerable<String> {
 
-  /** 系统更新 */
-  UPGRADE,
+  /** 创建中 */
+  CREATING,
 
-  /** 创建备份，枚举名保留旧存储协议 */
-  SNAPSHOT_CREATE,
+  /** 可用 */
+  AVAILABLE,
 
-  /** 恢复备份 */
-  SNAPSHOT_RESTORE,
+  /** 失败 */
+  FAILED,
 
-  /** 删除备份 */
-  SNAPSHOT_DELETE,
+  /** 删除中 */
+  DELETING,
 
-  /** 修改备份保护状态 */
-  SNAPSHOT_PROTECT
+  /** 已删除 */
+  DELETED
 
 }

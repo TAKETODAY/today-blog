@@ -74,7 +74,7 @@ public class BackupService {
 
   public List<BackupView> backups() {
     synchronizeIndex();
-    return entityManager.slice(AppSnapshot.class, new LatestBackups(), Pageable.of(1, LIST_LIMIT))
+    return entityManager.slice(Backup.class, new LatestBackups(), Pageable.of(1, LIST_LIMIT))
             .rows()
             .stream()
             .map(BackupView::from)
@@ -84,7 +84,7 @@ public class BackupService {
   public BackupDetail backup(String id) {
     UpgradeFiles.checkId(id);
     synchronizeIndex();
-    AppSnapshot record = entityManager.findById(AppSnapshot.class, id);
+    Backup record = entityManager.findById(Backup.class, id);
     if (record == null) {
       throw ErrorMessageException.failed("备份不存在", HttpStatus.NOT_FOUND);
     }
@@ -98,7 +98,7 @@ public class BackupService {
 
   public List<OperationView> operations() {
     synchronizeIndex();
-    return entityManager.slice(AppOperation.class, new BackupOperations(), Pageable.of(1, LIST_LIMIT))
+    return entityManager.slice(BackupOperation.class, new BackupOperations(), Pageable.of(1, LIST_LIMIT))
             .rows()
             .stream()
             .map(OperationView::from)
@@ -132,7 +132,7 @@ public class BackupService {
    * 最近备份：只声明排序，不产生 WHERE 条件。
    */
   @OrderByClause("created_at DESC, id DESC")
-  @EntityRef(AppSnapshot.class)
+  @EntityRef(Backup.class)
   static class LatestBackups {
 
   }
@@ -141,62 +141,61 @@ public class BackupService {
    * 备份相关操作记录：备份操作类型，或关联了备份、保护备份的系统更新。
    */
   @OrderByClause("created_at DESC, id DESC")
-  @EntityRef(AppOperation.class)
+  @EntityRef(BackupOperation.class)
   static class BackupOperations {
 
     @In
-    public final List<AppOperationType> operationType = List.of(
-            AppOperationType.SNAPSHOT_CREATE,
-            AppOperationType.SNAPSHOT_RESTORE,
-            AppOperationType.SNAPSHOT_DELETE,
-            AppOperationType.SNAPSHOT_PROTECT);
+    public final List<BackupOperationType> operationType = List.of(
+            BackupOperationType.BACKUP_CREATE,
+            BackupOperationType.BACKUP_RESTORE,
+            BackupOperationType.BACKUP_DELETE,
+            BackupOperationType.BACKUP_PROTECT);
 
     @OR
     @WhereIsNull(not = true)
-    public final @Nullable String snapshotId = null;
+    public final @Nullable String backupId = null;
 
     @OR
     @WhereIsNull(not = true)
-    public final @Nullable String protectionSnapshotId = null;
+    public final @Nullable String protectionBackupId = null;
   }
 
   /**
    * 备份列表和详情共用的只读视图，不暴露存储列 metadata。
-   * 字段名沿用旧协议，兼容历史客户端。
    */
   public record BackupView(
           String id,
           String name,
-          AppSnapshotStatus status,
+          BackupStatus status,
           String version,
           String build,
           Long operatorId,
           String createdAt,
-          boolean protectedSnapshot,
+          boolean protectedBackup,
           long totalBytes,
           String manifestSha256,
           String sourceOperationId) {
 
-    static BackupView from(AppSnapshot snapshot) {
+    static BackupView from(Backup backup) {
       return new BackupView(
-              snapshot.getId(),
-              snapshot.getName(),
-              snapshot.getStatus(),
-              snapshot.getVersion(),
-              snapshot.getBuild(),
-              snapshot.getOperatorId(),
-              snapshot.getCreatedAt(),
-              snapshot.isProtectedSnapshot(),
-              snapshot.getTotalBytes(),
-              snapshot.getManifestSha256(),
-              snapshot.getSourceOperationId());
+              backup.getId(),
+              backup.getName(),
+              backup.getStatus(),
+              backup.getVersion(),
+              backup.getBuild(),
+              backup.getOperatorId(),
+              backup.getCreatedAt(),
+              backup.isProtectedBackup(),
+              backup.getTotalBytes(),
+              backup.getManifestSha256(),
+              backup.getSourceOperationId());
     }
   }
 
   /**
    * 备份详情在基础视图之外补充 metadata 中的展示字段。
    */
-  public record BackupDetail(BackupView snapshot, String scope, String restoreVerifiedAt) {
+  public record BackupDetail(BackupView backup, String scope, String restoreVerifiedAt) {
   }
 
   /**
@@ -204,15 +203,15 @@ public class BackupService {
    */
   public record OperationView(
           String id,
-          AppOperationType type,
-          AppOperationStatus status,
+          BackupOperationType type,
+          BackupOperationStatus status,
           Long operatorId,
           String createdAt,
           String finishedAt,
-          String snapshotId,
-          String protectionSnapshotId) {
+          String backupId,
+          String protectionBackupId) {
 
-    static OperationView from(AppOperation operation) {
+    static OperationView from(BackupOperation operation) {
       return new OperationView(
               operation.getId(),
               operation.getOperationType(),
@@ -220,8 +219,8 @@ public class BackupService {
               operation.getOperatorId(),
               operation.getCreatedAt(),
               operation.getFinishedAt(),
-              operation.getSnapshotId(),
-              operation.getProtectionSnapshotId());
+              operation.getBackupId(),
+              operation.getProtectionBackupId());
     }
   }
 

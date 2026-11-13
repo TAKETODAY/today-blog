@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.backup.AppOperationStatus;
+import cn.taketoday.blog.backup.BackupOperationStatus;
 import cn.taketoday.blog.backup.BackupOperationService;
 import cn.taketoday.blog.updater.DatabaseBackup;
 import cn.taketoday.blog.updater.UpgradeFiles;
@@ -59,14 +59,14 @@ class UpgradeHttpHandler {
   /**
    * 尚未结束的更新任务状态，存在这些状态时禁止再次启动更新。
    */
-  private static final Set<AppOperationStatus> RUNNING_STATUSES = EnumSet.of(
-          AppOperationStatus.STARTING,
-          AppOperationStatus.VALIDATING,
-          AppOperationStatus.INSTALLING,
-          AppOperationStatus.BACKING_UP,
-          AppOperationStatus.RESTARTING,
-          AppOperationStatus.HEALTH_CHECKING,
-          AppOperationStatus.ROLLING_BACK);
+  private static final Set<BackupOperationStatus> RUNNING_STATUSES = EnumSet.of(
+          BackupOperationStatus.STARTING,
+          BackupOperationStatus.VALIDATING,
+          BackupOperationStatus.INSTALLING,
+          BackupOperationStatus.BACKING_UP,
+          BackupOperationStatus.RESTARTING,
+          BackupOperationStatus.HEALTH_CHECKING,
+          BackupOperationStatus.ROLLING_BACK);
 
   private final Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
 
@@ -174,7 +174,7 @@ class UpgradeHttpHandler {
       metadata.setProperty("version", manifest.version());
       metadata.setProperty("build", Long.toString(manifest.build()));
       metadata.setProperty("operatorId", String.valueOf(user.getId()));
-      metadata.setProperty("status", AppOperationStatus.READY.name());
+      metadata.setProperty("status", BackupOperationStatus.READY.name());
       metadata.setProperty("message", "文件完整性校验通过（未验证来源），等待确认升级");
       UpgradeFiles.write(task.resolve("metadata.properties"), metadata);
       return metadata;
@@ -204,12 +204,12 @@ class UpgradeHttpHandler {
       throw ErrorMessageException.failed("安装盘或备份盘可用空间不足");
     }
     for (Properties task : store.history()) {
-      AppOperationStatus status = AppOperationStatus.of(task.getProperty("status"));
+      BackupOperationStatus status = BackupOperationStatus.of(task.getProperty("status"));
       if (status != null && RUNNING_STATUSES.contains(status)) {
         throw ErrorMessageException.failed("已有更新任务运行，请先确认其结果", HttpStatus.CONFLICT);
       }
     }
-    if (AppOperationStatus.of(store.task(id).getProperty("status")) != AppOperationStatus.READY) {
+    if (BackupOperationStatus.of(store.task(id).getProperty("status")) != BackupOperationStatus.READY) {
       throw ErrorMessageException.failed("该任务已提交，不可重复启动", HttpStatus.CONFLICT);
     }
     store.snapshot(id, options, user.getId(), current());
@@ -227,13 +227,13 @@ class UpgradeHttpHandler {
     catch (Exception failure) {
       Path metadataPath = state.resolve("incoming").resolve(id).resolve("metadata.properties");
       Properties metadata = UpgradeFiles.read(metadataPath);
-      metadata.setProperty("status", AppOperationStatus.FAILED.name());
+      metadata.setProperty("status", BackupOperationStatus.FAILED.name());
       metadata.setProperty("finishedAt", java.time.Instant.now().toString());
       metadata.setProperty("message", "无法启动升级服务，请检查 sudoers 和 systemd 日志");
       UpgradeFiles.write(metadataPath, metadata);
       throw ErrorMessageException.failed(metadata.getProperty("message"));
     }
-    return Map.of("id", id, "status", AppOperationStatus.STARTING.name());
+    return Map.of("id", id, "status", BackupOperationStatus.STARTING.name());
   }
 
   @GET("/{id}")

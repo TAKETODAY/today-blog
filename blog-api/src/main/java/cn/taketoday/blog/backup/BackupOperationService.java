@@ -61,13 +61,13 @@ public class BackupOperationService {
   public synchronized List<Properties> upgradeHistory() throws IOException {
     // 恢复数据库会回退索引，按固定 UUID 补齐，不能仅依赖内存同步游标。
     for (Properties record : upgrades.history()) {
-      save(record, AppOperationType.UPGRADE);
+      save(record, BackupOperationType.UPGRADE);
     }
 
-    List<AppOperation> records = entityManager.find(AppOperation.class, new UpgradeOperations());
+    List<BackupOperation> records = entityManager.find(BackupOperation.class, new UpgradeOperations());
 
     List<Properties> history = new ArrayList<>(records.size());
-    for (AppOperation record : records) {
+    for (BackupOperation record : records) {
       history.add(decode(record.getMetadata()));
     }
     return history;
@@ -75,8 +75,8 @@ public class BackupOperationService {
 
   public synchronized Properties upgrade(String id) throws IOException {
     UpgradeFiles.checkId(id);
-    save(upgrades.task(id), AppOperationType.UPGRADE);
-    AppOperation record = entityManager.findById(AppOperation.class, id);
+    save(upgrades.task(id), BackupOperationType.UPGRADE);
+    BackupOperation record = entityManager.findById(BackupOperation.class, id);
     if (record == null) {
       throw new IllegalStateException("更新记录不存在：" + id);
     }
@@ -85,24 +85,24 @@ public class BackupOperationService {
 
   public synchronized void recordUpgrade(String id) throws IOException {
     UpgradeFiles.checkId(id);
-    save(upgrades.task(id), AppOperationType.UPGRADE);
+    save(upgrades.task(id), BackupOperationType.UPGRADE);
   }
 
-  void save(Properties record, AppOperationType type) throws IOException {
+  void save(Properties record, BackupOperationType type) throws IOException {
     String id = record.getProperty("id");
     UpgradeFiles.checkId(id);
-    AppOperation operation = new AppOperation();
+    BackupOperation operation = new BackupOperation();
     operation.setId(id);
     operation.setOperationType(type);
-    operation.setStatus(AppOperationStatus.of(record.getProperty("status")));
+    operation.setStatus(BackupOperationStatus.of(record.getProperty("status")));
     operation.setOperatorId(parseOperatorId(record.getProperty("operatorId")));
     operation.setCreatedAt(record.getProperty("createdAt", record.getProperty("startedAt", "")));
     operation.setFinishedAt(record.getProperty("finishedAt"));
-    operation.setSnapshotId(record.getProperty("snapshotId"));
-    operation.setProtectionSnapshotId(record.getProperty("protectionSnapshotId"));
+    operation.setBackupId(record.getProperty("backupId"));
+    operation.setProtectionBackupId(record.getProperty("protectionBackupId"));
     operation.setMetadata(encode(record));
     // 恢复数据库会丢失索引，磁盘记录需要重新补齐，因此按主键覆盖已有行。
-    if (entityManager.findById(AppOperation.class, id) == null) {
+    if (entityManager.findById(BackupOperation.class, id) == null) {
       entityManager.persist(operation);
     }
     else {
@@ -136,10 +136,10 @@ public class BackupOperationService {
    * 系统更新记录，按创建时间倒序。
    */
   @OrderByClause("created_at DESC")
-  @EntityRef(AppOperation.class)
+  @EntityRef(BackupOperation.class)
   static class UpgradeOperations {
 
-    public final AppOperationType operationType = AppOperationType.UPGRADE;
+    public final BackupOperationType operationType = BackupOperationType.UPGRADE;
   }
 
 }

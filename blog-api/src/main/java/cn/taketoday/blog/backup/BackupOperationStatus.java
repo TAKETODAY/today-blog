@@ -22,12 +22,12 @@ import org.jspecify.annotations.Nullable;
 import infra.lang.Enumerable;
 
 /**
- * 应用操作状态，枚举名即数据库存储值。
+ * 备份及关联更新的操作状态，枚举名即数据库存储值。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
-public enum AppOperationStatus implements Enumerable<String> {
+public enum BackupOperationStatus implements Enumerable<String> {
 
   /** 已提交 */
   STARTING,
@@ -71,11 +71,11 @@ public enum AppOperationStatus implements Enumerable<String> {
   /**
    * 按数据库或元数据中的状态名解析，未知值返回 {@code null}。
    */
-  public static @Nullable AppOperationStatus of(@Nullable String value) {
+  public static @Nullable BackupOperationStatus of(@Nullable String value) {
     if (value == null || value.isBlank()) {
       return null;
     }
-    for (AppOperationStatus status : values()) {
+    for (BackupOperationStatus status : values()) {
       if (status.name().equals(value)) {
         return status;
       }

@@ -17,29 +17,45 @@
 
 package cn.taketoday.blog.backup;
 
-import infra.lang.Enumerable;
+import infra.persistence.annotation.Id;
+import infra.persistence.annotation.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
- * 备份状态，类型名保留旧协议，枚举名即数据库存储值。
+ * 备份元信息。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
-public enum AppSnapshotStatus implements Enumerable<String> {
+@Getter
+@Setter
+@Table("t_backup")
+public class Backup {
 
-  /** 创建中 */
-  CREATING,
+  @Id
+  private String id;
 
-  /** 可用 */
-  AVAILABLE,
+  private String name;
 
-  /** 失败 */
-  FAILED,
+  private BackupStatus status;
 
-  /** 删除中 */
-  DELETING,
+  private String version;
 
-  /** 已删除 */
-  DELETED
+  private String build;
+
+  private Long operatorId;
+
+  private String createdAt;
+
+  private boolean protectedBackup;
+
+  private String manifestSha256;
+
+  private long totalBytes;
+
+  private String sourceOperationId;
+
+  private String metadata;
 
 }

@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @since 4.0 2026/11/12
  */
 @WebAPITest
-class AppOperationPersistenceTests {
+class BackupOperationPersistenceTests {
 
   @Autowired
   EntityManager entityManager;
@@ -50,34 +50,34 @@ class AppOperationPersistenceTests {
   Path temp;
 
   @Test
-  void snapshotManagementReadsDatabaseAndRejectsUnconnectedExecutor() throws Exception {
+  void backupManagementReadsDatabaseAndRejectsUnconnectedExecutor() throws Exception {
     String id = UUID.randomUUID().toString();
     Properties metadata = new Properties();
     metadata.setProperty("scope", "程序、数据库、本地附件、配置");
     metadata.setProperty("password", "must-not-leak");
-    AppSnapshot snapshot = new AppSnapshot();
-    snapshot.setId(id);
-    snapshot.setName("升级前保护点");
-    snapshot.setStatus(AppSnapshotStatus.AVAILABLE);
-    snapshot.setCreatedAt("2026-11-12T00:00:00Z");
-    snapshot.setProtectedSnapshot(true);
-    snapshot.setMetadata(BackupOperationService.encode(metadata));
-    entityManager.persist(snapshot);
+    Backup backup = new Backup();
+    backup.setId(id);
+    backup.setName("升级前保护点");
+    backup.setStatus(BackupStatus.AVAILABLE);
+    backup.setCreatedAt("2026-11-12T00:00:00Z");
+    backup.setProtectedBackup(true);
+    backup.setMetadata(BackupOperationService.encode(metadata));
+    entityManager.persist(backup);
     BackupService service = new BackupService(entityManager);
     assertThat(service.backups()).anySatisfy(record -> {
       assertThat(record.id()).isEqualTo(id);
-      assertThat(record.protectedSnapshot()).isTrue();
+      assertThat(record.protectedBackup()).isTrue();
     });
     BackupService.BackupDetail detail = service.backup(id);
     assertThat(detail.scope()).contains("数据库");
-    assertThat(detail.snapshot().id()).isEqualTo(id);
+    assertThat(detail.backup().id()).isEqualTo(id);
     // metadata 中的敏感字段不得进入对外视图。
     assertThat(detail.toString()).doesNotContain("must-not-leak");
     assertThatThrownBy(service::requireExecutor).hasMessageContaining("未执行任何备份操作");
     assertThat(service.capabilities()).containsEntry("create", false).containsEntry("restore", false);
     assertThatThrownBy(() -> service.backup(UUID.randomUUID().toString())).hasMessageContaining("不存在");
     assertThatThrownBy(() -> service.backup("../outside")).isInstanceOf(IllegalArgumentException.class);
-    assertThat(service.backup(id).snapshot().protectedSnapshot()).isTrue();
+    assertThat(service.backup(id).backup().protectedBackup()).isTrue();
   }
 
   @Test
@@ -85,34 +85,34 @@ class AppOperationPersistenceTests {
     String id = UUID.randomUUID().toString();
     Properties metadata = new Properties();
     metadata.setProperty("id", id);
-    metadata.setProperty("status", AppOperationStatus.STARTING.name());
+    metadata.setProperty("status", BackupOperationStatus.STARTING.name());
     metadata.setProperty("operatorId", "42");
     metadata.setProperty("createdAt", "2026-11-12T00:00:00Z");
     metadata.setProperty("note", "中文更新记录");
     UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), metadata);
     BackupOperationService service = new BackupOperationService(entityManager, new UpgradeStore(temp));
     assertThat(service.upgradeHistory()).anySatisfy(record -> assertThat(record).isEqualTo(metadata));
-    UpgradeFiles.status(temp.resolve("results"), id, AppOperationStatus.SUCCESS.name(), "更新成功");
+    UpgradeFiles.status(temp.resolve("results"), id, BackupOperationStatus.SUCCESS.name(), "更新成功");
     service.upgradeHistory();
     service.upgradeHistory();
-    assertThat(entityManager.count(AppOperation.class, new AppOperationId(id))).isEqualTo(1L);
-    assertThat(service.upgrade(id).getProperty("status")).isEqualTo(AppOperationStatus.SUCCESS.name());
+    assertThat(entityManager.count(BackupOperation.class, new BackupOperationId(id))).isEqualTo(1L);
+    assertThat(service.upgrade(id).getProperty("status")).isEqualTo(BackupOperationStatus.SUCCESS.name());
     // 模拟业务数据库恢复后丢失操作索引，磁盘日志不随业务库回退。
-    entityManager.delete(AppOperation.class, id);
+    entityManager.delete(BackupOperation.class, id);
     service.upgradeHistory();
     assertThat(service.upgrade(id).getProperty("note")).isEqualTo("中文更新记录");
-    assertThat(entityManager.count(AppOperation.class, new AppOperationId(id))).isEqualTo(1L);
+    assertThat(entityManager.count(BackupOperation.class, new BackupOperationId(id))).isEqualTo(1L);
   }
 
   /**
    * 按主键统计操作记录数量。
    */
-  @EntityRef(AppOperation.class)
-  static class AppOperationId {
+  @EntityRef(BackupOperation.class)
+  static class BackupOperationId {
 
     public final String id;
 
-    AppOperationId(String id) {
+    BackupOperationId(String id) {
       this.id = id;
     }
   }

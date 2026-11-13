@@ -60,38 +60,38 @@ public class BackupIndexService {
 
   public synchronized void synchronize() throws IOException {
     // 每次回放完整历史，不能用内存游标跳过数据库恢复后丢失的记录。
-    List<AppSnapshot> snapshots = new ArrayList<>();
-    for (Properties record : records("snapshots")) {
-      snapshots.add(snapshot(record));
+    List<Backup> backups = new ArrayList<>();
+    for (Properties record : records("backups")) {
+      backups.add(backup(record));
     }
-    List<Properties> history = records("snapshot-operations");
+    List<Properties> history = records("backup-operations");
     // 先校验整个批次，避免未知状态或损坏记录被静默降级为可用状态。
     for (Properties record : history) {
-      AppOperationType type = AppOperationType.valueOf(required(record, "operationType"));
-      if (type == AppOperationType.UPGRADE) {
+      BackupOperationType type = BackupOperationType.valueOf(required(record, "operationType"));
+      if (type == BackupOperationType.UPGRADE) {
         throw new IllegalArgumentException("备份操作目录不能保存更新记录");
       }
-      if (AppOperationStatus.of(required(record, "status")) == null) {
+      if (BackupOperationStatus.of(required(record, "status")) == null) {
         throw new IllegalArgumentException("未知的备份操作状态");
       }
       required(record, "createdAt");
       operator(record);
-      optionalId(record, "snapshotId");
-      optionalId(record, "protectionSnapshotId");
+      optionalId(record, "backupId");
+      optionalId(record, "protectionBackupId");
     }
-    for (AppSnapshot snapshot : snapshots) {
-      if (entityManager.findById(AppSnapshot.class, snapshot.getId()) == null) {
-        entityManager.persist(snapshot);
+    for (Backup backup : backups) {
+      if (entityManager.findById(Backup.class, backup.getId()) == null) {
+        entityManager.persist(backup);
       }
       else {
         // 包括删除墓碑和取消保护，不能保留恢复后的旧列值。
-        entityManager.updateById(snapshot, PropertyUpdateStrategy.always());
+        entityManager.updateById(backup, PropertyUpdateStrategy.always());
       }
     }
     for (Properties record : history) {
-      operations.save(record, AppOperationType.valueOf(record.getProperty("operationType")));
+      operations.save(record, BackupOperationType.valueOf(record.getProperty("operationType")));
     }
-    // 关联保护备份的旧更新仍沿用既有磁盘协议，不能要求先访问更新页面才补齐。
+    // 关联保护备份的更新记录也需要回放，不能要求先访问更新页面才补齐。
     operations.upgradeHistory();
   }
 
@@ -126,35 +126,35 @@ public class BackupIndexService {
     return result;
   }
 
-  private static AppSnapshot snapshot(Properties record) throws IOException {
-    AppSnapshot snapshot = new AppSnapshot();
-    snapshot.setId(required(record, "id"));
-    snapshot.setName(required(record, "name"));
-    snapshot.setStatus(AppSnapshotStatus.valueOf(required(record, "status")));
-    snapshot.setVersion(required(record, "version"));
-    snapshot.setBuild(required(record, "build"));
-    snapshot.setCreatedAt(required(record, "createdAt"));
-    snapshot.setOperatorId(operator(record));
-    String protection = required(record, "protectedSnapshot");
+  private static Backup backup(Properties record) throws IOException {
+    Backup backup = new Backup();
+    backup.setId(required(record, "id"));
+    backup.setName(required(record, "name"));
+    backup.setStatus(BackupStatus.valueOf(required(record, "status")));
+    backup.setVersion(required(record, "version"));
+    backup.setBuild(required(record, "build"));
+    backup.setCreatedAt(required(record, "createdAt"));
+    backup.setOperatorId(operator(record));
+    String protection = required(record, "protectedBackup");
     if (!"true".equals(protection) && !"false".equals(protection)) {
       throw new IllegalArgumentException("备份保护状态无效");
     }
-    snapshot.setProtectedSnapshot(Boolean.parseBoolean(protection));
+    backup.setProtectedBackup(Boolean.parseBoolean(protection));
     long totalBytes = Long.parseLong(required(record, "totalBytes"));
     if (totalBytes < 0) {
       throw new IllegalArgumentException("备份大小无效");
     }
-    snapshot.setTotalBytes(totalBytes);
+    backup.setTotalBytes(totalBytes);
     String digest = record.getProperty("manifestSha256");
-    if (snapshot.getStatus() == AppSnapshotStatus.AVAILABLE
+    if (backup.getStatus() == BackupStatus.AVAILABLE
             && (digest == null || !digest.matches("[0-9a-f]{64}"))) {
       throw new IllegalArgumentException("可用备份缺少有效清单摘要");
     }
-    snapshot.setManifestSha256(digest);
+    backup.setManifestSha256(digest);
     optionalId(record, "sourceOperationId");
-    snapshot.setSourceOperationId(record.getProperty("sourceOperationId"));
-    snapshot.setMetadata(BackupOperationService.encode(record));
-    return snapshot;
+    backup.setSourceOperationId(record.getProperty("sourceOperationId"));
+    backup.setMetadata(BackupOperationService.encode(record));
+    return backup;
   }
 
   private static Long operator(Properties record) {

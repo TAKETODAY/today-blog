@@ -83,14 +83,14 @@ class BackupHttpHandlerTests {
     metadata.setProperty("password", "must-not-leak");
     StringWriter metadataText = new StringWriter();
     metadata.store(metadataText, null);
-    AppSnapshot inserted = new AppSnapshot();
+    Backup inserted = new Backup();
     inserted.setId(id);
     inserted.setName("升级前保护点");
-    inserted.setStatus(AppSnapshotStatus.AVAILABLE);
+    inserted.setStatus(BackupStatus.AVAILABLE);
     inserted.setVersion("3.4");
     inserted.setBuild("123");
     inserted.setCreatedAt("2026-11-12T00:00:00Z");
-    inserted.setProtectedSnapshot(true);
+    inserted.setProtectedBackup(true);
     inserted.setTotalBytes(1048576L);
     inserted.setMetadata(metadataText.toString());
     entityManager.persist(inserted);
@@ -99,20 +99,20 @@ class BackupHttpHandlerTests {
             .assertThat().hasStatusOk().bodyJson()
             .convertTo(new ParameterizedTypeReference<List<BackupService.BackupView>>() {
             })
-            .satisfies(snapshots -> assertThat(snapshots).anySatisfy(snapshot -> {
-              assertThat(snapshot.id()).isEqualTo(id);
-              assertThat(snapshot.name()).isEqualTo("升级前保护点");
-              assertThat(snapshot.protectedSnapshot()).isTrue();
-              assertThat(snapshot.totalBytes()).isEqualTo(1048576L);
-              assertThat(snapshot.version()).isEqualTo("3.4");
+            .satisfies(backups -> assertThat(backups).anySatisfy(backup -> {
+              assertThat(backup.id()).isEqualTo(id);
+              assertThat(backup.name()).isEqualTo("升级前保护点");
+              assertThat(backup.protectedBackup()).isTrue();
+              assertThat(backup.totalBytes()).isEqualTo(1048576L);
+              assertThat(backup.version()).isEqualTo("3.4");
             }));
 
     mvc.get().uri("/api/console/backups/{id}", id)
             .assertThat().hasStatusOk().bodyJson()
             .convertTo(BackupService.BackupDetail.class)
             .satisfies(detail -> {
-              assertThat(detail.snapshot().id()).isEqualTo(id);
-              assertThat(detail.snapshot().protectedSnapshot()).isTrue();
+              assertThat(detail.backup().id()).isEqualTo(id);
+              assertThat(detail.backup().protectedBackup()).isTrue();
               assertThat(detail.scope()).isEqualTo("程序、数据库、本地附件、配置");
               assertThat(detail.restoreVerifiedAt()).isNull();
               assertThat(detail.toString()).doesNotContain("must-not-leak");
@@ -120,15 +120,15 @@ class BackupHttpHandlerTests {
   }
 
   @Test
-  void operationsIncludeSnapshotRecordsAndRelatedUpgradesOnly() throws Exception {
+  void operationsIncludeBackupRecordsAndRelatedUpgradesOnly() throws Exception {
     String created = UUID.randomUUID().toString();
     String related = UUID.randomUUID().toString();
     String protectedBy = UUID.randomUUID().toString();
     String unrelated = UUID.randomUUID().toString();
-    insertOperation(created, AppOperationType.SNAPSHOT_CREATE, null, null, "2026-11-12T00:00:02Z");
-    insertOperation(related, AppOperationType.UPGRADE, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1001", null, "2026-11-12T00:00:03Z");
-    insertOperation(protectedBy, AppOperationType.UPGRADE, null, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1002", "2026-11-12T00:00:01Z");
-    insertOperation(unrelated, AppOperationType.UPGRADE, null, null, "2026-11-12T00:00:04Z");
+    insertOperation(created, BackupOperationType.BACKUP_CREATE, null, null, "2026-11-12T00:00:02Z");
+    insertOperation(related, BackupOperationType.UPGRADE, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1001", null, "2026-11-12T00:00:03Z");
+    insertOperation(protectedBy, BackupOperationType.UPGRADE, null, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1002", "2026-11-12T00:00:01Z");
+    insertOperation(unrelated, BackupOperationType.UPGRADE, null, null, "2026-11-12T00:00:04Z");
 
     mvc.get().uri("/api/console/backups/operations")
             .assertThat().hasStatusOk().bodyJson()
@@ -144,50 +144,50 @@ class BackupHttpHandlerTests {
   }
 
   @Test
-  void listsSnapshotsNewestFirst() throws Exception {
+  void listsBackupsNewestFirst() throws Exception {
     String older = UUID.randomUUID().toString();
     String newer = UUID.randomUUID().toString();
-    insertSnapshot(older, "旧备份", "2026-11-12T00:00:01Z");
-    insertSnapshot(newer, "新备份", "2026-11-12T00:00:02Z");
+    insertBackup(older, "旧备份", "2026-11-12T00:00:01Z");
+    insertBackup(newer, "新备份", "2026-11-12T00:00:02Z");
 
     mvc.get().uri("/api/console/backups")
             .assertThat().hasStatusOk().bodyJson()
             .convertTo(new ParameterizedTypeReference<List<BackupService.BackupView>>() {
             })
-            .satisfies(snapshots -> assertThat(snapshots)
+            .satisfies(backups -> assertThat(backups)
                     .extracting(BackupService.BackupView::id)
                     .containsSubsequence(newer, older));
   }
 
-  private void insertSnapshot(String id, String name, String createdAt) throws Exception {
+  private void insertBackup(String id, String name, String createdAt) throws Exception {
     Properties metadata = new Properties();
     metadata.setProperty("id", id);
     StringWriter metadataText = new StringWriter();
     metadata.store(metadataText, null);
-    AppSnapshot snapshot = new AppSnapshot();
-    snapshot.setId(id);
-    snapshot.setName(name);
-    snapshot.setStatus(AppSnapshotStatus.AVAILABLE);
-    snapshot.setCreatedAt(createdAt);
-    snapshot.setMetadata(metadataText.toString());
-    entityManager.persist(snapshot);
+    Backup backup = new Backup();
+    backup.setId(id);
+    backup.setName(name);
+    backup.setStatus(BackupStatus.AVAILABLE);
+    backup.setCreatedAt(createdAt);
+    backup.setMetadata(metadataText.toString());
+    entityManager.persist(backup);
   }
 
-  private void insertOperation(String id, AppOperationType type, String snapshotId, String protectionSnapshotId,
+  private void insertOperation(String id, BackupOperationType type, String backupId, String protectionBackupId,
           String createdAt) throws Exception {
     Properties metadata = new Properties();
     metadata.setProperty("id", id);
-    metadata.setProperty("status", AppOperationStatus.SUCCESS.name());
+    metadata.setProperty("status", BackupOperationStatus.SUCCESS.name());
     metadata.setProperty("createdAt", createdAt);
     StringWriter metadataText = new StringWriter();
     metadata.store(metadataText, null);
-    AppOperation operation = new AppOperation();
+    BackupOperation operation = new BackupOperation();
     operation.setId(id);
     operation.setOperationType(type);
-    operation.setStatus(AppOperationStatus.SUCCESS);
+    operation.setStatus(BackupOperationStatus.SUCCESS);
     operation.setCreatedAt(createdAt);
-    operation.setSnapshotId(snapshotId);
-    operation.setProtectionSnapshotId(protectionSnapshotId);
+    operation.setBackupId(backupId);
+    operation.setProtectionBackupId(protectionBackupId);
     operation.setMetadata(metadataText.toString());
     entityManager.persist(operation);
   }

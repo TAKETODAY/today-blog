@@ -17,45 +17,29 @@
 
 package cn.taketoday.blog.backup;
 
-import infra.persistence.annotation.Id;
-import infra.persistence.annotation.Table;
-import lombok.Getter;
-import lombok.Setter;
+import infra.lang.Enumerable;
 
 /**
- * 备份元信息，类名、表名及字段名保留旧存储协议以兼容历史记录。
+ * 备份及关联更新的操作类型，枚举名即数据库存储值。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
-@Getter
-@Setter
-@Table("t_app_snapshot")
-public class AppSnapshot {
+public enum BackupOperationType implements Enumerable<String> {
 
-  @Id
-  private String id;
+  /** 系统更新 */
+  UPGRADE,
 
-  private String name;
+  /** 创建备份 */
+  BACKUP_CREATE,
 
-  private AppSnapshotStatus status;
+  /** 恢复备份 */
+  BACKUP_RESTORE,
 
-  private String version;
+  /** 删除备份 */
+  BACKUP_DELETE,
 
-  private String build;
-
-  private Long operatorId;
-
-  private String createdAt;
-
-  private boolean protectedSnapshot;
-
-  private String manifestSha256;
-
-  private long totalBytes;
-
-  private String sourceOperationId;
-
-  private String metadata;
+  /** 修改备份保护状态 */
+  BACKUP_PROTECT
 
 }

@@ -146,26 +146,29 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog-upgrade/results /var/backups/
 
 默认设置位于 `incoming/settings.properties`，任务参数位于 `incoming/<UUID>/options.properties`，
 任务元信息和 root 写入的结果文件作为独立执行依据；管理端查询时按 UUID 幂等同步至
-`t_app_operation`，再通过数据库查询更新列表和详情。派发前也会写入数据库，写入失败不启动更新。
+`t_backup_operation`，再通过数据库查询更新列表和详情。派发前也会写入数据库，写入失败不启动更新。
 恢复数据库后再次查询会从磁盘补齐记录；数据库索引不是恢复执行器的唯一依据。
-`t_app_snapshot` 为备份元信息表；完整备份创建和恢复尚未开放。
+`t_backup` 为备份元信息表；完整备份创建和恢复尚未开放。
+Flyway v3.7 将旧表 `t_app_snapshot` 重命名为 `t_backup`，保留已有记录。
 管理后台「系统管理 → 备份管理」（`/system/backups`）提供备份索引列表、详情和关联操作记录查询。
 接口统一使用 `/api/console/backups`；旧页面 `/system/snapshots` 重定向到新入口，
-旧接口 `/api/console/snapshots` 已移除，不再提供兼容。数据库表、`SNAPSHOT_*` 操作类型、
-`snapshot`、`protectedSnapshot`、`snapshotId` 和 `protectionSnapshotId` 响应字段及磁盘目录仍沿用旧协议，
-改名不迁移或删除历史数据。
+旧接口 `/api/console/snapshots` 已移除，不再提供兼容。操作类型使用 `BACKUP_*`，
+详情和关联字段使用 `backup`、`protectedBackup`、`backupId` 和 `protectionBackupId`，前后端需一同更新。
+Flyway v3.8 重命名保护状态、备份关联列并转换历史操作类型，不删除已有记录。
+Flyway v3.9 将旧表 `t_app_operation` 及其索引重命名为备份操作命名，保留已有备份和更新记录。
 所有接口要求博主身份；详情只返回允许展示的元信息，不返回任意清单字段、配置凭据或备份内容。
 当前管理入口为只读：完整执行器接通前，创建、保护、删除和恢复按钮均禁用，
 对应后端写接口返回服务不可用且不修改记录或备份文件。不能使用此页面创建实际恢复点。
 查询备份列表、详情和关联操作时，会重新回放 `BLOG_UPGRADE_STATE` 下的
-`snapshots/<UUID>.properties` 和 `snapshot-operations/<UUID>.properties`，按主键覆盖数据库索引。
-目录不存在时兼容现有部署；记录损坏、未知状态或文件名与记录 ID 不一致时返回服务不可用，
+`backups/<UUID>.properties` 和 `backup-operations/<UUID>.properties`，按主键覆盖数据库索引。
+仅使用当前备份字段、操作类型和目录，不转换旧命名协议。
+目录不存在时视为无磁盘记录；记录损坏、未知状态或文件名与记录 ID 不一致时返回服务不可用，
 不会把同步失败伪装成空列表。记录必须由受信任执行器原子发布，目录及父目录不能由 API 用户修改，
 不接受目录或记录文件自身为符号链接。
-备份记录要求 `id`、`name`、`status`、`version`、`build`、`createdAt`、`protectedSnapshot`
+备份记录要求 `id`、`name`、`status`、`version`、`build`、`createdAt`、`protectedBackup`
 及非负 `totalBytes`；`AVAILABLE` 还要求 64 位小写十六进制 `manifestSha256`。
 操作记录要求 `id`、备份类型的 `operationType`、`status`、`createdAt`，可关联
-`snapshotId` 和 `protectionSnapshotId`。删除后保留 `DELETED` 墓碑，取消保护写入显式 `false`，
+`backupId` 和 `protectionBackupId`。删除后保留 `DELETED` 墓碑，取消保护写入显式 `false`，
 以免恢复旧数据库后重新显示已删除或仍被保护的记录。索引回放不验证备份文件，
 也不代表完整执行器已经接通；`RESTORING` 和 `MAINTENANCE_REQUIRED` 分别表示恢复中和需人工处理。
 结果记录保留阶段时间、备份标识/大小/摘要/完成时间和任务结束时间，不提供 SQL 下载。

@@ -59,24 +59,24 @@ class BackupOperationServiceTests {
     Properties record = new Properties();
     String id = UUID.randomUUID().toString();
     record.setProperty("id", id);
-    record.setProperty("status", AppOperationStatus.READY.name());
+    record.setProperty("status", BackupOperationStatus.READY.name());
     record.setProperty("createdAt", "2026-11-12T00:00:00Z");
     UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), record);
     service.upgradeHistory();
     service.upgradeHistory();
 
-    ArgumentCaptor<AppOperation> saved = ArgumentCaptor.forClass(AppOperation.class);
+    ArgumentCaptor<BackupOperation> saved = ArgumentCaptor.forClass(BackupOperation.class);
     verify(entityManager, times(2)).persist(saved.capture());
     assertThat(saved.getAllValues()).allSatisfy(operation -> {
       assertThat(operation.getId()).isEqualTo(id);
-      assertThat(operation.getOperationType()).isEqualTo(AppOperationType.UPGRADE);
-      assertThat(operation.getStatus()).isEqualTo(AppOperationStatus.READY);
+      assertThat(operation.getOperationType()).isEqualTo(BackupOperationType.UPGRADE);
+      assertThat(operation.getStatus()).isEqualTo(BackupOperationStatus.READY);
       assertThat(operation.getCreatedAt()).isEqualTo("2026-11-12T00:00:00Z");
       assertThat(operation.getOperatorId()).isNull();
       assertThat(operation.getFinishedAt()).isNull();
       assertThat(operation.getMetadata()).contains("status=READY");
     });
-    verify(entityManager, never()).updateById(any(AppOperation.class), any(PropertyUpdateStrategy.class));
+    verify(entityManager, never()).updateById(any(BackupOperation.class), any(PropertyUpdateStrategy.class));
   }
 
   @Test
@@ -86,16 +86,16 @@ class BackupOperationServiceTests {
     Properties record = new Properties();
     String id = UUID.randomUUID().toString();
     record.setProperty("id", id);
-    record.setProperty("status", AppOperationStatus.SUCCESS.name());
+    record.setProperty("status", BackupOperationStatus.SUCCESS.name());
     record.setProperty("operatorId", "42");
     UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), record);
-    when(entityManager.findById(AppOperation.class, id)).thenReturn(new AppOperation());
+    when(entityManager.findById(BackupOperation.class, id)).thenReturn(new BackupOperation());
     service.upgradeHistory();
 
-    ArgumentCaptor<AppOperation> updated = ArgumentCaptor.forClass(AppOperation.class);
+    ArgumentCaptor<BackupOperation> updated = ArgumentCaptor.forClass(BackupOperation.class);
     verify(entityManager).updateById(updated.capture(), any(PropertyUpdateStrategy.class));
     assertThat(updated.getValue().getOperatorId()).isEqualTo(42L);
-    verify(entityManager, never()).persist(any(AppOperation.class));
+    verify(entityManager, never()).persist(any(BackupOperation.class));
   }
 
   @Test
@@ -107,38 +107,38 @@ class BackupOperationServiceTests {
   }
 
   @Test
-  void replaysSnapshotsAndMaintenanceOperationsAfterDatabaseRollback() throws Exception {
+  void replaysBackupsAndMaintenanceOperationsAfterDatabaseRollback() throws Exception {
     EntityManager entityManager = mock(EntityManager.class);
     BackupOperationService operations = new BackupOperationService(entityManager, new UpgradeStore(temp));
     BackupIndexService index = new BackupIndexService(entityManager, operations, temp);
-    Properties snapshot = snapshotRecord();
-    String id = snapshot.getProperty("id");
-    UpgradeFiles.write(temp.resolve("snapshots").resolve(id + ".properties"), snapshot);
+    Properties backup = backupRecord();
+    String id = backup.getProperty("id");
+    UpgradeFiles.write(temp.resolve("backups").resolve(id + ".properties"), backup);
     Properties operation = new Properties();
     String operationId = UUID.randomUUID().toString();
     operation.setProperty("id", operationId);
-    operation.setProperty("operationType", "SNAPSHOT_RESTORE");
+    operation.setProperty("operationType", "BACKUP_RESTORE");
     operation.setProperty("status", "MAINTENANCE_REQUIRED");
-    operation.setProperty("snapshotId", id);
+    operation.setProperty("backupId", id);
     operation.setProperty("createdAt", "2026-11-13T00:00:00Z");
-    UpgradeFiles.write(temp.resolve("snapshot-operations").resolve(operationId + ".properties"), operation);
+    UpgradeFiles.write(temp.resolve("backup-operations").resolve(operationId + ".properties"), operation);
 
     index.synchronize();
     index.synchronize();
 
-    ArgumentCaptor<AppSnapshot> snapshots = ArgumentCaptor.forClass(AppSnapshot.class);
-    verify(entityManager, times(2)).persist(snapshots.capture());
-    assertThat(snapshots.getAllValues()).allSatisfy(saved -> {
+    ArgumentCaptor<Backup> backups = ArgumentCaptor.forClass(Backup.class);
+    verify(entityManager, times(2)).persist(backups.capture());
+    assertThat(backups.getAllValues()).allSatisfy(saved -> {
       assertThat(saved.getId()).isEqualTo(id);
-      assertThat(saved.isProtectedSnapshot()).isTrue();
-      assertThat(saved.getStatus()).isEqualTo(AppSnapshotStatus.AVAILABLE);
+      assertThat(saved.isProtectedBackup()).isTrue();
+      assertThat(saved.getStatus()).isEqualTo(BackupStatus.AVAILABLE);
       assertThat(saved.getTotalBytes()).isEqualTo(123L);
     });
-    ArgumentCaptor<AppOperation> history = ArgumentCaptor.forClass(AppOperation.class);
+    ArgumentCaptor<BackupOperation> history = ArgumentCaptor.forClass(BackupOperation.class);
     verify(entityManager, times(2)).persist(history.capture());
     assertThat(history.getAllValues()).allSatisfy(saved -> {
-      assertThat(saved.getStatus()).isEqualTo(AppOperationStatus.MAINTENANCE_REQUIRED);
-      assertThat(saved.getSnapshotId()).isEqualTo(id);
+      assertThat(saved.getStatus()).isEqualTo(BackupOperationStatus.MAINTENANCE_REQUIRED);
+      assertThat(saved.getBackupId()).isEqualTo(id);
     });
   }
 
@@ -147,32 +147,32 @@ class BackupOperationServiceTests {
     EntityManager entityManager = mock(EntityManager.class);
     BackupIndexService index = new BackupIndexService(entityManager,
             new BackupOperationService(entityManager, new UpgradeStore(temp)), temp);
-    Properties record = snapshotRecord();
+    Properties record = backupRecord();
     String id = record.getProperty("id");
     record.setProperty("status", "DELETED");
-    record.setProperty("protectedSnapshot", "false");
+    record.setProperty("protectedBackup", "false");
     record.remove("manifestSha256");
-    UpgradeFiles.write(temp.resolve("snapshots").resolve(id + ".properties"), record);
-    when(entityManager.findById(AppSnapshot.class, id)).thenReturn(new AppSnapshot());
+    UpgradeFiles.write(temp.resolve("backups").resolve(id + ".properties"), record);
+    when(entityManager.findById(Backup.class, id)).thenReturn(new Backup());
 
     index.synchronize();
 
-    ArgumentCaptor<AppSnapshot> updated = ArgumentCaptor.forClass(AppSnapshot.class);
+    ArgumentCaptor<Backup> updated = ArgumentCaptor.forClass(Backup.class);
     verify(entityManager).updateById(updated.capture(), any(PropertyUpdateStrategy.class));
-    assertThat(updated.getValue().getStatus()).isEqualTo(AppSnapshotStatus.DELETED);
-    assertThat(updated.getValue().isProtectedSnapshot()).isFalse();
+    assertThat(updated.getValue().getStatus()).isEqualTo(BackupStatus.DELETED);
+    assertThat(updated.getValue().isProtectedBackup()).isFalse();
     assertThat(updated.getValue().getManifestSha256()).isNull();
-    verify(entityManager, never()).persist(any(AppSnapshot.class));
+    verify(entityManager, never()).persist(any(Backup.class));
   }
 
   @Test
-  void rejectsCorruptSnapshotBeforeDatabaseAccess() throws Exception {
+  void rejectsCorruptBackupBeforeDatabaseAccess() throws Exception {
     EntityManager entityManager = mock(EntityManager.class);
     BackupIndexService index = new BackupIndexService(entityManager,
             new BackupOperationService(entityManager, new UpgradeStore(temp)), temp);
-    Properties record = snapshotRecord();
-    record.setProperty("protectedSnapshot", "yes");
-    UpgradeFiles.write(temp.resolve("snapshots").resolve(record.getProperty("id") + ".properties"), record);
+    Properties record = backupRecord();
+    record.setProperty("protectedBackup", "yes");
+    UpgradeFiles.write(temp.resolve("backups").resolve(record.getProperty("id") + ".properties"), record);
 
     assertThatThrownBy(index::synchronize).isInstanceOf(IllegalArgumentException.class);
     verifyNoInteractions(entityManager);
@@ -183,13 +183,13 @@ class BackupOperationServiceTests {
     EntityManager entityManager = mock(EntityManager.class);
     BackupIndexService index = new BackupIndexService(entityManager,
             new BackupOperationService(entityManager, new UpgradeStore(temp)), temp);
-    UpgradeFiles.write(temp.resolve("snapshots").resolve(UUID.randomUUID() + ".properties"), snapshotRecord());
+    UpgradeFiles.write(temp.resolve("backups").resolve(UUID.randomUUID() + ".properties"), backupRecord());
 
     assertThatThrownBy(index::synchronize).isInstanceOf(IllegalArgumentException.class);
     verifyNoInteractions(entityManager);
   }
 
-  private static Properties snapshotRecord() {
+  private static Properties backupRecord() {
     Properties record = new Properties();
     record.setProperty("id", UUID.randomUUID().toString());
     record.setProperty("name", "恢复前保护");
@@ -197,20 +197,20 @@ class BackupOperationServiceTests {
     record.setProperty("version", "4.0");
     record.setProperty("build", "42");
     record.setProperty("createdAt", "2026-11-13T00:00:00Z");
-    record.setProperty("protectedSnapshot", "true");
+    record.setProperty("protectedBackup", "true");
     record.setProperty("totalBytes", "123");
     record.setProperty("manifestSha256", "a".repeat(64));
     return record;
   }
 
   @Test
-  void availableSnapshotRequiresManifestDigest() throws Exception {
+  void availableBackupRequiresManifestDigest() throws Exception {
     EntityManager entityManager = mock(EntityManager.class);
     BackupIndexService index = new BackupIndexService(entityManager,
             new BackupOperationService(entityManager, new UpgradeStore(temp)), temp);
-    Properties record = snapshotRecord();
+    Properties record = backupRecord();
     record.remove("manifestSha256");
-    UpgradeFiles.write(temp.resolve("snapshots").resolve(record.getProperty("id") + ".properties"), record);
+    UpgradeFiles.write(temp.resolve("backups").resolve(record.getProperty("id") + ".properties"), record);
 
     assertThatThrownBy(index::synchronize).isInstanceOf(IllegalArgumentException.class);
     verifyNoInteractions(entityManager);
@@ -221,11 +221,11 @@ class BackupOperationServiceTests {
     EntityManager entityManager = mock(EntityManager.class);
     BackupIndexService index = new BackupIndexService(entityManager,
             new BackupOperationService(entityManager, new UpgradeStore(temp)), temp);
-    Properties record = snapshotRecord();
+    Properties record = backupRecord();
     Path outside = temp.resolve("outside.properties");
     UpgradeFiles.write(outside, record);
-    Files.createDirectory(temp.resolve("snapshots"));
-    Files.createSymbolicLink(temp.resolve("snapshots").resolve(record.getProperty("id") + ".properties"), outside);
+    Files.createDirectory(temp.resolve("backups"));
+    Files.createSymbolicLink(temp.resolve("backups").resolve(record.getProperty("id") + ".properties"), outside);
 
     assertThatThrownBy(index::synchronize).isInstanceOf(java.io.IOException.class);
     verifyNoInteractions(entityManager);

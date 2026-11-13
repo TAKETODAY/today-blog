@@ -30,15 +30,15 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@Table("t_app_operation")
-public class AppOperation {
+@Table("t_backup_operation")
+public class BackupOperation {
 
   @Id
   private String id;
 
-  private AppOperationType operationType;
+  private BackupOperationType operationType;
 
-  private AppOperationStatus status;
+  private BackupOperationStatus status;
 
   private Long operatorId;
 
@@ -46,9 +46,9 @@ public class AppOperation {
 
   private String finishedAt;
 
-  private String snapshotId;
+  private String backupId;
 
-  private String protectionSnapshotId;
+  private String protectionBackupId;
 
   private String metadata;
 
