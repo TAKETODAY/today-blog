@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.snapshot;
+package cn.taketoday.blog.backup;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -61,23 +61,23 @@ class AppOperationPersistenceTests {
     snapshot.setStatus(AppSnapshotStatus.AVAILABLE);
     snapshot.setCreatedAt("2026-11-12T00:00:00Z");
     snapshot.setProtectedSnapshot(true);
-    snapshot.setMetadata(SnapshotOperationService.encode(metadata));
+    snapshot.setMetadata(BackupOperationService.encode(metadata));
     entityManager.persist(snapshot);
-    SnapshotService service = new SnapshotService(entityManager);
-    assertThat(service.snapshots()).anySatisfy(record -> {
+    BackupService service = new BackupService(entityManager);
+    assertThat(service.backups()).anySatisfy(record -> {
       assertThat(record.id()).isEqualTo(id);
       assertThat(record.protectedSnapshot()).isTrue();
     });
-    SnapshotService.SnapshotDetail detail = service.snapshot(id);
+    BackupService.BackupDetail detail = service.backup(id);
     assertThat(detail.scope()).contains("数据库");
     assertThat(detail.snapshot().id()).isEqualTo(id);
     // metadata 中的敏感字段不得进入对外视图。
     assertThat(detail.toString()).doesNotContain("must-not-leak");
-    assertThatThrownBy(service::requireExecutor).hasMessageContaining("未执行任何快照操作");
+    assertThatThrownBy(service::requireExecutor).hasMessageContaining("未执行任何备份操作");
     assertThat(service.capabilities()).containsEntry("create", false).containsEntry("restore", false);
-    assertThatThrownBy(() -> service.snapshot(UUID.randomUUID().toString())).hasMessageContaining("不存在");
-    assertThatThrownBy(() -> service.snapshot("../outside")).isInstanceOf(IllegalArgumentException.class);
-    assertThat(service.snapshot(id).snapshot().protectedSnapshot()).isTrue();
+    assertThatThrownBy(() -> service.backup(UUID.randomUUID().toString())).hasMessageContaining("不存在");
+    assertThatThrownBy(() -> service.backup("../outside")).isInstanceOf(IllegalArgumentException.class);
+    assertThat(service.backup(id).snapshot().protectedSnapshot()).isTrue();
   }
 
   @Test
@@ -90,7 +90,7 @@ class AppOperationPersistenceTests {
     metadata.setProperty("createdAt", "2026-11-12T00:00:00Z");
     metadata.setProperty("note", "中文更新记录");
     UpgradeFiles.write(temp.resolve("incoming").resolve(id).resolve("metadata.properties"), metadata);
-    SnapshotOperationService service = new SnapshotOperationService(entityManager, new UpgradeStore(temp));
+    BackupOperationService service = new BackupOperationService(entityManager, new UpgradeStore(temp));
     assertThat(service.upgradeHistory()).anySatisfy(record -> assertThat(record).isEqualTo(metadata));
     UpgradeFiles.status(temp.resolve("results"), id, AppOperationStatus.SUCCESS.name(), "更新成功");
     service.upgradeHistory();

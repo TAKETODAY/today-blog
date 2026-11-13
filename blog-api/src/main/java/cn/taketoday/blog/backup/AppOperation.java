@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.snapshot;
+package cn.taketoday.blog.backup;
 
 import infra.persistence.annotation.Id;
 import infra.persistence.annotation.Table;
@@ -23,7 +23,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 应用升级和快照操作记录。
+ * 系统更新和备份操作记录。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12

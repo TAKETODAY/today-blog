@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.snapshot;
+package cn.taketoday.blog.backup;
 
 import org.junit.jupiter.api.Test;
 
@@ -34,20 +34,46 @@ import infra.transaction.annotation.Transactional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 快照管理接口的响应契约与 metadata 隔离测试。
+ * 备份管理接口的响应契约与 metadata 隔离测试。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
 @WebAPITest
 @Transactional
-class SnapshotHttpHandlerTests {
+class BackupHttpHandlerTests {
 
   @Autowired
   private MockMvcTester mvc;
 
   @Autowired
   private EntityManager entityManager;
+
+  @Test
+  void backupRoutesRemainAvailableAndWritesStayDisabled() {
+    String base = "/api/console/backups";
+    mvc.get().uri(base).assertThat().hasStatusOk();
+    mvc.get().uri(base + "/capabilities").assertThat().hasStatusOk();
+    mvc.get().uri(base + "/operations").assertThat().hasStatusOk();
+    mvc.post().uri(base).assertThat().hasStatus(503);
+    String id = UUID.randomUUID().toString();
+    mvc.post().uri(base + "/{id}/restore", id).assertThat().hasStatus(503);
+    mvc.put().uri(base + "/{id}/protection", id).assertThat().hasStatus(503);
+    mvc.delete().uri(base + "/{id}", id).assertThat().hasStatus(503);
+  }
+
+  @Test
+  void legacyRoutesAreNotAvailable() {
+    String base = "/api/console/snapshots";
+    for (String suffix : List.of("", "/capabilities", "/operations", "/" + UUID.randomUUID())) {
+      mvc.get().uri(base + suffix).assertThat().hasStatus(404);
+    }
+    String id = UUID.randomUUID().toString();
+    mvc.post().uri(base).assertThat().hasStatus(404);
+    mvc.post().uri(base + "/{id}/restore", id).assertThat().hasStatus(404);
+    mvc.put().uri(base + "/{id}/protection", id).assertThat().hasStatus(404);
+    mvc.delete().uri(base + "/{id}", id).assertThat().hasStatus(404);
+  }
 
   @Test
   void listAndDetailReturnTypedContractWithoutMetadata() throws Exception {
@@ -69,9 +95,10 @@ class SnapshotHttpHandlerTests {
     inserted.setMetadata(metadataText.toString());
     entityManager.persist(inserted);
 
-    mvc.get().uri("/api/console/snapshots")
+    mvc.get().uri("/api/console/backups")
             .assertThat().hasStatusOk().bodyJson()
-            .convertTo(new ParameterizedTypeReference<List<SnapshotService.SnapshotView>>() { })
+            .convertTo(new ParameterizedTypeReference<List<BackupService.BackupView>>() {
+            })
             .satisfies(snapshots -> assertThat(snapshots).anySatisfy(snapshot -> {
               assertThat(snapshot.id()).isEqualTo(id);
               assertThat(snapshot.name()).isEqualTo("升级前保护点");
@@ -80,9 +107,9 @@ class SnapshotHttpHandlerTests {
               assertThat(snapshot.version()).isEqualTo("3.4");
             }));
 
-    mvc.get().uri("/api/console/snapshots/{id}", id)
+    mvc.get().uri("/api/console/backups/{id}", id)
             .assertThat().hasStatusOk().bodyJson()
-            .convertTo(SnapshotService.SnapshotDetail.class)
+            .convertTo(BackupService.BackupDetail.class)
             .satisfies(detail -> {
               assertThat(detail.snapshot().id()).isEqualTo(id);
               assertThat(detail.snapshot().protectedSnapshot()).isTrue();
@@ -103,14 +130,15 @@ class SnapshotHttpHandlerTests {
     insertOperation(protectedBy, AppOperationType.UPGRADE, null, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1002", "2026-11-12T00:00:01Z");
     insertOperation(unrelated, AppOperationType.UPGRADE, null, null, "2026-11-12T00:00:04Z");
 
-    mvc.get().uri("/api/console/snapshots/operations")
+    mvc.get().uri("/api/console/backups/operations")
             .assertThat().hasStatusOk().bodyJson()
-            .convertTo(new ParameterizedTypeReference<List<SnapshotService.OperationView>>() { })
+            .convertTo(new ParameterizedTypeReference<List<BackupService.OperationView>>() {
+            })
             .satisfies(operations -> {
-              assertThat(operations).extracting(SnapshotService.OperationView::id)
+              assertThat(operations).extracting(BackupService.OperationView::id)
                       .contains(created, related, protectedBy)
                       .doesNotContain(unrelated);
-              assertThat(operations).extracting(SnapshotService.OperationView::id)
+              assertThat(operations).extracting(BackupService.OperationView::id)
                       .containsSubsequence(related, created, protectedBy);
             });
   }
@@ -119,14 +147,15 @@ class SnapshotHttpHandlerTests {
   void listsSnapshotsNewestFirst() throws Exception {
     String older = UUID.randomUUID().toString();
     String newer = UUID.randomUUID().toString();
-    insertSnapshot(older, "旧快照", "2026-11-12T00:00:01Z");
-    insertSnapshot(newer, "新快照", "2026-11-12T00:00:02Z");
+    insertSnapshot(older, "旧备份", "2026-11-12T00:00:01Z");
+    insertSnapshot(newer, "新备份", "2026-11-12T00:00:02Z");
 
-    mvc.get().uri("/api/console/snapshots")
+    mvc.get().uri("/api/console/backups")
             .assertThat().hasStatusOk().bodyJson()
-            .convertTo(new ParameterizedTypeReference<List<SnapshotService.SnapshotView>>() { })
+            .convertTo(new ParameterizedTypeReference<List<BackupService.BackupView>>() {
+            })
             .satisfies(snapshots -> assertThat(snapshots)
-                    .extracting(SnapshotService.SnapshotView::id)
+                    .extracting(BackupService.BackupView::id)
                     .containsSubsequence(newer, older));
   }
 

@@ -15,12 +15,12 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.snapshot.console;
+package cn.taketoday.blog.backup.console;
 
 import java.util.List;
 import java.util.Map;
 
-import cn.taketoday.blog.snapshot.SnapshotService;
+import cn.taketoday.blog.backup.BackupService;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.web.annotation.DELETE;
@@ -32,62 +32,62 @@ import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
 
 /**
- * 应用快照管理接口，所有操作均要求博主身份。
+ * 备份管理接口，所有操作均要求博主身份。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
 @RestController
 @RequiresBlogger
-@RequestMapping("/api/console/snapshots")
-class SnapshotHttpHandler {
+@RequestMapping("/api/console/backups")
+class BackupHttpHandler {
 
-  private final SnapshotService snapshots;
+  private final BackupService backups;
 
-  public SnapshotHttpHandler(SnapshotService snapshots) {
-    this.snapshots = snapshots;
+  public BackupHttpHandler(BackupService backups) {
+    this.backups = backups;
   }
 
   @GET
-  public List<SnapshotService.SnapshotView> list() {
-    return snapshots.snapshots();
+  public List<BackupService.BackupView> list() {
+    return backups.backups();
   }
 
   @GET("/capabilities")
   public Map<String, Object> capabilities() {
-    return snapshots.capabilities();
+    return backups.capabilities();
   }
 
   @GET("/operations")
-  public List<SnapshotService.OperationView> operations() {
-    return snapshots.operations();
+  public List<BackupService.OperationView> operations() {
+    return backups.operations();
   }
 
   @GET("/{id}")
-  public SnapshotService.SnapshotDetail detail(@PathVariable String id) {
-    return snapshots.snapshot(id);
+  public BackupService.BackupDetail detail(@PathVariable String id) {
+    return backups.backup(id);
   }
 
   @POST
   public void create() {
-    snapshots.requireExecutor();
+    backups.requireExecutor();
   }
 
   @POST("/{id}/restore")
   public void restore(@PathVariable String id) {
     UpgradeFiles.checkId(id);
-    snapshots.requireExecutor();
+    backups.requireExecutor();
   }
 
   @PUT("/{id}/protection")
   public void protection(@PathVariable String id) {
     UpgradeFiles.checkId(id);
-    snapshots.requireExecutor();
+    backups.requireExecutor();
   }
 
   @DELETE("/{id}")
   public void delete(@PathVariable String id) {
     UpgradeFiles.checkId(id);
-    snapshots.requireExecutor();
+    backups.requireExecutor();
   }
 }

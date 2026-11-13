@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.snapshot;
+package cn.taketoday.blog.backup;
 
 import org.jspecify.annotations.Nullable;
 
@@ -60,7 +60,13 @@ public enum AppOperationStatus implements Enumerable<String> {
   ROLLED_BACK,
 
   /** 待确认 */
-  READY;
+  READY,
+
+  /** 正在恢复备份 */
+  RESTORING,
+
+  /** 恢复失败，保持维护状态等待人工处理 */
+  MAINTENANCE_REQUIRED;
 
   /**
    * 按数据库或元数据中的状态名解析，未知值返回 {@code null}。

@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.snapshot.AppOperationStatus;
-import cn.taketoday.blog.snapshot.SnapshotOperationService;
+import cn.taketoday.blog.backup.AppOperationStatus;
+import cn.taketoday.blog.backup.BackupOperationService;
 import cn.taketoday.blog.updater.DatabaseBackup;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeOptions;
@@ -72,9 +72,9 @@ class UpgradeHttpHandler {
 
   private final UpgradeStore store = new UpgradeStore(state);
 
-  private final SnapshotOperationService operations;
+  private final BackupOperationService operations;
 
-  UpgradeHttpHandler(SnapshotOperationService operations) {
+  UpgradeHttpHandler(BackupOperationService operations) {
     this.operations = operations;
   }
 

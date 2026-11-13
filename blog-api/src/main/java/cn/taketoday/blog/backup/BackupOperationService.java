@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.snapshot;
+package cn.taketoday.blog.backup;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -41,19 +41,19 @@ import infra.stereotype.Service;
  * @since 4.0 2026/11/12
  */
 @Service
-public class SnapshotOperationService {
+public class BackupOperationService {
 
   private final EntityManager entityManager;
 
   private final UpgradeStore upgrades;
 
   @Autowired
-  public SnapshotOperationService(EntityManager entityManager) {
+  public BackupOperationService(EntityManager entityManager) {
     this(entityManager, new UpgradeStore(Path.of(System.getenv().getOrDefault(
             "BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"))));
   }
 
-  SnapshotOperationService(EntityManager entityManager, UpgradeStore upgrades) {
+  BackupOperationService(EntityManager entityManager, UpgradeStore upgrades) {
     this.entityManager = entityManager;
     this.upgrades = upgrades;
   }

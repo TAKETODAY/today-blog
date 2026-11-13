@@ -15,31 +15,31 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.snapshot;
+package cn.taketoday.blog.backup;
 
 import infra.lang.Enumerable;
 
 /**
- * 应用操作类型，枚举名即数据库存储值。
+ * 备份状态，类型名保留旧协议，枚举名即数据库存储值。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
-public enum AppOperationType implements Enumerable<String> {
+public enum AppSnapshotStatus implements Enumerable<String> {
 
-  /** 系统更新 */
-  UPGRADE,
+  /** 创建中 */
+  CREATING,
 
-  /** 创建快照 */
-  SNAPSHOT_CREATE,
+  /** 可用 */
+  AVAILABLE,
 
-  /** 恢复快照 */
-  SNAPSHOT_RESTORE,
+  /** 失败 */
+  FAILED,
 
-  /** 删除快照 */
-  SNAPSHOT_DELETE,
+  /** 删除中 */
+  DELETING,
 
-  /** 修改快照保护状态 */
-  SNAPSHOT_PROTECT
+  /** 已删除 */
+  DELETED
 
 }

@@ -15,16 +15,18 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.snapshot;
+package cn.taketoday.blog.backup;
 
 import org.jspecify.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.ErrorMessageException;
+import infra.beans.factory.annotation.Autowired;
 import infra.http.HttpStatus;
 import infra.persistence.EntityManager;
 import infra.persistence.Pageable;
@@ -36,20 +38,28 @@ import infra.persistence.annotation.WhereIsNull;
 import infra.stereotype.Service;
 
 /**
- * 快照管理查询不将数据库索引等同于可恢复的磁盘备份。
+ * 备份管理查询不将数据库索引等同于可恢复的磁盘备份。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
 @Service
-public class SnapshotService {
+public class BackupService {
 
   private static final int LIST_LIMIT = 500;
 
   private final EntityManager entityManager;
 
-  public SnapshotService(EntityManager entityManager) {
+  private final BackupIndexService index;
+
+  public BackupService(EntityManager entityManager) {
+    this(entityManager, new BackupIndexService(entityManager, new BackupOperationService(entityManager)));
+  }
+
+  @Autowired
+  public BackupService(EntityManager entityManager, BackupIndexService index) {
     this.entityManager = entityManager;
+    this.index = index;
   }
 
   public Map<String, Object> capabilities() {
@@ -58,34 +68,37 @@ public class SnapshotService {
             "restore", false,
             "delete", false,
             "protect", false,
-            "reason", "完整快照执行器尚未接通，暂不能创建、保护、删除或恢复快照。数据库备份不等于完整应用快照。"
+            "reason", "备份与恢复执行器尚未接通，暂不能创建、保护、删除或恢复备份。仅备份数据库不等于完整备份。"
     );
   }
 
-  public List<SnapshotView> snapshots() {
-    return entityManager.slice(AppSnapshot.class, new LatestSnapshots(), Pageable.of(1, LIST_LIMIT))
+  public List<BackupView> backups() {
+    synchronizeIndex();
+    return entityManager.slice(AppSnapshot.class, new LatestBackups(), Pageable.of(1, LIST_LIMIT))
             .rows()
             .stream()
-            .map(SnapshotView::from)
+            .map(BackupView::from)
             .toList();
   }
 
-  public SnapshotDetail snapshot(String id) {
+  public BackupDetail backup(String id) {
     UpgradeFiles.checkId(id);
+    synchronizeIndex();
     AppSnapshot record = entityManager.findById(AppSnapshot.class, id);
     if (record == null) {
-      throw ErrorMessageException.failed("应用快照不存在", HttpStatus.NOT_FOUND);
+      throw ErrorMessageException.failed("备份不存在", HttpStatus.NOT_FOUND);
     }
     // 核心字段取结构化列，metadata 只补充不属于列的展示信息，旧记录不能覆盖保护状态。
     Properties metadata = decodeMetadata(record.getMetadata());
-    return new SnapshotDetail(
-            SnapshotView.from(record),
+    return new BackupDetail(
+            BackupView.from(record),
             metadata.getProperty("scope"),
             metadata.getProperty("restoreVerifiedAt"));
   }
 
   public List<OperationView> operations() {
-    return entityManager.slice(AppOperation.class, new SnapshotOperations(), Pageable.of(1, LIST_LIMIT))
+    synchronizeIndex();
+    return entityManager.slice(AppOperation.class, new BackupOperations(), Pageable.of(1, LIST_LIMIT))
             .rows()
             .stream()
             .map(OperationView::from)
@@ -93,33 +106,43 @@ public class SnapshotService {
   }
 
   public void requireExecutor() {
-    throw ErrorMessageException.failed("完整快照执行器尚未接通，未执行任何快照操作", HttpStatus.SERVICE_UNAVAILABLE);
+    throw ErrorMessageException.failed("备份与恢复执行器尚未接通，未执行任何备份操作", HttpStatus.SERVICE_UNAVAILABLE);
+  }
+
+  private void synchronizeIndex() {
+    try {
+      index.synchronize();
+    }
+    catch (IOException | IllegalArgumentException ex) {
+      // 不把同步失败伪装成空列表，也不向客户端暴露磁盘路径或原始记录。
+      throw ErrorMessageException.failed("备份磁盘记录同步失败，请联系管理员检查执行日志", HttpStatus.SERVICE_UNAVAILABLE);
+    }
   }
 
   private static Properties decodeMetadata(String value) {
     try {
-      return SnapshotOperationService.decode(value);
+      return BackupOperationService.decode(value);
     }
     catch (IllegalStateException ex) {
-      throw new IllegalStateException("快照元数据格式错误", ex);
+      throw new IllegalStateException("备份元数据格式错误", ex);
     }
   }
 
   /**
-   * 最近快照：只声明排序，不产生 WHERE 条件。
+   * 最近备份：只声明排序，不产生 WHERE 条件。
    */
   @OrderByClause("created_at DESC, id DESC")
   @EntityRef(AppSnapshot.class)
-  static class LatestSnapshots {
+  static class LatestBackups {
 
   }
 
   /**
-   * 快照相关操作记录：快照操作类型，或关联了快照、保护快照的系统更新。
+   * 备份相关操作记录：备份操作类型，或关联了备份、保护备份的系统更新。
    */
   @OrderByClause("created_at DESC, id DESC")
   @EntityRef(AppOperation.class)
-  static class SnapshotOperations {
+  static class BackupOperations {
 
     @In
     public final List<AppOperationType> operationType = List.of(
@@ -138,9 +161,10 @@ public class SnapshotService {
   }
 
   /**
-   * 快照列表和详情共用的只读视图，不暴露存储列 metadata。
+   * 备份列表和详情共用的只读视图，不暴露存储列 metadata。
+   * 字段名沿用旧协议，兼容历史客户端。
    */
-  public record SnapshotView(
+  public record BackupView(
           String id,
           String name,
           AppSnapshotStatus status,
@@ -153,8 +177,8 @@ public class SnapshotService {
           String manifestSha256,
           String sourceOperationId) {
 
-    static SnapshotView from(AppSnapshot snapshot) {
-      return new SnapshotView(
+    static BackupView from(AppSnapshot snapshot) {
+      return new BackupView(
               snapshot.getId(),
               snapshot.getName(),
               snapshot.getStatus(),
@@ -170,13 +194,13 @@ public class SnapshotService {
   }
 
   /**
-   * 快照详情在基础视图之外补充 metadata 中的展示字段。
+   * 备份详情在基础视图之外补充 metadata 中的展示字段。
    */
-  public record SnapshotDetail(SnapshotView snapshot, String scope, String restoreVerifiedAt) {
+  public record BackupDetail(BackupView snapshot, String scope, String restoreVerifiedAt) {
   }
 
   /**
-   * 快照操作记录视图，字段名与前端契约一致。
+   * 备份操作记录视图，字段名与前端契约一致。
    */
   public record OperationView(
           String id,
