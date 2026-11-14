@@ -518,7 +518,12 @@ export default function SystemUpgrade() {
       {disconnected && <Alert type="info" showIcon message={needsLogin ? '登录已失效，请重新登录后查看任务' : '连接暂时中断，正在自动重试'}
                               description="任务在服务器独立运行，请勿重复提交。长时间未恢复时请通过 SSH 检查 systemd 日志。"/>}
       <Card>
-        <Tabs activeKey={tab} onChange={setTab} items={[
+        <Tabs activeKey={tab} onChange={setTab}
+              tabBarExtraContent={tab === 'run'
+                  ? <Button icon={<UploadOutlined/>} onClick={() => setUploadVisible(true)}
+                            disabled={!loaded}>上传升级包</Button>
+                  : undefined}
+              items={[
           {
             key: 'run',
             label: '执行升级',
@@ -563,10 +568,6 @@ export default function SystemUpgrade() {
                       options={false}
                       pagination={false}
                       scroll={{ x: 900 }}
-                      toolBarRender={() => [
-                        <Button key="upload" icon={<UploadOutlined/>} onClick={() => setUploadVisible(true)}
-                                disabled={!loaded}>上传升级包</Button>,
-                      ]}
                       locale={{
                     emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级包，请先上传"/>
                   }} columns={[
