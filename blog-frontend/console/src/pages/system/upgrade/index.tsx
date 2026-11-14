@@ -554,14 +554,6 @@ export default function SystemUpgrade() {
                     message="文件映射配置未就绪"
                     description={mappingSettings.message || '升级时将无法发布前端文件，请检查服务器目标根目录配置。'}
                     action={<Button size="small" onClick={() => openConfig('mappings')}>去配置</Button>}/>}
-                <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small" bordered>
-                  <Descriptions.Item label="数据库备份"><Tag
-                      color={environment?.backupReady ? 'success' : 'warning'}>{environment?.backupReady ? '已配置，执行时验证连接' : '未就绪'}</Tag></Descriptions.Item>
-                  <Descriptions.Item label="安装盘可用空间">{environment ? bytes(environment.installFreeBytes) : '—'}（至少 3
-                    GiB）</Descriptions.Item>
-                  <Descriptions.Item label="备份盘可用空间">{environment ? bytes(environment.backupFreeBytes) : '—'}（至少 256
-                    MiB，另需足够导出空间）</Descriptions.Item>
-                </Descriptions>
                 <div>
                   <ProTable<UpgradePackage>
                       rowKey="id"
@@ -598,6 +590,14 @@ export default function SystemUpgrade() {
                   ]}/>
                   <span className="upgrade-secondary">选择待升级的发行包；已使用的包保留历史快照，可继续查看或删除。</span>
                 </div>
+                <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small" bordered>
+                  <Descriptions.Item label="数据库备份"><Tag
+                      color={environment?.backupReady ? 'success' : 'warning'}>{environment?.backupReady ? '已配置，执行时验证连接' : '未就绪'}</Tag></Descriptions.Item>
+                  <Descriptions.Item label="安装盘可用空间">{environment ? bytes(environment.installFreeBytes) : '—'}（至少 3
+                    GiB）</Descriptions.Item>
+                  <Descriptions.Item label="备份盘可用空间">{environment ? bytes(environment.backupFreeBytes) : '—'}（至少 256
+                    MiB，另需足够导出空间）</Descriptions.Item>
+                </Descriptions>
                 {record && <>
                   <Divider orientation="left" plain>升级任务</Divider>
                   <Space direction="vertical" size="large" style={{ width: '100%' }}>
