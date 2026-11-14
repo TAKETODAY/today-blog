@@ -6,6 +6,8 @@ import {
   Card,
   Col,
   Descriptions,
+  Divider,
+  Empty,
   Form,
   Input,
   InputNumber,
@@ -21,7 +23,7 @@ import {
   Tag,
   Upload
 } from 'antd';
-import { MinusCircleOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { MinusCircleOutlined, PlusOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { http } from '@/utils/http';
 import './index.less';
 
@@ -123,6 +125,7 @@ export default function SystemUpgrade() {
   const [uploading, setUploading] = useState(false);
   const [starting, setStarting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState('run');
   const [disconnected, setDisconnected] = useState(false);
@@ -146,15 +149,21 @@ export default function SystemUpgrade() {
   }, []);
 
   const refresh = useCallback(async () => {
-    const [current, records, env, maintenanceStatus] = await Promise.all([
-      http.get('/api/console/maintenance/upgrade/current'), http.get('/api/console/maintenance/upgrade/history'),
-      http.get('/api/console/maintenance/upgrade/environment'), http.get('/api/console/maintenance'),
-    ]);
-    setVersion(current.data);
-    setHistory(records.data);
-    setEnvironment(env.data);
-    setMaintenance(maintenanceStatus.data);
-    return records.data as UpgradeTask[];
+    setRefreshing(true);
+    try {
+      const [current, records, env, maintenanceStatus] = await Promise.all([
+        http.get('/api/console/maintenance/upgrade/current'), http.get('/api/console/maintenance/upgrade/history'),
+        http.get('/api/console/maintenance/upgrade/environment'), http.get('/api/console/maintenance'),
+      ]);
+      setVersion(current.data);
+      setHistory(records.data);
+      setEnvironment(env.data);
+      setMaintenance(maintenanceStatus.data);
+      return records.data as UpgradeTask[];
+    }
+    finally {
+      setRefreshing(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -394,196 +403,223 @@ export default function SystemUpgrade() {
                                       description={`${maintenance.message || '系统维护中，请稍后重试'}；建议重试间隔 ${maintenance.retryAfterSeconds || 120} 秒。${maintenanceSource}。`}/>}
       {disconnected && <Alert type="info" showIcon message={needsLogin ? '登录已失效，请重新登录后查看任务' : '连接暂时中断，正在自动重试'}
                               description="任务在服务器独立运行，请勿重复提交。长时间未恢复时请通过 SSH 检查 systemd 日志。"/>}
-      <Tabs activeKey={tab} onChange={setTab} items={[
-        {
-          key: 'run', label: '执行升级', children: <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Card title="当前环境" extra={<Space>
-              {maintenance?.enabled
-                  ? <Button danger loading={maintenanceSaving} disabled={busy || !loaded} onClick={disableMaintenance}>关闭维护</Button>
-                  : <Button loading={maintenanceSaving} disabled={busy || !loaded} onClick={openMaintenanceModal}>开启维护</Button>}
-              <Button onClick={() => refresh().catch(() => message.error('刷新环境失败'))}>刷新状态</Button>
-            </Space>}>
-              <Descriptions column={{ xs: 1, sm: 2, lg: 3 }}>
-                <Descriptions.Item label="当前版本">{version.version} / {version.build || '—'}</Descriptions.Item>
-                <Descriptions.Item label="维护状态">
-                  <Tag color={maintenance?.enabled ? 'warning' : 'success'}>
-                    {maintenance?.enabled ? (maintenance.source === 'manual' ? '手动维护中' : '升级维护中') : '正常服务'}
-                  </Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="升级器"><Tag
-                    color={environment?.updaterReady ? 'success' : 'warning'}>{environment?.updaterReady ? '已配置' : '未就绪'}</Tag></Descriptions.Item>
-                <Descriptions.Item label="数据库备份"><Tag
-                    color={environment?.backupReady ? 'success' : 'warning'}>{environment?.backupReady ? '已配置，执行时验证连接' : '未就绪'}</Tag></Descriptions.Item>
-                <Descriptions.Item label="安装盘可用空间">{environment ? size(environment.installFreeBytes) : '—'}（至少 3
-                  GiB）</Descriptions.Item>
-                <Descriptions.Item label="备份盘可用空间">{environment ? size(environment.backupFreeBytes) : '—'}（至少 256
-                  MiB，另需足够导出空间）</Descriptions.Item>
-              </Descriptions>
-            </Card>
-            <Card title="安装升级包">
-              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <Upload accept=".zip" showUploadList={false} beforeUpload={upload} disabled={busy || !loaded || !environment?.updaterReady}>
-                  <Button icon={<UploadOutlined/>} loading={uploading}>选择并上传升级包</Button>
-                </Upload>
-                <span>仅支持完整发行 ZIP，最大 512 MiB。摘要只校验完整性，请仅上传自己构建的可信包。</span>
-                {task?.status === 'READY' && <Alert type="success" showIcon message={`待升级：${task.version} / ${task.build}`}
-                                                    description={`包大小：${(Number(task.packageBytes || 0) / 1024 / 1024).toFixed(1)} MiB，完整性校验通过。`}/>}
-                <Form form={runForm} layout="vertical" disabled={busy || !loaded}>
-                  <OptionFields/>
-                  <Form.Item name="note" label="本次升级备注"><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
-                </Form>
-                <Button type="primary" disabled={task?.status !== 'READY' || busy || !ready} loading={starting}
-                        onClick={start}>开始升级</Button>
-              </Space>
-            </Card>
-            {task && <Card title="升级任务">
-              <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                <Alert showIcon
-                       type={task.status === 'SUCCESS' ? 'success' : ['FAILED', 'ROLLED_BACK'].includes(task.status) ? 'error' : 'info'}
-                       message={labels[task.status] || task.status} description={task.message}/>
-                <Steps size="small" responsive current={phases.includes(task.status) ? phases.indexOf(task.status) : lastPhase}
-                       status={['FAILED', 'ROLLED_BACK'].includes(task.status) ? 'error' : undefined}
-                       items={phases.map(phase => ({ title: labels[phase], description: task[`stage.${phase}`] ? '已进入' : undefined }))}/>
-                <Descriptions column={{ xs: 1, sm: 2 }}>
-                  <Descriptions.Item label="目标版本">{task.version} / {task.build}</Descriptions.Item>
-                  <Descriptions.Item label="任务 ID">{task.id}</Descriptions.Item>
-                  <Descriptions.Item
-                    label="数据库备份">{task.backupStatus || '尚未执行'}{task.backupBytes ? ` / ${(Number(task.backupBytes) / 1024 / 1024).toFixed(1)} MiB` : ''}</Descriptions.Item>
-                  <Descriptions.Item label="备份标识">{task.backupId || '—'}</Descriptions.Item>
-                  <Descriptions.Item label="开始时间">{task.startedAt || '—'}</Descriptions.Item>
-                  <Descriptions.Item label="结束时间">{task.finishedAt || '—'}</Descriptions.Item>
-                  <Descriptions.Item label="备注">{task.note || '—'}</Descriptions.Item>
-                </Descriptions>
-                {task.status === 'SUCCESS' && <Button onClick={() => window.location.reload()}>刷新并使用新版本</Button>}
-              </Space>
-            </Card>}
-          </Space>
-        },
-        {
-          key: 'settings', label: '升级设置', forceRender: true, children: <Card title="默认升级参数">
-            <Alert type="info" showIcon
-                   message="默认设置仅用于以后载入页面时初始化参数，不影响已提交的任务。映射目标白名单、命令及数据库凭据由运维配置。"
-                   style={{ marginBottom: 24 }}/>
-            <Form form={settingsForm} layout="vertical" disabled={!loaded || saving} style={{ maxWidth: 600 }}>
-              <OptionFields/>
-              <Button type="primary" onClick={saveSettings} loading={saving}
-                      disabled={!loaded || !environment?.updaterReady}>保存默认设置</Button>
-            </Form>
-          </Card>
-        },
-        {
-          key: 'mappings',
-          label: '文件映射',
-          forceRender: true,
-          children: <Card title="前端文件映射"
-                          extra={<Space>
-                            <Button onClick={() => reloadMappings().catch(() => message.error('重新载入映射失败'))}>重新载入</Button>
-                            <Button type="primary" loading={mappingSaving}
-                                    disabled={!loaded || !mappingSettings?.ready || !environment?.updaterReady}
-                                    onClick={saveMappings}>保存映射</Button>
-                          </Space>}>
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Alert type="info" showIcon
-                     message="映射在升级切换版本后发布为指向 current/<source> 的符号链接，回滚时自动指回旧版本。"
-                     description={mappingSettings?.ready
-                         ? '目标必须位于服务器白名单目录内；已存在的非空目录不会被覆盖，发布失败会终止本次升级。'
-                         : mappingSettings?.message || '正在加载映射配置'}/>
-              <div>
-                <span style={{ marginRight: 8 }}>允许的目标根目录：</span>
-                {mappingSettings?.roots?.length
-                    ? mappingSettings.roots.map(root => <Tag key={root}>{root}</Tag>)
-                    : <Tag color="warning">未配置</Tag>}
+      <Card>
+        <Tabs activeKey={tab} onChange={setTab} items={[
+          {
+            key: 'run',
+            label: '执行升级',
+            children: <>
+              <div className="upgrade-toolbar">
+                <span className="upgrade-secondary">当前版本：{version.version} / {version.build || '—'}</span>
+                <Space>
+                  {maintenance?.enabled
+                      ? <Button danger loading={maintenanceSaving} disabled={busy || !loaded}
+                                onClick={disableMaintenance}>关闭维护</Button>
+                      : <Button loading={maintenanceSaving} disabled={busy || !loaded}
+                                onClick={openMaintenanceModal}>开启维护</Button>}
+                  <Button icon={<ReloadOutlined/>} loading={refreshing}
+                          onClick={() => refresh().catch(() => message.error('刷新环境失败'))}>刷新状态</Button>
+                </Space>
               </div>
-              <Form form={mappingForm} layout="vertical" disabled={!loaded || mappingSaving}>
-                <Form.List name="mappings">
-                  {(fields, { remove }) => <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    {fields.map(field => <Row key={field.key} gutter={12} align="top">
-                      <Col xs={24} md={5}>
-                        <Form.Item name={[field.name, 'name']} label="名称"
-                                   rules={[
-                                     { required: true, message: '请输入名称' },
-                                     { pattern: /^[a-z][a-z0-9-]{0,31}$/, message: '小写字母开头，仅限小写字母、数字和短横线' },
-                                   ]}>
-                          <Input placeholder="console" maxLength={32}/>
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={3}>
-                        <Form.Item name={[field.name, 'mode']} label="方式" rules={[{ required: true }]}>
-                          <Select options={[{ value: 'SYMLINK', label: '符号链接' }]}/>
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={5}>
-                        <Form.Item name={[field.name, 'source']} label="发行源"
-                                   rules={[
-                                     { required: true, message: '请输入发行源' },
-                                     {
-                                       pattern: /^(console|desktop)(\/[A-Za-z0-9_@+.,-]+)*$/,
-                                       message: '只能是 console、desktop 或其子路径'
-                                     },
-                                   ]}>
-                          <Input placeholder="console"/>
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={9}>
-                        <Form.Item name={[field.name, 'target']} label="Nginx 目标路径"
-                                   rules={[
-                                     { required: true, message: '请输入目标路径' },
-                                     { pattern: /^\/[^\t\n\r]+$/, message: '请输入规范化的绝对路径' },
-                                   ]}>
-                          <Input placeholder="/var/www/today-blog/console"/>
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} md={2}>
-                        <Form.Item label=" ">
-                          <Button danger type="text" icon={<MinusCircleOutlined/>}
-                                  onClick={() => remove(field.name)}/>
-                        </Form.Item>
-                      </Col>
-                    </Row>)}
-                    {!fields.length && <Alert type="info" showIcon message="尚未配置映射，前端页面需要由 nginx 直接引用版本目录"/>
-                    }
-                    <Button type="dashed" block icon={<PlusOutlined/>} onClick={addMapping}>添加映射</Button>
-                  </Space>}
-                </Form.List>
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small" bordered>
+                  <Descriptions.Item label="维护状态">
+                    <Tag color={maintenance?.enabled ? 'warning' : 'success'}>
+                      {maintenance?.enabled ? (maintenance.source === 'manual' ? '手动维护中' : '升级维护中') : '正常服务'}
+                    </Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="升级器"><Tag
+                      color={environment?.updaterReady ? 'success' : 'warning'}>{environment?.updaterReady ? '已配置' : '未就绪'}</Tag></Descriptions.Item>
+                  <Descriptions.Item label="数据库备份"><Tag
+                      color={environment?.backupReady ? 'success' : 'warning'}>{environment?.backupReady ? '已配置，执行时验证连接' : '未就绪'}</Tag></Descriptions.Item>
+                  <Descriptions.Item label="安装盘可用空间">{environment ? size(environment.installFreeBytes) : '—'}（至少 3
+                    GiB）</Descriptions.Item>
+                  <Descriptions.Item label="备份盘可用空间">{environment ? size(environment.backupFreeBytes) : '—'}（至少 256
+                    MiB，另需足够导出空间）</Descriptions.Item>
+                </Descriptions>
+                <div>
+                  <Divider orientation="left" plain>安装升级包</Divider>
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Upload accept=".zip" showUploadList={false} beforeUpload={upload}
+                            disabled={busy || !loaded || !environment?.updaterReady}>
+                      <Button icon={<UploadOutlined/>} loading={uploading}>选择并上传升级包</Button>
+                    </Upload>
+                    <span className="upgrade-secondary">仅支持完整发行 ZIP，最大 512 MiB。摘要只校验完整性，请仅上传自己构建的可信包。</span>
+                    {task?.status === 'READY' && <Alert type="success" showIcon message={`待升级：${task.version} / ${task.build}`}
+                                                        description={`包大小：${(Number(task.packageBytes || 0) / 1024 / 1024).toFixed(1)} MiB，完整性校验通过。`}/>}
+                    <Form form={runForm} layout="vertical" disabled={busy || !loaded}>
+                      <OptionFields/>
+                      <Form.Item name="note" label="本次升级备注"><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
+                    </Form>
+                    <Button type="primary" disabled={task?.status !== 'READY' || busy || !ready} loading={starting}
+                            onClick={start}>开始升级</Button>
+                  </Space>
+                </div>
+                {task && <>
+                  <Divider orientation="left" plain>升级任务</Divider>
+                  <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                    <Alert showIcon
+                           type={task.status === 'SUCCESS' ? 'success' : ['FAILED', 'ROLLED_BACK'].includes(task.status) ? 'error' : 'info'}
+                           message={labels[task.status] || task.status} description={task.message}/>
+                    <Steps size="small" responsive current={phases.includes(task.status) ? phases.indexOf(task.status) : lastPhase}
+                           status={['FAILED', 'ROLLED_BACK'].includes(task.status) ? 'error' : undefined}
+                           items={phases.map(phase => ({ title: labels[phase], description: task[`stage.${phase}`] ? '已进入' : undefined }))}/>
+                    <Descriptions column={{ xs: 1, sm: 2 }}>
+                      <Descriptions.Item label="目标版本">{task.version} / {task.build}</Descriptions.Item>
+                      <Descriptions.Item label="任务 ID">{task.id}</Descriptions.Item>
+                      <Descriptions.Item
+                        label="数据库备份">{task.backupStatus || '尚未执行'}{task.backupBytes ? ` / ${(Number(task.backupBytes) / 1024 / 1024).toFixed(1)} MiB` : ''}</Descriptions.Item>
+                      <Descriptions.Item label="备份标识">{task.backupId || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="开始时间">{task.startedAt || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="结束时间">{task.finishedAt || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="备注">{task.note || '—'}</Descriptions.Item>
+                    </Descriptions>
+                    {task.status === 'SUCCESS' && <Button onClick={() => window.location.reload()}>刷新并使用新版本</Button>}
+                  </Space>
+                </>}
+              </Space>
+            </>,
+          },
+          {
+            key: 'settings',
+            label: '升级设置',
+            forceRender: true,
+            children: <>
+              <div className="upgrade-toolbar">
+                <span className="upgrade-secondary">默认设置仅用于以后载入页面时初始化参数，不影响已提交的任务；映射目标白名单、命令及数据库凭据由运维配置。</span>
+                <Button type="primary" onClick={saveSettings} loading={saving}
+                        disabled={!loaded || !environment?.updaterReady}>保存默认设置</Button>
+              </div>
+              <Form form={settingsForm} layout="vertical" disabled={!loaded || saving} style={{ maxWidth: 600 }}>
+                <OptionFields/>
               </Form>
-              <span>映射由管理端保存到数据库；启动升级任务时会快照，之后修改不影响已提交任务。</span>
-            </Space>
-          </Card>
-        },
-        {
-          key: 'history',
-          label: '升级记录',
-          children: <Card title="历史任务"
-                          extra={<Button onClick={() => refresh().catch(() => message.error('刷新记录失败'))}>刷新记录</Button>}>
-            <Table<UpgradeTask> rowKey="id" dataSource={history} scroll={{ x: 1000 }} pagination={{ pageSize: 10 }} columns={[
-              { title: '目标版本', key: 'version', render: (_, record) => `${record.version} / ${record.build}` },
-              { title: '状态', dataIndex: 'status', render: value => labels[value] || value },
-              { title: '操作人 ID', dataIndex: 'operatorId' },
-              { title: '开始时间', dataIndex: 'startedAt' },
-              { title: '结束时间', dataIndex: 'finishedAt' },
-              {
-                title: '操作',
-                key: 'action',
-                render: (_, record) => <Button type="link" onClick={() => selectTask(record)}>查看详情</Button>
-              },
-            ]} expandable={{
-              expandedRowRender: record => <Descriptions column={1}>
-                <Descriptions.Item label="任务 ID">{record.id}</Descriptions.Item>
-                <Descriptions.Item label="原版本">{record.oldVersion || '—'} / {record.oldBuild || '—'}</Descriptions.Item>
-                <Descriptions.Item label="详情">{record.message}</Descriptions.Item>
-                <Descriptions.Item
-                    label="参数快照">备份：{record.backupEnabled || '—'}；备份超时：{record.backupTimeoutSeconds || '—'} 秒；健康检查：{record.healthTimeoutSeconds || '—'} 秒</Descriptions.Item>
-                <Descriptions.Item
-                    label="备份">{record.backupStatus || '—'} / {record.backupId || '—'} / {record.backupCompletedAt || '—'}</Descriptions.Item>
-                <Descriptions.Item
-                    label="阶段时间">{Object.entries(record).filter(([key]) => key.startsWith('stage.')).map(([key, value]) => <div
-                    key={key}>{labels[key.substring(6)] || key.substring(6)}：{value}</div>)}</Descriptions.Item>
-                <Descriptions.Item label="备注">{record.note || '—'}</Descriptions.Item>
-              </Descriptions>
-            }}/>
-          </Card>
-        },
-      ]}/>
+            </>,
+          },
+          {
+            key: 'mappings',
+            label: '文件映射',
+            forceRender: true,
+            children: <>
+              <div className="upgrade-toolbar">
+                <span className="upgrade-secondary">映射在切换版本后发布为指向 current/&lt;source&gt; 的符号链接，回滚时自动指回旧版本。</span>
+                <Space>
+                  <Button icon={<ReloadOutlined/>}
+                          onClick={() => reloadMappings().catch(() => message.error('重新载入映射失败'))}>重新载入</Button>
+                  <Button type="primary" loading={mappingSaving}
+                          disabled={!loaded || !mappingSettings?.ready || !environment?.updaterReady}
+                          onClick={saveMappings}>保存映射</Button>
+                </Space>
+              </div>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Alert type={mappingSettings?.ready ? 'info' : 'warning'} showIcon
+                       message={mappingSettings?.ready ? '映射目标受服务器白名单限制' : '映射目标根目录配置未就绪'}
+                       description={mappingSettings?.ready
+                           ? '目标必须位于服务器白名单目录内；已存在的非空目录不会被覆盖，发布失败会终止本次升级。'
+                           : mappingSettings?.message || '正在加载映射配置'}/>
+                <div>
+                  <span style={{ marginRight: 8 }}>允许的目标根目录：</span>
+                  {mappingSettings?.roots?.length
+                      ? mappingSettings.roots.map(root => <Tag key={root}>{root}</Tag>)
+                      : <Tag color="warning">未配置</Tag>}
+                </div>
+                <Form form={mappingForm} layout="vertical" disabled={!loaded || mappingSaving}>
+                  <Form.List name="mappings">
+                    {(fields, { remove }) => <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                      {fields.map(field => <Row key={field.key} gutter={12} align="top">
+                        <Col xs={24} md={5}>
+                          <Form.Item name={[field.name, 'name']} label="名称"
+                                     rules={[
+                                       { required: true, message: '请输入名称' },
+                                       { pattern: /^[a-z][a-z0-9-]{0,31}$/, message: '小写字母开头，仅限小写字母、数字和短横线' },
+                                     ]}>
+                            <Input placeholder="console" maxLength={32}/>
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={3}>
+                          <Form.Item name={[field.name, 'mode']} label="方式" rules={[{ required: true }]}>
+                            <Select options={[{ value: 'SYMLINK', label: '符号链接' }]}/>
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={5}>
+                          <Form.Item name={[field.name, 'source']} label="发行源"
+                                     rules={[
+                                       { required: true, message: '请输入发行源' },
+                                       {
+                                         pattern: /^(console|desktop)(\/[A-Za-z0-9_@+.,-]+)*$/,
+                                         message: '只能是 console、desktop 或其子路径'
+                                       },
+                                     ]}>
+                            <Input placeholder="console"/>
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={9}>
+                          <Form.Item name={[field.name, 'target']} label="Nginx 目标路径"
+                                     rules={[
+                                       { required: true, message: '请输入目标路径' },
+                                       { pattern: /^\/[^\t\n\r]+$/, message: '请输入规范化的绝对路径' },
+                                     ]}>
+                            <Input placeholder="/var/www/today-blog/console"/>
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={2}>
+                          <Form.Item label=" ">
+                            <Button danger type="text" icon={<MinusCircleOutlined/>}
+                                    onClick={() => remove(field.name)}/>
+                          </Form.Item>
+                        </Col>
+                      </Row>)}
+                      {!fields.length && <Alert type="info" showIcon message="尚未配置映射，前端页面需要由 nginx 直接引用版本目录"/>}
+                      <Button type="dashed" block icon={<PlusOutlined/>} onClick={addMapping}>添加映射</Button>
+                    </Space>}
+                  </Form.List>
+                </Form>
+                <span className="upgrade-secondary">映射由管理端保存到数据库；启动升级任务时会快照，之后修改不影响已提交任务。</span>
+              </Space>
+            </>,
+          },
+          {
+            key: 'history',
+            label: '升级记录',
+            children: <>
+              <div className="upgrade-toolbar">
+                <span className="upgrade-secondary">记录已提交和已完成的升级任务，最多展示最近的任务。</span>
+                <Button icon={<ReloadOutlined/>} loading={refreshing}
+                        onClick={() => refresh().catch(() => message.error('刷新记录失败'))}>刷新记录</Button>
+              </div>
+              <Table<UpgradeTask> rowKey="id" loading={refreshing} dataSource={history} scroll={{ x: 1000 }}
+                                  pagination={{ pageSize: 10, showSizeChanger: false }}
+                                  locale={{
+                                    emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级记录"/>,
+                                  }} columns={[
+                { title: '目标版本', key: 'version', render: (_, record) => `${record.version} / ${record.build}` },
+                { title: '状态', dataIndex: 'status', render: value => labels[value] || value },
+                { title: '操作人 ID', dataIndex: 'operatorId' },
+                { title: '开始时间', dataIndex: 'startedAt' },
+                { title: '结束时间', dataIndex: 'finishedAt' },
+                {
+                  title: '操作',
+                  key: 'action',
+                  render: (_, record) => <Button type="link" onClick={() => selectTask(record)}>查看详情</Button>
+                },
+              ]} expandable={{
+                expandedRowRender: record => <Descriptions column={1}>
+                  <Descriptions.Item label="任务 ID">{record.id}</Descriptions.Item>
+                  <Descriptions.Item label="原版本">{record.oldVersion || '—'} / {record.oldBuild || '—'}</Descriptions.Item>
+                  <Descriptions.Item label="详情">{record.message}</Descriptions.Item>
+                  <Descriptions.Item
+                      label="参数快照">备份：{record.backupEnabled || '—'}；备份超时：{record.backupTimeoutSeconds || '—'} 秒；健康检查：{record.healthTimeoutSeconds || '—'} 秒</Descriptions.Item>
+                  <Descriptions.Item
+                      label="备份">{record.backupStatus || '—'} / {record.backupId || '—'} / {record.backupCompletedAt || '—'}</Descriptions.Item>
+                  <Descriptions.Item
+                      label="阶段时间">{Object.entries(record).filter(([key]) => key.startsWith('stage.')).map(([key, value]) => <div
+                      key={key}>{labels[key.substring(6)] || key.substring(6)}：{value}</div>)}</Descriptions.Item>
+                  <Descriptions.Item label="备注">{record.note || '—'}</Descriptions.Item>
+                </Descriptions>
+              }}/>
+            </>,
+          },
+        ]}/>
+      </Card>
     </Space>
     <Modal
         title="开启维护状态"
