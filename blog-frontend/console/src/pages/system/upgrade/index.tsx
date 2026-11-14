@@ -512,7 +512,11 @@ export default function SystemUpgrade() {
   const maintenanceSource = maintenance?.source === 'manual' ? '手动开启，升级后不会自动关闭' : '升级流程自动开启，完成后自动关闭';
 
   return <PageContainer className="system-update-page" title="系统升级" subTitle="发布新版本，保留可追溯的备份与升级记录"
-                        extra={<Space wrap size={8} align="center">
+                        extra={<Space direction="vertical" align="end" size={4}>
+                          <span className="upgrade-secondary">
+                            数据库备份：{environment?.backupReady ? '已配置' : '未就绪'} · 安装盘：{environment ? bytes(environment.installFreeBytes) : '—'} · 备份盘：{environment ? bytes(environment.backupFreeBytes) : '—'}
+                          </span>
+                          <Space wrap size={8} align="center">
                           <span className="upgrade-secondary">当前版本：{version.version} / {version.build || '—'}</span>
                           <Tag color={maintenance?.enabled ? 'warning' : 'success'}>
                             {maintenance?.enabled ? (maintenance.source === 'manual' ? '手动维护中' : '升级维护中') : '正常服务'}
@@ -530,6 +534,7 @@ export default function SystemUpgrade() {
                           <Badge dot={Boolean(mappingSettings && !mappingSettings.ready)} offset={[-4, 4]}>
                             <Button icon={<SettingOutlined/>} onClick={() => openConfig()}>升级配置</Button>
                           </Badge>
+                          </Space>
                         </Space>}>
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Alert type="warning" showIcon message="程序回滚不等于数据库恢复"
@@ -591,14 +596,6 @@ export default function SystemUpgrade() {
                   ]}/>
                   <span className="upgrade-secondary">选择待升级的发行包；已使用的包保留历史快照，可继续查看或删除。</span>
                 </div>
-                <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small" bordered>
-                  <Descriptions.Item label="数据库备份"><Tag
-                      color={environment?.backupReady ? 'success' : 'warning'}>{environment?.backupReady ? '已配置，执行时验证连接' : '未就绪'}</Tag></Descriptions.Item>
-                  <Descriptions.Item label="安装盘可用空间">{environment ? bytes(environment.installFreeBytes) : '—'}（至少 3
-                    GiB）</Descriptions.Item>
-                  <Descriptions.Item label="备份盘可用空间">{environment ? bytes(environment.backupFreeBytes) : '—'}（至少 256
-                    MiB，另需足够导出空间）</Descriptions.Item>
-                </Descriptions>
                 {record && <>
                   <Divider orientation="left" plain>升级任务</Divider>
                   <Space direction="vertical" size="large" style={{ width: '100%' }}>
