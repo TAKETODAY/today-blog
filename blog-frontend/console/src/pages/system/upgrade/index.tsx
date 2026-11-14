@@ -10,7 +10,6 @@ import {
   Col,
   Descriptions,
   Divider,
-  Drawer,
   Empty,
   Form,
   Input,
@@ -507,16 +506,21 @@ export default function SystemUpgrade() {
   const maintenanceSource = maintenance?.source === 'manual' ? '手动开启，升级后不会自动关闭' : '升级流程自动开启，完成后自动关闭';
 
   return <PageContainer className="system-update-page" title="系统升级" subTitle="发布新版本，保留可追溯的备份与升级记录"
-                        extra={<Space direction="vertical" align="end" size={6}>
-                          <Space wrap size={8}>
-                            <span className="upgrade-secondary">当前版本：{version.version} / {version.build || '—'}</span>
-                            <Tag color={maintenance?.enabled ? 'warning' : 'success'}>
-                              {maintenance?.enabled ? (maintenance.source === 'manual' ? '手动维护中' : '升级维护中') : '正常服务'}
-                            </Tag>
-                            <Tag color={environment?.updaterReady ? 'success' : 'warning'}>
-                              升级器{environment?.updaterReady ? '已就绪' : '未就绪'}
-                            </Tag>
-                          </Space>
+                        extra={<Space wrap size={8} align="center">
+                          <span className="upgrade-secondary">当前版本：{version.version} / {version.build || '—'}</span>
+                          <Tag color={maintenance?.enabled ? 'warning' : 'success'}>
+                            {maintenance?.enabled ? (maintenance.source === 'manual' ? '手动维护中' : '升级维护中') : '正常服务'}
+                          </Tag>
+                          <Tag color={environment?.updaterReady ? 'success' : 'warning'}>
+                            升级器{environment?.updaterReady ? '已就绪' : '未就绪'}
+                          </Tag>
+                          {maintenance?.enabled
+                              ? <Button danger loading={maintenanceSaving} disabled={busy || !loaded}
+                                        onClick={disableMaintenance}>关闭维护</Button>
+                              : <Button loading={maintenanceSaving} disabled={busy || !loaded}
+                                        onClick={openMaintenanceModal}>开启维护</Button>}
+                          <Button icon={<ReloadOutlined/>} loading={refreshing}
+                                  onClick={() => refresh().catch(() => message.error('刷新环境失败'))}>刷新状态</Button>
                           <Badge dot={Boolean(mappingSettings && !mappingSettings.ready)} offset={[-4, 4]}>
                             <Button icon={<SettingOutlined/>} onClick={() => openConfig()}>升级配置</Button>
                           </Badge>
@@ -539,17 +543,6 @@ export default function SystemUpgrade() {
             key: 'run',
             label: '执行升级',
             children: <>
-              <div className="upgrade-toolbar" style={{ justifyContent: 'flex-end' }}>
-                <Space>
-                  {maintenance?.enabled
-                      ? <Button danger loading={maintenanceSaving} disabled={busy || !loaded}
-                                onClick={disableMaintenance}>关闭维护</Button>
-                      : <Button loading={maintenanceSaving} disabled={busy || !loaded}
-                                onClick={openMaintenanceModal}>开启维护</Button>}
-                  <Button icon={<ReloadOutlined/>} loading={refreshing}
-                          onClick={() => refresh().catch(() => message.error('刷新环境失败'))}>刷新状态</Button>
-                </Space>
-              </div>
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 {loaded && mappingSettings && !mappingSettings.ready && <Alert type="warning" showIcon
                     message="文件映射配置未就绪"
@@ -673,8 +666,10 @@ export default function SystemUpgrade() {
         ]}/>
       </Card>
     </Space>
-    <Drawer className="upgrade-config-drawer" title="升级配置" open={configVisible} forceRender
-            onClose={() => setConfigVisible(false)} width={720} contentWrapperStyle={{ maxWidth: '100vw' }}>
+    <Modal className="upgrade-config-modal" title="升级配置" open={configVisible} forceRender footer={null}
+           width={760} style={{ maxWidth: 'calc(100vw - 32px)', top: 40 }}
+           bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+           onCancel={() => setConfigVisible(false)}>
       <Tabs activeKey={configTab} onChange={setConfigTab} items={[
         {
           key: 'settings',
@@ -774,7 +769,7 @@ export default function SystemUpgrade() {
           </>,
         },
       ]}/>
-    </Drawer>
+    </Modal>
     <Modal title="上传升级包" open={uploadVisible} confirmLoading={uploading} okText="上传"
            onOk={uploadPackage} onCancel={() => { setUploadVisible(false); setUploadFile(undefined); }}>
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
