@@ -507,9 +507,20 @@ export default function SystemUpgrade() {
   const maintenanceSource = maintenance?.source === 'manual' ? '手动开启，升级后不会自动关闭' : '升级流程自动开启，完成后自动关闭';
 
   return <PageContainer className="system-update-page" title="系统升级" subTitle="发布新版本，保留可追溯的备份与升级记录"
-                        extra={<Badge dot={Boolean(mappingSettings && !mappingSettings.ready)} offset={[-4, 4]}>
-                          <Button icon={<SettingOutlined/>} onClick={() => openConfig()}>升级配置</Button>
-                        </Badge>}>
+                        extra={<Space direction="vertical" align="end" size={6}>
+                          <Space wrap size={8}>
+                            <span className="upgrade-secondary">当前版本：{version.version} / {version.build || '—'}</span>
+                            <Tag color={maintenance?.enabled ? 'warning' : 'success'}>
+                              {maintenance?.enabled ? (maintenance.source === 'manual' ? '手动维护中' : '升级维护中') : '正常服务'}
+                            </Tag>
+                            <Tag color={environment?.updaterReady ? 'success' : 'warning'}>
+                              升级器{environment?.updaterReady ? '已就绪' : '未就绪'}
+                            </Tag>
+                          </Space>
+                          <Badge dot={Boolean(mappingSettings && !mappingSettings.ready)} offset={[-4, 4]}>
+                            <Button icon={<SettingOutlined/>} onClick={() => openConfig()}>升级配置</Button>
+                          </Badge>
+                        </Space>}>
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Alert type="warning" showIcon message="程序回滚不等于数据库恢复"
              description="仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份时间点之后的新数据；升级期间不得并发修改表结构。"/>
@@ -528,8 +539,7 @@ export default function SystemUpgrade() {
             key: 'run',
             label: '执行升级',
             children: <>
-              <div className="upgrade-toolbar">
-                <span className="upgrade-secondary">当前版本：{version.version} / {version.build || '—'}</span>
+              <div className="upgrade-toolbar" style={{ justifyContent: 'flex-end' }}>
                 <Space>
                   {maintenance?.enabled
                       ? <Button danger loading={maintenanceSaving} disabled={busy || !loaded}
@@ -546,13 +556,6 @@ export default function SystemUpgrade() {
                     description={mappingSettings.message || '升级时将无法发布前端文件，请检查服务器目标根目录配置。'}
                     action={<Button size="small" onClick={() => openConfig('mappings')}>去配置</Button>}/>}
                 <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small" bordered>
-                  <Descriptions.Item label="维护状态">
-                    <Tag color={maintenance?.enabled ? 'warning' : 'success'}>
-                      {maintenance?.enabled ? (maintenance.source === 'manual' ? '手动维护中' : '升级维护中') : '正常服务'}
-                    </Tag>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="升级器"><Tag
-                      color={environment?.updaterReady ? 'success' : 'warning'}>{environment?.updaterReady ? '已配置' : '未就绪'}</Tag></Descriptions.Item>
                   <Descriptions.Item label="数据库备份"><Tag
                       color={environment?.backupReady ? 'success' : 'warning'}>{environment?.backupReady ? '已配置，执行时验证连接' : '未就绪'}</Tag></Descriptions.Item>
                   <Descriptions.Item label="安装盘可用空间">{environment ? bytes(environment.installFreeBytes) : '—'}（至少 3
