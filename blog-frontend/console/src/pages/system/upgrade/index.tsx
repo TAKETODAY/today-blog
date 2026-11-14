@@ -558,7 +558,6 @@ export default function SystemUpgrade() {
                 <div>
                   <ProTable<UpgradePackage>
                       rowKey="id"
-                      headerTitle="升级包"
                       dataSource={packages}
                       search={false}
                       options={false}
