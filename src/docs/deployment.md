@@ -98,7 +98,7 @@ current/desktop  ->  /var/www/today-blog/desktop
 
 管理后台「系统升级 → 升级配置 → 文件映射」提供增删改界面，也可以直接调用
 `GET /api/console/maintenance/upgrade/mappings` 查询、`PUT` 同一路径保存。
-配置保存在数据库表 `t_release_mapping`（Flyway v3.8 创建），是该配置的唯一来源；
+配置保存在数据库表 `t_release_mapping`（由 Flyway v3.6 维护表迁移创建），是该配置的唯一来源；
 启动升级任务时把当前映射快照到 `t_upgrade_path_mapping`，之后修改默认配置不影响已提交任务。
 恢复业务数据库会把默认映射一并恢复到备份时间点，已提交任务仍使用各自快照。
 升级器通过数据库读取任务快照，发布前会重新校验白名单、父目录所有权与权限。
@@ -259,7 +259,7 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
 
 升级器通过 JDBC 读取 `t_upgrade_record`、`t_upgrade_package` 和 `t_upgrade_path_mapping`，
 直接更新任务状态。成功后会按 `delete_package_after_upgrade` 删除升级包文件和记录。
-`t_backup_operation` 已删除，备份管理页不再展示操作记录；备份执行器接通时需要审计再单独建表。
+`t_backup_operation` 不再创建，备份管理页不展示操作记录；备份执行器接通时需要审计再单独建表。
 
 管理后台「系统管理 → 备份管理」（`/system/backups`）提供备份列表和详情；
 接口统一使用 `/api/console/backups`；旧页面 `/system/snapshots` 重定向到新入口。

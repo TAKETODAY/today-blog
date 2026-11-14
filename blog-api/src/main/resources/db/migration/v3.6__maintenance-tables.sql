@@ -1,0 +1,93 @@
+create table t_backup
+(
+    id                  char(36)      not null primary key,
+    name                varchar(200)  not null,
+    status              varchar(32)   not null,
+    version             varchar(100)  null,
+    build               varchar(32)   null,
+    created_at          varchar(40)   not null,
+    protected_backup    boolean       not null default false,
+    manifest_sha256     char(64)      null,
+    total_bytes         bigint        not null default 0,
+    source_operation_id char(36)      null,
+    location            varchar(1024) null,
+    scope               varchar(500)  null,
+    restore_verified_at varchar(40)   null
+);
+
+create table t_release_mapping
+(
+    name       varchar(32)  not null primary key,
+    mode       varchar(16)  not null,
+    source     varchar(255) not null,
+    target     varchar(512) not null,
+    created_at varchar(40)  not null,
+    updated_at varchar(40)  not null
+);
+
+create table t_upgrade_package
+(
+    id            char(36)      not null primary key,
+    original_name varchar(255)  not null,
+    display_name  varchar(255)  null,
+    note          varchar(500)  null,
+    status        varchar(32)   not null,
+    version       varchar(100)  not null,
+    build         bigint        not null,
+    file_size     bigint        not null,
+    sha256        char(64)      not null,
+    entry_count   int           not null default 0,
+    location      varchar(1024) not null,
+    created_at    varchar(40)   not null,
+    consumed_at   varchar(40)   null
+);
+
+create table t_upgrade_record
+(
+    id                           char(36)      not null primary key,
+    package_id                   char(36)      not null,
+    package_name                 varchar(255)  not null,
+    package_version              varchar(100)  not null,
+    package_build                bigint        not null,
+    package_sha256               char(64)      not null,
+    package_path                 varchar(1024) not null,
+    old_version                  varchar(100)  null,
+    old_build                    bigint        null,
+    status                       varchar(32)   not null,
+    backup_enabled               boolean       not null default true,
+    backup_timeout_seconds       int           not null default 600,
+    health_timeout_seconds       int           not null default 90,
+    note                         varchar(500)  null,
+    delete_package_after_upgrade boolean       not null default false,
+    release_path                 varchar(1024) null,
+    backup_path                  varchar(1024) null,
+    backup_bytes                 bigint        null,
+    backup_sha256                char(64)      null,
+    backup_completed_at          varchar(40)   null,
+    message                      varchar(1000) null,
+    created_at                   varchar(40)   not null,
+    started_at                   varchar(40)   null,
+    finished_at                  varchar(40)   null
+);
+
+create table t_upgrade_path_mapping
+(
+    id        bigint       not null auto_increment primary key,
+    record_id char(36)     not null,
+    name      varchar(32)  not null,
+    mode      varchar(16)  not null,
+    source    varchar(255) not null,
+    target    varchar(512) not null
+);
+
+create table t_upgrade_setting
+(
+    id                     tinyint      not null primary key,
+    backup_enabled         boolean      not null,
+    backup_timeout_seconds int          not null,
+    health_timeout_seconds int          not null,
+    note                   varchar(500) not null
+);
+
+insert into t_upgrade_setting (id, backup_enabled, backup_timeout_seconds, health_timeout_seconds, note)
+values (1, true, 600, 90, '');
