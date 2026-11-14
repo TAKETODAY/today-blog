@@ -169,7 +169,7 @@ export default function SystemUpgrade() {
   const [id, setId] = useState(() => localStorage.getItem(taskKey) || '');
   const [records, setRecords] = useState<UpgradeRecord[]>([]);
   const [packages, setPackages] = useState<UpgradePackage[]>([]);
-  const [selectedPackageId, setSelectedPackageId] = useState<number>();
+  const [startPackage, setStartPackage] = useState<UpgradePackage>();
   const [environment, setEnvironment] = useState<Environment>();
   const [uploading, setUploading] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -210,12 +210,6 @@ export default function SystemUpgrade() {
     const response = await http.get('/api/console/maintenance/upgrade/packages');
     const list = response.data as UpgradePackage[];
     setPackages(list);
-    setSelectedPackageId(current => {
-      if (current && list.some(item => item.id === current && item.status === 'READY')) {
-        return current;
-      }
-      return list.find(item => item.status === 'READY')?.id;
-    });
     return list;
   }, []);
 
@@ -318,10 +312,8 @@ export default function SystemUpgrade() {
 
   const activeTask = records.some(item => !terminal.includes(item.status));
   const busy = uploading || starting || packageSaving || activeTask;
-  const selectedPackage = packages.find(item => item.id === selectedPackageId);
-  const ready = loaded && environment?.updaterReady && environment.installFreeBytes >= 3 * 1024 ** 3
-      && (!backupEnabled || (environment.backupReady && environment.backupFreeBytes >= 256 * 1024 ** 2))
-      && selectedPackage?.status === 'READY';
+  const environmentReady = loaded && environment?.updaterReady && environment.installFreeBytes >= 3 * 1024 ** 3
+      && (!backupEnabled || (environment.backupReady && environment.backupFreeBytes >= 256 * 1024 ** 2));
   const lastPhase = record ? phases.reduce((last, phase, index) => record.status === phase ? index : last, 0) : 0;
 
   async function uploadPackage() {
@@ -380,54 +372,35 @@ export default function SystemUpgrade() {
       okButtonProps: { danger: true },
       async onOk() {
         await http.delete(`/api/console/maintenance/upgrade/packages/${item.id}`);
-        if (selectedPackageId === item.id) {
-          setSelectedPackageId(undefined);
-        }
         await reloadPackages();
         message.success('升级包已删除');
       },
     });
   }
 
+  function openStart(item: UpgradePackage) {
+    setStartPackage(item);
+    setDeletePackageAfter(false);
+  }
+
   async function start() {
-    if (!selectedPackage) {
-      message.warning('请选择升级包');
+    if (!startPackage) {
       return;
     }
     const options = await runForm.validateFields();
-    Modal.confirm({
-      title: `确认升级到 ${selectedPackage.version} / ${selectedPackage.build}？`,
-      content: <Space direction="vertical">
-        <span>当前版本：{version.version} / {version.build || '—'}</span>
-        <span>升级包：{selectedPackage.displayName || selectedPackage.originalName}</span>
-        <span>数据库备份：{options.backupEnabled ? `开启，超时 ${options.backupTimeoutSeconds} 秒` : '关闭，请确认已自行备份'}</span>
-        <span>健康检查超时：{options.healthTimeoutSeconds} 秒。</span>
-        <span>文件映射：{mappingSettings?.mappings?.length
-            ? `${mappingSettings.mappings.length} 条，切换版本后发布`
-            : '未配置'}</span>
-        <span>{deletePackageAfter ? '升级成功后删除升级包。' : '升级成功后保留升级包。'}</span>
-        <span>提交后立即进入维护状态，新的业务请求返回 503；升级完成后自动恢复。</span>
-        {maintenance?.enabled && maintenance.source === 'manual'
-            && <span>当前为手动维护状态，升级完成后不会自动关闭，请升级完成后手动关闭。</span>}
-        <span>服务会短暂中断。仅适用于向后兼容的数据库迁移；自动回滚只恢复程序，不恢复数据库。</span>
-      </Space>,
-      okText: options.backupEnabled ? '开始升级' : '确认跳过备份并升级',
-      okButtonProps: { danger: !options.backupEnabled },
-      async onOk() {
-        setStarting(true);
-        try {
-          const response = await http.post(`/api/console/maintenance/upgrade/packages/${selectedPackage.id}/start`, {
-            options: requestOptions(options), deletePackage: deletePackageAfter,
-          });
-          selectRecord(response.data);
-          await refresh();
-          await reloadPackages();
-        }
-        finally {
-          setStarting(false);
-        }
-      },
-    });
+    setStarting(true);
+    try {
+      const response = await http.post(`/api/console/maintenance/upgrade/packages/${startPackage.id}/start`, {
+        options: requestOptions(options), deletePackage: deletePackageAfter,
+      });
+      setStartPackage(undefined);
+      selectRecord(response.data);
+      await refresh();
+      await reloadPackages();
+    }
+    finally {
+      setStarting(false);
+    }
   }
 
   async function saveSettings() {
@@ -595,12 +568,7 @@ export default function SystemUpgrade() {
                         <Button key="upload" icon={<UploadOutlined/>} onClick={() => setUploadVisible(true)}
                                 disabled={!loaded}>上传升级包</Button>,
                       ]}
-                      rowSelection={{
-                        type: 'radio',
-                        selectedRowKeys: selectedPackageId ? [selectedPackageId] : [],
-                        getCheckboxProps: item => ({ disabled: item.status !== 'READY' }),
-                        onChange: keys => setSelectedPackageId(keys.length ? Number(keys[0]) : undefined),
-                      }} locale={{
+                      locale={{
                     emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级包，请先上传"/>
                   }} columns={[
                     {
@@ -619,27 +587,14 @@ export default function SystemUpgrade() {
                       title: '操作',
                       key: 'action',
                       render: (_, item) => <Space size={0}>
+                        <Button type="link" disabled={item.status !== 'READY' || busy}
+                                onClick={() => openStart(item)}>升级</Button>
                         <Button type="link" onClick={() => openEditPackage(item)}>编辑</Button>
                         <Button type="link" danger onClick={() => removePackage(item)} disabled={busy}>删除</Button>
                       </Space>
                     },
                   ]}/>
                   <span className="upgrade-secondary">选择待升级的发行包；已使用的包保留历史快照，可继续查看或删除。</span>
-                </div>
-                <div>
-                  <Divider orientation="left" plain>升级参数</Divider>
-                  <Form form={runForm} layout="vertical" disabled={busy || !loaded}>
-                    <OptionFields/>
-                    <Form.Item name="note" label="本次升级备注"><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
-                  </Form>
-                  <Checkbox checked={deletePackageAfter} disabled={busy || !loaded}
-                            onChange={event => setDeletePackageAfter(event.target.checked)}>
-                    升级成功后删除升级包
-                  </Checkbox>
-                  <div style={{ marginTop: 16 }}>
-                    <Button type="primary" disabled={!ready || busy || !loaded} loading={starting}
-                            onClick={start}>开始升级</Button>
-                  </div>
                 </div>
                 {record && <>
                   <Divider orientation="left" plain>升级任务</Divider>
@@ -840,6 +795,30 @@ export default function SystemUpgrade() {
                           onChange={event => setEditNote(event.target.value)}/>
         </Form.Item>
       </Form>
+    </Modal>
+    <Modal
+        title={startPackage ? `升级到 ${startPackage.version} / ${startPackage.build}` : '开始升级'}
+        open={Boolean(startPackage)}
+        forceRender
+        confirmLoading={starting}
+        okText="开始升级"
+        okButtonProps={{ disabled: !environmentReady }}
+        onOk={start}
+        onCancel={() => setStartPackage(undefined)}
+    >
+      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        <Alert type="info" showIcon
+               message={startPackage?.displayName || startPackage?.originalName}
+               description={`当前版本 ${version.version} / ${version.build || '—'}；提交后立即进入维护状态。`}/>
+        <Form form={runForm} layout="vertical" disabled={starting || !loaded}>
+          <OptionFields/>
+          <Form.Item name="note" label="本次升级备注"><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
+        </Form>
+        <Checkbox checked={deletePackageAfter} disabled={starting}
+                  onChange={event => setDeletePackageAfter(event.target.checked)}>
+          升级成功后删除升级包
+        </Checkbox>
+      </Space>
     </Modal>
     <Modal
         title="开启维护状态"
