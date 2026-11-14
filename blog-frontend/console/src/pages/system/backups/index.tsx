@@ -181,7 +181,7 @@ export default function Backups() {
     },
   ];
 
-  return <PageContainer className="backups-page" title="备份管理" subTitle="管理恢复点，追踪程序与数据的匹配状态">
+  return <PageContainer className="backups-page" title="系统备份" subTitle="管理恢复点，追踪程序与数据的匹配状态">
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Alert type="warning" showIcon message="恢复备份会回退业务数据"
              description="恢复会将程序、数据库、附件及配置回到同一恢复点，此后新增或修改的数据可能丢失。恢复前必须先自动备份当前状态并保护该备份。"/>

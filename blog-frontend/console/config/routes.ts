@@ -160,7 +160,7 @@ export default [
         component: './system/upgrade',
       },
       {
-        name: '备份管理',
+        name: '系统备份',
         path: '/system/backups',
         component: './system/backups',
       },
