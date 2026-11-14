@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import {
   Alert,
+  Badge,
   Button,
   Card,
   Col,
   Descriptions,
   Divider,
+  Drawer,
   Empty,
   Form,
   Input,
@@ -23,7 +25,13 @@ import {
   Tag,
   Upload
 } from 'antd';
-import { MinusCircleOutlined, PlusOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons';
+import {
+  MinusCircleOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SettingOutlined,
+  UploadOutlined
+} from '@ant-design/icons';
 import { http } from '@/utils/http';
 import './index.less';
 
@@ -128,6 +136,8 @@ export default function SystemUpgrade() {
   const [refreshing, setRefreshing] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState('run');
+  const [configVisible, setConfigVisible] = useState(false);
+  const [configTab, setConfigTab] = useState('settings');
   const [disconnected, setDisconnected] = useState(false);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [maintenance, setMaintenance] = useState<MaintenanceStatus>();
@@ -353,6 +363,13 @@ export default function SystemUpgrade() {
     });
   }
 
+  function openConfig(tabKey?: string) {
+    if (tabKey) {
+      setConfigTab(tabKey);
+    }
+    setConfigVisible(true);
+  }
+
   function openMaintenanceModal() {
     maintenanceForm.setFieldsValue({ message: '系统维护中，请稍后重试', retryAfter: 120 });
     setMaintenanceVisible(true);
@@ -395,7 +412,10 @@ export default function SystemUpgrade() {
 
   const maintenanceSource = maintenance?.source === 'manual' ? '手动开启，升级后不会自动关闭' : '升级流程自动开启，完成后自动关闭';
 
-  return <PageContainer className="system-update-page" title="系统升级" subTitle="发布新版本，保留可追溯的备份与升级记录">
+  return <PageContainer className="system-update-page" title="系统升级" subTitle="发布新版本，保留可追溯的备份与升级记录"
+                        extra={<Badge dot={Boolean(mappingSettings && !mappingSettings.ready)} offset={[-4, 4]}>
+                          <Button icon={<SettingOutlined/>} onClick={() => openConfig()}>升级配置</Button>
+                        </Badge>}>
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Alert type="warning" showIcon message="程序回滚不等于数据库恢复"
              description="仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份时间点之后的新数据；升级期间不得并发修改表结构。"/>
@@ -422,6 +442,10 @@ export default function SystemUpgrade() {
                 </Space>
               </div>
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                {loaded && mappingSettings && !mappingSettings.ready && <Alert type="warning" showIcon
+                    message="文件映射配置未就绪"
+                    description={mappingSettings.message || '升级时将无法发布前端文件，请检查服务器目标根目录配置。'}
+                    action={<Button size="small" onClick={() => openConfig('mappings')}>去配置</Button>}/>}
                 <Descriptions column={{ xs: 1, sm: 2, lg: 3 }} size="small" bordered>
                   <Descriptions.Item label="维护状态">
                     <Tag color={maintenance?.enabled ? 'warning' : 'success'}>
@@ -481,103 +505,6 @@ export default function SystemUpgrade() {
             </>,
           },
           {
-            key: 'settings',
-            label: '升级设置',
-            forceRender: true,
-            children: <>
-              <div className="upgrade-toolbar">
-                <span className="upgrade-secondary">默认设置仅用于以后载入页面时初始化参数，不影响已提交的任务；映射目标白名单、命令及数据库凭据由运维配置。</span>
-                <Button type="primary" onClick={saveSettings} loading={saving}
-                        disabled={!loaded || !environment?.updaterReady}>保存默认设置</Button>
-              </div>
-              <Form form={settingsForm} layout="vertical" disabled={!loaded || saving} style={{ maxWidth: 600 }}>
-                <OptionFields/>
-              </Form>
-            </>,
-          },
-          {
-            key: 'mappings',
-            label: '文件映射',
-            forceRender: true,
-            children: <>
-              <div className="upgrade-toolbar">
-                <span className="upgrade-secondary">映射在切换版本后发布为指向 current/&lt;source&gt; 的符号链接，回滚时自动指回旧版本。</span>
-                <Space>
-                  <Button icon={<ReloadOutlined/>}
-                          onClick={() => reloadMappings().catch(() => message.error('重新载入映射失败'))}>重新载入</Button>
-                  <Button type="primary" loading={mappingSaving}
-                          disabled={!loaded || !mappingSettings?.ready || !environment?.updaterReady}
-                          onClick={saveMappings}>保存映射</Button>
-                </Space>
-              </div>
-              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <Alert type={mappingSettings?.ready ? 'info' : 'warning'} showIcon
-                       message={mappingSettings?.ready ? '映射目标受服务器白名单限制' : '映射目标根目录配置未就绪'}
-                       description={mappingSettings?.ready
-                           ? '目标必须位于服务器白名单目录内；已存在的非空目录不会被覆盖，发布失败会终止本次升级。'
-                           : mappingSettings?.message || '正在加载映射配置'}/>
-                <div>
-                  <span style={{ marginRight: 8 }}>允许的目标根目录：</span>
-                  {mappingSettings?.roots?.length
-                      ? mappingSettings.roots.map(root => <Tag key={root}>{root}</Tag>)
-                      : <Tag color="warning">未配置</Tag>}
-                </div>
-                <Form form={mappingForm} layout="vertical" disabled={!loaded || mappingSaving}>
-                  <Form.List name="mappings">
-                    {(fields, { remove }) => <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                      {fields.map(field => <Row key={field.key} gutter={12} align="top">
-                        <Col xs={24} md={5}>
-                          <Form.Item name={[field.name, 'name']} label="名称"
-                                     rules={[
-                                       { required: true, message: '请输入名称' },
-                                       { pattern: /^[a-z][a-z0-9-]{0,31}$/, message: '小写字母开头，仅限小写字母、数字和短横线' },
-                                     ]}>
-                            <Input placeholder="console" maxLength={32}/>
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={3}>
-                          <Form.Item name={[field.name, 'mode']} label="方式" rules={[{ required: true }]}>
-                            <Select options={[{ value: 'SYMLINK', label: '符号链接' }]}/>
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={5}>
-                          <Form.Item name={[field.name, 'source']} label="发行源"
-                                     rules={[
-                                       { required: true, message: '请输入发行源' },
-                                       {
-                                         pattern: /^(console|desktop)(\/[A-Za-z0-9_@+.,-]+)*$/,
-                                         message: '只能是 console、desktop 或其子路径'
-                                       },
-                                     ]}>
-                            <Input placeholder="console"/>
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={9}>
-                          <Form.Item name={[field.name, 'target']} label="Nginx 目标路径"
-                                     rules={[
-                                       { required: true, message: '请输入目标路径' },
-                                       { pattern: /^\/[^\t\n\r]+$/, message: '请输入规范化的绝对路径' },
-                                     ]}>
-                            <Input placeholder="/var/www/today-blog/console"/>
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={2}>
-                          <Form.Item label=" ">
-                            <Button danger type="text" icon={<MinusCircleOutlined/>}
-                                    onClick={() => remove(field.name)}/>
-                          </Form.Item>
-                        </Col>
-                      </Row>)}
-                      {!fields.length && <Alert type="info" showIcon message="尚未配置映射，前端页面需要由 nginx 直接引用版本目录"/>}
-                      <Button type="dashed" block icon={<PlusOutlined/>} onClick={addMapping}>添加映射</Button>
-                    </Space>}
-                  </Form.List>
-                </Form>
-                <span className="upgrade-secondary">映射由管理端保存到数据库；启动升级任务时会快照，之后修改不影响已提交任务。</span>
-              </Space>
-            </>,
-          },
-          {
             key: 'history',
             label: '升级记录',
             children: <>
@@ -621,6 +548,108 @@ export default function SystemUpgrade() {
         ]}/>
       </Card>
     </Space>
+    <Drawer className="upgrade-config-drawer" title="升级配置" open={configVisible} forceRender
+            onClose={() => setConfigVisible(false)} width={720} contentWrapperStyle={{ maxWidth: '100vw' }}>
+      <Tabs activeKey={configTab} onChange={setConfigTab} items={[
+        {
+          key: 'settings',
+          label: '升级设置',
+          forceRender: true,
+          children: <>
+            <div className="upgrade-toolbar">
+              <span className="upgrade-secondary">默认设置仅用于以后载入页面时初始化参数，不影响已提交的任务；命令及数据库凭据由运维配置。</span>
+              <Button type="primary" onClick={saveSettings} loading={saving}
+                      disabled={!loaded || !environment?.updaterReady}>保存默认设置</Button>
+            </div>
+            <Form form={settingsForm} layout="vertical" disabled={!loaded || saving}>
+              <OptionFields/>
+            </Form>
+          </>,
+        },
+        {
+          key: 'mappings',
+          label: '文件映射',
+          forceRender: true,
+          children: <>
+            <div className="upgrade-toolbar">
+              <span className="upgrade-secondary">映射在切换版本后发布为指向 current/&lt;source&gt; 的符号链接，回滚时自动指回旧版本。</span>
+              <Space>
+                <Button icon={<ReloadOutlined/>}
+                        onClick={() => reloadMappings().catch(() => message.error('重新载入映射失败'))}>重新载入</Button>
+                <Button type="primary" loading={mappingSaving}
+                        disabled={!loaded || !mappingSettings?.ready || !environment?.updaterReady}
+                        onClick={saveMappings}>保存映射</Button>
+              </Space>
+            </div>
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Alert type={mappingSettings?.ready ? 'info' : 'warning'} showIcon
+                     message={mappingSettings?.ready ? '映射目标受服务器白名单限制' : '映射目标根目录配置未就绪'}
+                     description={mappingSettings?.ready
+                         ? '目标必须位于服务器白名单目录内；已存在的非空目录不会被覆盖，发布失败会终止本次升级。'
+                         : mappingSettings?.message || '正在加载映射配置'}/>
+              <div>
+                <span style={{ marginRight: 8 }}>允许的目标根目录：</span>
+                {mappingSettings?.roots?.length
+                    ? mappingSettings.roots.map(root => <Tag key={root}>{root}</Tag>)
+                    : <Tag color="warning">未配置</Tag>}
+              </div>
+              <Form form={mappingForm} layout="vertical" disabled={!loaded || mappingSaving}>
+                <Form.List name="mappings">
+                  {(fields, { remove }) => <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                    {fields.map(field => <Row key={field.key} gutter={12} align="top">
+                      <Col xs={24} md={5}>
+                        <Form.Item name={[field.name, 'name']} label="名称"
+                                   rules={[
+                                     { required: true, message: '请输入名称' },
+                                     { pattern: /^[a-z][a-z0-9-]{0,31}$/, message: '小写字母开头，仅限小写字母、数字和短横线' },
+                                   ]}>
+                          <Input placeholder="console" maxLength={32}/>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={3}>
+                        <Form.Item name={[field.name, 'mode']} label="方式" rules={[{ required: true }]}>
+                          <Select options={[{ value: 'SYMLINK', label: '符号链接' }]}/>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={5}>
+                        <Form.Item name={[field.name, 'source']} label="发行源"
+                                   rules={[
+                                     { required: true, message: '请输入发行源' },
+                                     {
+                                       pattern: /^(console|desktop)(\/[A-Za-z0-9_@+.,-]+)*$/,
+                                       message: '只能是 console、desktop 或其子路径'
+                                     },
+                                   ]}>
+                          <Input placeholder="console"/>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={9}>
+                        <Form.Item name={[field.name, 'target']} label="Nginx 目标路径"
+                                   rules={[
+                                     { required: true, message: '请输入目标路径' },
+                                     { pattern: /^\/[^\t\n\r]+$/, message: '请输入规范化的绝对路径' },
+                                   ]}>
+                          <Input placeholder="/var/www/today-blog/console"/>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={2}>
+                        <Form.Item label=" ">
+                          <Button danger type="text" icon={<MinusCircleOutlined/>}
+                                  onClick={() => remove(field.name)}/>
+                        </Form.Item>
+                      </Col>
+                    </Row>)}
+                    {!fields.length && <Alert type="info" showIcon message="尚未配置映射，前端页面需要由 nginx 直接引用版本目录"/>}
+                    <Button type="dashed" block icon={<PlusOutlined/>} onClick={addMapping}>添加映射</Button>
+                  </Space>}
+                </Form.List>
+              </Form>
+              <span className="upgrade-secondary">映射由管理端保存到数据库；启动升级任务时会快照，之后修改不影响已提交任务。</span>
+            </Space>
+          </>,
+        },
+      ]}/>
+    </Drawer>
     <Modal
         title="开启维护状态"
         open={maintenanceVisible}
