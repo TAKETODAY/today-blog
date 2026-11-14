@@ -24,10 +24,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +53,7 @@ public final class BlogUpdaterApplication {
     try {
       UpgradeOptions options = UpgradeOptions.from(UpgradeFiles.read(state.resolve("incoming").resolve(args[0]).resolve("options.properties")));
       run(root, state, args[0], new SystemdControl(URI.create(health), options.healthTimeoutSeconds()),
-              options, (id, timeout) -> DatabaseBackup.configured().create(id, timeout));
+              options, (id, timeout) -> DatabaseBackup.configured().create(id, timeout), mappingPolicy());
     }
     catch (Exception error) {
       Path result = state.resolve("results").resolve(args[0] + ".properties");
@@ -68,11 +70,19 @@ public final class BlogUpdaterApplication {
     boolean healthy(long build) throws Exception;
   }
 
+  private static Path mappingPolicy() {
+    return Path.of(System.getenv().getOrDefault("BLOG_MAPPING_ROOTS", ReleaseMappings.POLICY.toString()));
+  }
+
   public static void run(Path root, Path state, String id, ServiceControl service) throws Exception {
+    run(root, state, id, service, mappingPolicy());
+  }
+
+  public static void run(Path root, Path state, String id, ServiceControl service, Path mappingPolicy) throws Exception {
     UpgradeFiles.checkId(id);
     Path options = state.resolve("incoming").resolve(id).resolve("options.properties");
     run(root, state, id, service, UpgradeOptions.from(UpgradeFiles.read(options)),
-            (task, timeout) -> DatabaseBackup.configured().create(task, timeout));
+            (task, timeout) -> DatabaseBackup.configured().create(task, timeout), mappingPolicy);
   }
 
   @FunctionalInterface
@@ -82,8 +92,16 @@ public final class BlogUpdaterApplication {
 
   public static void run(Path root, Path state, String id, ServiceControl service,
           UpgradeOptions options, BackupControl backup) throws Exception {
+    run(root, state, id, service, options, backup, mappingPolicy());
+  }
+
+  public static void run(Path root, Path state, String id, ServiceControl service, UpgradeOptions options,
+          BackupControl backup, Path mappingPolicy) throws Exception {
     UpgradeFiles.checkId(id);
     Path results = state.resolve("results");
+    List<ReleaseMapping> mappings = ReleaseMappings.readIfExists(
+            state.resolve("incoming").resolve(id).resolve("mappings.conf"));
+    List<Path> mappingRoots = mappings.isEmpty() ? List.of() : ReleaseMappings.roots(mappingPolicy);
     Files.createDirectories(root.resolve("releases"));
     Files.createDirectories(results);
     try (var channel = FileChannel.open(root.resolve("upgrade.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
@@ -184,9 +202,16 @@ public final class BlogUpdaterApplication {
           }
         }
         Files.move(unpacked, release, StandardCopyOption.ATOMIC_MOVE);
+        for (ReleaseMapping mapping : mappings) {
+          if (!Files.exists(release.resolve(mapping.source()), LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("升级包缺少映射源: " + mapping.source());
+          }
+        }
         UpgradeFiles.status(results, id, "RESTARTING", "切换版本并重启 API");
         switchRelease(root, release);
         switched = true;
+        // 映射始终指向 current，切换版本后无需重新计算路径；发布失败会按普通升级失败回滚。
+        ReleaseMappings.publish(root, state, mappings, mappingRoots);
         service.restart();
         UpgradeFiles.status(results, id, "HEALTH_CHECKING", "等待新版本健康检查");
         if (!service.healthy(manifest.build())) {

@@ -45,7 +45,8 @@ public final class UpgradeStore {
     UpgradeFiles.write(state.resolve("incoming/settings.properties"), options.properties());
   }
 
-  public void snapshot(String id, UpgradeOptions options, long operator, Properties current) throws IOException {
+  public void snapshot(String id, UpgradeOptions options, List<ReleaseMapping> mappings,
+          long operator, Properties current) throws IOException {
     UpgradeFiles.checkId(id);
     Path task = state.resolve("incoming").resolve(id);
     Properties metadata = UpgradeFiles.read(task.resolve("metadata.properties"));
@@ -53,6 +54,7 @@ public final class UpgradeStore {
       throw new IllegalStateException("该任务已提交，不可重复启动");
     }
     UpgradeFiles.write(task.resolve("options.properties"), options.properties());
+    ReleaseMappings.write(task.resolve("mappings.conf"), mappings);
     metadata.putAll(options.properties());
     metadata.setProperty("operatorId", Long.toString(operator));
     metadata.setProperty("oldVersion", current.getProperty("version", ""));

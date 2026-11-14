@@ -19,6 +19,7 @@ package cn.taketoday.blog.updater;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.zip.GZIPInputStream;
@@ -60,7 +61,7 @@ class UpgradeSettingsTests {
     values.setProperty("id", id);
     UpgradeFiles.write(metadata, values);
     UpgradeStore store = new UpgradeStore(temp);
-    store.snapshot(id, UpgradeOptions.defaults(), 42, values);
+    store.snapshot(id, UpgradeOptions.defaults(), java.util.List.of(), 42, values);
     store.saveSettings(new UpgradeOptions(false, 30, 10, "changed"));
     assertThat(UpgradeOptions.from(UpgradeFiles.read(metadata.getParent().resolve("options.properties"))))
             .isEqualTo(UpgradeOptions.defaults());
@@ -71,8 +72,24 @@ class UpgradeSettingsTests {
     assertThat(record.getProperty("status")).isEqualTo("FAILED");
     assertThat(record.getProperty("stage.BACKING_UP")).isNotBlank();
     assertThat(record.getProperty("finishedAt")).isNotBlank();
-    assertThatThrownBy(() -> store.snapshot(id, UpgradeOptions.defaults(), 42, values))
+    assertThatThrownBy(() -> store.snapshot(id, UpgradeOptions.defaults(), java.util.List.of(), 42, values))
             .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void snapshotCarriesMappingsToUpdater() throws Exception {
+    String id = UUID.randomUUID().toString();
+    Path directory = Files.createDirectories(temp.resolve("incoming").resolve(id));
+    Properties values = new Properties();
+    values.setProperty("status", "READY");
+    values.setProperty("id", id);
+    UpgradeFiles.write(directory.resolve("metadata.properties"), values);
+    ReleaseMapping mapping = new ReleaseMapping("console", ReleaseMapping.Mode.SYMLINK,
+            "console", temp.resolve("www/console").toString());
+
+    new UpgradeStore(temp).snapshot(id, UpgradeOptions.defaults(), List.of(mapping), 42, values);
+
+    assertThat(ReleaseMappings.read(directory.resolve("mappings.conf"))).containsExactly(mapping);
   }
 
   @Test

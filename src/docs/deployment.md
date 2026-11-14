@@ -73,6 +73,57 @@ curl --fail http://127.0.0.1:8080/api/internal/health
 
 正常返回 `UP:<build>`。确认 API 和两套静态页面正常后再使用在线升级。
 
+## 前端文件映射（可选）
+
+反向代理可以不直接引用版本目录，而是把 `current/console`、`current/desktop` 映射到固定的
+Web 根目录。映射由管理端配置，由 root 升级器在切换版本后发布为符号链接：
+
+```text
+current/console  ->  /var/www/today-blog/console
+current/desktop  ->  /var/www/today-blog/desktop
+```
+
+符号链接始终经过 `current`，因此升级只需切换 `current`，nginx 自动读取新版本文件；
+升级失败回滚时，链接也随之指回旧版本，无需二次操作。nginx 默认跟随符号链接，
+若启用了 `disable_symlinks`，需要关闭或改用直接引用版本目录的方式。
+
+映射参数是具体结构而不是 `Properties`，字段为名称、方式、源和目标：
+
+| 字段   | 约束                                                                     |
+|--------|--------------------------------------------------------------------------|
+| name   | 小写字母、数字、短横线，最长 32 字符，同一配置内唯一                     |
+| mode   | 当前仅支持 `SYMLINK`                                                     |
+| source | 只能是 `console`、`desktop` 或其子路径                                   |
+| target | 规范化的绝对路径，必须位于服务器白名单目录内，不能与安装目录或状态目录重叠 |
+
+管理后台「系统更新 → 文件映射」提供增删改界面，也可以直接调用
+`GET /api/console/maintenance/upgrade/mappings` 查询、`PUT` 同一路径保存。
+配置保存在数据库表 `t_release_mapping`（Flyway v3.8 创建），是该配置的唯一来源；
+启动升级任务时快照到 `incoming/<UUID>/mappings.conf` 交给升级器，之后修改数据库配置不影响
+已提交任务。恢复业务数据库会把默认映射一并恢复到备份时间点，已提交任务仍使用各自快照。
+升级器不访问数据库，发布前会重新校验白名单、父目录所有权与权限。
+
+白名单由 root 管理，默认文件为 `/etc/today-blog/release-mapping-roots`，每行一个绝对目录。
+首次安装会创建 `/var/www/today-blog` 并写入该文件：
+
+```bash
+sudo install -d -m 755 /var/www/today-blog
+printf '/var/www/today-blog\n' | sudo tee /etc/today-blog/release-mapping-roots
+sudo chmod 644 /etc/today-blog/release-mapping-roots
+```
+
+目标父目录必须由 root 管理且不可被组或其他用户写入；目标已存在时只接受空目录或指向
+同一位置的符号链接，其他内容会拒绝发布并阻止本次升级。新建链接使用临时名加原子重命名。
+升级 unit 默认只读文件系统，需要把映射根目录加入 `ReadWritePaths` 后 `daemon-reload`：
+
+```ini
+[Service]
+ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog /var/www/today-blog
+```
+
+当前不提供复制模式；目标在同一挂载点且 nginx 可跟随符号链接时使用上述方案即可。
+新增映射前可先在测试环境确认 nginx、SELinux/AppArmor 和文件权限允许访问链接目标。
+
 ## 后台升级
 
 系统 → 系统更新 → 执行更新 → 上传 ZIP → 校验通过 → 确认参数 → 开始更新。
@@ -143,10 +194,10 @@ API 只读取非敏感配置和凭据文件元信息，不读取数据库密码�
 ```ini
 [Service]
 TimeoutStartSec=5400
-ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog
+ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog /var/www/today-blog
 ```
 
-修改 unit 后执行 `systemctl daemon-reload`。使用自定义备份目录时必须预先创建目录，
+修改 unit 后执行 `systemctl daemon-reload`。使用自定义备份目录或映射根目录时必须预先创建目录，
 并同步修改 `ReadWritePaths`；目录不可放在 release 下。
 
 备份在解压准备完成后、切换 current 和启动新版本之前执行；失败或超时不会重启旧服务。
@@ -168,6 +219,7 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/r
 `ROLLED_BACK` 表示本次更新失败、已恢复旧程序，而不是新版本发布成功。
 
 默认设置位于 `incoming/settings.properties`，任务参数位于 `incoming/<UUID>/options.properties`，
+前端映射默认值保存在数据库表 `t_release_mapping`，任务启动时快照到 `incoming/<UUID>/mappings.conf`，
 任务元信息和 root 写入的结果文件作为独立执行依据；管理端查询时按 UUID 幂等同步至
 `t_backup_operation`，再通过数据库查询更新列表和详情。派发前也会写入数据库，写入失败不启动更新。
 恢复数据库后再次查询会从磁盘补齐记录；数据库索引不是恢复执行器的唯一依据。
@@ -205,10 +257,13 @@ Flyway v3.6 直接创建 `t_backup` 和 `t_backup_operation`，统一使用 `bac
   releases/                            新旧版本并存
   highest-build.properties             成功发布的最高构建号
 /usr/local/lib/today-blog/updater.jar    固定、root 所有，不随在线包更新
+/etc/today-blog/release-mapping-roots    root 所有，前端映射目标白名单
 /var/lib/today-blog-upgrade/
-  incoming/<UUID>/                      today 写，上传包与元信息
+  incoming/settings.properties          today 写，更新默认参数
+  incoming/<UUID>/                      today 写，上传包、元信息与任务快照
   results/<UUID>.properties             root 写，API 读
 /var/lib/today-blog/                     today 写，业务运行数据
+/var/www/today-blog/                    映射目标，root 管理，升级器发布链接
 ```
 
 维护状态保存在 API 进程内存中，不占用该目录。

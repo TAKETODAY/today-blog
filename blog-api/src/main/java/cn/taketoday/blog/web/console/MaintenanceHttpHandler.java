@@ -37,10 +37,13 @@ import cn.taketoday.blog.backup.BackupOperationStatus;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.updater.DatabaseBackup;
+import cn.taketoday.blog.updater.ReleaseMapping;
+import cn.taketoday.blog.updater.ReleaseMappings;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeOptions;
 import cn.taketoday.blog.updater.UpgradePackage;
 import cn.taketoday.blog.updater.UpgradeStore;
+import cn.taketoday.blog.upgrade.ReleaseMappingService;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
@@ -91,6 +94,11 @@ class MaintenanceHttpHandler {
 
   private final Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
 
+  private final Path installRoot = Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
+
+  private final Path mappingPolicy = Path.of(System.getenv().getOrDefault(
+          "BLOG_MAPPING_ROOTS", ReleaseMappings.POLICY.toString()));
+
   private final ServerStatus serverStatus;
 
   private final ApplicationTemp applicationTemp;
@@ -101,12 +109,16 @@ class MaintenanceHttpHandler {
 
   private final BackupOperationService operations;
 
+  private final ReleaseMappingService releaseMappings;
+
   MaintenanceHttpHandler(ServerStatus serverStatus, ApplicationTemp applicationTemp,
-          ApplicationEventPublisher eventPublisher, BackupOperationService operations) {
+          ApplicationEventPublisher eventPublisher, BackupOperationService operations,
+          ReleaseMappingService releaseMappings) {
     this.serverStatus = serverStatus;
     this.applicationTemp = applicationTemp;
     this.eventPublisher = eventPublisher;
     this.operations = operations;
+    this.releaseMappings = releaseMappings;
   }
 
   @GET
@@ -154,6 +166,39 @@ class MaintenanceHttpHandler {
     return options.properties();
   }
 
+  @GET("/upgrade/mappings")
+  public ReleaseMappingSettings mappings() throws Exception {
+    List<ReleaseMapping> mappings = releaseMappings.findAll();
+    try {
+      List<Path> roots = ReleaseMappings.roots(mappingPolicy);
+      ReleaseMappings.validate(mappings, roots);
+      ReleaseMappings.validateTargets(mappings, installRoot, state);
+      return new ReleaseMappingSettings(mappings, roots.stream().map(Path::toString).toList(),
+              true, "映射目标目录由服务器白名单限定");
+    }
+    catch (Exception unavailable) {
+      return new ReleaseMappingSettings(mappings, List.of(), false, "映射目标根目录配置未就绪");
+    }
+  }
+
+  @PUT("/upgrade/mappings")
+  @Logging(title = "修改文件映射", content = "操作人: [#{#user.id}]")
+  public synchronized ReleaseMappingSettings mappings(@RequestBody ReleaseMappingSettingsRequest request, User user)
+          throws Exception {
+    enabled();
+    List<ReleaseMapping> mappings = request == null || request.mappings() == null
+            ? List.of() : List.copyOf(request.mappings());
+    try {
+      ReleaseMappings.validate(mappings, ReleaseMappings.roots(mappingPolicy));
+      ReleaseMappings.validateTargets(mappings, installRoot, state);
+    }
+    catch (Exception invalid) {
+      throw ErrorMessageException.failed(invalid.getMessage());
+    }
+    releaseMappings.replaceAll(mappings, user.getId());
+    return mappings();
+  }
+
   @GET("/upgrade/history")
   public List<Properties> history() throws Exception {
     return operations.upgradeHistory();
@@ -170,14 +215,13 @@ class MaintenanceHttpHandler {
     catch (Exception unavailable) {
       backupReady = false;
     }
-    Path root = Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
     boolean updaterReady = System.getenv("BLOG_RELEASE_PATH") != null
             && Files.isRegularFile(Path.of("/usr/local/lib/today-blog/updater.jar"))
             && Files.isRegularFile(Path.of("/etc/systemd/system/today-blog-updater@.service"));
     return Map.of("updaterReady", updaterReady,
             "backupReady", backupReady,
             "backupFreeBytes", backupFreeBytes,
-            "installFreeBytes", Files.exists(root) ? Files.getFileStore(root).getUsableSpace() : 0);
+            "installFreeBytes", Files.exists(installRoot) ? Files.getFileStore(installRoot).getUsableSpace() : 0);
   }
 
   @GET("/upgrade/current")
@@ -263,7 +307,17 @@ class MaintenanceHttpHandler {
     if (BackupOperationStatus.of(store.task(id).getProperty("status")) != BackupOperationStatus.READY) {
       throw ErrorMessageException.failed("该任务已提交，不可重复启动", HttpStatus.CONFLICT);
     }
-    store.snapshot(id, options, user.getId(), current());
+    List<ReleaseMapping> mappings = releaseMappings.findAll();
+    if (!mappings.isEmpty()) {
+      try {
+        ReleaseMappings.validate(mappings, ReleaseMappings.roots(mappingPolicy));
+        ReleaseMappings.validateTargets(mappings, installRoot, state);
+      }
+      catch (Exception invalid) {
+        throw ErrorMessageException.failed("文件映射配置无效: " + invalid.getMessage());
+      }
+    }
+    store.snapshot(id, options, mappings, user.getId(), current());
     enableMaintenance();
     try {
       // 数据库记录失败时不派发高权限任务，磁盘记录仍保留供核对。
@@ -321,6 +375,16 @@ class MaintenanceHttpHandler {
     public boolean enabled;
     public @Nullable String message;
     public @Nullable Integer retryAfter;
+  }
+
+  /**
+   * 前端静态文件的映射设置。目标必须位于服务器白名单目录内。
+   */
+  public record ReleaseMappingSettings(List<ReleaseMapping> mappings, List<String> roots,
+          boolean ready, String message) {
+  }
+
+  public record ReleaseMappingSettingsRequest(List<ReleaseMapping> mappings) {
   }
 
 }

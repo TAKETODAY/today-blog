@@ -4,12 +4,15 @@ import {
   Alert,
   Button,
   Card,
+  Col,
   Descriptions,
   Form,
   Input,
   InputNumber,
   message,
   Modal,
+  Row,
+  Select,
   Space,
   Steps,
   Switch,
@@ -18,7 +21,7 @@ import {
   Tag,
   Upload
 } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { MinusCircleOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { http } from '@/utils/http';
 import './index.less';
 
@@ -44,6 +47,20 @@ interface Environment {
   backupReady: boolean;
   installFreeBytes: number;
   backupFreeBytes: number;
+}
+
+interface ReleaseMapping {
+  name: string;
+  mode: 'SYMLINK';
+  source: string;
+  target: string;
+}
+
+interface MappingSettings {
+  mappings: ReleaseMapping[];
+  roots: string[];
+  ready: boolean;
+  message: string;
 }
 
 interface MaintenanceStatus {
@@ -113,8 +130,11 @@ export default function SystemUpgrade() {
   const [maintenance, setMaintenance] = useState<MaintenanceStatus>();
   const [maintenanceSaving, setMaintenanceSaving] = useState(false);
   const [maintenanceVisible, setMaintenanceVisible] = useState(false);
+  const [mappingSettings, setMappingSettings] = useState<MappingSettings>();
+  const [mappingSaving, setMappingSaving] = useState(false);
   const [runForm] = Form.useForm<Options>();
   const [settingsForm] = Form.useForm<Options>();
+  const [mappingForm] = Form.useForm<{ mappings: ReleaseMapping[] }>();
   const [maintenanceForm] = Form.useForm<{ message: string; retryAfter: number }>();
   const backupEnabled = Form.useWatch('backupEnabled', runForm);
 
@@ -142,13 +162,19 @@ export default function SystemUpgrade() {
 
     async function load() {
       try {
-        const [settings, records] = await Promise.all([http.get('/api/console/maintenance/upgrade/settings'), refresh()]);
+        const [settings, mappings, records] = await Promise.all([
+          http.get('/api/console/maintenance/upgrade/settings'),
+          http.get('/api/console/maintenance/upgrade/mappings'),
+          refresh(),
+        ]);
         if (cancelled) {
           return;
         }
         const options = parseOptions(settings.data);
         runForm.setFieldsValue(options);
         settingsForm.setFieldsValue(options);
+        setMappingSettings(mappings.data);
+        mappingForm.setFieldsValue({ mappings: mappings.data.mappings || [] });
         const active = records.find(record => record.status !== 'READY' && !terminal.includes(record.status));
         if (active) {
           selectTask(active);
@@ -164,7 +190,7 @@ export default function SystemUpgrade() {
     return () => {
       cancelled = true;
     };
-  }, [refresh, runForm, settingsForm, selectTask]);
+  }, [refresh, runForm, settingsForm, mappingForm, selectTask]);
 
   useEffect(() => {
     if (!id) {
@@ -239,6 +265,9 @@ export default function SystemUpgrade() {
         <span>当前版本：{version.version} / {version.build || '—'}</span>
         <span>数据库备份：{options.backupEnabled ? `开启，超时 ${options.backupTimeoutSeconds} 秒` : '关闭，请确认已自行备份'}</span>
         <span>健康检查超时：{options.healthTimeoutSeconds} 秒。</span>
+        <span>文件映射：{mappingSettings?.mappings?.length
+            ? `${mappingSettings.mappings.length} 条，切换版本后发布`
+            : '未配置'}</span>
         <span>提交后立即进入维护状态，新的业务请求返回 503；升级完成后自动恢复。</span>
         {maintenance?.enabled && maintenance.source === 'manual'
             && <span>当前为手动维护状态，升级完成后不会自动关闭，请升级完成后手动关闭。</span>}
@@ -274,8 +303,49 @@ export default function SystemUpgrade() {
     }
   }
 
+  async function saveMappings() {
+    const values = await mappingForm.validateFields();
+    setMappingSaving(true);
+    try {
+      const response = await http.put('/api/console/maintenance/upgrade/mappings', {
+        mappings: (values.mappings || []).map(mapping => ({
+          ...mapping,
+          mode: mapping.mode || 'SYMLINK',
+          target: (mapping.target || '').trim(),
+        })),
+      });
+      setMappingSettings(response.data);
+      mappingForm.setFieldsValue({ mappings: response.data.mappings || [] });
+      message.success('文件映射已保存；已提交的升级任务不受影响');
+    }
+    finally {
+      setMappingSaving(false);
+    }
+  }
+
+  async function reloadMappings() {
+    const response = await http.get('/api/console/maintenance/upgrade/mappings');
+    setMappingSettings(response.data);
+    mappingForm.setFieldsValue({ mappings: response.data.mappings || [] });
+  }
+
+  function addMapping() {
+    const root = mappingSettings?.roots?.[0] || '/var/www/today-blog';
+    const mappings = mappingForm.getFieldValue('mappings') || [];
+    const used = new Set(mappings.map((mapping: ReleaseMapping) => mapping.name));
+    const name = used.has('console') ? (used.has('desktop') ? `mapping-${mappings.length + 1}` : 'desktop') : 'console';
+    mappingForm.setFieldsValue({
+      mappings: [...mappings, {
+        name,
+        mode: 'SYMLINK',
+        source: name === 'desktop' ? 'desktop' : 'console',
+        target: `${root}/${name}`,
+      }],
+    });
+  }
+
   function openMaintenanceModal() {
-    maintenanceForm.setFieldsValue({ message: '系统升级中，请稍后访问', retryAfter: 120 });
+    maintenanceForm.setFieldsValue({ message: '系统维护中，请稍后重试', retryAfter: 120 });
     setMaintenanceVisible(true);
   }
 
@@ -321,7 +391,7 @@ export default function SystemUpgrade() {
       <Alert type="warning" showIcon message="程序回滚不等于数据库恢复"
              description="仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份时间点之后的新数据；更新期间不得并发修改表结构。"/>
       {maintenance?.enabled && <Alert type="warning" showIcon message="维护状态已开启"
-                                      description={`${maintenance.message || '系统升级中，请稍后访问'}；建议重试间隔 ${maintenance.retryAfterSeconds || 120} 秒。${maintenanceSource}。`}/>}
+                                      description={`${maintenance.message || '系统维护中，请稍后重试'}；建议重试间隔 ${maintenance.retryAfterSeconds || 120} 秒。${maintenanceSource}。`}/>}
       {disconnected && <Alert type="info" showIcon message={needsLogin ? '登录已失效，请重新登录后查看任务' : '连接暂时中断，正在自动重试'}
                               description="任务在服务器独立运行，请勿重复提交。长时间未恢复时请通过 SSH 检查 systemd 日志。"/>}
       <Tabs activeKey={tab} onChange={setTab} items={[
@@ -392,13 +462,92 @@ export default function SystemUpgrade() {
         {
           key: 'settings', label: '更新设置', forceRender: true, children: <Card title="默认更新参数">
             <Alert type="info" showIcon
-                   message="默认设置仅用于以后载入页面时初始化参数，不影响已提交的任务。服务器路径、命令及数据库凭据由运维配置。"
+                   message="默认设置仅用于以后载入页面时初始化参数，不影响已提交的任务。映射目标白名单、命令及数据库凭据由运维配置。"
                    style={{ marginBottom: 24 }}/>
             <Form form={settingsForm} layout="vertical" disabled={!loaded || saving} style={{ maxWidth: 600 }}>
               <OptionFields/>
               <Button type="primary" onClick={saveSettings} loading={saving}
                       disabled={!loaded || !environment?.updaterReady}>保存默认设置</Button>
             </Form>
+          </Card>
+        },
+        {
+          key: 'mappings',
+          label: '文件映射',
+          forceRender: true,
+          children: <Card title="前端文件映射"
+                          extra={<Space>
+                            <Button onClick={() => reloadMappings().catch(() => message.error('重新载入映射失败'))}>重新载入</Button>
+                            <Button type="primary" loading={mappingSaving}
+                                    disabled={!loaded || !mappingSettings?.ready || !environment?.updaterReady}
+                                    onClick={saveMappings}>保存映射</Button>
+                          </Space>}>
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Alert type="info" showIcon
+                     message="映射在升级切换版本后发布为指向 current/<source> 的符号链接，回滚时自动指回旧版本。"
+                     description={mappingSettings?.ready
+                         ? '目标必须位于服务器白名单目录内；已存在的非空目录不会被覆盖，发布失败会终止本次升级。'
+                         : mappingSettings?.message || '正在加载映射配置'}/>
+              <div>
+                <span style={{ marginRight: 8 }}>允许的目标根目录：</span>
+                {mappingSettings?.roots?.length
+                    ? mappingSettings.roots.map(root => <Tag key={root}>{root}</Tag>)
+                    : <Tag color="warning">未配置</Tag>}
+              </div>
+              <Form form={mappingForm} layout="vertical" disabled={!loaded || mappingSaving}>
+                <Form.List name="mappings">
+                  {(fields, { remove }) => <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                    {fields.map(field => <Row key={field.key} gutter={12} align="top">
+                      <Col xs={24} md={5}>
+                        <Form.Item name={[field.name, 'name']} label="名称"
+                                   rules={[
+                                     { required: true, message: '请输入名称' },
+                                     { pattern: /^[a-z][a-z0-9-]{0,31}$/, message: '小写字母开头，仅限小写字母、数字和短横线' },
+                                   ]}>
+                          <Input placeholder="console" maxLength={32}/>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={3}>
+                        <Form.Item name={[field.name, 'mode']} label="方式" rules={[{ required: true }]}>
+                          <Select options={[{ value: 'SYMLINK', label: '符号链接' }]}/>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={5}>
+                        <Form.Item name={[field.name, 'source']} label="发行源"
+                                   rules={[
+                                     { required: true, message: '请输入发行源' },
+                                     {
+                                       pattern: /^(console|desktop)(\/[A-Za-z0-9_@+.,-]+)*$/,
+                                       message: '只能是 console、desktop 或其子路径'
+                                     },
+                                   ]}>
+                          <Input placeholder="console"/>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={9}>
+                        <Form.Item name={[field.name, 'target']} label="Nginx 目标路径"
+                                   rules={[
+                                     { required: true, message: '请输入目标路径' },
+                                     { pattern: /^\/[^\t\n\r]+$/, message: '请输入规范化的绝对路径' },
+                                   ]}>
+                          <Input placeholder="/var/www/today-blog/console"/>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={2}>
+                        <Form.Item label=" ">
+                          <Button danger type="text" icon={<MinusCircleOutlined/>}
+                                  onClick={() => remove(field.name)}/>
+                        </Form.Item>
+                      </Col>
+                    </Row>)}
+                    {!fields.length && <Alert type="info" showIcon message="尚未配置映射，前端页面需要由 nginx 直接引用版本目录"/>
+                    }
+                    <Button type="dashed" block icon={<PlusOutlined/>} onClick={addMapping}>添加映射</Button>
+                  </Space>}
+                </Form.List>
+              </Form>
+              <span>映射由管理端保存到数据库；启动升级任务时会快照，之后修改不影响已提交任务。</span>
+            </Space>
           </Card>
         },
         {
