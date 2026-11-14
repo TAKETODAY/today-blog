@@ -80,42 +80,26 @@ curl --fail http://127.0.0.1:8080/api/internal/health
 
 ### 升级期间拒绝请求
 
-管理端提交升级（`POST /api/console/upgrade/{id}/start`）后立即进入维护状态，无需等待升级器
+管理端提交升级（`POST /api/console/maintenance/upgrade/{id}/start`）后立即进入维护状态，无需等待升级器
 执行到切换步骤。API 进程不退出，但对新的业务请求返回 `503 Service Unavailable` 和
 `Retry-After`；等待约 2 秒让已进入处理的请求完成后再重启 API。新版本通过健康检查
-（或回滚版本恢复健康）后升级器删除状态文件，站点自动恢复服务。
+（或回滚版本恢复健康）后重新对外提供服务。
 
 维护期间仍可访问：
 
 - `GET /api/internal/health`：升级器健康检查使用。
-- `GET /api/console/upgrade/**`：管理端继续轮询升级进度。
-- `GET /api/console/upgrade/maintenance`：查询当前维护状态。
-- `PUT /api/console/upgrade/maintenance`：管理员手动开启或关闭维护，请求体为
+- `GET /api/console/maintenance/upgrade/**`：管理端继续轮询升级进度。
+- `GET /api/console/maintenance`：查询当前维护状态。
+- `PUT /api/console/maintenance`：管理员手动开启或关闭维护，请求体为
   `{"enabled":true,"message":"维护中","retryAfter":120}`。
 
 管理端「系统更新 → 当前环境」会显示维护状态并提供「开启维护 / 关闭维护」按钮；
-升级任务运行期间按钮禁用，避免中途关闭保护。手动维护不会在升级完成后自动关闭。
+升级任务运行期间按钮禁用，避免中途关闭保护。
 
-管理端通过 HTTP 开启的状态会写入 `${BLOG_RUNTIME_PATH:-/var/lib/today-blog}/maintenance.properties`，
-升级流程只清除自己写入的状态；管理员手动开启（`source=manual`）的状态不会被升级器自动删除。
-健康检查仍返回 `UP:<build>`，因此维护状态不会阻止新版本验收。
-
-运行用户必须能创建并写入该目录，否则接口会返回「无法写入维护状态文件」而不是停留在维护状态。
-从旧版本升级的服务器需要补充运行时目录和 unit 权限：
-
-```bash
-sudo install -d -m 755 -o today -g today /var/lib/today-blog
-sudo systemctl daemon-reload
-sudo systemctl restart today-blog
-```
-
-升级 unit 的 `ReadWritePaths` 必须包含 `/var/lib/today-blog`；仅配置目录属主而没有该行时，
-`ProtectSystem=strict` 仍会阻止写入。
-
-若升级器被强制终止导致长期停留在维护状态，确认 `current` 指向正确版本且健康检查正常后，执行
-`sudo rm /var/lib/today-blog/maintenance.properties` 恢复服务；回滚失败时不要删除该文件。
-状态文件路径可通过 `BLOG_MAINTENANCE_FILE` 覆盖；文件存在即表示维护中，内容中的
-`message` 和 `retryAfter` 分别控制提示文本和客户端重试间隔。
+维护状态保存在 API 进程内存中，不写入磁盘。API 重启后维护状态自动清除，因此升级器切换
+版本并重启 API 后，新版本或回滚后的旧版本会按正常状态提供服务。手动维护在进程重启后同样
+会清除，需要长期维护时请在服务重启后重新开启。健康检查仍返回 `UP:<build>`，维护状态不会
+阻止新版本验收。
 
 ### 数据库备份配置
 
@@ -225,8 +209,9 @@ Flyway v3.6 直接创建 `t_backup` 和 `t_backup_operation`，统一使用 `bac
   incoming/<UUID>/                      today 写，上传包与元信息
   results/<UUID>.properties             root 写，API 读
 /var/lib/today-blog/                     today 写，业务运行数据
-  maintenance.properties               存在时 API 拒绝新业务请求
 ```
+
+维护状态保存在 API 进程内存中，不占用该目录。
 
 API 只能 sudo 启动 UUID 命名的升级 unit，没有 shell/java/任意 systemctl 权限。
 **API unit 不能设置 `NoNewPrivileges=true`，否则 sudo 无法工作。**

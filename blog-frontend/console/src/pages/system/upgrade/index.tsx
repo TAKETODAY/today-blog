@@ -127,8 +127,8 @@ export default function SystemUpgrade() {
 
   const refresh = useCallback(async () => {
     const [current, records, env, maintenanceStatus] = await Promise.all([
-      http.get('/api/console/upgrade/current'), http.get('/api/console/upgrade/history'),
-      http.get('/api/console/upgrade/environment'), http.get('/api/console/upgrade/maintenance'),
+      http.get('/api/console/maintenance/upgrade/current'), http.get('/api/console/maintenance/upgrade/history'),
+      http.get('/api/console/maintenance/upgrade/environment'), http.get('/api/console/maintenance'),
     ]);
     setVersion(current.data);
     setHistory(records.data);
@@ -142,7 +142,7 @@ export default function SystemUpgrade() {
 
     async function load() {
       try {
-        const [settings, records] = await Promise.all([http.get('/api/console/upgrade/settings'), refresh()]);
+        const [settings, records] = await Promise.all([http.get('/api/console/maintenance/upgrade/settings'), refresh()]);
         if (cancelled) {
           return;
         }
@@ -176,7 +176,7 @@ export default function SystemUpgrade() {
     async function poll() {
       let done = false;
       try {
-        const response = await http.get(`/api/console/upgrade/${id}`);
+        const response = await http.get(`/api/console/maintenance/upgrade/${id}`);
         if (cancelled) {
           return;
         }
@@ -217,7 +217,7 @@ export default function SystemUpgrade() {
     try {
       const data = new FormData();
       data.append('file', file);
-      const response = await http.post('/api/console/upgrade/packages', data, { timeout: 300000 });
+      const response = await http.post('/api/console/maintenance/upgrade/packages', data, { timeout: 300000 });
       selectTask(response.data);
       await refresh();
       message.success('升级包完整性校验通过，请确认来源可信');
@@ -249,7 +249,7 @@ export default function SystemUpgrade() {
       async onOk() {
         setStarting(true);
         try {
-          await http.post(`/api/console/upgrade/${id}/start`, requestOptions(options));
+          await http.post(`/api/console/maintenance/upgrade/${id}/start`, requestOptions(options));
           setTask(previous => previous && ({ ...previous, status: 'STARTING', message: '更新任务已提交' }));
           await refresh();
         }
@@ -264,8 +264,8 @@ export default function SystemUpgrade() {
     const options = await settingsForm.validateFields();
     setSaving(true);
     try {
-      await http.put('/api/console/upgrade/settings', requestOptions({ ...options, note: '' }));
-      const response = await http.get('/api/console/upgrade/settings');
+      await http.put('/api/console/maintenance/upgrade/settings', requestOptions({ ...options, note: '' }));
+      const response = await http.get('/api/console/maintenance/upgrade/settings');
       settingsForm.setFieldsValue(parseOptions(response.data));
       message.success('默认设置已保存；本次更新参数保持不变');
     }
@@ -283,8 +283,8 @@ export default function SystemUpgrade() {
     const values = await maintenanceForm.validateFields();
     setMaintenanceSaving(true);
     try {
-      const response = await http.put('/api/console/upgrade/maintenance', {
-        enabled: 'true', message: values.message, retryAfter: String(values.retryAfter),
+      const response = await http.put('/api/console/maintenance', {
+        enabled: true, message: values.message, retryAfter: values.retryAfter,
       });
       setMaintenance(response.data);
       setMaintenanceVisible(false);
@@ -303,7 +303,7 @@ export default function SystemUpgrade() {
       async onOk() {
         setMaintenanceSaving(true);
         try {
-          const response = await http.put('/api/console/upgrade/maintenance', { enabled: 'false' });
+          const response = await http.put('/api/console/maintenance', { enabled: false });
           setMaintenance(response.data);
           message.success('维护状态已关闭');
         }

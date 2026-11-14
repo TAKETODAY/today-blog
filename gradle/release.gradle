@@ -1,5 +1,6 @@
 import cn.taketoday.blog.release.ReleaseManifest
 
+import java.nio.file.Files
 import java.util.regex.Pattern
 
 apply plugin: 'distribution-base'
@@ -88,15 +89,17 @@ def manifest = tasks.register('releaseManifest', ReleaseManifest) {
   buildNumber = releaseBuild
 }
 
-distributions.create('release') {
+distributions.create("release") {
   distributionBaseName = 'today-blog'
   contents {
-    // 使用绝对 CopySpec 路径，覆盖插件默认的版本化归档根目录。
-    into '/today-blog'
+    into 'today-blog'
     from(stageRelease)
     from(manifest) {
       into 'META-INF'
     }
+
+    exclude '__MACOSX/**'
+    exclude '.DS_Store'
   }
 }
 

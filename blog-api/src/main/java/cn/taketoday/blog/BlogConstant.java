@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
 package cn.taketoday.blog;
 
 import infra.lang.VersionExtractor;
+import infra.logging.Logger;
+import infra.logging.LoggerFactory;
 
 /**
  * 时间:2018,1,6 2018 1 16
@@ -46,5 +48,7 @@ public interface BlogConstant extends infra.lang.Constant {
   int DEFAULT_LIST_SIZE = 10;
 
   int DEFAULT_MAX_PAGE_SIZE = 100;
+
+  Logger upgradeLogger = LoggerFactory.getLogger("today.blog.server.upgrade");
 
 }

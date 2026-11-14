@@ -17,7 +17,8 @@
 
 package cn.taketoday.blog.web.console;
 
-import java.io.IOException;
+import org.jspecify.annotations.Nullable;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -29,19 +30,22 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import cn.taketoday.blog.MaintenanceStatus;
+import cn.taketoday.blog.ServerStatus;
 import cn.taketoday.blog.backup.BackupOperationService;
 import cn.taketoday.blog.backup.BackupOperationStatus;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.updater.DatabaseBackup;
-import cn.taketoday.blog.updater.MaintenanceState;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeOptions;
 import cn.taketoday.blog.updater.UpgradePackage;
 import cn.taketoday.blog.updater.UpgradeStore;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import cn.taketoday.blog.web.maintenance.MaintenanceMode;
+import infra.context.ApplicationEventPublisher;
+import infra.core.ApplicationTemp;
 import infra.http.HttpStatus;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
@@ -52,13 +56,26 @@ import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
 import infra.web.multipart.Part;
 
+import static cn.taketoday.blog.BlogConstant.upgradeLogger;
+
 /**
- * 管理端仅上传与派发任务，安装与重启由独立 systemd unit 执行。
+ * 管理端维护状态接口。
+ * <p>
+ * 维护状态由 {@link MaintenanceStatus} 统一管理，升级流程开启的状态会在升级结束后自动清除，
+ * 管理员手动开启的状态需要主动关闭。
+ *
+ * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
+ * @since 4.0
  */
 @RequiresBlogger
 @RestController
-@RequestMapping("/api/console/upgrade")
-class UpgradeHttpHandler {
+@RequestMapping("/api/console/maintenance")
+class MaintenanceHttpHandler {
+
+  // 系统维护中，请稍后重试
+  public static final String DEFAULT_MESSAGE = "系统维护中，请稍后重试";
+
+  public static final int DEFAULT_RETRY_AFTER_SECONDS = 120;
 
   /**
    * 尚未结束的更新任务状态，存在这些状态时禁止再次启动更新。
@@ -74,15 +91,44 @@ class UpgradeHttpHandler {
 
   private final Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
 
+  private final ServerStatus serverStatus;
+
+  private final ApplicationTemp applicationTemp;
+
+  private final ApplicationEventPublisher eventPublisher;
+
   private final UpgradeStore store = new UpgradeStore(state);
 
   private final BackupOperationService operations;
 
-  private final MaintenanceMode maintenance;
-
-  UpgradeHttpHandler(BackupOperationService operations, MaintenanceMode maintenance) {
+  MaintenanceHttpHandler(ServerStatus serverStatus, ApplicationTemp applicationTemp,
+          ApplicationEventPublisher eventPublisher, BackupOperationService operations) {
+    this.serverStatus = serverStatus;
+    this.applicationTemp = applicationTemp;
+    this.eventPublisher = eventPublisher;
     this.operations = operations;
-    this.maintenance = maintenance;
+  }
+
+  @GET
+  public MaintenanceStatus maintenance() {
+    return serverStatus.getMaintenanceStatus();
+  }
+
+  @PUT
+  @Logging(title = "切换维护状态", content = "维护: [#{#request.enabled}]")
+  public synchronized MaintenanceStatus maintenance(@RequestBody MaintenanceRequest request) throws Exception {
+    if (request.enabled) {
+      String message = request.message;
+      if (StringUtils.isBlank(message)) {
+        message = DEFAULT_MESSAGE;
+      }
+      MaintenanceStatus status = new MaintenanceStatus(request.enabled,
+              message, retryAfter(request.retryAfter), MaintenanceStatus.Source.MANUAL);
+      serverStatus.setMaintenanceStatus(status);
+      return status;
+    }
+    serverStatus.setMaintenanceStatus(MaintenanceStatus.DISABLED);
+    return MaintenanceStatus.DISABLED;
   }
 
   private UpgradeOptions options(Properties values) {
@@ -94,12 +140,12 @@ class UpgradeHttpHandler {
     }
   }
 
-  @GET("/settings")
+  @GET("/upgrade/settings")
   public Properties settings() throws Exception {
     return store.settings().properties();
   }
 
-  @PUT("/settings")
+  @PUT("/upgrade/settings")
   @Logging(title = "修改更新设置", content = "操作人: [#{#user.id}]")
   public synchronized Properties settings(@RequestBody Properties values, User user) throws Exception {
     enabled();
@@ -108,12 +154,12 @@ class UpgradeHttpHandler {
     return options.properties();
   }
 
-  @GET("/history")
+  @GET("/upgrade/history")
   public List<Properties> history() throws Exception {
     return operations.upgradeHistory();
   }
 
-  @GET("/environment")
+  @GET("/upgrade/environment")
   public Map<String, Object> environment() throws Exception {
     boolean backupReady;
     long backupFreeBytes = 0;
@@ -134,7 +180,7 @@ class UpgradeHttpHandler {
             "installFreeBytes", Files.exists(root) ? Files.getFileStore(root).getUsableSpace() : 0);
   }
 
-  @GET("/current")
+  @GET("/upgrade/current")
   public Properties current() throws Exception {
     String release = System.getenv("BLOG_RELEASE_PATH");
     if (release == null) {
@@ -145,9 +191,10 @@ class UpgradeHttpHandler {
     return UpgradeFiles.read(Path.of(release).resolve("release.properties"));
   }
 
-  @POST("/packages")
-  @Logging(title = "上传升级包", content = "操作人: [#{#user.id}]")
-  public synchronized Properties upload(Part file, User user) throws Exception {
+  @POST("/upgrade/packages")
+  @Logging(title = "上传升级包", content = "文件: [#{#file.originalFilename}], 文件大小：[#{#file.contentLength}]")
+  public Properties upload(Part file, User user) throws Exception {
+    upgradeLogger.info("Upload TODAY BLOG Server package");
     enabled();
     if (file.getContentLength() <= 0 || file.getContentLength() > UpgradePackage.MAX_PACKAGE_BYTES) {
       throw ErrorMessageException.failed("升级包大小必须在 1 字节至 512 MiB 之间");
@@ -156,18 +203,8 @@ class UpgradeHttpHandler {
     Path task = Files.createDirectories(state.resolve("incoming").resolve(id));
     Path temp = task.resolve("upload.tmp");
     try {
-      try (var input = file.getInputStream(); var output = Files.newOutputStream(temp)) {
-        byte[] buffer = new byte[65536];
-        long total = 0;
-        int count;
-        while ((count = input.read(buffer)) != -1) {
-          total += count;
-          if (total > UpgradePackage.MAX_PACKAGE_BYTES) {
-            throw new java.io.IOException("升级包过大");
-          }
-          output.write(buffer, 0, count);
-        }
-      }
+      file.transferTo(temp);
+
       var manifest = UpgradePackage.verify(temp);
       long currentBuild = Long.parseLong(current().getProperty("build"));
       if (manifest.build() <= currentBuild) {
@@ -195,80 +232,16 @@ class UpgradeHttpHandler {
     }
   }
 
-  @GET("/maintenance")
-  public Map<String, Object> maintenance() {
-    MaintenanceMode.Status status = maintenance.status();
-    Map<String, Object> result = new java.util.LinkedHashMap<>();
-    result.put("enabled", status.enabled());
-    result.put("message", status.message());
-    result.put("retryAfterSeconds", status.retryAfterSeconds());
-    result.put("source", status.source() == null ? null : status.source().value());
-    return result;
-  }
-
-  /**
-   * 手动切换维护状态。手动开启的状态不会被升级流程自动清除。
-   */
-  @PUT("/maintenance")
-  @Logging(title = "切换维护状态", content = "维护: [#{#values.getProperty('enabled')}]")
-  public synchronized Map<String, Object> maintenance(@RequestBody Properties values) throws Exception {
-    String enabled = values.getProperty("enabled");
-    if (!"true".equals(enabled) && !"false".equals(enabled)) {
-      throw ErrorMessageException.failed("维护状态必须为 true 或 false");
-    }
-    if (Boolean.parseBoolean(enabled)) {
-      String message = values.getProperty("message", MaintenanceState.DEFAULT_MESSAGE);
-      if (message.isBlank()) {
-        message = MaintenanceState.DEFAULT_MESSAGE;
-      }
-      enableMaintenance(message, retryAfter(values.getProperty("retryAfter")),
-              MaintenanceState.Source.MANUAL);
-    }
-    else {
-      disableMaintenance();
-    }
-    return maintenance();
-  }
-
-  private void enableMaintenance(String message, int retryAfterSeconds, MaintenanceState.Source source) {
-    try {
-      maintenance.enable(message, retryAfterSeconds, source);
-    }
-    catch (IOException failure) {
-      throw ErrorMessageException.failed("无法写入维护状态文件 " + maintenance.file()
-              + "，请确认运行用户对所在目录有写权限");
-    }
-  }
-
-  private void disableMaintenance() {
-    try {
-      maintenance.disable();
-    }
-    catch (IOException failure) {
-      throw ErrorMessageException.failed("无法删除维护状态文件 " + maintenance.file()
-              + "，请确认运行用户对所在目录有写权限");
-    }
-  }
-
-  private static int retryAfter(String value) {
-    if (value == null) {
-      return MaintenanceState.DEFAULT_RETRY_AFTER_SECONDS;
-    }
-    try {
-      int seconds = Integer.parseInt(value);
-      if (seconds < 1 || seconds > 86400) {
-        throw ErrorMessageException.failed("重试等待时间必须在 1 至 86400 秒之间");
-      }
-      return seconds;
-    }
-    catch (NumberFormatException invalid) {
-      throw ErrorMessageException.failed("重试等待时间必须是整数秒");
-    }
-  }
-
-  @POST("/{id}/start")
+  @POST("/upgrade/{id}/start")
   @Logging(title = "启动系统升级", content = "任务: [#{#id}]，操作人: [#{#user.id}]")
   public synchronized Map<String, String> start(@PathVariable String id, @RequestBody Properties values, User user) throws Exception {
+    Path unpackPath = applicationTemp.getDir("upload");
+
+    upgradeLogger.debug("Unzipped file {}", unpackPath);
+//    Path backupPath = backupBasePath.resolve(BuildProperties.version);
+//    File[] files = unpackPath.resolve("ironman-server").toFile().listFiles();
+//    Assert.state(files != null, "The directory structure of the files you provided is incorrect.");
+
     enabled();
     UpgradeFiles.checkId(id);
     UpgradeOptions options = options(values);
@@ -291,12 +264,7 @@ class UpgradeHttpHandler {
       throw ErrorMessageException.failed("该任务已提交，不可重复启动", HttpStatus.CONFLICT);
     }
     store.snapshot(id, options, user.getId(), current());
-    boolean maintenanceEnabled = maintenance.exists();
-    if (!maintenanceEnabled) {
-      // 管理端一提交升级就停止接收新请求，覆盖备份、切换和重启整个过程。
-      enableMaintenance(MaintenanceState.DEFAULT_MESSAGE,
-              MaintenanceState.DEFAULT_RETRY_AFTER_SECONDS, MaintenanceState.Source.UPGRADE);
-    }
+    enableMaintenance();
     try {
       // 数据库记录失败时不派发高权限任务，磁盘记录仍保留供核对。
       operations.recordUpgrade(id);
@@ -309,14 +277,8 @@ class UpgradeHttpHandler {
       }
     }
     catch (Exception failure) {
-      if (!maintenanceEnabled) {
-        try {
-          maintenance.disable();
-        }
-        catch (Exception ignored) {
-          // 保留原始派发失败原因，维护状态可在确认后手动关闭。
-        }
-      }
+      serverStatus.setMaintenanceStatus(MaintenanceStatus.DISABLED);
+
       Path metadataPath = state.resolve("incoming").resolve(id).resolve("metadata.properties");
       Properties metadata = UpgradeFiles.read(metadataPath);
       metadata.setProperty("status", BackupOperationStatus.FAILED.name());
@@ -328,9 +290,15 @@ class UpgradeHttpHandler {
     return Map.of("id", id, "status", BackupOperationStatus.STARTING.name());
   }
 
-  @GET("/{id}")
+  @GET("/upgrade/{id}")
   public Properties status(@PathVariable String id) throws Exception {
     return operations.upgrade(id);
+  }
+
+  private void enableMaintenance() {
+    MaintenanceStatus status = new MaintenanceStatus(true, DEFAULT_MESSAGE,
+            DEFAULT_RETRY_AFTER_SECONDS, MaintenanceStatus.Source.UPGRADE);
+    serverStatus.setMaintenanceStatus(status);
   }
 
   private void enabled() {
@@ -338,4 +306,21 @@ class UpgradeHttpHandler {
       throw ErrorMessageException.failed("请先完成 systemd 部署配置");
     }
   }
+
+  private static int retryAfter(@Nullable Integer value) {
+    if (value == null) {
+      return DEFAULT_RETRY_AFTER_SECONDS;
+    }
+    if (value < 1 || value > 86400) {
+      throw ErrorMessageException.failed("重试等待时间必须在 1 至 86400 秒之间");
+    }
+    return value;
+  }
+
+  static class MaintenanceRequest {
+    public boolean enabled;
+    public @Nullable String message;
+    public @Nullable Integer retryAfter;
+  }
+
 }

@@ -18,6 +18,7 @@
 package cn.taketoday.blog.updater;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -39,8 +40,10 @@ public final class UpgradeFiles {
 
   public static Properties read(Path path) throws IOException {
     Properties properties = new Properties();
-    try (var input = Files.newInputStream(path)) {
-      properties.load(input);
+    // 按 UTF-8 解码：store() 生成的 Unicode 转义仍是 ASCII，不影响读取；
+    // 手工写入的中文提示则不会变成乱码。
+    try (var reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+      properties.load(reader);
     }
     return properties;
   }

@@ -18,30 +18,24 @@
 package cn.taketoday.blog.web.maintenance;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-import java.nio.file.Path;
-import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import cn.taketoday.blog.updater.UpgradeFiles;
+import cn.taketoday.blog.MaintenanceStatus;
+import cn.taketoday.blog.ServerStatus;
+import infra.context.ApplicationEventPublisher;
+import infra.context.availability.ApplicationAvailability;
 import infra.web.mock.MockHttpContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 class MaintenanceFilterTests {
 
-  @TempDir
-  Path temp;
-
   @Test
-  void rejectsRequestsWhileMaintenanceMarkerExists() throws Exception {
-    Path marker = temp.resolve("maintenance.properties");
-    Properties properties = new Properties();
-    properties.setProperty("message", "系统升级中");
-    properties.setProperty("retryAfter", "60");
-    UpgradeFiles.write(marker, properties);
-    MaintenanceFilter filter = new MaintenanceFilter(new MaintenanceMode(marker));
+  void rejectsRequestsDuringMaintenance() throws Exception {
+    MaintenanceFilter filter = filter(new MaintenanceStatus(
+            true, "系统升级中", 60, MaintenanceStatus.Source.MANUAL));
 
     AtomicBoolean proceeded = new AtomicBoolean();
     MockHttpContext context = request("GET", "/api/articles");
@@ -56,9 +50,8 @@ class MaintenanceFilterTests {
 
   @Test
   void allowsHealthAndUpgradeStatus() throws Exception {
-    Path marker = temp.resolve("maintenance.properties");
-    UpgradeFiles.write(marker, new Properties());
-    MaintenanceFilter filter = new MaintenanceFilter(new MaintenanceMode(marker));
+    MaintenanceFilter filter = filter(new MaintenanceStatus(
+            true, "系统升级中", 60, MaintenanceStatus.Source.UPGRADE));
 
     MockHttpContext health = request("GET", MaintenanceFilter.HEALTH_PATH);
     AtomicBoolean healthProceeded = new AtomicBoolean();
@@ -78,10 +71,9 @@ class MaintenanceFilterTests {
 
   @Test
   void allowsMaintenanceToggle() throws Exception {
-    Path marker = temp.resolve("maintenance.properties");
-    UpgradeFiles.write(marker, new Properties());
-    MaintenanceFilter filter = new MaintenanceFilter(new MaintenanceMode(marker));
-    String toggle = MaintenanceFilter.UPGRADE_PATH + "/maintenance";
+    MaintenanceFilter filter = filter(new MaintenanceStatus(
+            true, "系统维护中", 120, MaintenanceStatus.Source.MANUAL));
+    String toggle = MaintenanceFilter.MAINTENANCE_PATH;
 
     AtomicBoolean queried = new AtomicBoolean();
     filter.doFilter(request("GET", toggle), ignored -> queried.set(true));
@@ -99,14 +91,20 @@ class MaintenanceFilterTests {
   }
 
   @Test
-  void servesNormallyWithoutMarker() throws Exception {
-    Path marker = temp.resolve("maintenance.properties");
-    MaintenanceFilter filter = new MaintenanceFilter(new MaintenanceMode(marker));
+  void servesNormallyWhenMaintenanceDisabled() throws Exception {
+    MaintenanceFilter filter = filter(MaintenanceStatus.DISABLED);
 
     AtomicBoolean proceeded = new AtomicBoolean();
     filter.doFilter(request("GET", "/api/articles"), ignored -> proceeded.set(true));
 
     assertThat(proceeded).isTrue();
+  }
+
+  private static MaintenanceFilter filter(MaintenanceStatus status) {
+    ServerStatus serverStatus = new ServerStatus(
+            mock(ApplicationAvailability.class), mock(ApplicationEventPublisher.class));
+    serverStatus.setMaintenanceStatus(status);
+    return new MaintenanceFilter(serverStatus);
   }
 
   private static MockHttpContext request(String method, String uri) {

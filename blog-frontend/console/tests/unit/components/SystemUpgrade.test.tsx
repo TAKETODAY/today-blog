@@ -76,7 +76,7 @@ describe('SystemUpgrade', () => {
     await act(async () => {
       save?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    expect(http.put).toHaveBeenCalledWith('/api/console/upgrade/settings', expect.objectContaining({ backupEnabled: 'false' }));
+    expect(http.put).toHaveBeenCalledWith('/api/console/maintenance/upgrade/settings', expect.objectContaining({ backupEnabled: 'false' }));
     expect((http.get as jest.Mock).mock.calls.filter(([url]) => url.endsWith('/settings')).length).toBe(2);
     act(() => root.unmount());
     root = createRoot(container);
