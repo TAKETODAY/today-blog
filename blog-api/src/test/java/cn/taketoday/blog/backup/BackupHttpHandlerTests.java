@@ -32,7 +32,7 @@ import infra.transaction.annotation.Transactional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 备份管理接口的响应契约测试。
+ * 系统备份接口的响应契约测试。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12

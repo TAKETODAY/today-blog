@@ -32,7 +32,7 @@ import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
 
 /**
- * 备份管理接口，所有操作均要求博主身份。
+ * 系统备份接口，所有操作均要求博主身份。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12

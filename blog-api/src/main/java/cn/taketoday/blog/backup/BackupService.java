@@ -30,7 +30,7 @@ import infra.persistence.annotation.OrderByClause;
 import infra.stereotype.Service;
 
 /**
- * 备份管理查询。数据库保存备份元信息，{@code location} 指向本地文件。
+ * 系统备份查询。数据库保存备份元信息，{@code location} 指向本地文件。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12

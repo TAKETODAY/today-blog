@@ -259,9 +259,9 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
 
 升级器通过 JDBC 读取 `t_upgrade_record`、`t_upgrade_package` 和 `t_upgrade_path_mapping`，
 直接更新任务状态。成功后会按 `delete_package_after_upgrade` 删除升级包文件和记录。
-`t_backup_operation` 不再创建，备份管理页不展示操作记录；备份执行器接通时需要审计再单独建表。
+`t_backup_operation` 不再创建，系统备份页不展示操作记录；备份执行器接通时需要审计再单独建表。
 
-管理后台「系统管理 → 备份管理」（`/system/backups`）提供备份列表和详情；
+管理后台「系统管理 → 系统备份」（`/system/backups`）提供备份列表和详情；
 接口统一使用 `/api/console/backups`；旧页面 `/system/snapshots` 重定向到新入口。
 所有接口要求博主身份；详情只返回允许展示的元信息，不返回配置凭据或备份内容。
 当前管理入口为只读：完整执行器接通前，创建、保护、删除和恢复按钮均禁用。
