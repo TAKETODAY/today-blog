@@ -26,10 +26,16 @@ import {
   Upload
 } from 'antd';
 import {
+  ArrowUpOutlined,
+  DeleteOutlined,
+  EditOutlined,
   MinusCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
+  SaveOutlined,
   SettingOutlined,
+  StopOutlined,
+  ToolOutlined,
   UploadOutlined
 } from '@ant-design/icons';
 import { http } from '@/utils/http';
@@ -516,9 +522,9 @@ export default function SystemUpgrade() {
                           </Tag>
                           {maintenance?.enabled
                               ? <Button danger loading={maintenanceSaving} disabled={busy || !loaded}
-                                        onClick={disableMaintenance}>关闭维护</Button>
+                                        onClick={disableMaintenance} icon={<StopOutlined/>}>关闭维护</Button>
                               : <Button loading={maintenanceSaving} disabled={busy || !loaded}
-                                        onClick={openMaintenanceModal}>开启维护</Button>}
+                                        onClick={openMaintenanceModal} icon={<ToolOutlined/>}>开启维护</Button>}
                           <Button icon={<ReloadOutlined/>} loading={refreshing}
                                   onClick={() => refresh().catch(() => message.error('刷新环境失败'))}>刷新状态</Button>
                           <Badge dot={Boolean(mappingSettings && !mappingSettings.ready)} offset={[-4, 4]}>
@@ -584,9 +590,9 @@ export default function SystemUpgrade() {
                       key: 'action',
                       render: (_, item) => <Space size={0}>
                         <Button type="link" disabled={item.status !== 'READY' || busy}
-                                onClick={() => openStart(item)}>升级</Button>
-                        <Button type="link" onClick={() => openEditPackage(item)}>编辑</Button>
-                        <Button type="link" danger onClick={() => removePackage(item)} disabled={busy}>删除</Button>
+                                onClick={() => openStart(item)} icon={<ArrowUpOutlined/>}>升级</Button>
+                        <Button type="link" onClick={() => openEditPackage(item)} icon={<EditOutlined/>}>编辑</Button>
+                        <Button type="link" danger onClick={() => removePackage(item)} disabled={busy} icon={<DeleteOutlined/>}>删除</Button>
                       </Space>
                     },
                   ]}/>
@@ -678,7 +684,7 @@ export default function SystemUpgrade() {
           children: <>
             <div className="upgrade-toolbar">
               <span className="upgrade-secondary">默认设置仅用于以后载入页面时初始化参数，不影响已提交的任务；命令及数据库凭据由运维配置。</span>
-              <Button type="primary" onClick={saveSettings} loading={saving}
+              <Button type="primary" icon={<SaveOutlined/>} onClick={saveSettings} loading={saving}
                       disabled={!loaded || !environment?.updaterReady}>保存默认设置</Button>
             </div>
             <Form form={settingsForm} layout="vertical" disabled={!loaded || saving}>
@@ -696,7 +702,7 @@ export default function SystemUpgrade() {
               <Space>
                 <Button icon={<ReloadOutlined/>}
                         onClick={() => reloadMappings().catch(() => message.error('重新载入映射失败'))}>重新载入</Button>
-                <Button type="primary" loading={mappingSaving}
+                <Button type="primary" icon={<SaveOutlined/>} loading={mappingSaving}
                         disabled={!loaded || !mappingSettings?.ready || !environment?.updaterReady}
                         onClick={saveMappings}>保存映射</Button>
               </Space>
@@ -800,7 +806,7 @@ export default function SystemUpgrade() {
         forceRender
         confirmLoading={starting}
         okText="开始升级"
-        okButtonProps={{ disabled: !environmentReady }}
+        okButtonProps={{ disabled: !environmentReady, icon: <ArrowUpOutlined/> }}
         onOk={start}
         onCancel={() => setStartPackage(undefined)}
     >
@@ -823,6 +829,7 @@ export default function SystemUpgrade() {
         open={maintenanceVisible}
         confirmLoading={maintenanceSaving}
         okText="开启维护"
+        okButtonProps={{ icon: <ToolOutlined/> }}
         onOk={enableMaintenance}
         onCancel={() => setMaintenanceVisible(false)}
     >
