@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
+import ProTable from '@ant-design/pro-table';
 import {
   Alert,
   Badge,
@@ -21,7 +22,6 @@ import {
   Space,
   Steps,
   Switch,
-  Table,
   Tabs,
   Tag,
   Upload
@@ -583,17 +583,24 @@ export default function SystemUpgrade() {
                     MiB，另需足够导出空间）</Descriptions.Item>
                 </Descriptions>
                 <div>
-                  <div className="upgrade-toolbar">
-                    <span className="upgrade-secondary">选择待升级的发行包；已使用的包保留历史快照，可继续查看或删除。</span>
-                    <Button icon={<UploadOutlined/>} onClick={() => setUploadVisible(true)} disabled={!loaded}>上传升级包</Button>
-                  </div>
-                  <Table<UpgradePackage> rowKey="id" dataSource={packages} pagination={false} scroll={{ x: 900 }}
-                                          rowSelection={{
-                                            type: 'radio',
-                                            selectedRowKeys: selectedPackageId ? [selectedPackageId] : [],
-                                            getCheckboxProps: item => ({ disabled: item.status !== 'READY' }),
-                                            onChange: keys => setSelectedPackageId(keys.length ? Number(keys[0]) : undefined),
-                                          }} locale={{
+                  <ProTable<UpgradePackage>
+                      rowKey="id"
+                      headerTitle="升级包"
+                      dataSource={packages}
+                      search={false}
+                      options={false}
+                      pagination={false}
+                      scroll={{ x: 900 }}
+                      toolBarRender={() => [
+                        <Button key="upload" icon={<UploadOutlined/>} onClick={() => setUploadVisible(true)}
+                                disabled={!loaded}>上传升级包</Button>,
+                      ]}
+                      rowSelection={{
+                        type: 'radio',
+                        selectedRowKeys: selectedPackageId ? [selectedPackageId] : [],
+                        getCheckboxProps: item => ({ disabled: item.status !== 'READY' }),
+                        onChange: keys => setSelectedPackageId(keys.length ? Number(keys[0]) : undefined),
+                      }} locale={{
                     emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级包，请先上传"/>
                   }} columns={[
                     {
@@ -605,7 +612,7 @@ export default function SystemUpgrade() {
                       </Space>
                     },
                     { title: '版本 / 构建', key: 'version', render: (_, item) => `${item.version} / ${item.build}` },
-                    { title: '状态', dataIndex: 'status', render: value => <Tag color={value === 'READY' ? 'success' : 'default'}>{statusLabels[value] || value}</Tag> },
+                    { title: '状态', dataIndex: 'status', render: (_, item) => <Tag color={item.status === 'READY' ? 'success' : 'default'}>{statusLabels[item.status] || item.status}</Tag> },
                     { title: '大小', dataIndex: 'fileSize', render: value => bytes(Number(value)) },
                     { title: '上传时间', dataIndex: 'createdAt' },
                     {
@@ -617,6 +624,7 @@ export default function SystemUpgrade() {
                       </Space>
                     },
                   ]}/>
+                  <span className="upgrade-secondary">选择待升级的发行包；已使用的包保留历史快照，可继续查看或删除。</span>
                 </div>
                 <div>
                   <Divider orientation="left" plain>升级参数</Divider>
@@ -662,19 +670,25 @@ export default function SystemUpgrade() {
             key: 'history',
             label: '升级记录',
             children: <>
-              <div className="upgrade-toolbar">
-                <span className="upgrade-secondary">记录已提交和已完成的升级任务，升级包删除后仍保留快照。</span>
-                <Button icon={<ReloadOutlined/>} loading={refreshing}
-                        onClick={() => refresh().catch(() => message.error('刷新记录失败'))}>刷新记录</Button>
-              </div>
-              <Table<UpgradeRecord> rowKey="id" loading={refreshing} dataSource={records} scroll={{ x: 1000 }}
-                                    pagination={{ pageSize: 10, showSizeChanger: false }}
-                                    locale={{
-                                      emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级记录"/>,
-                                    }} columns={[
+              <ProTable<UpgradeRecord>
+                  rowKey="id"
+                  headerTitle="升级记录"
+                  loading={refreshing}
+                  dataSource={records}
+                  search={false}
+                  options={false}
+                  scroll={{ x: 1000 }}
+                  pagination={{ pageSize: 10, showSizeChanger: false }}
+                  toolBarRender={() => [
+                    <Button key="refresh" icon={<ReloadOutlined/>} loading={refreshing}
+                            onClick={() => refresh().catch(() => message.error('刷新记录失败'))}>刷新记录</Button>,
+                  ]}
+                  locale={{
+                    emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级记录"/>,
+                  }} columns={[
                 { title: '升级包', dataIndex: 'packageName' },
                 { title: '目标版本', key: 'version', render: (_, item) => `${item.packageVersion} / ${item.packageBuild}` },
-                { title: '状态', dataIndex: 'status', render: value => statusLabels[value] || value },
+                { title: '状态', dataIndex: 'status', render: (_, item) => statusLabels[item.status] || item.status },
                 { title: '开始时间', dataIndex: 'startedAt', render: value => value || '—' },
                 { title: '结束时间', dataIndex: 'finishedAt', render: value => value || '—' },
                 {
@@ -695,6 +709,7 @@ export default function SystemUpgrade() {
                   <Descriptions.Item label="发行版本目录">{item.releasePath || '—'}</Descriptions.Item>
                   <Descriptions.Item label="备注">{item.note || '—'}</Descriptions.Item>
                 </Descriptions>}}/>
+              <span className="upgrade-secondary">记录已提交和已完成的升级任务，升级包删除后仍保留快照。</span>
             </>,
           },
         ]}/>
