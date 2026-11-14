@@ -32,7 +32,7 @@ public record UpgradeOptions(boolean backupEnabled, int backupTimeoutSeconds, in
       throw new IllegalArgumentException("健康检查超时必须在 10 至 600 秒之间");
     }
     if (note == null || note.length() > 500) {
-      throw new IllegalArgumentException("更新备注不能超过 500 字");
+      throw new IllegalArgumentException("升级备注不能超过 500 字");
     }
   }
 
@@ -43,7 +43,7 @@ public record UpgradeOptions(boolean backupEnabled, int backupTimeoutSeconds, in
   public static UpgradeOptions from(Properties properties) {
     for (Object key : properties.keySet()) {
       if (!java.util.Set.of("backupEnabled", "backupTimeoutSeconds", "healthTimeoutSeconds", "note").contains(key)) {
-        throw new IllegalArgumentException("包含不支持的更新参数");
+        throw new IllegalArgumentException("包含不支持的升级参数");
       }
     }
     String enabled = properties.getProperty("backupEnabled", "true");

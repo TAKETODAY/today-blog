@@ -43,7 +43,7 @@ const statusNames: Record<string, string> = {
 };
 const typeNames: Record<string, string> = {
   BACKUP_CREATE: '创建备份', BACKUP_RESTORE: '恢复备份', BACKUP_DELETE: '删除备份',
-  BACKUP_PROTECT: '修改保护', UPGRADE: '系统更新',
+  BACKUP_PROTECT: '修改保护', UPGRADE: '系统升级',
 };
 
 function status(value: string) {
@@ -187,7 +187,7 @@ export default function Backups() {
           },
           {
             key: 'operations', label: '操作记录', children: <>
-              <div className="backup-toolbar"><span>创建、恢复、保护和删除的操作记录，以及关联备份的系统更新</span><Button onClick={refresh}
+              <div className="backup-toolbar"><span>创建、恢复、保护和删除的操作记录，以及关联备份的系统升级</span><Button onClick={refresh}
                                                                                                                           loading={loading}>刷新记录</Button>
               </div>
               <Table<Operation> rowKey="id" loading={loading} dataSource={operations} scroll={{ x: 1100 }}
@@ -242,7 +242,7 @@ export default function Backups() {
           <Descriptions.Item label="来源任务"><span
             className="backup-id">{detail.backup.sourceOperationId || '手动创建或未关联任务'}</span></Descriptions.Item>
         </Descriptions>
-        <Button onClick={() => history.push('/system/upgrade')}>前往系统更新</Button>
+        <Button onClick={() => history.push('/system/upgrade')}>前往系统升级</Button>
       </Space>}
     </Drawer>
   </PageContainer>;

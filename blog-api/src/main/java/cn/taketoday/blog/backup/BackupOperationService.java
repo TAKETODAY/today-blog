@@ -78,7 +78,7 @@ public class BackupOperationService {
     save(upgrades.task(id), BackupOperationType.UPGRADE);
     BackupOperation record = entityManager.findById(BackupOperation.class, id);
     if (record == null) {
-      throw new IllegalStateException("更新记录不存在：" + id);
+      throw new IllegalStateException("升级记录不存在：" + id);
     }
     return decode(record.getMetadata());
   }
@@ -133,7 +133,7 @@ public class BackupOperationService {
   }
 
   /**
-   * 系统更新记录，按创建时间倒序。
+   * 系统升级记录，按创建时间倒序。
    */
   @OrderByClause("created_at DESC")
   @EntityRef(BackupOperation.class)

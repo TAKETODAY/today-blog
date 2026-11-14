@@ -81,7 +81,7 @@ class MaintenanceHttpHandler {
   public static final int DEFAULT_RETRY_AFTER_SECONDS = 120;
 
   /**
-   * 尚未结束的更新任务状态，存在这些状态时禁止再次启动更新。
+   * 尚未结束的升级任务状态，存在这些状态时禁止再次启动升级。
    */
   private static final Set<BackupOperationStatus> RUNNING_STATUSES = EnumSet.of(
           BackupOperationStatus.STARTING,
@@ -148,7 +148,7 @@ class MaintenanceHttpHandler {
       return UpgradeOptions.from(values);
     }
     catch (IllegalArgumentException invalid) {
-      throw ErrorMessageException.failed("更新参数无效：备份超时 30–3600 秒，健康检查 10–600 秒，备注最多 500 字");
+      throw ErrorMessageException.failed("升级参数无效：备份超时 30–3600 秒，健康检查 10–600 秒，备注最多 500 字");
     }
   }
 
@@ -158,7 +158,7 @@ class MaintenanceHttpHandler {
   }
 
   @PUT("/upgrade/settings")
-  @Logging(title = "修改更新设置", content = "操作人: [#{#user.id}]")
+  @Logging(title = "修改升级设置", content = "操作人: [#{#user.id}]")
   public synchronized Properties settings(@RequestBody Properties values, User user) throws Exception {
     enabled();
     UpgradeOptions options = options(values);
@@ -301,7 +301,7 @@ class MaintenanceHttpHandler {
     for (Properties task : store.history()) {
       BackupOperationStatus status = BackupOperationStatus.of(task.getProperty("status"));
       if (status != null && RUNNING_STATUSES.contains(status)) {
-        throw ErrorMessageException.failed("已有更新任务运行，请先确认其结果", HttpStatus.CONFLICT);
+        throw ErrorMessageException.failed("已有升级任务运行，请先确认其结果", HttpStatus.CONFLICT);
       }
     }
     if (BackupOperationStatus.of(store.task(id).getProperty("status")) != BackupOperationStatus.READY) {

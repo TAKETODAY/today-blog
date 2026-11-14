@@ -138,7 +138,7 @@ public class BackupService {
   }
 
   /**
-   * 备份相关操作记录：备份操作类型，或关联了备份、保护备份的系统更新。
+   * 备份相关操作记录：备份操作类型，或关联了备份、保护备份的系统升级。
    */
   @OrderByClause("created_at DESC, id DESC")
   @EntityRef(BackupOperation.class)

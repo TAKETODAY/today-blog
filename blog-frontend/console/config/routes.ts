@@ -155,7 +155,7 @@ export default [
         component: './system/api-keys',
       },
       {
-        name: '系统更新',
+        name: '系统升级',
         path: '/system/upgrade',
         component: './system/upgrade',
       },

@@ -20,14 +20,14 @@ package cn.taketoday.blog.backup;
 import infra.lang.Enumerable;
 
 /**
- * 备份及关联更新的操作类型，枚举名即数据库存储值。
+ * 备份及关联升级的操作类型，枚举名即数据库存储值。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
  */
 public enum BackupOperationType implements Enumerable<String> {
 
-  /** 系统更新 */
+  /** 系统升级 */
   UPGRADE,
 
   /** 创建备份 */

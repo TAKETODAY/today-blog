@@ -76,7 +76,7 @@ const phases = ['VALIDATING', 'INSTALLING', 'BACKING_UP', 'RESTARTING', 'HEALTH_
 const labels: Record<string, string> = {
   READY: '待确认', STARTING: '已提交', VALIDATING: '校验升级包', INSTALLING: '准备版本',
   BACKING_UP: '数据库备份', RESTARTING: '切换并重启', HEALTH_CHECKING: '健康检查',
-  SUCCESS: '更新成功', FAILED: '更新失败', ROLLING_BACK: '正在恢复旧程序', ROLLED_BACK: '更新失败，已恢复旧版本',
+  SUCCESS: '升级成功', FAILED: '升级失败', ROLLING_BACK: '正在恢复旧程序', ROLLED_BACK: '升级失败，已恢复旧版本',
 };
 
 function parseOptions(data: Record<string, string>): Options {
@@ -101,8 +101,8 @@ function size(bytes: number) {
 
 function OptionFields() {
   return <>
-    <Form.Item name="backupEnabled" label="更新前备份数据库" valuePropName="checked"
-               extra="备份失败将终止更新；关闭后必须自行保证有可恢复的备份。">
+    <Form.Item name="backupEnabled" label="升级前备份数据库" valuePropName="checked"
+               extra="备份失败将终止升级；关闭后必须自行保证有可恢复的备份。">
       <Switch checkedChildren="开启" unCheckedChildren="关闭"/>
     </Form.Item>
     <Form.Item name="backupTimeoutSeconds" label="备份超时（秒）" rules={[{ required: true }]}>
@@ -182,7 +182,7 @@ export default function SystemUpgrade() {
         setLoaded(true);
       }
       catch (error) {
-        message.error('无法加载更新环境，请刷新页面重试');
+        message.error('无法加载升级环境，请刷新页面重试');
       }
     }
 
@@ -260,7 +260,7 @@ export default function SystemUpgrade() {
   async function start() {
     const options = await runForm.validateFields();
     Modal.confirm({
-      title: `确认更新到 ${task?.version} / ${task?.build}？`,
+      title: `确认升级到 ${task?.version} / ${task?.build}？`,
       content: <Space direction="vertical">
         <span>当前版本：{version.version} / {version.build || '—'}</span>
         <span>数据库备份：{options.backupEnabled ? `开启，超时 ${options.backupTimeoutSeconds} 秒` : '关闭，请确认已自行备份'}</span>
@@ -273,13 +273,13 @@ export default function SystemUpgrade() {
             && <span>当前为手动维护状态，升级完成后不会自动关闭，请升级完成后手动关闭。</span>}
         <span>服务会短暂中断。仅适用于向后兼容的数据库迁移；自动回滚只恢复程序，不恢复数据库。</span>
       </Space>,
-      okText: options.backupEnabled ? '开始更新' : '确认跳过备份并更新',
+      okText: options.backupEnabled ? '开始升级' : '确认跳过备份并升级',
       okButtonProps: { danger: !options.backupEnabled },
       async onOk() {
         setStarting(true);
         try {
           await http.post(`/api/console/maintenance/upgrade/${id}/start`, requestOptions(options));
-          setTask(previous => previous && ({ ...previous, status: 'STARTING', message: '更新任务已提交' }));
+          setTask(previous => previous && ({ ...previous, status: 'STARTING', message: '升级任务已提交' }));
           await refresh();
         }
         finally {
@@ -296,7 +296,7 @@ export default function SystemUpgrade() {
       await http.put('/api/console/maintenance/upgrade/settings', requestOptions({ ...options, note: '' }));
       const response = await http.get('/api/console/maintenance/upgrade/settings');
       settingsForm.setFieldsValue(parseOptions(response.data));
-      message.success('默认设置已保存；本次更新参数保持不变');
+      message.success('默认设置已保存；本次升级参数保持不变');
     }
     finally {
       setSaving(false);
@@ -386,17 +386,17 @@ export default function SystemUpgrade() {
 
   const maintenanceSource = maintenance?.source === 'manual' ? '手动开启，升级后不会自动关闭' : '升级流程自动开启，完成后自动关闭';
 
-  return <PageContainer className="system-update-page" title="系统更新" subTitle="发布新版本，保留可追溯的备份与更新记录">
+  return <PageContainer className="system-update-page" title="系统升级" subTitle="发布新版本，保留可追溯的备份与升级记录">
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Alert type="warning" showIcon message="程序回滚不等于数据库恢复"
-             description="仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份时间点之后的新数据；更新期间不得并发修改表结构。"/>
+             description="仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份时间点之后的新数据；升级期间不得并发修改表结构。"/>
       {maintenance?.enabled && <Alert type="warning" showIcon message="维护状态已开启"
                                       description={`${maintenance.message || '系统维护中，请稍后重试'}；建议重试间隔 ${maintenance.retryAfterSeconds || 120} 秒。${maintenanceSource}。`}/>}
       {disconnected && <Alert type="info" showIcon message={needsLogin ? '登录已失效，请重新登录后查看任务' : '连接暂时中断，正在自动重试'}
                               description="任务在服务器独立运行，请勿重复提交。长时间未恢复时请通过 SSH 检查 systemd 日志。"/>}
       <Tabs activeKey={tab} onChange={setTab} items={[
         {
-          key: 'run', label: '执行更新', children: <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          key: 'run', label: '执行升级', children: <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card title="当前环境" extra={<Space>
               {maintenance?.enabled
                   ? <Button danger loading={maintenanceSaving} disabled={busy || !loaded} onClick={disableMaintenance}>关闭维护</Button>
@@ -426,17 +426,17 @@ export default function SystemUpgrade() {
                   <Button icon={<UploadOutlined/>} loading={uploading}>选择并上传升级包</Button>
                 </Upload>
                 <span>仅支持完整发行 ZIP，最大 512 MiB。摘要只校验完整性，请仅上传自己构建的可信包。</span>
-                {task?.status === 'READY' && <Alert type="success" showIcon message={`待更新：${task.version} / ${task.build}`}
+                {task?.status === 'READY' && <Alert type="success" showIcon message={`待升级：${task.version} / ${task.build}`}
                                                     description={`包大小：${(Number(task.packageBytes || 0) / 1024 / 1024).toFixed(1)} MiB，完整性校验通过。`}/>}
                 <Form form={runForm} layout="vertical" disabled={busy || !loaded}>
                   <OptionFields/>
-                  <Form.Item name="note" label="本次更新备注"><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
+                  <Form.Item name="note" label="本次升级备注"><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
                 </Form>
                 <Button type="primary" disabled={task?.status !== 'READY' || busy || !ready} loading={starting}
-                        onClick={start}>开始更新</Button>
+                        onClick={start}>开始升级</Button>
               </Space>
             </Card>
-            {task && <Card title="更新任务">
+            {task && <Card title="升级任务">
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 <Alert showIcon
                        type={task.status === 'SUCCESS' ? 'success' : ['FAILED', 'ROLLED_BACK'].includes(task.status) ? 'error' : 'info'}
@@ -460,7 +460,7 @@ export default function SystemUpgrade() {
           </Space>
         },
         {
-          key: 'settings', label: '更新设置', forceRender: true, children: <Card title="默认更新参数">
+          key: 'settings', label: '升级设置', forceRender: true, children: <Card title="默认升级参数">
             <Alert type="info" showIcon
                    message="默认设置仅用于以后载入页面时初始化参数，不影响已提交的任务。映射目标白名单、命令及数据库凭据由运维配置。"
                    style={{ marginBottom: 24 }}/>
@@ -552,7 +552,7 @@ export default function SystemUpgrade() {
         },
         {
           key: 'history',
-          label: '更新记录',
+          label: '升级记录',
           children: <Card title="历史任务"
                           extra={<Button onClick={() => refresh().catch(() => message.error('刷新记录失败'))}>刷新记录</Button>}>
             <Table<UpgradeTask> rowKey="id" dataSource={history} scroll={{ x: 1000 }} pagination={{ pageSize: 10 }} columns={[

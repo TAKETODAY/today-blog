@@ -23,7 +23,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 系统更新和备份操作记录。
+ * 系统升级和备份操作记录。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12

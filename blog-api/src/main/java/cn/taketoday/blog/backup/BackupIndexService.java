@@ -69,7 +69,7 @@ public class BackupIndexService {
     for (Properties record : history) {
       BackupOperationType type = BackupOperationType.valueOf(required(record, "operationType"));
       if (type == BackupOperationType.UPGRADE) {
-        throw new IllegalArgumentException("备份操作目录不能保存更新记录");
+        throw new IllegalArgumentException("备份操作目录不能保存升级记录");
       }
       if (BackupOperationStatus.of(required(record, "status")) == null) {
         throw new IllegalArgumentException("未知的备份操作状态");
@@ -91,7 +91,7 @@ public class BackupIndexService {
     for (Properties record : history) {
       operations.save(record, BackupOperationType.valueOf(record.getProperty("operationType")));
     }
-    // 关联保护备份的更新记录也需要回放，不能要求先访问更新页面才补齐。
+    // 关联保护备份的升级记录也需要回放，不能要求先访问升级页面才补齐。
     operations.upgradeHistory();
   }
 

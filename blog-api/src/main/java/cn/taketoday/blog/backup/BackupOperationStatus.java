@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
 import infra.lang.Enumerable;
 
 /**
- * 备份及关联更新的操作状态，枚举名即数据库存储值。
+ * 备份及关联升级的操作状态，枚举名即数据库存储值。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12

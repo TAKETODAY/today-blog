@@ -96,7 +96,7 @@ current/desktop  ->  /var/www/today-blog/desktop
 | source | 只能是 `console`、`desktop` 或其子路径                                   |
 | target | 规范化的绝对路径，必须位于服务器白名单目录内，不能与安装目录或状态目录重叠 |
 
-管理后台「系统更新 → 文件映射」提供增删改界面，也可以直接调用
+管理后台「系统升级 → 文件映射」提供增删改界面，也可以直接调用
 `GET /api/console/maintenance/upgrade/mappings` 查询、`PUT` 同一路径保存。
 配置保存在数据库表 `t_release_mapping`（Flyway v3.8 创建），是该配置的唯一来源；
 启动升级任务时快照到 `incoming/<UUID>/mappings.conf` 交给升级器，之后修改数据库配置不影响
@@ -126,7 +126,7 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/r
 
 ## 后台升级
 
-系统 → 系统更新 → 执行更新 → 上传 ZIP → 校验通过 → 确认参数 → 开始更新。
+系统 → 系统升级 → 执行升级 → 上传 ZIP → 校验通过 → 确认参数 → 开始升级。
 任务 ID 保存在浏览器本地，重载页面后继续查询。重启可能导致登录失效，需重新登录。
 
 ### 升级期间拒绝请求
@@ -145,7 +145,7 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/r
 - `PUT /api/console/maintenance`：管理员手动开启或关闭维护，请求体为
   `{"enabled":true,"message":"维护中","retryAfter":120}`。
 
-管理端「系统更新 → 当前环境」会显示维护状态并提供「开启维护 / 关闭维护」按钮；
+管理端「系统升级 → 当前环境」会显示维护状态并提供「开启维护 / 关闭维护」按钮；
 升级任务运行期间按钮禁用，避免中途关闭保护。手动维护不会随升级任务结束自动关闭，
 需要管理员主动恢复；维护期间登录状态探测和登录接口保持可用，页面刷新或会话过期后
 仍可重新登录并关闭维护。API 进程重启会清除内存中的手动维护状态，无法通过管理端登录时
@@ -158,11 +158,11 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/r
 
 ### 数据库备份配置
 
-默认启用更新前数据库备份。旧安装必须先通过 SSH 更新固定的 updater JAR、systemd unit，
+默认启用升级前数据库备份。旧安装必须先通过 SSH 更新固定的 updater JAR、systemd unit，
 再使用新页面；在线发行 ZIP 不会更新这些受信任组件。
 
 安装与备份环境检查仅验证配置、工具和空间，数据库连接和权限在实际备份时验证。
-未配置备份时默认禁止更新；如明确关闭本次备份，页面会要求二次确认风险。
+未配置备份时默认禁止升级；如明确关闭本次备份，页面会要求二次确认风险。
 
 服务器安装 `mysqldump` 或与生产数据库版本兼容的 `mariadb-dump`。
 创建 root 所有、不可被其他用户写入的 `/etc/today-blog/upgrade.properties`（建议 0644；不含密码）：
@@ -218,14 +218,14 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/r
 
 ### 设置与记录
 
-“更新设置”保存默认参数；“执行更新”可覆盖本次参数。启动时写入任务参数快照，
+“升级设置”保存默认参数；“执行升级”可覆盖本次参数。启动时写入任务参数快照，
 后续修改默认值不影响已提交任务。开启自动程序回滚仅适用于向后兼容的迁移。
-`ROLLED_BACK` 表示本次更新失败、已恢复旧程序，而不是新版本发布成功。
+`ROLLED_BACK` 表示本次升级失败、已恢复旧程序，而不是新版本发布成功。
 
 默认设置位于 `incoming/settings.properties`，任务参数位于 `incoming/<UUID>/options.properties`，
 前端映射默认值保存在数据库表 `t_release_mapping`，任务启动时快照到 `incoming/<UUID>/mappings.conf`，
 任务元信息和 root 写入的结果文件作为独立执行依据；管理端查询时按 UUID 幂等同步至
-`t_backup_operation`，再通过数据库查询更新列表和详情。派发前也会写入数据库，写入失败不启动更新。
+`t_backup_operation`，再通过数据库查询升级列表和详情。派发前也会写入数据库，写入失败不启动升级。
 恢复数据库后再次查询会从磁盘补齐记录；数据库索引不是恢复执行器的唯一依据。
 `t_backup` 为备份元信息表；完整备份创建和恢复尚未开放。
 Flyway v3.6 直接创建 `t_backup` 和 `t_backup_operation`，统一使用 `backup` 命名，不保留旧快照表迁移。
@@ -263,7 +263,7 @@ Flyway v3.6 直接创建 `t_backup` 和 `t_backup_operation`，统一使用 `bac
 /usr/local/lib/today-blog/updater.jar    固定、root 所有，不随在线包更新
 /etc/today-blog/release-mapping-roots    root 所有，前端映射目标白名单
 /var/lib/today-blog-upgrade/
-  incoming/settings.properties          today 写，更新默认参数
+  incoming/settings.properties          today 写，升级默认参数
   incoming/<UUID>/                      today 写，上传包、元信息与任务快照
   results/<UUID>.properties             root 写，API 读
 /var/lib/today-blog/                     today 写，业务运行数据
