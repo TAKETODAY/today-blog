@@ -19,6 +19,7 @@ package cn.taketoday.blog.backup;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,7 +82,7 @@ class BackupHttpHandlerTests {
     inserted.setStatus(BackupStatus.AVAILABLE);
     inserted.setVersion("3.4");
     inserted.setBuild("123");
-    inserted.setCreatedAt("2026-11-12T00:00:00Z");
+    inserted.setCreatedAt(Instant.parse("2026-11-12T00:00:00Z"));
     inserted.setProtectedBackup(true);
     inserted.setTotalBytes(1048576L);
     inserted.setLocation("/var/backups/today-blog/" + id + "/database.sql.gz");
@@ -133,7 +134,7 @@ class BackupHttpHandlerTests {
     backup.setId(id);
     backup.setName(name);
     backup.setStatus(BackupStatus.AVAILABLE);
-    backup.setCreatedAt(createdAt);
+    backup.setCreatedAt(Instant.parse(createdAt));
     entityManager.persist(backup);
   }
 

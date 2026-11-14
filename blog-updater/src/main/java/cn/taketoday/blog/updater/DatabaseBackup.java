@@ -143,7 +143,7 @@ public final class DatabaseBackup {
       Files.move(compressed, archive, StandardCopyOption.ATOMIC_MOVE);
       complete = true;
       return new DatabaseBackupResult(id, archive, Files.size(archive),
-              java.util.HexFormat.of().formatHex(digest.digest()), Instant.now().toString());
+              java.util.HexFormat.of().formatHex(digest.digest()), Instant.now());
     }
     finally {
       if (process != null && process.isAlive()) {

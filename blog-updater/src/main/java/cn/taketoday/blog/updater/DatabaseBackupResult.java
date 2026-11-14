@@ -18,6 +18,7 @@
 package cn.taketoday.blog.updater;
 
 import java.nio.file.Path;
+import java.time.Instant;
 
 /**
  * 数据库备份产物。元信息写入数据库，文件只保存在 {@code location}。
@@ -25,6 +26,6 @@ import java.nio.file.Path;
  * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
  * @since 4.0
  */
-public record DatabaseBackupResult(String id, Path location, long bytes, String sha256, String completedAt) {
+public record DatabaseBackupResult(String id, Path location, long bytes, String sha256, Instant completedAt) {
 
 }

@@ -69,7 +69,7 @@ public class ReleaseMappingService {
       entities.add(toEntity(mapping));
     }
 
-    String now = Instant.now().toString();
+    Instant now = Instant.now();
     Map<String, ReleaseMappingEntity> existing = new HashMap<>();
     for (ReleaseMappingEntity entity : entityManager.find(ReleaseMappingEntity.class)) {
       existing.put(entity.getName(), entity);

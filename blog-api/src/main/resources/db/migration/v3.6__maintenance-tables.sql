@@ -5,14 +5,14 @@ create table t_backup
     status              varchar(32)   not null,
     version             varchar(100)  null,
     build               varchar(32)   null,
-    created_at          varchar(40)   not null,
+    created_at          datetime   not null,
     protected_backup    boolean       not null default false,
     manifest_sha256     char(64)      null,
     total_bytes         bigint        not null default 0,
     source_operation_id char(36)      null,
     location            varchar(1024) null,
     scope               varchar(500)  null,
-    restore_verified_at varchar(40)   null
+    restore_verified_at datetime   null
 );
 
 create table t_release_mapping
@@ -21,8 +21,8 @@ create table t_release_mapping
     mode       varchar(16)  not null,
     source     varchar(255) not null,
     target     varchar(512) not null,
-    created_at varchar(40)  not null,
-    updated_at varchar(40)  not null
+    created_at datetime  not null,
+    updated_at datetime  not null
 );
 
 create table t_upgrade_package
@@ -38,8 +38,8 @@ create table t_upgrade_package
     sha256        char(64)      not null,
     entry_count   int           not null default 0,
     location      varchar(1024) not null,
-    created_at    varchar(40)   not null,
-    consumed_at   varchar(40)   null
+    created_at    datetime   not null,
+    consumed_at   datetime   null
 );
 
 create table t_upgrade_record
@@ -63,11 +63,11 @@ create table t_upgrade_record
     backup_path                  varchar(1024) null,
     backup_bytes                 bigint        null,
     backup_sha256                char(64)      null,
-    backup_completed_at          varchar(40)   null,
+    backup_completed_at          datetime   null,
     message                      varchar(1000) null,
-    created_at                   varchar(40)   not null,
-    started_at                   varchar(40)   null,
-    finished_at                  varchar(40)   null
+    created_at                   datetime   not null,
+    started_at                   datetime   null,
+    finished_at                  datetime   null
 );
 
 create table t_upgrade_path_mapping

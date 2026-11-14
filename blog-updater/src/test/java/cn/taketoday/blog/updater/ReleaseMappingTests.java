@@ -23,6 +23,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -197,7 +198,7 @@ class ReleaseMappingTests {
 
   private DatabaseBackupResult backup() {
     return new DatabaseBackupResult("backup-id", temp.resolve("backup.sql.gz"), 1024,
-            "a".repeat(64), "2026-11-14T00:00:00Z");
+            "a".repeat(64), Instant.parse("2026-11-14T00:00:00Z"));
   }
 
   private static java.util.Properties properties() {

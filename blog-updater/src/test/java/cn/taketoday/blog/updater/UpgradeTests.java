@@ -27,6 +27,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
+import java.time.Instant;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -179,7 +180,7 @@ class UpgradeTests {
 
   private DatabaseBackupResult backup(Scenario scenario, String id) {
     return new DatabaseBackupResult(id, temp.resolve("backup.sql.gz"), 1024,
-            "a".repeat(64), "2026-11-14T00:00:00Z");
+            "a".repeat(64), Instant.parse("2026-11-14T00:00:00Z"));
   }
 
   private Path archive(String extra, boolean missingManifest, boolean corruptFile) throws Exception {

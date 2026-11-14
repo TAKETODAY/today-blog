@@ -97,7 +97,7 @@ public class UpgradePackageService {
   public void markConsumed(String id) {
     UpgradePackageEntity entity = find(id);
     entity.setStatus(UpgradePackageStatus.CONSUMED);
-    entity.setConsumedAt(Instant.now().toString());
+    entity.setConsumedAt(Instant.now());
     entityManager.updateById(entity);
   }
 

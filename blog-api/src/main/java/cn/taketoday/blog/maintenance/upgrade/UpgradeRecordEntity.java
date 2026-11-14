@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.maintenance.upgrade;
 
+import java.time.Instant;
+
 import infra.persistence.annotation.Id;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
@@ -72,14 +74,14 @@ public class UpgradeRecordEntity {
 
   private String backupSha256;
 
-  private String backupCompletedAt;
+  private Instant backupCompletedAt;
 
   private String message;
 
-  private String createdAt;
+  private Instant createdAt;
 
-  private String startedAt;
+  private Instant startedAt;
 
-  private String finishedAt;
+  private Instant finishedAt;
 
 }

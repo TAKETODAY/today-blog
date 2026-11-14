@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.backup;
 
+import java.time.Instant;
+
 import infra.persistence.annotation.Id;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
@@ -44,7 +46,7 @@ public class Backup {
 
   private String build;
 
-  private String createdAt;
+  private Instant createdAt;
 
   private boolean protectedBackup;
 
@@ -58,6 +60,6 @@ public class Backup {
 
   private String scope;
 
-  private String restoreVerifiedAt;
+  private Instant restoreVerifiedAt;
 
 }

@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.maintenance.upgrade;
 
+import java.time.Instant;
+
 import infra.persistence.annotation.Id;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
@@ -44,8 +46,8 @@ public class ReleaseMappingEntity {
 
   private String target;
 
-  private String createdAt;
+  private Instant createdAt;
 
-  private String updatedAt;
+  private Instant updatedAt;
 
 }

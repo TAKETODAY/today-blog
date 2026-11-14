@@ -20,6 +20,7 @@ package cn.taketoday.blog.updater;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 import java.sql.ResultSet;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -106,7 +107,7 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
   public void started(String id, String releasePath) throws Exception {
     try (PreparedStatement statement = connection.prepareStatement(
             "update t_upgrade_record set started_at = ?, release_path = ? where id = ?")) {
-      statement.setString(1, Instant.now().toString());
+      statement.setTimestamp(1, Timestamp.from(Instant.now()));
       statement.setString(2, releasePath);
       statement.setString(3, id);
       statement.executeUpdate();
@@ -137,7 +138,7 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
       insert.setString(2, "升级前数据库备份 " + version);
       insert.setString(3, version);
       insert.setString(4, Long.toString(build));
-      insert.setString(5, backup.completedAt());
+      insert.setTimestamp(5, Timestamp.from(backup.completedAt()));
       insert.setString(6, backup.sha256());
       insert.setLong(7, backup.bytes());
       insert.setString(8, id);
@@ -152,7 +153,7 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
       update.setString(1, backup.location().toString());
       update.setLong(2, backup.bytes());
       update.setString(3, backup.sha256());
-      update.setString(4, backup.completedAt());
+      update.setTimestamp(4, Timestamp.from(backup.completedAt()));
       update.setString(5, id);
       update.executeUpdate();
     }
@@ -165,7 +166,7 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
             """)) {
       statement.setString(1, status);
       statement.setString(2, message);
-      statement.setString(3, Instant.now().toString());
+      statement.setTimestamp(3, Timestamp.from(Instant.now()));
       statement.setString(4, id);
       statement.executeUpdate();
     }

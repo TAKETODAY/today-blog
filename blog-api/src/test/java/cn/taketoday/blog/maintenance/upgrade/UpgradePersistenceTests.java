@@ -22,6 +22,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -95,7 +96,7 @@ class UpgradePersistenceTests {
 
     records.failed(record.getId(), "失败");
     assertThat(records.find(record.getId()).getStatus()).isEqualTo(UpgradeStatus.FAILED);
-    assertThat(records.find(record.getId()).getFinishedAt()).isNotBlank();
+    assertThat(records.find(record.getId()).getFinishedAt()).isNotNull();
     assertThat(records.running()).isNull();
   }
 
@@ -120,7 +121,7 @@ class UpgradePersistenceTests {
     entity.setSha256("a".repeat(64));
     entity.setEntryCount(4);
     entity.setLocation(location.toString());
-    entity.setCreatedAt("2026-11-14T00:00:00Z");
+    entity.setCreatedAt(Instant.parse("2026-11-14T00:00:00Z"));
     return entity;
   }
 
@@ -137,7 +138,7 @@ class UpgradePersistenceTests {
     entity.setBackupEnabled(true);
     entity.setBackupTimeoutSeconds(600);
     entity.setHealthTimeoutSeconds(90);
-    entity.setCreatedAt("2026-11-14T00:00:00Z");
+    entity.setCreatedAt(Instant.parse("2026-11-14T00:00:00Z"));
     return entity;
   }
 

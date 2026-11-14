@@ -219,7 +219,7 @@ class MaintenanceHttpHandler {
       entity.setSha256(sha256(location));
       entity.setEntryCount(manifest.hashes().size());
       entity.setLocation(location.toString());
-      entity.setCreatedAt(Instant.now().toString());
+      entity.setCreatedAt(Instant.now());
       packages.create(entity);
       return PackageView.from(entity);
     }
@@ -301,7 +301,7 @@ class MaintenanceHttpHandler {
     record.setNote(options.note());
     record.setDeletePackageAfterUpgrade(request != null && request.deletePackage());
     record.setMessage("任务已提交，请等待升级器启动");
-    record.setCreatedAt(Instant.now().toString());
+    record.setCreatedAt(Instant.now());
     records.create(record);
     pathMappings.replace(recordId, mappings);
     packages.markConsumed(entity.getId());
@@ -431,7 +431,7 @@ class MaintenanceHttpHandler {
 
   public record PackageView(String id, String originalName, String displayName, String note,
           UpgradePackageStatus status, String version, long build, long fileSize, String sha256,
-          int entryCount, String location, String createdAt, String consumedAt) {
+          int entryCount, String location, Instant createdAt, Instant consumedAt) {
 
     static PackageView from(UpgradePackageEntity entity) {
       return new PackageView(entity.getId(), entity.getOriginalName(), entity.getDisplayName(),
@@ -453,8 +453,8 @@ class MaintenanceHttpHandler {
           boolean backupEnabled, int backupTimeoutSeconds, int healthTimeoutSeconds,
           String note, boolean deletePackageAfterUpgrade,
           String releasePath, String backupPath, Long backupBytes, String backupSha256,
-          String backupCompletedAt, String message, String createdAt, String startedAt,
-          String finishedAt) {
+          Instant backupCompletedAt, String message, Instant createdAt, Instant startedAt,
+          Instant finishedAt) {
 
     static RecordView from(UpgradeRecordEntity entity) {
       return new RecordView(entity.getId(), entity.getPackageId(), entity.getPackageName(),

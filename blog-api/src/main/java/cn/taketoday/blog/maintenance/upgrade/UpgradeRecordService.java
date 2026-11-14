@@ -89,7 +89,7 @@ public class UpgradeRecordService {
     UpgradeRecordEntity entity = find(id);
     entity.setStatus(UpgradeStatus.FAILED);
     entity.setMessage(message);
-    entity.setFinishedAt(Instant.now().toString());
+    entity.setFinishedAt(Instant.now());
     entityManager.updateById(entity);
   }
 

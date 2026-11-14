@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.maintenance.upgrade;
 
+import java.time.Instant;
+
 import infra.persistence.annotation.Id;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
@@ -56,8 +58,8 @@ public class UpgradePackageEntity {
 
   private String location;
 
-  private String createdAt;
+  private Instant createdAt;
 
-  private String consumedAt;
+  private Instant consumedAt;
 
 }

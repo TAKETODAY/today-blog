@@ -56,8 +56,8 @@ class ReleaseMappingPersistenceTests {
 
     assertThat(service.findAll()).containsExactly(console);
     ReleaseMappingEntity saved = entityManager.findById(ReleaseMappingEntity.class, "console");
-    assertThat(saved.getCreatedAt()).isNotBlank();
-    assertThat(saved.getUpdatedAt()).isNotBlank();
+    assertThat(saved.getCreatedAt()).isNotNull();
+    assertThat(saved.getUpdatedAt()).isNotNull();
 
     ReleaseMapping desktop = mapping("desktop", "desktop", temp.resolve("desktop"));
     service.replaceAll(List.of(desktop));

@@ -17,6 +17,7 @@
 
 package cn.taketoday.blog.backup;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -96,7 +97,7 @@ public class BackupService {
           BackupStatus status,
           String version,
           String build,
-          String createdAt,
+          Instant createdAt,
           boolean protectedBackup,
           long totalBytes,
           String manifestSha256,
@@ -120,7 +121,7 @@ public class BackupService {
   /**
    * 备份详情补充覆盖范围、恢复验证记录和本地文件路径。
    */
-  public record BackupDetail(BackupView backup, String scope, String restoreVerifiedAt, String location) {
+  public record BackupDetail(BackupView backup, String scope, Instant restoreVerifiedAt, String location) {
   }
 
 }
