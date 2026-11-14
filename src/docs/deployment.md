@@ -139,13 +139,17 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/r
 维护期间仍可访问：
 
 - `GET /api/internal/health`：升级器健康检查使用。
+- `GET /api/auth`、`POST /api/auth`：探测登录状态和重新登录，保证手动维护期间页面刷新或会话过期后仍能进入管理端。
 - `GET /api/console/maintenance/upgrade/**`：管理端继续轮询升级进度。
 - `GET /api/console/maintenance`：查询当前维护状态。
 - `PUT /api/console/maintenance`：管理员手动开启或关闭维护，请求体为
   `{"enabled":true,"message":"维护中","retryAfter":120}`。
 
 管理端「系统更新 → 当前环境」会显示维护状态并提供「开启维护 / 关闭维护」按钮；
-升级任务运行期间按钮禁用，避免中途关闭保护。
+升级任务运行期间按钮禁用，避免中途关闭保护。手动维护不会随升级任务结束自动关闭，
+需要管理员主动恢复；维护期间登录状态探测和登录接口保持可用，页面刷新或会话过期后
+仍可重新登录并关闭维护。API 进程重启会清除内存中的手动维护状态，无法通过管理端登录时
+也可重启 `today-blog.service` 恢复服务。
 
 维护状态保存在 API 进程内存中，不写入磁盘。API 重启后维护状态自动清除，因此升级器切换
 版本并重启 API 后，新版本或回滚后的旧版本会按正常状态提供服务。手动维护在进程重启后同样

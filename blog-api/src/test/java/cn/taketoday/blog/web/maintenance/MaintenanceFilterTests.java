@@ -91,6 +91,25 @@ class MaintenanceFilterTests {
   }
 
   @Test
+  void allowsSessionProbeAndLoginDuringManualMaintenance() throws Exception {
+    MaintenanceFilter filter = filter(new MaintenanceStatus(
+            true, "手动维护中", 120, MaintenanceStatus.Source.MANUAL));
+
+    AtomicBoolean probe = new AtomicBoolean();
+    filter.doFilter(request("GET", MaintenanceFilter.AUTH_PATH), ignored -> probe.set(true));
+    assertThat(probe).isTrue();
+
+    AtomicBoolean login = new AtomicBoolean();
+    filter.doFilter(request("POST", MaintenanceFilter.AUTH_PATH), ignored -> login.set(true));
+    assertThat(login).isTrue();
+
+    MockHttpContext update = request("PUT", MaintenanceFilter.AUTH_PATH);
+    filter.doFilter(update, ignored -> {
+    });
+    assertThat(update.getStatus()).isEqualTo(503);
+  }
+
+  @Test
   void servesNormallyWhenMaintenanceDisabled() throws Exception {
     MaintenanceFilter filter = filter(MaintenanceStatus.DISABLED);
 
