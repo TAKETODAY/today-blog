@@ -15,67 +15,45 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.backup;
+package cn.taketoday.blog.maintenance.upgrade;
 
 import org.jspecify.annotations.Nullable;
 
 import infra.lang.Enumerable;
 
 /**
- * 备份及关联升级的操作状态，枚举名即数据库存储值。
+ * 升级任务状态，枚举名即数据库存储值。
  *
- * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 4.0 2026/11/12
+ * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
+ * @since 4.0
  */
-public enum BackupOperationStatus implements Enumerable<String> {
+public enum UpgradeStatus implements Enumerable<String> {
 
-  /** 已提交 */
   STARTING,
 
-  /** 校验升级包 */
   VALIDATING,
 
-  /** 准备版本 */
   INSTALLING,
 
-  /** 数据库备份 */
   BACKING_UP,
 
-  /** 切换并重启 */
   RESTARTING,
 
-  /** 健康检查 */
   HEALTH_CHECKING,
 
-  /** 执行成功 */
   SUCCESS,
 
-  /** 执行失败 */
   FAILED,
 
-  /** 正在恢复旧版本 */
   ROLLING_BACK,
 
-  /** 已恢复旧版本 */
-  ROLLED_BACK,
+  ROLLED_BACK;
 
-  /** 待确认 */
-  READY,
-
-  /** 正在恢复备份 */
-  RESTORING,
-
-  /** 恢复失败，保持维护状态等待人工处理 */
-  MAINTENANCE_REQUIRED;
-
-  /**
-   * 按数据库或元数据中的状态名解析，未知值返回 {@code null}。
-   */
-  public static @Nullable BackupOperationStatus of(@Nullable String value) {
+  public static @Nullable UpgradeStatus of(@Nullable String value) {
     if (value == null || value.isBlank()) {
       return null;
     }
-    for (BackupOperationStatus status : values()) {
+    for (UpgradeStatus status : values()) {
       if (status.name().equals(value)) {
         return status;
       }

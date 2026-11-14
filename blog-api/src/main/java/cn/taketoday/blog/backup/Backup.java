@@ -23,7 +23,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 备份元信息。
+ * 备份元信息，{@code location} 指向本地备份文件。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
@@ -44,8 +44,6 @@ public class Backup {
 
   private String build;
 
-  private Long operatorId;
-
   private String createdAt;
 
   private boolean protectedBackup;
@@ -56,6 +54,10 @@ public class Backup {
 
   private String sourceOperationId;
 
-  private String metadata;
+  private String location;
+
+  private String scope;
+
+  private String restoreVerifiedAt;
 
 }

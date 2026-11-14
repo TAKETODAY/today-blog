@@ -15,9 +15,8 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog;
+package cn.taketoday.blog.maintenance;
 
-import cn.taketoday.blog.event.MaintenanceStatusChangeEvent;
 import infra.context.ApplicationEventPublisher;
 import infra.context.ApplicationListener;
 import infra.context.availability.ApplicationAvailability;

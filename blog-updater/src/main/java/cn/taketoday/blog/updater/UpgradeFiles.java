@@ -63,19 +63,4 @@ public final class UpgradeFiles {
     }
   }
 
-  public static void status(Path results, String id, String state, String message) throws IOException {
-    checkId(id);
-    Path path = results.resolve(id + ".properties");
-    Properties properties = Files.exists(path) ? read(path) : new Properties();
-    properties.setProperty("id", id);
-    properties.setProperty("status", state);
-    properties.setProperty("message", message);
-    String now = java.time.Instant.now().toString();
-    properties.setProperty("updatedAt", now);
-    properties.setProperty("stage." + state, now);
-    if (java.util.Set.of("SUCCESS", "FAILED", "ROLLED_BACK").contains(state)) {
-      properties.setProperty("finishedAt", now);
-    }
-    write(path, properties);
-  }
 }

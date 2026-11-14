@@ -8,8 +8,9 @@ tasks.withType(JavaCompile).configureEach {
   options.release = 17
 }
 
-// 生产代码只依赖 JDK；API 通过项目依赖复用包校验和磁盘协议。
+// 生产代码依赖 JDK 与 MySQL 驱动，用于直接读写升级任务状态。
 dependencies {
+  implementation 'com.mysql:mysql-connector-j:26.10.0'
   testImplementation platform('org.junit:junit-bom:5.14.2')
   testImplementation 'org.junit.jupiter:junit-jupiter'
   testImplementation 'org.assertj:assertj-core:3.27.7'
@@ -18,6 +19,12 @@ dependencies {
 
 jar {
   archiveFileName = 'today-blog-updater.jar'
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  // 升级器通过 java -jar 独立运行，需要把 JDBC 驱动打进固定 updater.jar。
+  from {
+    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+  exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'module-info.class'
   manifest {
     attributes 'Main-Class': 'cn.taketoday.blog.updater.BlogUpdaterApplication'
   }

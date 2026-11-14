@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.upgrade;
+package cn.taketoday.blog.maintenance.upgrade;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -36,8 +36,7 @@ import infra.transaction.annotation.Transactional;
 /**
  * 前端文件映射配置的数据库读写。
  * <p>
- * 数据库是可编辑配置的唯一来源；升级器不访问数据库，启动任务时由
- * {@code UpgradeStore} 将当前配置快照到任务目录。
+ * 数据库是可编辑配置的唯一来源；升级器通过任务快照表读取本次配置。
  *
  * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
  * @since 4.0
@@ -62,12 +61,12 @@ public class ReleaseMappingService {
   }
 
   @Transactional
-  public void replaceAll(List<ReleaseMapping> mappings, Long operatorId) {
+  public void replaceAll(List<ReleaseMapping> mappings) {
     // 先完成结构和实体校验，任何一条配置非法都不修改数据库。
     ReleaseMappings.validateStructure(mappings);
     List<ReleaseMappingEntity> entities = new ArrayList<>(mappings.size());
     for (ReleaseMapping mapping : mappings) {
-      entities.add(toEntity(mapping, operatorId));
+      entities.add(toEntity(mapping));
     }
 
     String now = Instant.now().toString();
@@ -107,13 +106,12 @@ public class ReleaseMappingService {
     }
   }
 
-  private static ReleaseMappingEntity toEntity(ReleaseMapping mapping, Long operatorId) {
+  private static ReleaseMappingEntity toEntity(ReleaseMapping mapping) {
     ReleaseMappingEntity entity = new ReleaseMappingEntity();
     entity.setName(mapping.name());
     entity.setMode(mapping.mode().name());
     entity.setSource(mapping.source());
     entity.setTarget(mapping.target());
-    entity.setOperatorId(operatorId);
     return entity;
   }
 

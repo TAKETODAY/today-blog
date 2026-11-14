@@ -15,41 +15,35 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.backup;
+package cn.taketoday.blog.maintenance.upgrade;
 
-import infra.persistence.annotation.Id;
+import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 系统升级和备份操作记录。
+ * 升级任务启动时的文件目录映射快照。
  *
- * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 4.0 2026/11/12
+ * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
+ * @since 4.0
  */
 @Getter
 @Setter
-@Table("t_backup_operation")
-public class BackupOperation {
+@Table("t_upgrade_path_mapping")
+public class UpgradePathMappingEntity {
 
-  @Id
-  private String id;
+  @GeneratedId
+  private Long id;
 
-  private BackupOperationType operationType;
+  private String recordId;
 
-  private BackupOperationStatus status;
+  private String name;
 
-  private Long operatorId;
+  private String mode;
 
-  private String createdAt;
+  private String source;
 
-  private String finishedAt;
-
-  private String backupId;
-
-  private String protectionBackupId;
-
-  private String metadata;
+  private String target;
 
 }

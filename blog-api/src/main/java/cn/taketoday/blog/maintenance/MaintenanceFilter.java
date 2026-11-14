@@ -15,12 +15,10 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.maintenance;
+package cn.taketoday.blog.maintenance;
 
 import java.io.IOException;
 
-import cn.taketoday.blog.MaintenanceStatus;
-import cn.taketoday.blog.ServerStatus;
 import cn.taketoday.blog.util.ObjectUtils;
 import cn.taketoday.blog.web.ErrorMessage;
 import infra.core.Ordered;

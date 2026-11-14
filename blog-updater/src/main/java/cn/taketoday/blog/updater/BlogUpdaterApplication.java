@@ -29,12 +29,16 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 独立模块的一次性升级入口，不启动 Web 容器、数据库或应用上下文。
+ * 独立模块的一次性升级入口，不启动 Web 容器、数据库连接池或应用上下文。
+ * <p>
+ * 任务参数、状态和结果全部通过 JDBC 直接读写数据库；文件只保存升级包、备份和发行产物。
+ *
+ * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
+ * @since 4.0
  */
 public final class BlogUpdaterApplication {
 
@@ -47,20 +51,22 @@ public final class BlogUpdaterApplication {
     }
     UpgradeFiles.checkId(args[0]);
     Path root = Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
-    Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
     String health = System.getenv().getOrDefault("BLOG_HEALTH_URL", "http://127.0.0.1:8080/api/internal/health");
 
-    try {
-      UpgradeOptions options = UpgradeOptions.from(UpgradeFiles.read(state.resolve("incoming").resolve(args[0]).resolve("options.properties")));
-      run(root, state, args[0], new SystemdControl(URI.create(health), options.healthTimeoutSeconds()),
-              options, (id, timeout) -> DatabaseBackup.configured().create(id, timeout), mappingPolicy());
-    }
-    catch (Exception error) {
-      Path result = state.resolve("results").resolve(args[0] + ".properties");
-      if (!Files.exists(result)) {
-        UpgradeFiles.status(state.resolve("results"), args[0], "FAILED", error.toString());
+    try (UpgradeTaskStore store = JdbcUpgradeTaskStore.open(UpgradeDatabase.configured())) {
+      try {
+        UpgradeTask task = store.load(args[0]);
+        run(root, task, new SystemdControl(URI.create(health), task.healthTimeoutSeconds()),
+                store, (id, timeout) -> DatabaseBackup.configured().create(id, timeout));
       }
-      throw error;
+      catch (Exception error) {
+        try {
+          store.finished(args[0], "FAILED", error.toString());
+        }
+        catch (Exception ignored) {
+        }
+        throw error;
+      }
     }
   }
 
@@ -70,69 +76,49 @@ public final class BlogUpdaterApplication {
     boolean healthy(long build) throws Exception;
   }
 
-  private static Path mappingPolicy() {
-    return Path.of(System.getenv().getOrDefault("BLOG_MAPPING_ROOTS", ReleaseMappings.POLICY.toString()));
-  }
-
-  public static void run(Path root, Path state, String id, ServiceControl service) throws Exception {
-    run(root, state, id, service, mappingPolicy());
-  }
-
-  public static void run(Path root, Path state, String id, ServiceControl service, Path mappingPolicy) throws Exception {
-    UpgradeFiles.checkId(id);
-    Path options = state.resolve("incoming").resolve(id).resolve("options.properties");
-    run(root, state, id, service, UpgradeOptions.from(UpgradeFiles.read(options)),
-            (task, timeout) -> DatabaseBackup.configured().create(task, timeout), mappingPolicy);
-  }
-
   @FunctionalInterface
   public interface BackupControl {
-    Properties create(String id, int timeoutSeconds) throws Exception;
+    DatabaseBackupResult create(String id, int timeoutSeconds) throws Exception;
   }
 
-  public static void run(Path root, Path state, String id, ServiceControl service,
-          UpgradeOptions options, BackupControl backup) throws Exception {
-    run(root, state, id, service, options, backup, mappingPolicy());
+  public static void run(Path root, UpgradeTask task, ServiceControl service,
+          UpgradeTaskStore store, BackupControl backup) throws Exception {
+    run(root, task, service, store, backup, Path.of(System.getenv().getOrDefault(
+            "BLOG_MAPPING_ROOTS", ReleaseMappings.POLICY.toString())));
   }
 
-  public static void run(Path root, Path state, String id, ServiceControl service, UpgradeOptions options,
-          BackupControl backup, Path mappingPolicy) throws Exception {
+  public static void run(Path root, UpgradeTask task, ServiceControl service,
+          UpgradeTaskStore store, BackupControl backup, Path mappingPolicy) throws Exception {
+    String id = task.id();
     UpgradeFiles.checkId(id);
-    Path results = state.resolve("results");
-    List<ReleaseMapping> mappings = ReleaseMappings.readIfExists(
-            state.resolve("incoming").resolve(id).resolve("mappings.conf"));
-    List<Path> mappingRoots = mappings.isEmpty() ? List.of() : ReleaseMappings.roots(mappingPolicy);
+    Path lockPath = root.resolve("upgrade.lock");
     Files.createDirectories(root.resolve("releases"));
-    Files.createDirectories(results);
-    try (var channel = FileChannel.open(root.resolve("upgrade.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+    try (var channel = FileChannel.open(lockPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
             var lock = channel.tryLock()) {
       if (lock == null) {
-        UpgradeFiles.status(results, id, "FAILED", "已有升级任务运行");
+        store.finished(id, "FAILED", "已有升级任务运行");
         return;
-      }
-      if (Files.exists(results.resolve(id + ".properties"))) {
-        throw new IOException("任务已有执行记录，不可重复运行");
       }
       Path current = root.resolve("current");
       Path oldRelease = current.toRealPath();
       Properties oldMetadata = UpgradeFiles.read(oldRelease.resolve("release.properties"));
       long oldBuild = Long.parseLong(oldMetadata.getProperty("build"));
-      Path task = Files.createTempDirectory(root.resolve("releases"), ".upgrade-");
+      Path taskDirectory = Files.createTempDirectory(root.resolve("releases"), ".upgrade-");
       boolean switched = false;
       boolean rollbackFailed = false;
       try {
-        UpgradeFiles.status(results, id, "VALIDATING", "校验升级包");
+        store.status(id, "VALIDATING", "校验升级包");
         // 先复制到仅 updater 可写的目录，之后校验和安装均使用同一份文件。
-        Path archive = task.resolve("package.zip");
-        Path upload = state.resolve("incoming").resolve(id).resolve("package.zip");
-        if (!Files.isRegularFile(upload, java.nio.file.LinkOption.NOFOLLOW_LINKS)
-                || Files.size(upload) > UpgradePackage.MAX_PACKAGE_BYTES) {
+        Path archive = taskDirectory.resolve("package.zip");
+        Path packageFile = Path.of(task.packagePath());
+        if (!Files.isRegularFile(packageFile, LinkOption.NOFOLLOW_LINKS)
+                || Files.size(packageFile) > UpgradePackage.MAX_PACKAGE_BYTES) {
           throw new IOException("升级包不存在或过大");
         }
         if (Files.getFileStore(root).getUsableSpace() < 3L * 1024 * 1024 * 1024) {
           throw new IOException("安装磁盘可用空间不足 3 GiB");
         }
-        try (var input = Files.newInputStream(upload); var output = Files.newOutputStream(archive)) {
+        try (var input = Files.newInputStream(packageFile); var output = Files.newOutputStream(archive)) {
           long copied = input.transferTo(new java.io.OutputStream() {
             long total;
 
@@ -166,8 +152,8 @@ public final class BlogUpdaterApplication {
         if (Files.exists(release)) {
           throw new IOException("版本目录已存在");
         }
-        UpgradeFiles.status(results, id, "INSTALLING", "准备新版本");
-        Path unpacked = Files.createDirectory(task.resolve("release"));
+        store.status(id, "INSTALLING", "准备新版本");
+        Path unpacked = Files.createDirectory(taskDirectory.resolve("release"));
         UpgradePackage.extract(archive, unpacked, manifest);
         if (!unpacked.resolve("api/bin/blog-api").toFile().setExecutable(true, false)) {
           throw new IOException("无法设置启动权限");
@@ -177,80 +163,88 @@ public final class BlogUpdaterApplication {
         metadata.setProperty("version", manifest.version());
         metadata.setProperty("build", Long.toString(manifest.build()));
         UpgradeFiles.write(unpacked.resolve("release.properties"), metadata);
-        Properties details = UpgradeFiles.read(results.resolve(id + ".properties"));
-        details.putAll(options.properties());
-        details.setProperty("oldVersion", oldMetadata.getProperty("version", ""));
-        details.setProperty("oldBuild", Long.toString(oldBuild));
-        details.setProperty("backupStatus", options.backupEnabled() ? "RUNNING" : "SKIPPED");
-        UpgradeFiles.write(results.resolve(id + ".properties"), details);
-        if (options.backupEnabled()) {
-          UpgradeFiles.status(results, id, "BACKING_UP", "备份数据库，尚未切换版本");
+        if (task.backupEnabled()) {
+          store.status(id, "BACKING_UP", "备份数据库，尚未切换版本");
           try {
-            Properties saved = backup.create(id, options.backupTimeoutSeconds());
-            if (!"SUCCESS".equals(saved.getProperty("backupStatus"))) {
-              throw new IOException("数据库备份未成功完成");
-            }
-            details = UpgradeFiles.read(results.resolve(id + ".properties"));
-            details.putAll(saved);
-            UpgradeFiles.write(results.resolve(id + ".properties"), details);
+            store.backup(id, backup.create(id, task.backupTimeoutSeconds()));
           }
           catch (Exception failure) {
-            details = UpgradeFiles.read(results.resolve(id + ".properties"));
-            details.setProperty("backupStatus", "FAILED");
-            UpgradeFiles.write(results.resolve(id + ".properties"), details);
             throw new IOException("数据库备份失败或超时，未切换版本；请检查服务器备份配置", failure);
           }
         }
         Files.move(unpacked, release, StandardCopyOption.ATOMIC_MOVE);
-        for (ReleaseMapping mapping : mappings) {
+        for (ReleaseMapping mapping : task.mappings()) {
           if (!Files.exists(release.resolve(mapping.source()), LinkOption.NOFOLLOW_LINKS)) {
             throw new IOException("升级包缺少映射源: " + mapping.source());
           }
         }
-        UpgradeFiles.status(results, id, "RESTARTING", "切换版本并重启 API");
+        store.status(id, "RESTARTING", "切换版本并重启 API");
         switchRelease(root, release);
         switched = true;
-        // 映射始终指向 current，切换版本后无需重新计算路径；发布失败会按普通升级失败回滚。
-        ReleaseMappings.publish(root, state, mappings, mappingRoots);
+        store.started(id, release.toString());
+        if (!task.mappings().isEmpty()) {
+          ReleaseMappings.publish(root, Path.of(System.getenv().getOrDefault(
+                  "BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade")), task.mappings(),
+                  ReleaseMappings.roots(mappingPolicy));
+        }
         service.restart();
-        UpgradeFiles.status(results, id, "HEALTH_CHECKING", "等待新版本健康检查");
+        store.status(id, "HEALTH_CHECKING", "等待新版本健康检查");
         if (!service.healthy(manifest.build())) {
           throw new IOException("新版本健康检查失败");
         }
         UpgradeFiles.write(highWaterPath, metadata);
-        UpgradeFiles.status(results, id, "SUCCESS", "升级成功: " + manifest.version());
+        store.finished(id, "SUCCESS", "升级成功: " + manifest.version());
+        deleteConsumedPackage(task, store);
       }
       catch (Exception error) {
         if (switched) {
           try {
-            UpgradeFiles.status(results, id, "ROLLING_BACK", "新版本失败，恢复旧版本");
+            store.status(id, "ROLLING_BACK", "新版本失败，恢复旧版本");
             switchRelease(root, oldRelease);
             service.restart();
             if (!service.healthy(oldBuild)) {
               throw new IOException("旧版本健康检查失败");
             }
-            UpgradeFiles.status(results, id, "ROLLED_BACK", "已恢复旧版本；不撤销数据库迁移。原因: " + error.getMessage());
+            store.finished(id, "ROLLED_BACK", "已恢复旧版本；不撤销数据库迁移。原因: " + error.getMessage());
           }
           catch (Exception rollbackError) {
             rollbackFailed = true;
             error.addSuppressed(rollbackError);
-            UpgradeFiles.status(results, id, "FAILED", "回滚失败，需要人工处理: " + rollbackError.getMessage());
+            store.finished(id, "FAILED", "回滚失败，需要人工处理: " + rollbackError.getMessage());
           }
         }
         else {
-          UpgradeFiles.status(results, id, "FAILED", error.toString());
+          store.finished(id, "FAILED", error.toString());
         }
         if (!switched || rollbackFailed) {
           throw error;
         }
       }
       finally {
-        try (var paths = Files.walk(task)) {
+        try (var paths = Files.walk(taskDirectory)) {
           for (Path path : paths.sorted(java.util.Comparator.reverseOrder()).toList()) {
             Files.deleteIfExists(path);
           }
         }
       }
+    }
+  }
+
+  private static void deleteConsumedPackage(UpgradeTask task, UpgradeTaskStore store) {
+    if (!task.deletePackageAfterUpgrade()) {
+      return;
+    }
+    try {
+      store.deletePackage(task.packageId());
+      Path location = Path.of(task.packagePath());
+      Files.deleteIfExists(location);
+      Path parent = location.getParent();
+      if (parent != null) {
+        Files.deleteIfExists(parent);
+      }
+    }
+    catch (Exception ignored) {
+      // 升级已经成功，清理失败不能把结果改写成失败。
     }
   }
 
@@ -305,4 +299,5 @@ public final class BlogUpdaterApplication {
 
     private static final java.util.Set<String> LOOPBACK_HOSTS = java.util.Set.of("127.0.0.1", "localhost", "[::1]");
   }
+
 }

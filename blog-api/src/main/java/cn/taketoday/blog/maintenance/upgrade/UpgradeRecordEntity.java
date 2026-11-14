@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.upgrade;
+package cn.taketoday.blog.maintenance.upgrade;
 
 import infra.persistence.annotation.Id;
 import infra.persistence.annotation.Table;
@@ -23,31 +23,63 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 前端发行文件映射配置。
- * <p>
- * 数据库保存可编辑的默认配置；启动升级任务时再快照为磁盘文件交给只依赖 JDK 的升级器。
+ * 升级记录。包信息保存快照，升级包删除后历史仍可展示。
  *
  * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
  * @since 4.0
  */
 @Getter
 @Setter
-@Table("t_release_mapping")
-public class ReleaseMappingEntity {
+@Table("t_upgrade_record")
+public class UpgradeRecordEntity {
 
   @Id
-  private String name;
+  private String id;
 
-  private String mode;
+  private String packageId;
 
-  private String source;
+  private String packageName;
 
-  private String target;
+  private String packageVersion;
 
-  private Long operatorId;
+  private long packageBuild;
+
+  private String packageSha256;
+
+  private String packagePath;
+
+  private String oldVersion;
+
+  private Long oldBuild;
+
+  private UpgradeStatus status;
+
+  private boolean backupEnabled;
+
+  private int backupTimeoutSeconds;
+
+  private int healthTimeoutSeconds;
+
+  private String note;
+
+  private boolean deletePackageAfterUpgrade;
+
+  private String releasePath;
+
+  private String backupPath;
+
+  private Long backupBytes;
+
+  private String backupSha256;
+
+  private String backupCompletedAt;
+
+  private String message;
 
   private String createdAt;
 
-  private String updatedAt;
+  private String startedAt;
+
+  private String finishedAt;
 
 }

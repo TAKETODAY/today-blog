@@ -15,7 +15,6 @@ interface Backup {
   createdAt: string;
   protectedBackup: boolean;
   totalBytes: number;
-  operatorId: number | null;
   manifestSha256: string | null;
   sourceOperationId: string | null;
 }
@@ -26,24 +25,9 @@ interface BackupDetail {
   restoreVerifiedAt: string | null;
 }
 
-interface Operation {
-  id: string;
-  type: string;
-  status: string;
-  createdAt: string;
-  finishedAt: string | null;
-  backupId: string | null;
-  protectionBackupId: string | null;
-  operatorId: number | null;
-}
-
 const statusNames: Record<string, string> = {
   CREATING: '创建中', AVAILABLE: '可用', FAILED: '失败', DELETING: '删除中', DELETED: '已删除',
   STARTING: '已提交', SUCCESS: '成功', RESTORING: '恢复中', MAINTENANCE_REQUIRED: '需人工处理',
-};
-const typeNames: Record<string, string> = {
-  BACKUP_CREATE: '创建备份', BACKUP_RESTORE: '恢复备份', BACKUP_DELETE: '删除备份',
-  BACKUP_PROTECT: '修改保护', UPGRADE: '系统升级',
 };
 
 function status(value: string) {
@@ -65,7 +49,6 @@ function bytes(value: number) {
 
 export default function Backups() {
   const [backups, setBackups] = useState<Backup[]>([]);
-  const [operations, setOperations] = useState<Operation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reason, setReason] = useState('正在检查备份执行环境');
@@ -79,13 +62,11 @@ export default function Backups() {
     setLoading(true);
     setError(false);
     try {
-      const [records, actions, capabilities] = await Promise.all([
+      const [records, capabilities] = await Promise.all([
         http.get('/api/console/backups'),
-        http.get('/api/console/backups/operations'),
         http.get('/api/console/backups/capabilities'),
       ]);
       setBackups(records.data);
-      setOperations(actions.data);
       setReason(capabilities.data.reason || '备份执行能力尚不可用');
     }
     catch (failure) {
@@ -185,37 +166,6 @@ export default function Backups() {
               <span className="backup-secondary">最多展示最近 500 份备份。列表记录不代表备份已通过完整性校验或恢复演练。</span>
             </>,
           },
-          {
-            key: 'operations', label: '操作记录', children: <>
-              <div className="backup-toolbar"><span>创建、恢复、保护和删除的操作记录，以及关联备份的系统升级</span><Button onClick={refresh}
-                                                                                                                          loading={loading}>刷新记录</Button>
-              </div>
-              <Table<Operation> rowKey="id" loading={loading} dataSource={operations} scroll={{ x: 1100 }}
-                                pagination={{ pageSize: 10, showSizeChanger: false }} columns={[
-                { title: '操作', dataIndex: 'type', render: value => typeNames[value] || value },
-                { title: '状态', dataIndex: 'status', render: status },
-                { title: '操作人 ID', dataIndex: 'operatorId' },
-                { title: '开始时间', dataIndex: 'createdAt' },
-                { title: '结束时间', dataIndex: 'finishedAt', render: value => value || '—' },
-                {
-                  title: '目标备份',
-                  dataIndex: 'backupId',
-                  render: value => value ? <Button type="link" onClick={() => setDetailId(value)}>查看备份</Button> : '—'
-                },
-                {
-                  title: '保护备份',
-                  dataIndex: 'protectionBackupId',
-                  render: value => value ? <Button type="link" onClick={() => setDetailId(value)}>查看保护备份</Button> : '—'
-                },
-              ]} expandable={{
-                expandedRowRender: item => <Descriptions column={1}>
-                  <Descriptions.Item label="操作 ID">{item.id}</Descriptions.Item>
-                  <Descriptions.Item label="目标备份 ID">{item.backupId || '—'}</Descriptions.Item>
-                  <Descriptions.Item label="保护备份 ID">{item.protectionBackupId || '—'}</Descriptions.Item>
-                </Descriptions>
-              }}/>
-            </>,
-          },
         ]}/>
       </Card>
     </Space>
@@ -232,7 +182,6 @@ export default function Backups() {
           <Descriptions.Item label="状态">{status(detail.backup.status)}</Descriptions.Item>
           <Descriptions.Item label="程序版本">{detail.backup.version || '—'} / {detail.backup.build || '—'}</Descriptions.Item>
           <Descriptions.Item label="创建时间">{detail.backup.createdAt}</Descriptions.Item>
-          <Descriptions.Item label="操作人 ID">{detail.backup.operatorId ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="保护状态">{detail.backup.protectedBackup ? '已保护，禁止删除' : '未保护'}</Descriptions.Item>
           <Descriptions.Item label="大小">{bytes(detail.backup.totalBytes)}</Descriptions.Item>
           <Descriptions.Item label="覆盖范围">{detail.scope || '尚未记录，不可据此判断为完整备份'}</Descriptions.Item>

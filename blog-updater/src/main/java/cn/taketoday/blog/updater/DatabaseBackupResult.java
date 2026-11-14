@@ -15,26 +15,16 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.event;
+package cn.taketoday.blog.updater;
 
-import cn.taketoday.blog.MaintenanceStatus;
-import infra.context.ApplicationEvent;
+import java.nio.file.Path;
 
 /**
- * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 4.0 2026/11/14
+ * 数据库备份产物。元信息写入数据库，文件只保存在 {@code location}。
+ *
+ * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
+ * @since 4.0
  */
-public class MaintenanceStatusChangeEvent extends ApplicationEvent {
-
-  private final MaintenanceStatus status;
-
-  public MaintenanceStatusChangeEvent(Object source, MaintenanceStatus status) {
-    super(source);
-    this.status = status;
-  }
-
-  public MaintenanceStatus getStatus() {
-    return status;
-  }
+public record DatabaseBackupResult(String id, Path location, long bytes, String sha256, String completedAt) {
 
 }

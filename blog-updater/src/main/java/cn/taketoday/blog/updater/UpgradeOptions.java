@@ -17,12 +17,11 @@
 
 package cn.taketoday.blog.updater;
 
-import java.util.Properties;
-
 /**
  * API 和升级器共同验证的参数，不包含路径、命令或凭据。
  */
-public record UpgradeOptions(boolean backupEnabled, int backupTimeoutSeconds, int healthTimeoutSeconds, String note) {
+public record UpgradeOptions(boolean backupEnabled, int backupTimeoutSeconds,
+        int healthTimeoutSeconds, String note) {
 
   public UpgradeOptions {
     if (backupTimeoutSeconds < 30 || backupTimeoutSeconds > 3600) {
@@ -40,27 +39,4 @@ public record UpgradeOptions(boolean backupEnabled, int backupTimeoutSeconds, in
     return new UpgradeOptions(true, 600, 90, "");
   }
 
-  public static UpgradeOptions from(Properties properties) {
-    for (Object key : properties.keySet()) {
-      if (!java.util.Set.of("backupEnabled", "backupTimeoutSeconds", "healthTimeoutSeconds", "note").contains(key)) {
-        throw new IllegalArgumentException("包含不支持的升级参数");
-      }
-    }
-    String enabled = properties.getProperty("backupEnabled", "true");
-    if (!enabled.equals("true") && !enabled.equals("false")) {
-      throw new IllegalArgumentException("数据库备份开关无效");
-    }
-    return new UpgradeOptions(Boolean.parseBoolean(enabled),
-            Integer.parseInt(properties.getProperty("backupTimeoutSeconds", "600")),
-            Integer.parseInt(properties.getProperty("healthTimeoutSeconds", "90")), properties.getProperty("note", ""));
-  }
-
-  public Properties properties() {
-    Properties result = new Properties();
-    result.setProperty("backupEnabled", Boolean.toString(backupEnabled));
-    result.setProperty("backupTimeoutSeconds", Integer.toString(backupTimeoutSeconds));
-    result.setProperty("healthTimeoutSeconds", Integer.toString(healthTimeoutSeconds));
-    result.setProperty("note", note);
-    return result;
-  }
 }

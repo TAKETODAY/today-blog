@@ -17,15 +17,13 @@
 
 package cn.taketoday.blog.updater;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.zip.GZIPInputStream;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
+import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,60 +34,14 @@ class UpgradeSettingsTests {
   Path temp;
 
   @Test
-  void validatesOptionsAndPersistsDefaults() throws Exception {
-    UpgradeStore store = new UpgradeStore(temp);
-    assertThat(store.settings().backupEnabled()).isTrue();
-    UpgradeOptions options = new UpgradeOptions(false, 30, 10, "测试");
-    store.saveSettings(options);
-    assertThat(new UpgradeStore(temp).settings()).isEqualTo(options);
-    assertThatThrownBy(() -> new UpgradeOptions(true, 29, 90, "")).isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new UpgradeOptions(true, 600, 601, "")).isInstanceOf(IllegalArgumentException.class);
-    Properties bad = new Properties();
-    bad.setProperty("backupEnabled", "yes");
-    assertThatThrownBy(() -> UpgradeOptions.from(bad)).isInstanceOf(IllegalArgumentException.class);
-    bad.setProperty("backupEnabled", "true");
-    bad.setProperty("healthTimeoutSeconds", "1.2");
-    assertThatThrownBy(() -> UpgradeOptions.from(bad)).isInstanceOf(IllegalArgumentException.class);
-  }
-
-  @Test
-  void snapshotAndHistorySurviveSettingsChanges() throws Exception {
-    String id = UUID.randomUUID().toString();
-    Path metadata = temp.resolve("incoming").resolve(id).resolve("metadata.properties");
-    Properties values = new Properties();
-    values.setProperty("status", "READY");
-    values.setProperty("id", id);
-    UpgradeFiles.write(metadata, values);
-    UpgradeStore store = new UpgradeStore(temp);
-    store.snapshot(id, UpgradeOptions.defaults(), java.util.List.of(), 42, values);
-    store.saveSettings(new UpgradeOptions(false, 30, 10, "changed"));
-    assertThat(UpgradeOptions.from(UpgradeFiles.read(metadata.getParent().resolve("options.properties"))))
-            .isEqualTo(UpgradeOptions.defaults());
-    UpgradeFiles.status(temp.resolve("results"), id, "BACKING_UP", "备份中");
-    UpgradeFiles.status(temp.resolve("results"), id, "FAILED", "失败");
-    Properties record = new UpgradeStore(temp).history().get(0);
-    assertThat(record.getProperty("operatorId")).isEqualTo("42");
-    assertThat(record.getProperty("status")).isEqualTo("FAILED");
-    assertThat(record.getProperty("stage.BACKING_UP")).isNotBlank();
-    assertThat(record.getProperty("finishedAt")).isNotBlank();
-    assertThatThrownBy(() -> store.snapshot(id, UpgradeOptions.defaults(), java.util.List.of(), 42, values))
-            .isInstanceOf(IllegalStateException.class);
-  }
-
-  @Test
-  void snapshotCarriesMappingsToUpdater() throws Exception {
-    String id = UUID.randomUUID().toString();
-    Path directory = Files.createDirectories(temp.resolve("incoming").resolve(id));
-    Properties values = new Properties();
-    values.setProperty("status", "READY");
-    values.setProperty("id", id);
-    UpgradeFiles.write(directory.resolve("metadata.properties"), values);
-    ReleaseMapping mapping = new ReleaseMapping("console", ReleaseMapping.Mode.SYMLINK,
-            "console", temp.resolve("www/console").toString());
-
-    new UpgradeStore(temp).snapshot(id, UpgradeOptions.defaults(), List.of(mapping), 42, values);
-
-    assertThat(ReleaseMappings.read(directory.resolve("mappings.conf"))).containsExactly(mapping);
+  void validatesOptions() {
+    assertThat(new UpgradeOptions(true, 30, 10, "测试").backupTimeoutSeconds()).isEqualTo(30);
+    assertThatThrownBy(() -> new UpgradeOptions(true, 29, 90, ""))
+            .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new UpgradeOptions(true, 600, 601, ""))
+            .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new UpgradeOptions(true, 600, 90, "a".repeat(501)))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -98,15 +50,17 @@ class UpgradeSettingsTests {
     Path credentials = Files.createFile(temp.resolve("backup.cnf"));
     String id = UUID.randomUUID().toString();
     DatabaseBackup backup = new DatabaseBackup(executable, credentials, temp, "today");
-    Properties result = backup.create(id, 30);
+    DatabaseBackupResult result = backup.create(id, 30);
     Path archive = temp.resolve(id).resolve("database.sql.gz");
-    assertThat(result.getProperty("backupStatus")).isEqualTo("SUCCESS");
+    assertThat(result.location()).isEqualTo(archive);
+    assertThat(result.bytes()).isPositive();
     try (var input = new GZIPInputStream(Files.newInputStream(archive))) {
       assertThat(new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)).contains("CREATE TABLE");
     }
     assertThat(Files.getPosixFilePermissions(archive))
             .isEqualTo(java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
     assertThat(Files.exists(archive.getParent().resolve("database.sql.tmp"))).isFalse();
+    assertThat(Files.exists(archive.getParent().resolve("backup.properties"))).isFalse();
   }
 
   @Test
@@ -136,4 +90,5 @@ class UpgradeSettingsTests {
     Files.setPosixFilePermissions(path, java.nio.file.attribute.PosixFilePermissions.fromString("rwx------"));
     return path;
   }
+
 }

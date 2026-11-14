@@ -58,11 +58,6 @@ class BackupHttpHandler {
     return backups.capabilities();
   }
 
-  @GET("/operations")
-  public List<BackupService.OperationView> operations() {
-    return backups.operations();
-  }
-
   @GET("/{id}")
   public BackupService.BackupDetail detail(@PathVariable String id) {
     return backups.backup(id);

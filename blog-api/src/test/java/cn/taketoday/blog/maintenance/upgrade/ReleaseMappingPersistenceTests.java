@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.upgrade;
+package cn.taketoday.blog.maintenance.upgrade;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -52,29 +52,27 @@ class ReleaseMappingPersistenceTests {
   @Test
   void persistsReplacesAndRemovesMappings() {
     ReleaseMapping console = mapping("console", "console", temp.resolve("console"));
-    service.replaceAll(List.of(console), 7L);
+    service.replaceAll(List.of(console));
 
     assertThat(service.findAll()).containsExactly(console);
     ReleaseMappingEntity saved = entityManager.findById(ReleaseMappingEntity.class, "console");
-    assertThat(saved.getOperatorId()).isEqualTo(7L);
     assertThat(saved.getCreatedAt()).isNotBlank();
     assertThat(saved.getUpdatedAt()).isNotBlank();
 
     ReleaseMapping desktop = mapping("desktop", "desktop", temp.resolve("desktop"));
-    service.replaceAll(List.of(desktop), 8L);
+    service.replaceAll(List.of(desktop));
 
     assertThat(service.findAll()).containsExactly(desktop);
     assertThat(entityManager.findById(ReleaseMappingEntity.class, "console")).isNull();
-    assertThat(entityManager.findById(ReleaseMappingEntity.class, "desktop").getOperatorId()).isEqualTo(8L);
   }
 
   @Test
   void invalidMappingNeverChangesDatabase() {
     ReleaseMapping desktop = mapping("desktop", "desktop", temp.resolve("desktop"));
-    service.replaceAll(List.of(desktop), 7L);
+    service.replaceAll(List.of(desktop));
 
     ReleaseMapping duplicate = mapping("desktop", "console", temp.resolve("duplicate"));
-    assertThatThrownBy(() -> service.replaceAll(List.of(desktop, duplicate), 8L))
+    assertThatThrownBy(() -> service.replaceAll(List.of(desktop, duplicate)))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("名称重复");
 

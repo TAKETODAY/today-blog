@@ -15,31 +15,36 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.backup;
+package cn.taketoday.blog.maintenance.upgrade;
+
+import org.jspecify.annotations.Nullable;
 
 import infra.lang.Enumerable;
 
 /**
- * 备份及关联升级的操作类型，枚举名即数据库存储值。
+ * 升级包状态。
  *
- * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
- * @since 4.0 2026/11/12
+ * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
+ * @since 4.0
  */
-public enum BackupOperationType implements Enumerable<String> {
+public enum UpgradePackageStatus implements Enumerable<String> {
 
-  /** 系统升级 */
-  UPGRADE,
+  /** 已上传，可用于升级。 */
+  READY,
 
-  /** 创建备份 */
-  BACKUP_CREATE,
+  /** 已被升级任务使用。 */
+  CONSUMED;
 
-  /** 恢复备份 */
-  BACKUP_RESTORE,
-
-  /** 删除备份 */
-  BACKUP_DELETE,
-
-  /** 修改备份保护状态 */
-  BACKUP_PROTECT
+  public static @Nullable UpgradePackageStatus of(@Nullable String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    for (UpgradePackageStatus status : values()) {
+      if (status.name().equals(value)) {
+        return status;
+      }
+    }
+    return null;
+  }
 
 }

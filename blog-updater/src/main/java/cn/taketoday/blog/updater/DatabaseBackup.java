@@ -74,7 +74,7 @@ public final class DatabaseBackup {
     return Files.getFileStore(root).getUsableSpace();
   }
 
-  private static void trusted(Path path, boolean secret) throws IOException {
+  static void trusted(Path path, boolean secret) throws IOException {
     if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(path)
             || !Files.getOwner(path).getName().equals("root")) {
       throw new IOException("备份配置、工具及目录必须由 root 管理");
@@ -95,7 +95,7 @@ public final class DatabaseBackup {
     }
   }
 
-  public Properties create(String id, int timeoutSeconds) throws Exception {
+  public DatabaseBackupResult create(String id, int timeoutSeconds) throws Exception {
     UpgradeFiles.checkId(id);
     if (timeoutSeconds <= 0 || timeoutSeconds > 3600) {
       throw new IllegalArgumentException("备份超时无效");
@@ -141,16 +141,9 @@ public final class DatabaseBackup {
         }
       }
       Files.move(compressed, archive, StandardCopyOption.ATOMIC_MOVE);
-      Properties result = new Properties();
-      result.setProperty("backupId", id);
-      result.setProperty("backupStatus", "SUCCESS");
-      result.setProperty("backupBytes", Long.toString(Files.size(archive)));
-      result.setProperty("backupSha256", java.util.HexFormat.of().formatHex(digest.digest()));
-      result.setProperty("backupCompletedAt", Instant.now().toString());
-      // 备份目录私有，即使元信息可读也不会暴露 SQL 数据。
-      UpgradeFiles.write(task.resolve("backup.properties"), result);
       complete = true;
-      return result;
+      return new DatabaseBackupResult(id, archive, Files.size(archive),
+              java.util.HexFormat.of().formatHex(digest.digest()), Instant.now().toString());
     }
     finally {
       if (process != null && process.isAlive()) {

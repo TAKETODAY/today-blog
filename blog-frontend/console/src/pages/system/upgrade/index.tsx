@@ -5,6 +5,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   Col,
   Descriptions,
   Divider,
@@ -35,16 +36,6 @@ import {
 import { http } from '@/utils/http';
 import './index.less';
 
-interface UpgradeTask {
-  id: string;
-  version: string;
-  build: string;
-  status: string;
-  message: string;
-
-  [key: string]: string;
-}
-
 interface Options {
   backupEnabled: boolean;
   backupTimeoutSeconds: number;
@@ -73,6 +64,49 @@ interface MappingSettings {
   message: string;
 }
 
+interface UpgradePackage {
+  id: string;
+  originalName: string;
+  displayName: string;
+  note?: string;
+  status: 'READY' | 'CONSUMED';
+  version: string;
+  build: number;
+  fileSize: number;
+  sha256: string;
+  entryCount: number;
+  location: string;
+  createdAt: string;
+  consumedAt?: string;
+}
+
+interface UpgradeRecord {
+  id: string;
+  packageId: string;
+  packageName: string;
+  packageVersion: string;
+  packageBuild: number;
+  packageSha256: string;
+  packagePath: string;
+  oldVersion?: string;
+  oldBuild?: number;
+  status: string;
+  backupEnabled: boolean;
+  backupTimeoutSeconds: number;
+  healthTimeoutSeconds: number;
+  note?: string;
+  deletePackageAfterUpgrade: boolean;
+  releasePath?: string;
+  backupPath?: string;
+  backupBytes?: number;
+  backupSha256?: string;
+  backupCompletedAt?: string;
+  message?: string;
+  createdAt: string;
+  startedAt?: string;
+  finishedAt?: string;
+}
+
 interface MaintenanceStatus {
   enabled: boolean;
   message?: string;
@@ -83,30 +117,35 @@ interface MaintenanceStatus {
 const terminal = ['SUCCESS', 'FAILED', 'ROLLED_BACK'];
 const taskKey = 'today-blog-upgrade-task';
 const phases = ['VALIDATING', 'INSTALLING', 'BACKING_UP', 'RESTARTING', 'HEALTH_CHECKING', 'SUCCESS'];
-const labels: Record<string, string> = {
-  READY: '待确认', STARTING: '已提交', VALIDATING: '校验升级包', INSTALLING: '准备版本',
+const statusLabels: Record<string, string> = {
+  STARTING: '已提交', VALIDATING: '校验升级包', INSTALLING: '准备版本',
   BACKING_UP: '数据库备份', RESTARTING: '切换并重启', HEALTH_CHECKING: '健康检查',
   SUCCESS: '升级成功', FAILED: '升级失败', ROLLING_BACK: '正在恢复旧程序', ROLLED_BACK: '升级失败，已恢复旧版本',
+  READY: '待升级', CONSUMED: '已使用',
 };
 
-function parseOptions(data: Record<string, string>): Options {
+function parseOptions(data?: Partial<Options>): Options {
   return {
-    backupEnabled: data.backupEnabled === 'true',
-    backupTimeoutSeconds: Number(data.backupTimeoutSeconds),
-    healthTimeoutSeconds: Number(data.healthTimeoutSeconds),
-    note: data.note || '',
+    backupEnabled: data?.backupEnabled ?? true,
+    backupTimeoutSeconds: data?.backupTimeoutSeconds ?? 600,
+    healthTimeoutSeconds: data?.healthTimeoutSeconds ?? 90,
+    note: data?.note || '',
   };
 }
 
-function requestOptions(options: Options) {
-  return {
-    backupEnabled: String(options.backupEnabled), backupTimeoutSeconds: String(options.backupTimeoutSeconds),
-    healthTimeoutSeconds: String(options.healthTimeoutSeconds), note: options.note || '',
-  };
+function requestOptions(options: Options): Options {
+  return { ...options, note: options.note || '' };
 }
 
-function size(bytes: number) {
-  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GiB`;
+function bytes(value?: number) {
+  const size = Number(value);
+  if (!Number.isFinite(size) || size < 0) {
+    return '—';
+  }
+  if (size >= 1024 ** 3) {
+    return `${(size / 1024 ** 3).toFixed(2)} GiB`;
+  }
+  return `${(size / 1024 ** 2).toFixed(1)} MiB`;
 }
 
 function OptionFields() {
@@ -125,10 +164,12 @@ function OptionFields() {
 }
 
 export default function SystemUpgrade() {
-  const [version, setVersion] = useState<Record<string, string>>({ version: '加载中' });
-  const [task, setTask] = useState<UpgradeTask>();
+  const [version, setVersion] = useState<{ version: string; build?: string | null }>({ version: '加载中' });
+  const [record, setRecord] = useState<UpgradeRecord>();
   const [id, setId] = useState(() => localStorage.getItem(taskKey) || '');
-  const [history, setHistory] = useState<UpgradeTask[]>([]);
+  const [records, setRecords] = useState<UpgradeRecord[]>([]);
+  const [packages, setPackages] = useState<UpgradePackage[]>([]);
+  const [selectedPackageId, setSelectedPackageId] = useState('');
   const [environment, setEnvironment] = useState<Environment>();
   const [uploading, setUploading] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -136,8 +177,6 @@ export default function SystemUpgrade() {
   const [refreshing, setRefreshing] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState('run');
-  const [configVisible, setConfigVisible] = useState(false);
-  const [configTab, setConfigTab] = useState('settings');
   const [disconnected, setDisconnected] = useState(false);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [maintenance, setMaintenance] = useState<MaintenanceStatus>();
@@ -145,31 +184,55 @@ export default function SystemUpgrade() {
   const [maintenanceVisible, setMaintenanceVisible] = useState(false);
   const [mappingSettings, setMappingSettings] = useState<MappingSettings>();
   const [mappingSaving, setMappingSaving] = useState(false);
+  const [configVisible, setConfigVisible] = useState(false);
+  const [configTab, setConfigTab] = useState('settings');
+  const [uploadVisible, setUploadVisible] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File>();
+  const [editPackage, setEditPackage] = useState<UpgradePackage>();
+  const [editName, setEditName] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [packageSaving, setPackageSaving] = useState(false);
+  const [deletePackageAfter, setDeletePackageAfter] = useState(false);
   const [runForm] = Form.useForm<Options>();
   const [settingsForm] = Form.useForm<Options>();
   const [mappingForm] = Form.useForm<{ mappings: ReleaseMapping[] }>();
   const [maintenanceForm] = Form.useForm<{ message: string; retryAfter: number }>();
   const backupEnabled = Form.useWatch('backupEnabled', runForm);
 
-  const selectTask = useCallback((next: UpgradeTask) => {
-    setTask(next);
+  const selectRecord = useCallback((next: UpgradeRecord) => {
+    setRecord(next);
     setTab('run');
     setId(next.id);
     localStorage.setItem(taskKey, next.id);
   }, []);
 
+  const reloadPackages = useCallback(async () => {
+    const response = await http.get('/api/console/maintenance/upgrade/packages');
+    const list = response.data as UpgradePackage[];
+    setPackages(list);
+    setSelectedPackageId(current => {
+      if (current && list.some(item => item.id === current && item.status === 'READY')) {
+        return current;
+      }
+      return list.find(item => item.status === 'READY')?.id || '';
+    });
+    return list;
+  }, []);
+
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [current, records, env, maintenanceStatus] = await Promise.all([
-        http.get('/api/console/maintenance/upgrade/current'), http.get('/api/console/maintenance/upgrade/history'),
-        http.get('/api/console/maintenance/upgrade/environment'), http.get('/api/console/maintenance'),
+      const [current, history, env, maintenanceStatus] = await Promise.all([
+        http.get('/api/console/maintenance/upgrade/current'),
+        http.get('/api/console/maintenance/upgrade/records'),
+        http.get('/api/console/maintenance/upgrade/environment'),
+        http.get('/api/console/maintenance'),
       ]);
       setVersion(current.data);
-      setHistory(records.data);
+      setRecords(history.data);
       setEnvironment(env.data);
       setMaintenance(maintenanceStatus.data);
-      return records.data as UpgradeTask[];
+      return history.data as UpgradeRecord[];
     }
     finally {
       setRefreshing(false);
@@ -181,10 +244,11 @@ export default function SystemUpgrade() {
 
     async function load() {
       try {
-        const [settings, mappings, records] = await Promise.all([
+        const [settings, mappings, history] = await Promise.all([
           http.get('/api/console/maintenance/upgrade/settings'),
           http.get('/api/console/maintenance/upgrade/mappings'),
           refresh(),
+          reloadPackages(),
         ]);
         if (cancelled) {
           return;
@@ -194,9 +258,9 @@ export default function SystemUpgrade() {
         settingsForm.setFieldsValue(options);
         setMappingSettings(mappings.data);
         mappingForm.setFieldsValue({ mappings: mappings.data.mappings || [] });
-        const active = records.find(record => record.status !== 'READY' && !terminal.includes(record.status));
+        const active = history.find(item => !terminal.includes(item.status));
         if (active) {
-          selectTask(active);
+          selectRecord(active);
         }
         setLoaded(true);
       }
@@ -209,7 +273,7 @@ export default function SystemUpgrade() {
     return () => {
       cancelled = true;
     };
-  }, [refresh, runForm, settingsForm, mappingForm, selectTask]);
+  }, [refresh, reloadPackages, runForm, settingsForm, mappingForm, selectRecord]);
 
   useEffect(() => {
     if (!id) {
@@ -221,16 +285,17 @@ export default function SystemUpgrade() {
     async function poll() {
       let done = false;
       try {
-        const response = await http.get(`/api/console/maintenance/upgrade/${id}`);
+        const response = await http.get(`/api/console/maintenance/upgrade/records/${id}`);
         if (cancelled) {
           return;
         }
-        setTask(response.data);
+        setRecord(response.data);
         setDisconnected(false);
         setNeedsLogin(false);
-        done = terminal.includes(response.data.status) || response.data.status === 'READY';
+        done = terminal.includes(response.data.status);
         if (done) {
           await refresh();
+          await reloadPackages();
         }
       }
       catch (error) {
@@ -249,44 +314,98 @@ export default function SystemUpgrade() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [id, starting, refresh]);
+  }, [id, starting, refresh, reloadPackages]);
 
-  const activeTask = history.some(record => record.status !== 'READY' && !terminal.includes(record.status));
-  const busy = uploading || starting || activeTask || Boolean(task && task.status !== 'READY' && !terminal.includes(task.status));
+  const activeTask = records.some(item => !terminal.includes(item.status));
+  const busy = uploading || starting || packageSaving || activeTask;
+  const selectedPackage = packages.find(item => item.id === selectedPackageId);
   const ready = loaded && environment?.updaterReady && environment.installFreeBytes >= 3 * 1024 ** 3
-      && (!backupEnabled || (environment.backupReady && environment.backupFreeBytes >= 256 * 1024 ** 2));
-  const lastPhase = task ? phases.reduce((last, phase, index) => task[`stage.${phase}`] ? index : last, 0) : 0;
+      && (!backupEnabled || (environment.backupReady && environment.backupFreeBytes >= 256 * 1024 ** 2))
+      && selectedPackage?.status === 'READY';
+  const lastPhase = record ? phases.reduce((last, phase, index) => record.status === phase ? index : last, 0) : 0;
 
-  async function upload(file: File) {
+  async function uploadPackage() {
+    if (!uploadFile) {
+      message.warning('请选择升级包');
+      return;
+    }
     setUploading(true);
     try {
       const data = new FormData();
-      data.append('file', file);
-      const response = await http.post('/api/console/maintenance/upgrade/packages', data, { timeout: 300000 });
-      selectTask(response.data);
-      await refresh();
+      data.append('file', uploadFile);
+      await http.post('/api/console/maintenance/upgrade/packages', data, { timeout: 300000 });
+      setUploadVisible(false);
+      setUploadFile(undefined);
+      await reloadPackages();
       message.success('升级包完整性校验通过，请确认来源可信');
-    }
-    catch (error) {
-      // 通用 HTTP 拦截器负责错误提示。
     }
     finally {
       setUploading(false);
     }
-    return false;
+  }
+
+  function openEditPackage(item: UpgradePackage) {
+    setEditPackage(item);
+    setEditName(item.displayName || item.originalName);
+    setEditNote(item.note || '');
+  }
+
+  async function savePackage() {
+    if (!editPackage) {
+      return;
+    }
+    if (!editName.trim()) {
+      message.warning('请输入升级包名称');
+      return;
+    }
+    setPackageSaving(true);
+    try {
+      await http.put(`/api/console/maintenance/upgrade/packages/${editPackage.id}`, {
+        displayName: editName.trim(), note: editNote,
+      });
+      setEditPackage(undefined);
+      await reloadPackages();
+      message.success('升级包已更新');
+    }
+    finally {
+      setPackageSaving(false);
+    }
+  }
+
+  function removePackage(item: UpgradePackage) {
+    Modal.confirm({
+      title: `删除升级包「${item.displayName || item.originalName}」？`,
+      content: '将同时删除数据库记录和本地 ZIP 文件。已被升级记录使用的包会保留历史快照。',
+      okText: '删除',
+      okButtonProps: { danger: true },
+      async onOk() {
+        await http.delete(`/api/console/maintenance/upgrade/packages/${item.id}`);
+        if (selectedPackageId === item.id) {
+          setSelectedPackageId('');
+        }
+        await reloadPackages();
+        message.success('升级包已删除');
+      },
+    });
   }
 
   async function start() {
+    if (!selectedPackage) {
+      message.warning('请选择升级包');
+      return;
+    }
     const options = await runForm.validateFields();
     Modal.confirm({
-      title: `确认升级到 ${task?.version} / ${task?.build}？`,
+      title: `确认升级到 ${selectedPackage.version} / ${selectedPackage.build}？`,
       content: <Space direction="vertical">
         <span>当前版本：{version.version} / {version.build || '—'}</span>
+        <span>升级包：{selectedPackage.displayName || selectedPackage.originalName}</span>
         <span>数据库备份：{options.backupEnabled ? `开启，超时 ${options.backupTimeoutSeconds} 秒` : '关闭，请确认已自行备份'}</span>
         <span>健康检查超时：{options.healthTimeoutSeconds} 秒。</span>
         <span>文件映射：{mappingSettings?.mappings?.length
             ? `${mappingSettings.mappings.length} 条，切换版本后发布`
             : '未配置'}</span>
+        <span>{deletePackageAfter ? '升级成功后删除升级包。' : '升级成功后保留升级包。'}</span>
         <span>提交后立即进入维护状态，新的业务请求返回 503；升级完成后自动恢复。</span>
         {maintenance?.enabled && maintenance.source === 'manual'
             && <span>当前为手动维护状态，升级完成后不会自动关闭，请升级完成后手动关闭。</span>}
@@ -297,9 +416,12 @@ export default function SystemUpgrade() {
       async onOk() {
         setStarting(true);
         try {
-          await http.post(`/api/console/maintenance/upgrade/${id}/start`, requestOptions(options));
-          setTask(previous => previous && ({ ...previous, status: 'STARTING', message: '升级任务已提交' }));
+          const response = await http.post(`/api/console/maintenance/upgrade/packages/${selectedPackage.id}/start`, {
+            options: requestOptions(options), deletePackage: deletePackageAfter,
+          });
+          selectRecord(response.data);
           await refresh();
+          await reloadPackages();
         }
         finally {
           setStarting(false);
@@ -312,8 +434,7 @@ export default function SystemUpgrade() {
     const options = await settingsForm.validateFields();
     setSaving(true);
     try {
-      await http.put('/api/console/maintenance/upgrade/settings', requestOptions({ ...options, note: '' }));
-      const response = await http.get('/api/console/maintenance/upgrade/settings');
+      const response = await http.put('/api/console/maintenance/upgrade/settings', requestOptions(options));
       settingsForm.setFieldsValue(parseOptions(response.data));
       message.success('默认设置已保存；本次升级参数保持不变');
     }
@@ -456,49 +577,82 @@ export default function SystemUpgrade() {
                       color={environment?.updaterReady ? 'success' : 'warning'}>{environment?.updaterReady ? '已配置' : '未就绪'}</Tag></Descriptions.Item>
                   <Descriptions.Item label="数据库备份"><Tag
                       color={environment?.backupReady ? 'success' : 'warning'}>{environment?.backupReady ? '已配置，执行时验证连接' : '未就绪'}</Tag></Descriptions.Item>
-                  <Descriptions.Item label="安装盘可用空间">{environment ? size(environment.installFreeBytes) : '—'}（至少 3
+                  <Descriptions.Item label="安装盘可用空间">{environment ? bytes(environment.installFreeBytes) : '—'}（至少 3
                     GiB）</Descriptions.Item>
-                  <Descriptions.Item label="备份盘可用空间">{environment ? size(environment.backupFreeBytes) : '—'}（至少 256
+                  <Descriptions.Item label="备份盘可用空间">{environment ? bytes(environment.backupFreeBytes) : '—'}（至少 256
                     MiB，另需足够导出空间）</Descriptions.Item>
                 </Descriptions>
                 <div>
-                  <Divider orientation="left" plain>安装升级包</Divider>
-                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                    <Upload accept=".zip" showUploadList={false} beforeUpload={upload}
-                            disabled={busy || !loaded || !environment?.updaterReady}>
-                      <Button icon={<UploadOutlined/>} loading={uploading}>选择并上传升级包</Button>
-                    </Upload>
-                    <span className="upgrade-secondary">仅支持完整发行 ZIP，最大 512 MiB。摘要只校验完整性，请仅上传自己构建的可信包。</span>
-                    {task?.status === 'READY' && <Alert type="success" showIcon message={`待升级：${task.version} / ${task.build}`}
-                                                        description={`包大小：${(Number(task.packageBytes || 0) / 1024 / 1024).toFixed(1)} MiB，完整性校验通过。`}/>}
-                    <Form form={runForm} layout="vertical" disabled={busy || !loaded}>
-                      <OptionFields/>
-                      <Form.Item name="note" label="本次升级备注"><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
-                    </Form>
-                    <Button type="primary" disabled={task?.status !== 'READY' || busy || !ready} loading={starting}
-                            onClick={start}>开始升级</Button>
-                  </Space>
+                  <div className="upgrade-toolbar">
+                    <span className="upgrade-secondary">选择待升级的发行包；已使用的包保留历史快照，可继续查看或删除。</span>
+                    <Button icon={<UploadOutlined/>} onClick={() => setUploadVisible(true)} disabled={!loaded}>上传升级包</Button>
+                  </div>
+                  <Table<UpgradePackage> rowKey="id" dataSource={packages} pagination={false} scroll={{ x: 900 }}
+                                          rowSelection={{
+                                            type: 'radio',
+                                            selectedRowKeys: selectedPackageId ? [selectedPackageId] : [],
+                                            getCheckboxProps: item => ({ disabled: item.status !== 'READY' }),
+                                            onChange: keys => setSelectedPackageId(String(keys[0] || '')),
+                                          }} locale={{
+                    emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级包，请先上传"/>
+                  }} columns={[
+                    {
+                      title: '升级包',
+                      key: 'name',
+                      render: (_, item) => <Space direction="vertical" size={0}>
+                        <span>{item.displayName || item.originalName}</span>
+                        <span className="upgrade-secondary">{item.originalName}</span>
+                      </Space>
+                    },
+                    { title: '版本 / 构建', key: 'version', render: (_, item) => `${item.version} / ${item.build}` },
+                    { title: '状态', dataIndex: 'status', render: value => <Tag color={value === 'READY' ? 'success' : 'default'}>{statusLabels[value] || value}</Tag> },
+                    { title: '大小', dataIndex: 'fileSize', render: value => bytes(Number(value)) },
+                    { title: '上传时间', dataIndex: 'createdAt' },
+                    {
+                      title: '操作',
+                      key: 'action',
+                      render: (_, item) => <Space size={0}>
+                        <Button type="link" onClick={() => openEditPackage(item)}>编辑</Button>
+                        <Button type="link" danger onClick={() => removePackage(item)} disabled={busy}>删除</Button>
+                      </Space>
+                    },
+                  ]}/>
                 </div>
-                {task && <>
+                <div>
+                  <Divider orientation="left" plain>升级参数</Divider>
+                  <Form form={runForm} layout="vertical" disabled={busy || !loaded}>
+                    <OptionFields/>
+                    <Form.Item name="note" label="本次升级备注"><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
+                  </Form>
+                  <Checkbox checked={deletePackageAfter} disabled={busy || !loaded}
+                            onChange={event => setDeletePackageAfter(event.target.checked)}>
+                    升级成功后删除升级包
+                  </Checkbox>
+                  <div style={{ marginTop: 16 }}>
+                    <Button type="primary" disabled={!ready || busy || !loaded} loading={starting}
+                            onClick={start}>开始升级</Button>
+                  </div>
+                </div>
+                {record && <>
                   <Divider orientation="left" plain>升级任务</Divider>
                   <Space direction="vertical" size="large" style={{ width: '100%' }}>
                     <Alert showIcon
-                           type={task.status === 'SUCCESS' ? 'success' : ['FAILED', 'ROLLED_BACK'].includes(task.status) ? 'error' : 'info'}
-                           message={labels[task.status] || task.status} description={task.message}/>
-                    <Steps size="small" responsive current={phases.includes(task.status) ? phases.indexOf(task.status) : lastPhase}
-                           status={['FAILED', 'ROLLED_BACK'].includes(task.status) ? 'error' : undefined}
-                           items={phases.map(phase => ({ title: labels[phase], description: task[`stage.${phase}`] ? '已进入' : undefined }))}/>
+                           type={record.status === 'SUCCESS' ? 'success' : ['FAILED', 'ROLLED_BACK'].includes(record.status) ? 'error' : 'info'}
+                           message={statusLabels[record.status] || record.status} description={record.message}/>
+                    <Steps size="small" responsive current={phases.includes(record.status) ? phases.indexOf(record.status) : lastPhase}
+                           status={['FAILED', 'ROLLED_BACK'].includes(record.status) ? 'error' : undefined}
+                           items={phases.map(phase => ({ title: statusLabels[phase] }))}/>
                     <Descriptions column={{ xs: 1, sm: 2 }}>
-                      <Descriptions.Item label="目标版本">{task.version} / {task.build}</Descriptions.Item>
-                      <Descriptions.Item label="任务 ID">{task.id}</Descriptions.Item>
+                      <Descriptions.Item label="升级包">{record.packageName}</Descriptions.Item>
+                      <Descriptions.Item label="目标版本">{record.packageVersion} / {record.packageBuild}</Descriptions.Item>
+                      <Descriptions.Item label="任务 ID">{record.id}</Descriptions.Item>
                       <Descriptions.Item
-                        label="数据库备份">{task.backupStatus || '尚未执行'}{task.backupBytes ? ` / ${(Number(task.backupBytes) / 1024 / 1024).toFixed(1)} MiB` : ''}</Descriptions.Item>
-                      <Descriptions.Item label="备份标识">{task.backupId || '—'}</Descriptions.Item>
-                      <Descriptions.Item label="开始时间">{task.startedAt || '—'}</Descriptions.Item>
-                      <Descriptions.Item label="结束时间">{task.finishedAt || '—'}</Descriptions.Item>
-                      <Descriptions.Item label="备注">{task.note || '—'}</Descriptions.Item>
+                        label="数据库备份">{record.backupPath || '尚未执行'}{record.backupBytes ? ` / ${bytes(record.backupBytes)}` : ''}</Descriptions.Item>
+                      <Descriptions.Item label="开始时间">{record.startedAt || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="结束时间">{record.finishedAt || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="备注">{record.note || '—'}</Descriptions.Item>
                     </Descriptions>
-                    {task.status === 'SUCCESS' && <Button onClick={() => window.location.reload()}>刷新并使用新版本</Button>}
+                    {record.status === 'SUCCESS' && <Button onClick={() => window.location.reload()}>刷新并使用新版本</Button>}
                   </Space>
                 </>}
               </Space>
@@ -509,40 +663,38 @@ export default function SystemUpgrade() {
             label: '升级记录',
             children: <>
               <div className="upgrade-toolbar">
-                <span className="upgrade-secondary">记录已提交和已完成的升级任务，最多展示最近的任务。</span>
+                <span className="upgrade-secondary">记录已提交和已完成的升级任务，升级包删除后仍保留快照。</span>
                 <Button icon={<ReloadOutlined/>} loading={refreshing}
                         onClick={() => refresh().catch(() => message.error('刷新记录失败'))}>刷新记录</Button>
               </div>
-              <Table<UpgradeTask> rowKey="id" loading={refreshing} dataSource={history} scroll={{ x: 1000 }}
-                                  pagination={{ pageSize: 10, showSizeChanger: false }}
-                                  locale={{
-                                    emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级记录"/>,
-                                  }} columns={[
-                { title: '目标版本', key: 'version', render: (_, record) => `${record.version} / ${record.build}` },
-                { title: '状态', dataIndex: 'status', render: value => labels[value] || value },
-                { title: '操作人 ID', dataIndex: 'operatorId' },
-                { title: '开始时间', dataIndex: 'startedAt' },
-                { title: '结束时间', dataIndex: 'finishedAt' },
+              <Table<UpgradeRecord> rowKey="id" loading={refreshing} dataSource={records} scroll={{ x: 1000 }}
+                                    pagination={{ pageSize: 10, showSizeChanger: false }}
+                                    locale={{
+                                      emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级记录"/>,
+                                    }} columns={[
+                { title: '升级包', dataIndex: 'packageName' },
+                { title: '目标版本', key: 'version', render: (_, item) => `${item.packageVersion} / ${item.packageBuild}` },
+                { title: '状态', dataIndex: 'status', render: value => statusLabels[value] || value },
+                { title: '开始时间', dataIndex: 'startedAt', render: value => value || '—' },
+                { title: '结束时间', dataIndex: 'finishedAt', render: value => value || '—' },
                 {
                   title: '操作',
                   key: 'action',
-                  render: (_, record) => <Button type="link" onClick={() => selectTask(record)}>查看详情</Button>
+                  render: (_, item) => <Button type="link" onClick={() => selectRecord(item)}>查看详情</Button>
                 },
               ]} expandable={{
-                expandedRowRender: record => <Descriptions column={1}>
-                  <Descriptions.Item label="任务 ID">{record.id}</Descriptions.Item>
-                  <Descriptions.Item label="原版本">{record.oldVersion || '—'} / {record.oldBuild || '—'}</Descriptions.Item>
-                  <Descriptions.Item label="详情">{record.message}</Descriptions.Item>
+                expandedRowRender: item => <Descriptions column={1}>
+                  <Descriptions.Item label="任务 ID">{item.id}</Descriptions.Item>
+                  <Descriptions.Item label="原版本">{item.oldVersion || '—'} / {item.oldBuild ?? '—'}</Descriptions.Item>
+                  <Descriptions.Item label="详情">{item.message || '—'}</Descriptions.Item>
                   <Descriptions.Item
-                      label="参数快照">备份：{record.backupEnabled || '—'}；备份超时：{record.backupTimeoutSeconds || '—'} 秒；健康检查：{record.healthTimeoutSeconds || '—'} 秒</Descriptions.Item>
-                  <Descriptions.Item
-                      label="备份">{record.backupStatus || '—'} / {record.backupId || '—'} / {record.backupCompletedAt || '—'}</Descriptions.Item>
-                  <Descriptions.Item
-                      label="阶段时间">{Object.entries(record).filter(([key]) => key.startsWith('stage.')).map(([key, value]) => <div
-                      key={key}>{labels[key.substring(6)] || key.substring(6)}：{value}</div>)}</Descriptions.Item>
-                  <Descriptions.Item label="备注">{record.note || '—'}</Descriptions.Item>
-                </Descriptions>
-              }}/>
+                      label="参数快照">备份：{item.backupEnabled ? '开启' : '关闭'}；备份超时：{item.backupTimeoutSeconds} 秒；健康检查：{item.healthTimeoutSeconds} 秒</Descriptions.Item>
+                  <Descriptions.Item label="升级后删除包">{item.deletePackageAfterUpgrade ? '是' : '否'}</Descriptions.Item>
+                  <Descriptions.Item label="升级包路径">{item.packagePath}</Descriptions.Item>
+                  <Descriptions.Item label="备份文件">{item.backupPath || '—'}</Descriptions.Item>
+                  <Descriptions.Item label="发行版本目录">{item.releasePath || '—'}</Descriptions.Item>
+                  <Descriptions.Item label="备注">{item.note || '—'}</Descriptions.Item>
+                </Descriptions>}}/>
             </>,
           },
         ]}/>
@@ -650,6 +802,30 @@ export default function SystemUpgrade() {
         },
       ]}/>
     </Drawer>
+    <Modal title="上传升级包" open={uploadVisible} confirmLoading={uploading} okText="上传"
+           onOk={uploadPackage} onCancel={() => { setUploadVisible(false); setUploadFile(undefined); }}>
+      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        <Alert type="info" showIcon message="仅支持完整发行 ZIP，最大 512 MiB"
+               description="摘要只校验完整性，请仅上传自己构建并通过可信渠道传输的升级包。"/>
+        <Upload accept=".zip" showUploadList={false} maxCount={1}
+                beforeUpload={file => { setUploadFile(file); return false; }}>
+          <Button icon={<UploadOutlined/>}>选择 ZIP 文件</Button>
+        </Upload>
+        <span>{uploadFile ? uploadFile.name : '尚未选择文件'}</span>
+      </Space>
+    </Modal>
+    <Modal title="编辑升级包" open={Boolean(editPackage)} confirmLoading={packageSaving} okText="保存"
+           onOk={savePackage} onCancel={() => setEditPackage(undefined)}>
+      <Form layout="vertical">
+        <Form.Item label="展示名称" required>
+          <Input value={editName} maxLength={255} onChange={event => setEditName(event.target.value)}/>
+        </Form.Item>
+        <Form.Item label="备注">
+          <Input.TextArea value={editNote} maxLength={500} showCount rows={3}
+                          onChange={event => setEditNote(event.target.value)}/>
+        </Form.Item>
+      </Form>
+    </Modal>
     <Modal
         title="开启维护状态"
         open={maintenanceVisible}

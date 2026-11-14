@@ -1,7 +1,7 @@
 # 打包、部署和后台升级
 
 API 使用 systemd，升级器位于独立 Gradle 模块 `blog-updater`，生产代码仅依赖 JDK。
-`blog-api` 依赖该模块复用升级包校验和磁盘协议，升级器不依赖 API 或其 Web、数据库框架。
+`blog-api` 依赖该模块复用升级包校验；升级器通过 JDBC 直接读取任务和写回状态，不依赖 API 或 Web 框架。
 可单独运行 `./gradlew :blog-updater:build` 构建并测试，产物为
 `blog-updater/build/libs/today-blog-updater.jar`，通过 `java -jar` 启动。
 通过独立的 `today-blog-updater@<UUID>.service` 执行，不随 API 重启终止。
@@ -96,12 +96,12 @@ current/desktop  ->  /var/www/today-blog/desktop
 | source | 只能是 `console`、`desktop` 或其子路径                                   |
 | target | 规范化的绝对路径，必须位于服务器白名单目录内，不能与安装目录或状态目录重叠 |
 
-管理后台「系统升级 → 文件映射」提供增删改界面，也可以直接调用
+管理后台「系统升级 → 升级配置 → 文件映射」提供增删改界面，也可以直接调用
 `GET /api/console/maintenance/upgrade/mappings` 查询、`PUT` 同一路径保存。
 配置保存在数据库表 `t_release_mapping`（Flyway v3.8 创建），是该配置的唯一来源；
-启动升级任务时快照到 `incoming/<UUID>/mappings.conf` 交给升级器，之后修改数据库配置不影响
-已提交任务。恢复业务数据库会把默认映射一并恢复到备份时间点，已提交任务仍使用各自快照。
-升级器不访问数据库，发布前会重新校验白名单、父目录所有权与权限。
+启动升级任务时把当前映射快照到 `t_upgrade_path_mapping`，之后修改默认配置不影响已提交任务。
+恢复业务数据库会把默认映射一并恢复到备份时间点，已提交任务仍使用各自快照。
+升级器通过数据库读取任务快照，发布前会重新校验白名单、父目录所有权与权限。
 
 白名单由 root 管理，默认文件为 `/etc/today-blog/release-mapping-roots`，每行一个绝对目录。
 首次安装会创建 `/var/www/today-blog` 并写入该文件：
@@ -118,7 +118,7 @@ sudo chmod 644 /etc/today-blog/release-mapping-roots
 
 ```ini
 [Service]
-ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog /var/www/today-blog
+ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade /var/backups/today-blog /var/www/today-blog
 ```
 
 当前不提供复制模式；目标在同一挂载点且 nginx 可跟随符号链接时使用上述方案即可。
@@ -126,12 +126,12 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/r
 
 ## 后台升级
 
-系统 → 系统升级 → 执行升级 → 上传 ZIP → 校验通过 → 确认参数 → 开始升级。
+系统 → 系统升级 → 执行升级 → 上传或选择升级包 → 确认参数 → 开始升级。
 任务 ID 保存在浏览器本地，重载页面后继续查询。重启可能导致登录失效，需重新登录。
 
 ### 升级期间拒绝请求
 
-管理端提交升级（`POST /api/console/maintenance/upgrade/{id}/start`）后立即进入维护状态，无需等待升级器
+管理端提交升级（`POST /api/console/maintenance/upgrade/packages/{id}/start`）后立即进入维护状态，无需等待升级器
 执行到切换步骤。API 进程不退出，但对新的业务请求返回 `503 Service Unavailable` 和
 `Retry-After`；等待约 2 秒让已进入处理的请求完成后再重启 API。新版本通过健康检查
 （或回滚版本恢复健康）后重新对外提供服务。
@@ -145,7 +145,7 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/r
 - `PUT /api/console/maintenance`：管理员手动开启或关闭维护，请求体为
   `{"enabled":true,"message":"维护中","retryAfter":120}`。
 
-管理端「系统升级 → 当前环境」会显示维护状态并提供「开启维护 / 关闭维护」按钮；
+管理端「系统升级 → 执行升级」会显示维护状态并提供「开启维护 / 关闭维护」按钮；
 升级任务运行期间按钮禁用，避免中途关闭保护。手动维护不会随升级任务结束自动关闭，
 需要管理员主动恢复；维护期间登录状态探测和登录接口保持可用，页面刷新或会话过期后
 仍可重新登录并关闭维护。API 进程重启会清除内存中的手动维护状态，无法通过管理端登录时
@@ -188,6 +188,20 @@ password=由运维安全配置
 触发器、事件、存储过程另需对应权限；具体要求依 MySQL/MariaDB 版本而异，须用实际版本演练。
 当前导出包含 routines、events、triggers，不应通过授予数据库管理权限来绕过配置问题。
 
+升级器默认复用 `defaultsFile` 中的 `[client]` 账号读写任务状态，需要额外授权：
+
+```sql
+GRANT SELECT, UPDATE ON today.t_upgrade_record TO 'blog_backup'@'localhost';
+GRANT SELECT ON today.t_upgrade_package TO 'blog_backup'@'localhost';
+GRANT SELECT ON today.t_upgrade_path_mapping TO 'blog_backup'@'localhost';
+GRANT INSERT, SELECT ON today.t_backup TO 'blog_backup'@'localhost';
+GRANT DELETE ON today.t_upgrade_package TO 'blog_backup'@'localhost';
+```
+
+也可以使用独立账号，在 `/etc/today-blog/upgrade.properties` 中配置
+`jdbcUrl`、`jdbcUser` 和 `jdbcPasswordFile`；密码文件必须由 root 管理且为 0600。
+升级器直连数据库，数据库不可用时升级无法启动或回写状态。
+
 备份根目录及全部父目录必须由 root 管理，且不可被组或其他用户写入；建议根目录 0755，
 升级器为每个任务建立 0700 子目录，SQL 临时文件及 gzip 文件使用 0600。
 API 只读取非敏感配置和凭据文件元信息，不读取数据库密码或备份内容。
@@ -198,7 +212,7 @@ API 只读取非敏感配置和凭据文件元信息，不读取数据库密码�
 ```ini
 [Service]
 TimeoutStartSec=5400
-ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog /var/www/today-blog
+ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade /var/backups/today-blog /var/www/today-blog
 ```
 
 修改 unit 后执行 `systemctl daemon-reload`。使用自定义备份目录或映射根目录时必须预先创建目录，
@@ -218,40 +232,39 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/r
 
 ### 设置与记录
 
-“升级设置”保存默认参数；“执行升级”可覆盖本次参数。启动时写入任务参数快照，
-后续修改默认值不影响已提交任务。开启自动程序回滚仅适用于向后兼容的迁移。
+“升级设置”保存默认参数；“执行升级”可覆盖本次参数。启动时把参数和升级包快照写入
+`t_upgrade_record`，后续修改默认值不影响已提交任务。开启自动程序回滚仅适用于向后兼容的迁移。
 `ROLLED_BACK` 表示本次升级失败、已恢复旧程序，而不是新版本发布成功。
 
-默认设置位于 `incoming/settings.properties`，任务参数位于 `incoming/<UUID>/options.properties`，
-前端映射默认值保存在数据库表 `t_release_mapping`，任务启动时快照到 `incoming/<UUID>/mappings.conf`，
-任务元信息和 root 写入的结果文件作为独立执行依据；管理端查询时按 UUID 幂等同步至
-`t_backup_operation`，再通过数据库查询升级列表和详情。派发前也会写入数据库，写入失败不启动升级。
-恢复数据库后再次查询会从磁盘补齐记录；数据库索引不是恢复执行器的唯一依据。
-`t_backup` 为备份元信息表；完整备份创建和恢复尚未开放。
-Flyway v3.6 直接创建 `t_backup` 和 `t_backup_operation`，统一使用 `backup` 命名，不保留旧快照表迁移。
-管理后台「系统管理 → 备份管理」（`/system/backups`）提供备份索引列表、详情和关联操作记录查询。
-接口统一使用 `/api/console/backups`；旧页面 `/system/snapshots` 重定向到新入口，
-旧接口 `/api/console/snapshots` 已移除，不再提供兼容。操作类型使用 `BACKUP_*`，
-详情和关联字段使用 `backup`、`protectedBackup`、`backupId` 和 `protectionBackupId`，前后端需一同更新。
-所有接口要求博主身份；详情只返回允许展示的元信息，不返回任意清单字段、配置凭据或备份内容。
-当前管理入口为只读：完整执行器接通前，创建、保护、删除和恢复按钮均禁用，
-对应后端写接口返回服务不可用且不修改记录或备份文件。不能使用此页面创建实际恢复点。
-查询备份列表、详情和关联操作时，会重新回放 `BLOG_UPGRADE_STATE` 下的
-`backups/<UUID>.properties` 和 `backup-operations/<UUID>.properties`，按主键覆盖数据库索引。
-仅使用当前备份字段、操作类型和目录，不转换旧命名协议。
-目录不存在时视为无磁盘记录；记录损坏、未知状态或文件名与记录 ID 不一致时返回服务不可用，
-不会把同步失败伪装成空列表。记录必须由受信任执行器原子发布，目录及父目录不能由 API 用户修改，
-不接受目录或记录文件自身为符号链接。
-备份记录要求 `id`、`name`、`status`、`version`、`build`、`createdAt`、`protectedBackup`
-及非负 `totalBytes`；`AVAILABLE` 还要求 64 位小写十六进制 `manifestSha256`。
-操作记录要求 `id`、备份类型的 `operationType`、`status`、`createdAt`，可关联
-`backupId` 和 `protectionBackupId`。删除后保留 `DELETED` 墓碑，取消保护写入显式 `false`，
-以免恢复旧数据库后重新显示已删除或仍被保护的记录。索引回放不验证备份文件，
-也不代表完整执行器已经接通；`RESTORING` 和 `MAINTENANCE_REQUIRED` 分别表示恢复中和需人工处理。
-结果记录保留阶段时间、备份标识/大小/摘要/完成时间和任务结束时间，不提供 SQL 下载。
-备份内的 `backup.properties` 可通过任务 ID 与版本记录关联。历史记录、上传包和备份不会自动清理。
-存在未完成任务时不允许再次派发；若升级器被强杀等原因遗留运行状态，应先确认 unit 已停止、
-检查 current、数据库迁移和健康状态，再由管理员修正结果记录，不可直接删除记录后重复发布。
+升级相关数据全部保存在数据库：
+
+- `t_upgrade_setting`：默认升级参数
+- `t_upgrade_package`：上传的升级包，`location` 指向本地 ZIP
+- `t_upgrade_record`：升级任务和历史记录，保存包信息与参数快照
+- `t_upgrade_path_mapping`：任务启动时的文件目录映射快照
+- `t_release_mapping`：可编辑的默认文件映射
+- `t_backup`：备份元信息，`location` 指向本地备份文件
+
+升级包接口：
+
+```text
+GET    /api/console/maintenance/upgrade/packages           列表
+POST   /api/console/maintenance/upgrade/packages           上传
+PUT    /api/console/maintenance/upgrade/packages/{id}      修改名称和备注
+DELETE /api/console/maintenance/upgrade/packages/{id}      删除记录和文件
+POST   /api/console/maintenance/upgrade/packages/{id}/start 从该包创建升级任务
+GET    /api/console/maintenance/upgrade/records            升级记录
+GET    /api/console/maintenance/upgrade/records/{id}       任务详情
+```
+
+升级器通过 JDBC 读取 `t_upgrade_record`、`t_upgrade_package` 和 `t_upgrade_path_mapping`，
+直接更新任务状态。成功后会按 `delete_package_after_upgrade` 删除升级包文件和记录。
+`t_backup_operation` 已删除，备份管理页不再展示操作记录；备份执行器接通时需要审计再单独建表。
+
+管理后台「系统管理 → 备份管理」（`/system/backups`）提供备份列表和详情；
+接口统一使用 `/api/console/backups`；旧页面 `/system/snapshots` 重定向到新入口。
+所有接口要求博主身份；详情只返回允许展示的元信息，不返回配置凭据或备份内容。
+当前管理入口为只读：完整执行器接通前，创建、保护、删除和恢复按钮均禁用。
 
 目录与权限：
 
@@ -260,30 +273,27 @@ Flyway v3.6 直接创建 `t_backup` 和 `t_backup_operation`，统一使用 `bac
   current -> releases/<version>-<build>
   releases/                            新旧版本并存
   highest-build.properties             成功发布的最高构建号
-/usr/local/lib/today-blog/updater.jar    固定、root 所有，不随在线包更新
+/usr/local/lib/today-blog/updater.jar    固定、root 所有，包含 JDBC 驱动
+/etc/today-blog/upgrade.properties       升级器数据库和备份配置，root 所有
 /etc/today-blog/release-mapping-roots    root 所有，前端映射目标白名单
 /var/lib/today-blog-upgrade/
-  incoming/settings.properties          today 写，升级默认参数
-  incoming/<UUID>/                      today 写，上传包、元信息与任务快照
-  results/<UUID>.properties             root 写，API 读
+  packages/<UUID>/package.zip           today 写，升级包文件
 /var/lib/today-blog/                     today 写，业务运行数据
+/var/backups/today-blog/                 root 写，数据库备份
 /var/www/today-blog/                    映射目标，root 管理，升级器发布链接
 ```
 
-维护状态保存在 API 进程内存中，不占用该目录。
-
-API 只能 sudo 启动 UUID 命名的升级 unit，没有 shell/java/任意 systemctl 权限。
-**API unit 不能设置 `NoNewPrivileges=true`，否则 sudo 无法工作。**
-升级器持有全局文件锁，将包复制到 root 私有临时目录后再次校验文件清单及摘要，再安装到新目录，
-原子切换 current、重启 API，最长等待 90 秒验证数据库及构建号。
-失败时切回旧版本并再次检查；数据库不回滚。
+维护状态保存在 API 进程内存中，不写入磁盘。API 重启后维护状态自动清除，因此升级器切换
+版本并重启 API 后，新版本或回滚后的旧版本会按正常状态提供服务。手动维护在进程重启后同样
+会清除，需要长期维护时请在服务重启后重新开启。健康检查仍返回 `UP:<build>`，维护状态不会
+阻止新版本验收。
 
 ## 运维与边界
 
 ```bash
 journalctl -u today-blog.service
 journalctl -u today-blog-updater@<UUID>.service
-cat /var/lib/today-blog-upgrade/results/<UUID>.properties
+mysql -e "select id,status,message from today.t_upgrade_record order by created_at desc limit 5"
 ```
 
 自动回滚仅覆盖可捕获的安装、启动、健康检查失败。

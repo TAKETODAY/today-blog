@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog;
+package cn.taketoday.blog.maintenance;
 
 import org.jspecify.annotations.Nullable;
 

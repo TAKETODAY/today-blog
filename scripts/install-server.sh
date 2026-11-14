@@ -7,12 +7,12 @@ ROOT=/opt/today-blog
 STATE=/var/lib/today-blog-upgrade
 [[ ! -e "$ROOT/current" ]] || { echo '已有安装，请使用后台升级'; exit 1; }
 id today >/dev/null 2>&1 || useradd --system --home /var/lib/today-blog --shell /usr/sbin/nologin today
-install -d -m 755 "$ROOT/releases" "$STATE/results" /etc/today-blog /usr/local/lib/today-blog /var/lib/today-blog
+install -d -m 755 "$ROOT/releases" "$STATE" /etc/today-blog /usr/local/lib/today-blog /var/lib/today-blog
 install -d -m 755 /var/backups/today-blog /var/www/today-blog
 # 前端映射目标白名单由 root 管理；管理端只能在此目录内选择目标。
 install -m 644 /dev/null /etc/today-blog/release-mapping-roots
 printf '/var/www/today-blog\n' > /etc/today-blog/release-mapping-roots
-install -d -m 700 -o today -g today "$STATE/incoming"
+install -d -m 700 -o today -g today "$STATE/packages"
 chown today:today /var/lib/today-blog
 install -m 644 "$2" /usr/local/lib/today-blog/updater.jar
 # 首次包校验文件完整性后安装；包必须来自可信渠道，不运行包内的任何 root 脚本。
@@ -82,7 +82,7 @@ TimeoutStartSec=5400
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade/results /var/backups/today-blog /var/www/today-blog
+ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade /var/backups/today-blog /var/www/today-blog
 EOF
 # sudo >= 1.9.10 支持参数正则；固定命令与 UUID，不允许任意路径或 shell。
 SUDOERS="$(mktemp)"

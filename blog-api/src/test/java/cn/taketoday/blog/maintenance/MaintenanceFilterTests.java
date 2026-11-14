@@ -15,14 +15,12 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.web.maintenance;
+package cn.taketoday.blog.maintenance;
 
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import cn.taketoday.blog.MaintenanceStatus;
-import cn.taketoday.blog.ServerStatus;
 import infra.context.ApplicationEventPublisher;
 import infra.context.availability.ApplicationAvailability;
 import infra.web.mock.MockHttpContext;

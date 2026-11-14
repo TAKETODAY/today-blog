@@ -19,9 +19,7 @@ package cn.taketoday.blog.backup;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.StringWriter;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 
 import cn.taketoday.blog.web.WebAPITest;
@@ -34,7 +32,7 @@ import infra.transaction.annotation.Transactional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 备份管理接口的响应契约与 metadata 隔离测试。
+ * 备份管理接口的响应契约测试。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/12
@@ -54,7 +52,6 @@ class BackupHttpHandlerTests {
     String base = "/api/console/backups";
     mvc.get().uri(base).assertThat().hasStatusOk();
     mvc.get().uri(base + "/capabilities").assertThat().hasStatusOk();
-    mvc.get().uri(base + "/operations").assertThat().hasStatusOk();
     mvc.post().uri(base).assertThat().hasStatus(503);
     String id = UUID.randomUUID().toString();
     mvc.post().uri(base + "/{id}/restore", id).assertThat().hasStatus(503);
@@ -65,7 +62,7 @@ class BackupHttpHandlerTests {
   @Test
   void legacyRoutesAreNotAvailable() {
     String base = "/api/console/snapshots";
-    for (String suffix : List.of("", "/capabilities", "/operations", "/" + UUID.randomUUID())) {
+    for (String suffix : List.of("", "/capabilities", "/" + UUID.randomUUID())) {
       mvc.get().uri(base + suffix).assertThat().hasStatus(404);
     }
     String id = UUID.randomUUID().toString();
@@ -78,11 +75,6 @@ class BackupHttpHandlerTests {
   @Test
   void listAndDetailReturnTypedContractWithoutMetadata() throws Exception {
     String id = UUID.randomUUID().toString();
-    Properties metadata = new Properties();
-    metadata.setProperty("scope", "程序、数据库、本地附件、配置");
-    metadata.setProperty("password", "must-not-leak");
-    StringWriter metadataText = new StringWriter();
-    metadata.store(metadataText, null);
     Backup inserted = new Backup();
     inserted.setId(id);
     inserted.setName("升级前保护点");
@@ -92,7 +84,8 @@ class BackupHttpHandlerTests {
     inserted.setCreatedAt("2026-11-12T00:00:00Z");
     inserted.setProtectedBackup(true);
     inserted.setTotalBytes(1048576L);
-    inserted.setMetadata(metadataText.toString());
+    inserted.setLocation("/var/backups/today-blog/" + id + "/database.sql.gz");
+    inserted.setScope("程序、数据库、本地附件、配置");
     entityManager.persist(inserted);
 
     mvc.get().uri("/api/console/backups")
@@ -115,31 +108,7 @@ class BackupHttpHandlerTests {
               assertThat(detail.backup().protectedBackup()).isTrue();
               assertThat(detail.scope()).isEqualTo("程序、数据库、本地附件、配置");
               assertThat(detail.restoreVerifiedAt()).isNull();
-              assertThat(detail.toString()).doesNotContain("must-not-leak");
-            });
-  }
-
-  @Test
-  void operationsIncludeBackupRecordsAndRelatedUpgradesOnly() throws Exception {
-    String created = UUID.randomUUID().toString();
-    String related = UUID.randomUUID().toString();
-    String protectedBy = UUID.randomUUID().toString();
-    String unrelated = UUID.randomUUID().toString();
-    insertOperation(created, BackupOperationType.BACKUP_CREATE, null, null, "2026-11-12T00:00:02Z");
-    insertOperation(related, BackupOperationType.UPGRADE, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1001", null, "2026-11-12T00:00:03Z");
-    insertOperation(protectedBy, BackupOperationType.UPGRADE, null, "9c1cbb8e-2e5a-4b8a-8b2d-1f0b0d1a1002", "2026-11-12T00:00:01Z");
-    insertOperation(unrelated, BackupOperationType.UPGRADE, null, null, "2026-11-12T00:00:04Z");
-
-    mvc.get().uri("/api/console/backups/operations")
-            .assertThat().hasStatusOk().bodyJson()
-            .convertTo(new ParameterizedTypeReference<List<BackupService.OperationView>>() {
-            })
-            .satisfies(operations -> {
-              assertThat(operations).extracting(BackupService.OperationView::id)
-                      .contains(created, related, protectedBy)
-                      .doesNotContain(unrelated);
-              assertThat(operations).extracting(BackupService.OperationView::id)
-                      .containsSubsequence(related, created, protectedBy);
+              assertThat(detail.location()).endsWith("/database.sql.gz");
             });
   }
 
@@ -159,37 +128,13 @@ class BackupHttpHandlerTests {
                     .containsSubsequence(newer, older));
   }
 
-  private void insertBackup(String id, String name, String createdAt) throws Exception {
-    Properties metadata = new Properties();
-    metadata.setProperty("id", id);
-    StringWriter metadataText = new StringWriter();
-    metadata.store(metadataText, null);
+  private void insertBackup(String id, String name, String createdAt) {
     Backup backup = new Backup();
     backup.setId(id);
     backup.setName(name);
     backup.setStatus(BackupStatus.AVAILABLE);
     backup.setCreatedAt(createdAt);
-    backup.setMetadata(metadataText.toString());
     entityManager.persist(backup);
-  }
-
-  private void insertOperation(String id, BackupOperationType type, String backupId, String protectionBackupId,
-          String createdAt) throws Exception {
-    Properties metadata = new Properties();
-    metadata.setProperty("id", id);
-    metadata.setProperty("status", BackupOperationStatus.SUCCESS.name());
-    metadata.setProperty("createdAt", createdAt);
-    StringWriter metadataText = new StringWriter();
-    metadata.store(metadataText, null);
-    BackupOperation operation = new BackupOperation();
-    operation.setId(id);
-    operation.setOperationType(type);
-    operation.setStatus(BackupOperationStatus.SUCCESS);
-    operation.setCreatedAt(createdAt);
-    operation.setBackupId(backupId);
-    operation.setProtectionBackupId(protectionBackupId);
-    operation.setMetadata(metadataText.toString());
-    entityManager.persist(operation);
   }
 
 }

@@ -151,15 +151,13 @@ class ReleaseMappingTests {
 
   @Test
   void upgradePublishesMappingAndRollbackKeepsCurrentLink() throws Exception {
-    Scenario scenario = scenario();
     Path www = Files.createDirectories(temp.resolve("www"));
-    Path policy = Files.writeString(temp.resolve("mapping-roots"), www + "\n");
     Path target = www.resolve("console");
-    Files.writeString(scenario.state.resolve("incoming").resolve(scenario.id).resolve("mappings.conf"),
-            "console\tsymlink\tconsole\t" + target + "\n");
+    Scenario scenario = scenario(mapping("console", target));
+    Path policy = Files.writeString(temp.resolve("mapping-roots"), www + "\n");
 
-    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id,
-            new FakeService(false, false), policy);
+    BlogUpdaterApplication.run(scenario.root, scenario.task, new FakeService(false, false),
+            new UpgradeTests.FakeStore(), (id, timeout) -> backup(), policy);
 
     assertThat(Files.readSymbolicLink(target)).isEqualTo(scenario.root.resolve("current/console"));
     assertThat(Files.readString(target.resolve("index.html"))).isEqualTo("console");
@@ -168,17 +166,13 @@ class ReleaseMappingTests {
 
   @Test
   void failedUpgradeLeavesMappingPointingAtRolledBackRelease() throws Exception {
-    Scenario scenario = scenario();
-    Files.createDirectories(scenario.root.resolve("releases/old/console"));
-    Files.writeString(scenario.root.resolve("releases/old/console/index.html"), "old");
     Path www = Files.createDirectories(temp.resolve("www"));
-    Path policy = Files.writeString(temp.resolve("mapping-roots"), www + "\n");
     Path target = www.resolve("console");
-    Files.writeString(scenario.state.resolve("incoming").resolve(scenario.id).resolve("mappings.conf"),
-            "console\tsymlink\tconsole\t" + target + "\n");
+    Scenario scenario = scenario(mapping("console", target));
+    Path policy = Files.writeString(temp.resolve("mapping-roots"), www + "\n");
 
-    BlogUpdaterApplication.run(scenario.root, scenario.state, scenario.id,
-            new FakeService(true, false), policy);
+    BlogUpdaterApplication.run(scenario.root, scenario.task, new FakeService(true, false),
+            new UpgradeTests.FakeStore(), (id, timeout) -> backup(), policy);
 
     assertThat(Files.readSymbolicLink(target)).isEqualTo(scenario.root.resolve("current/console"));
     assertThat(Files.readString(target.resolve("index.html"))).isEqualTo("old");
@@ -189,17 +183,21 @@ class ReleaseMappingTests {
     return new ReleaseMapping(name, ReleaseMapping.Mode.SYMLINK, name, target.toString());
   }
 
-  private Scenario scenario() throws Exception {
+  private Scenario scenario(ReleaseMapping mapping) throws Exception {
     Path root = Files.createDirectory(temp.resolve("install"));
-    Path old = Files.createDirectories(root.resolve("releases/old"));
-    UpgradeFiles.write(old.resolve("release.properties"), properties());
-    Files.createSymbolicLink(root.resolve("current"), old);
-    Path state = Files.createDirectory(temp.resolve("state"));
+    Path old = Files.createDirectories(root.resolve("releases/old/console"));
+    Files.writeString(old.resolve("index.html"), "old");
+    UpgradeFiles.write(old.getParent().resolve("release.properties"), properties());
+    Files.createSymbolicLink(root.resolve("current"), old.getParent());
     String id = UUID.randomUUID().toString();
-    Path incoming = Files.createDirectories(state.resolve("incoming").resolve(id));
-    Files.copy(archive(), incoming.resolve("package.zip"));
-    UpgradeFiles.write(incoming.resolve("options.properties"), new UpgradeOptions(false, 600, 90, "").properties());
-    return new Scenario(root, state, id);
+    UpgradeTask task = new UpgradeTask(id, "package-1", archive().toString(),
+            "3.4", 2, 1L, false, 600, 90, false, List.of(mapping));
+    return new Scenario(root, task);
+  }
+
+  private DatabaseBackupResult backup() {
+    return new DatabaseBackupResult("backup-id", temp.resolve("backup.sql.gz"), 1024,
+            "a".repeat(64), "2026-11-14T00:00:00Z");
   }
 
   private static java.util.Properties properties() {
@@ -234,7 +232,7 @@ class ReleaseMappingTests {
     return archive;
   }
 
-  private record Scenario(Path root, Path state, String id) {
+  private record Scenario(Path root, UpgradeTask task) {
   }
 
   private static class FakeService implements BlogUpdaterApplication.ServiceControl {
