@@ -21,7 +21,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.ErrorMessageException;
 import infra.http.HttpStatus;
 import infra.persistence.EntityManager;
@@ -65,8 +64,7 @@ public class BackupService {
             .toList();
   }
 
-  public BackupDetail backup(String id) {
-    UpgradeFiles.checkId(id);
+  public BackupDetail backup(long id) {
     Backup record = entityManager.findById(Backup.class, id);
     if (record == null) {
       throw ErrorMessageException.failed("备份不存在", HttpStatus.NOT_FOUND);
@@ -92,7 +90,7 @@ public class BackupService {
    * 备份列表只展示结构化字段。
    */
   public record BackupView(
-          String id,
+          Long id,
           String name,
           BackupStatus status,
           String version,
@@ -101,7 +99,7 @@ public class BackupService {
           boolean protectedBackup,
           long totalBytes,
           String manifestSha256,
-          String sourceOperationId) {
+          Long sourceOperationId) {
 
     static BackupView from(Backup backup) {
       return new BackupView(

@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.UpgradeOptions;
@@ -111,7 +110,6 @@ class UpgradePersistenceTests {
 
   private UpgradePackageEntity packageEntity(Path location) {
     UpgradePackageEntity entity = new UpgradePackageEntity();
-    entity.setId(UUID.randomUUID().toString());
     entity.setOriginalName("package.zip");
     entity.setDisplayName("测试包");
     entity.setStatus(UpgradePackageStatus.READY);
@@ -127,8 +125,7 @@ class UpgradePersistenceTests {
 
   private UpgradeRecordEntity recordEntity() {
     UpgradeRecordEntity entity = new UpgradeRecordEntity();
-    entity.setId(UUID.randomUUID().toString());
-    entity.setPackageId(UUID.randomUUID().toString());
+    entity.setPackageId(10L);
     entity.setPackageName("测试包");
     entity.setPackageVersion("3.5");
     entity.setPackageBuild(10);

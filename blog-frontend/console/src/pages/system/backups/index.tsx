@@ -8,7 +8,7 @@ import { http } from '@/utils/http';
 import './index.less';
 
 interface Backup {
-  id: string;
+  id: number;
   name: string;
   status: string;
   version: string | null;
@@ -18,7 +18,7 @@ interface Backup {
   totalBytes: number;
   operatorId?: number | null;
   manifestSha256: string | null;
-  sourceOperationId: string | null;
+  sourceOperationId: number | null;
 }
 
 interface BackupDetail {
@@ -57,7 +57,7 @@ export default function Backups() {
   const [detail, setDetail] = useState<BackupDetail>();
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState(false);
-  const [detailId, setDetailId] = useState('');
+  const [detailId, setDetailId] = useState<number>();
 
   const loadCapabilities = useCallback(async () => {
     setError(false);
@@ -240,7 +240,7 @@ export default function Backups() {
       />
       <span className="backup-secondary">最多展示最近 500 份备份。列表记录不代表备份已通过完整性校验或恢复演练。</span>
     </Space>
-    <Drawer className="backup-detail-drawer" title="备份详情" open={Boolean(detailId)} onClose={() => setDetailId('')} width={640}
+    <Drawer className="backup-detail-drawer" title="备份详情" open={detailId !== undefined} onClose={() => setDetailId(undefined)} width={640}
             contentWrapperStyle={{ maxWidth: '100vw' }}>
       {detailError && <Alert type="error" showIcon message="无法读取备份详情" description="备份可能已移除或连接中断，请关闭后重试。"/>}
       {detailLoading && <Card loading bordered={false}/>}

@@ -84,11 +84,11 @@ ProtectHome=true
 ProtectSystem=strict
 ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade /var/backups/today-blog /var/www/today-blog
 EOF
-# sudo >= 1.9.10 支持参数正则；固定命令与 UUID，不允许任意路径或 shell。
+# sudo >= 1.9.10 支持参数正则；固定命令与任务 ID，不允许任意路径或 shell。
 SUDOERS="$(mktemp)"
 trap 'rm -rf "$WORK"; rm -f "$SUDOERS"' EXIT
 cat > "$SUDOERS" <<'EOF'
-today ALL=(root) NOPASSWD: /usr/bin/systemctl ^start --no-block today-blog-updater@[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.service$
+today ALL=(root) NOPASSWD: /usr/bin/systemctl ^start --no-block today-blog-updater@[1-9][0-9]{0,18}\.service$
 EOF
 visudo -cf "$SUDOERS"
 install -m 440 "$SUDOERS" /etc/sudoers.d/today-blog-upgrade

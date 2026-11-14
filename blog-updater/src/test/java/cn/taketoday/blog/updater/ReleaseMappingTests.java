@@ -25,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -190,8 +189,7 @@ class ReleaseMappingTests {
     Files.writeString(old.resolve("index.html"), "old");
     UpgradeFiles.write(old.getParent().resolve("release.properties"), properties());
     Files.createSymbolicLink(root.resolve("current"), old.getParent());
-    String id = UUID.randomUUID().toString();
-    UpgradeTask task = new UpgradeTask(id, "package-1", archive().toString(),
+    UpgradeTask task = new UpgradeTask(1L, 10L, archive().toString(),
             "3.4", 2, 1L, false, 600, 90, false, List.of(mapping));
     return new Scenario(root, task);
   }

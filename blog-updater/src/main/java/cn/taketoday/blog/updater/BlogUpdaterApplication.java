@@ -50,18 +50,19 @@ public final class BlogUpdaterApplication {
       throw new IllegalArgumentException("需要一个升级任务 ID");
     }
     UpgradeFiles.checkId(args[0]);
+    long id = Long.parseLong(args[0]);
     Path root = Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
     String health = System.getenv().getOrDefault("BLOG_HEALTH_URL", "http://127.0.0.1:8080/api/internal/health");
 
     try (UpgradeTaskStore store = JdbcUpgradeTaskStore.open(UpgradeDatabase.configured())) {
       try {
-        UpgradeTask task = store.load(args[0]);
+        UpgradeTask task = store.load(id);
         run(root, task, new SystemdControl(URI.create(health), task.healthTimeoutSeconds()),
-                store, (id, timeout) -> DatabaseBackup.configured().create(id, timeout));
+                store, (taskId, timeout) -> DatabaseBackup.configured().create(taskId, timeout));
       }
       catch (Exception error) {
         try {
-          store.finished(args[0], "FAILED", error.toString());
+          store.finished(id, "FAILED", error.toString());
         }
         catch (Exception ignored) {
         }
@@ -89,8 +90,7 @@ public final class BlogUpdaterApplication {
 
   public static void run(Path root, UpgradeTask task, ServiceControl service,
           UpgradeTaskStore store, BackupControl backup, Path mappingPolicy) throws Exception {
-    String id = task.id();
-    UpgradeFiles.checkId(id);
+    long id = task.id();
     Path lockPath = root.resolve("upgrade.lock");
     Files.createDirectories(root.resolve("releases"));
     try (var channel = FileChannel.open(lockPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
@@ -166,7 +166,7 @@ public final class BlogUpdaterApplication {
         if (task.backupEnabled()) {
           store.status(id, "BACKING_UP", "备份数据库，尚未切换版本");
           try {
-            store.backup(id, backup.create(id, task.backupTimeoutSeconds()));
+            store.backup(id, backup.create(Long.toString(id), task.backupTimeoutSeconds()));
           }
           catch (Exception failure) {
             throw new IOException("数据库备份失败或超时，未切换版本；请检查服务器备份配置", failure);

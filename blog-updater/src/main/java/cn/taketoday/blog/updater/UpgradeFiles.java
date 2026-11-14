@@ -33,7 +33,7 @@ public final class UpgradeFiles {
   }
 
   public static void checkId(String id) {
-    if (!id.matches("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}")) {
+    if (!id.matches("[1-9][0-9]{0,18}")) {
       throw new IllegalArgumentException("升级任务 ID 无效");
     }
   }

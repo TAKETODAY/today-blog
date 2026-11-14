@@ -4,7 +4,7 @@ API 使用 systemd，升级器位于独立 Gradle 模块 `blog-updater`，生产
 `blog-api` 依赖该模块复用升级包校验；升级器通过 JDBC 直接读取任务和写回状态，不依赖 API 或 Web 框架。
 可单独运行 `./gradlew :blog-updater:build` 构建并测试，产物为
 `blog-updater/build/libs/today-blog-updater.jar`，通过 `java -jar` 启动。
-通过独立的 `today-blog-updater@<UUID>.service` 执行，不随 API 重启终止。
+通过独立的 `today-blog-updater@<id>.service` 执行，不随 API 重启终止。
 
 ## 构建
 
@@ -292,7 +292,7 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
 
 ```bash
 journalctl -u today-blog.service
-journalctl -u today-blog-updater@<UUID>.service
+journalctl -u today-blog-updater@<id>.service
 mysql -e "select id,status,message from today.t_upgrade_record order by created_at desc limit 5"
 ```
 

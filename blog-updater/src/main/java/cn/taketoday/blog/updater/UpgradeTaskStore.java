@@ -25,17 +25,17 @@ package cn.taketoday.blog.updater;
  */
 public interface UpgradeTaskStore extends AutoCloseable {
 
-  UpgradeTask load(String id) throws Exception;
+  UpgradeTask load(long id) throws Exception;
 
-  void status(String id, String status, String message) throws Exception;
+  void status(long id, String status, String message) throws Exception;
 
-  void started(String id, String releasePath) throws Exception;
+  void started(long id, String releasePath) throws Exception;
 
-  void backup(String id, DatabaseBackupResult backup) throws Exception;
+  void backup(long id, DatabaseBackupResult backup) throws Exception;
 
-  void finished(String id, String status, String message) throws Exception;
+  void finished(long id, String status, String message) throws Exception;
 
-  void deletePackage(String packageId) throws Exception;
+  void deletePackage(long packageId) throws Exception;
 
   @Override
   void close() throws Exception;

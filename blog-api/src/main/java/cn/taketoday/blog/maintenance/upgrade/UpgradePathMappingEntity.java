@@ -36,7 +36,7 @@ public class UpgradePathMappingEntity {
   @GeneratedId
   private Long id;
 
-  private String recordId;
+  private Long recordId;
 
   private String name;
 

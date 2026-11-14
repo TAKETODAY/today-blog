@@ -54,7 +54,7 @@ class BackupHttpHandlerTests {
     mvc.get().uri(base).assertThat().hasStatusOk();
     mvc.get().uri(base + "/capabilities").assertThat().hasStatusOk();
     mvc.post().uri(base).assertThat().hasStatus(503);
-    String id = UUID.randomUUID().toString();
+    String id = "1";
     mvc.post().uri(base + "/{id}/restore", id).assertThat().hasStatus(503);
     mvc.put().uri(base + "/{id}/protection", id).assertThat().hasStatus(503);
     mvc.delete().uri(base + "/{id}", id).assertThat().hasStatus(503);
@@ -66,7 +66,7 @@ class BackupHttpHandlerTests {
     for (String suffix : List.of("", "/capabilities", "/" + UUID.randomUUID())) {
       mvc.get().uri(base + suffix).assertThat().hasStatus(404);
     }
-    String id = UUID.randomUUID().toString();
+    String id = "1";
     mvc.post().uri(base).assertThat().hasStatus(404);
     mvc.post().uri(base + "/{id}/restore", id).assertThat().hasStatus(404);
     mvc.put().uri(base + "/{id}/protection", id).assertThat().hasStatus(404);
@@ -75,9 +75,7 @@ class BackupHttpHandlerTests {
 
   @Test
   void listAndDetailReturnTypedContractWithoutMetadata() throws Exception {
-    String id = UUID.randomUUID().toString();
     Backup inserted = new Backup();
-    inserted.setId(id);
     inserted.setName("升级前保护点");
     inserted.setStatus(BackupStatus.AVAILABLE);
     inserted.setVersion("3.4");
@@ -85,9 +83,11 @@ class BackupHttpHandlerTests {
     inserted.setCreatedAt(Instant.parse("2026-11-12T00:00:00Z"));
     inserted.setProtectedBackup(true);
     inserted.setTotalBytes(1048576L);
-    inserted.setLocation("/var/backups/today-blog/" + id + "/database.sql.gz");
     inserted.setScope("程序、数据库、本地附件、配置");
     entityManager.persist(inserted);
+    Long id = inserted.getId();
+    inserted.setLocation("/var/backups/today-blog/" + id + "/database.sql.gz");
+    entityManager.updateById(inserted);
 
     mvc.get().uri("/api/console/backups")
             .assertThat().hasStatusOk().bodyJson()
@@ -115,10 +115,8 @@ class BackupHttpHandlerTests {
 
   @Test
   void listsBackupsNewestFirst() throws Exception {
-    String older = UUID.randomUUID().toString();
-    String newer = UUID.randomUUID().toString();
-    insertBackup(older, "旧备份", "2026-11-12T00:00:01Z");
-    insertBackup(newer, "新备份", "2026-11-12T00:00:02Z");
+    Backup older = insertBackup("旧备份", "2026-11-12T00:00:01Z");
+    Backup newer = insertBackup("新备份", "2026-11-12T00:00:02Z");
 
     mvc.get().uri("/api/console/backups")
             .assertThat().hasStatusOk().bodyJson()
@@ -126,16 +124,16 @@ class BackupHttpHandlerTests {
             })
             .satisfies(backups -> assertThat(backups)
                     .extracting(BackupService.BackupView::id)
-                    .containsSubsequence(newer, older));
+                    .containsSubsequence(newer.getId(), older.getId()));
   }
 
-  private void insertBackup(String id, String name, String createdAt) {
+  private Backup insertBackup(String name, String createdAt) {
     Backup backup = new Backup();
-    backup.setId(id);
     backup.setName(name);
     backup.setStatus(BackupStatus.AVAILABLE);
     backup.setCreatedAt(Instant.parse(createdAt));
     entityManager.persist(backup);
+    return backup;
   }
 
 }

@@ -19,7 +19,7 @@ package cn.taketoday.blog.maintenance.upgrade;
 
 import java.time.Instant;
 
-import infra.persistence.annotation.Id;
+import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,7 +37,9 @@ import lombok.Setter;
 @Table("t_release_mapping")
 public class ReleaseMappingEntity {
 
-  @Id
+  @GeneratedId
+  private Long id;
+
   private String name;
 
   private String mode;

@@ -19,7 +19,7 @@ package cn.taketoday.blog.maintenance.upgrade;
 
 import java.time.Instant;
 
-import infra.persistence.annotation.Id;
+import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,10 +35,10 @@ import lombok.Setter;
 @Table("t_upgrade_record")
 public class UpgradeRecordEntity {
 
-  @Id
-  private String id;
+  @GeneratedId
+  private Long id;
 
-  private String packageId;
+  private Long packageId;
 
   private String packageName;
 

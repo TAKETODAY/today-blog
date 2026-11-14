@@ -30,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.time.Instant;
 import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -154,7 +153,7 @@ class UpgradeTests {
     FakeStore store = new FakeStore();
     BlogUpdaterApplication.run(scenario.root, scenario.task,
             new FakeService(false, false), store, (id, timeout) -> backup(scenario, id));
-    assertThat(store.deletedPackage).isEqualTo("package-1");
+    assertThat(store.deletedPackage).isEqualTo(10L);
     assertThat(Files.exists(Path.of(scenario.task.packagePath()))).isFalse();
   }
 
@@ -172,8 +171,7 @@ class UpgradeTests {
     metadata.setProperty("build", "1");
     UpgradeFiles.write(old.getParent().resolve("release.properties"), metadata);
     Files.createSymbolicLink(root.resolve("current"), old.getParent());
-    String id = UUID.randomUUID().toString();
-    UpgradeTask task = new UpgradeTask(id, "package-1", archive(null, false, false).toString(),
+    UpgradeTask task = new UpgradeTask(1L, 10L, archive(null, false, false).toString(),
             "3.4", 2, 1L, true, 600, 90, deletePackage, List.of());
     return new Scenario(root, task);
   }
@@ -219,38 +217,38 @@ class UpgradeTests {
   static class FakeStore implements UpgradeTaskStore {
     final List<String> statuses = new ArrayList<>();
     DatabaseBackupResult backup;
-    String deletedPackage;
+    Long deletedPackage;
     String message;
 
     @Override
-    public UpgradeTask load(String id) {
+    public UpgradeTask load(long id) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public void status(String id, String status, String message) {
+    public void status(long id, String status, String message) {
       statuses.add(status);
       this.message = message;
     }
 
     @Override
-    public void started(String id, String releasePath) {
+    public void started(long id, String releasePath) {
       statuses.add("STARTED");
     }
 
     @Override
-    public void backup(String id, DatabaseBackupResult backup) {
+    public void backup(long id, DatabaseBackupResult backup) {
       this.backup = backup;
     }
 
     @Override
-    public void finished(String id, String status, String message) {
+    public void finished(long id, String status, String message) {
       statuses.add(status);
       this.message = message;
     }
 
     @Override
-    public void deletePackage(String packageId) {
+    public void deletePackage(long packageId) {
       deletedPackage = packageId;
     }
 

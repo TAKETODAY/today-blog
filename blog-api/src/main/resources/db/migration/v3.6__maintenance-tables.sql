@@ -1,6 +1,6 @@
 create table t_backup
 (
-    id                  char(36)      not null primary key,
+    id                  bigint unsigned not null auto_increment primary key,
     name                varchar(200)  not null,
     status              varchar(32)   not null,
     version             varchar(100)  null,
@@ -9,7 +9,7 @@ create table t_backup
     protected_backup    boolean       not null default false,
     manifest_sha256     char(64)      null,
     total_bytes         bigint        not null default 0,
-    source_operation_id char(36)      null,
+    source_operation_id bigint unsigned null,
     location            varchar(1024) null,
     scope               varchar(500)  null,
     restore_verified_at datetime   null
@@ -17,7 +17,8 @@ create table t_backup
 
 create table t_release_mapping
 (
-    name       varchar(32)  not null primary key,
+    id         bigint unsigned not null auto_increment primary key,
+    name       varchar(32)  not null,
     mode       varchar(16)  not null,
     source     varchar(255) not null,
     target     varchar(512) not null,
@@ -27,7 +28,7 @@ create table t_release_mapping
 
 create table t_upgrade_package
 (
-    id            char(36)      not null primary key,
+    id            bigint unsigned not null auto_increment primary key,
     original_name varchar(255)  not null,
     display_name  varchar(255)  null,
     note          varchar(500)  null,
@@ -44,8 +45,8 @@ create table t_upgrade_package
 
 create table t_upgrade_record
 (
-    id                           char(36)      not null primary key,
-    package_id                   char(36)      not null,
+    id                           bigint unsigned not null auto_increment primary key,
+    package_id                   bigint unsigned not null,
     package_name                 varchar(255)  not null,
     package_version              varchar(100)  not null,
     package_build                bigint        not null,
@@ -72,8 +73,8 @@ create table t_upgrade_record
 
 create table t_upgrade_path_mapping
 (
-    id        bigint       not null auto_increment primary key,
-    record_id char(36)     not null,
+    id        bigint unsigned not null auto_increment primary key,
+    record_id bigint unsigned not null,
     name      varchar(32)  not null,
     mode      varchar(16)  not null,
     source    varchar(255) not null,

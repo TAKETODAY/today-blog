@@ -22,7 +22,6 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,7 +47,7 @@ class UpgradeSettingsTests {
   void dumpIsCompressedAndPrivate() throws Exception {
     Path executable = script("printf 'CREATE TABLE example (id int);'");
     Path credentials = Files.createFile(temp.resolve("backup.cnf"));
-    String id = UUID.randomUUID().toString();
+    String id = "1";
     DatabaseBackup backup = new DatabaseBackup(executable, credentials, temp, "today");
     DatabaseBackupResult result = backup.create(id, 30);
     Path archive = temp.resolve(id).resolve("database.sql.gz");
@@ -67,7 +66,7 @@ class UpgradeSettingsTests {
   void failedDumpIsNotReportedAsBackup() throws Exception {
     Path executable = script("printf 'partial'; printf 'password=secret' >&2; exit 1");
     Path credentials = Files.createFile(temp.resolve("backup.cnf"));
-    String id = UUID.randomUUID().toString();
+    String id = "1";
     assertThatThrownBy(() -> new DatabaseBackup(executable, credentials, temp, "today").create(id, 30))
             .hasMessageContaining("导出失败").hasMessageNotContaining("secret");
     assertThat(Files.exists(temp.resolve(id).resolve("database.sql.gz"))).isFalse();
@@ -78,7 +77,7 @@ class UpgradeSettingsTests {
   void timedOutDumpIsKilledWithoutPublishingArchive() throws Exception {
     Path executable = script("exec sleep 10");
     Path credentials = Files.createFile(temp.resolve("backup.cnf"));
-    String id = UUID.randomUUID().toString();
+    String id = "1";
     assertThatThrownBy(() -> new DatabaseBackup(executable, credentials, temp, "today").create(id, 1))
             .hasMessageContaining("超时");
     assertThat(Files.exists(temp.resolve(id).resolve("database.sql.gz"))).isFalse();

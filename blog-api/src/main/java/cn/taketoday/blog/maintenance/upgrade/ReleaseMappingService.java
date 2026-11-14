@@ -20,16 +20,11 @@ package cn.taketoday.blog.maintenance.upgrade;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.ReleaseMappings;
 import infra.persistence.EntityManager;
-import infra.persistence.PropertyUpdateStrategy;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 
@@ -70,29 +65,13 @@ public class ReleaseMappingService {
     }
 
     Instant now = Instant.now();
-    Map<String, ReleaseMappingEntity> existing = new HashMap<>();
     for (ReleaseMappingEntity entity : entityManager.find(ReleaseMappingEntity.class)) {
-      existing.put(entity.getName(), entity);
+      entityManager.delete(ReleaseMappingEntity.class, entity.getId());
     }
-    Set<String> retained = new HashSet<>();
     for (ReleaseMappingEntity entity : entities) {
-      ReleaseMappingEntity previous = existing.get(entity.getName());
-      if (previous == null) {
-        entity.setCreatedAt(now);
-        entity.setUpdatedAt(now);
-        entityManager.persist(entity);
-      }
-      else {
-        entity.setCreatedAt(previous.getCreatedAt());
-        entity.setUpdatedAt(now);
-        entityManager.updateById(entity, PropertyUpdateStrategy.always());
-      }
-      retained.add(entity.getName());
-    }
-    for (String name : existing.keySet()) {
-      if (!retained.contains(name)) {
-        entityManager.delete(ReleaseMappingEntity.class, name);
-      }
+      entity.setCreatedAt(now);
+      entity.setUpdatedAt(now);
+      entityManager.persist(entity);
     }
   }
 

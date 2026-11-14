@@ -46,21 +46,21 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
   }
 
   @Override
-  public UpgradeTask load(String id) throws Exception {
+  public UpgradeTask load(long id) throws Exception {
     try (PreparedStatement statement = connection.prepareStatement("""
             select package_id, package_path, package_version, package_build, old_build,
                    backup_enabled, backup_timeout_seconds, health_timeout_seconds,
                    delete_package_after_upgrade
             from t_upgrade_record where id = ?
             """)) {
-      statement.setString(1, id);
+      statement.setLong(1, id);
       try (ResultSet result = statement.executeQuery()) {
         if (!result.next()) {
           throw new IllegalStateException("升级任务不存在: " + id);
         }
         Long oldBuild = result.getObject("old_build", Long.class);
         return new UpgradeTask(id,
-                result.getString("package_id"),
+                result.getLong("package_id"),
                 result.getString("package_path"),
                 result.getString("package_version"),
                 result.getLong("package_build"),
@@ -74,12 +74,12 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
     }
   }
 
-  private List<ReleaseMapping> mappings(String id) throws Exception {
+  private List<ReleaseMapping> mappings(long id) throws Exception {
     try (PreparedStatement statement = connection.prepareStatement("""
             select name, mode, source, target from t_upgrade_path_mapping
             where record_id = ? order by name
             """)) {
-      statement.setString(1, id);
+      statement.setLong(1, id);
       try (ResultSet result = statement.executeQuery()) {
         List<ReleaseMapping> mappings = new ArrayList<>();
         while (result.next()) {
@@ -93,34 +93,34 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
   }
 
   @Override
-  public void status(String id, String status, String message) throws Exception {
+  public void status(long id, String status, String message) throws Exception {
     try (PreparedStatement statement = connection.prepareStatement(
             "update t_upgrade_record set status = ?, message = ? where id = ?")) {
       statement.setString(1, status);
       statement.setString(2, message);
-      statement.setString(3, id);
+      statement.setLong(3, id);
       statement.executeUpdate();
     }
   }
 
   @Override
-  public void started(String id, String releasePath) throws Exception {
+  public void started(long id, String releasePath) throws Exception {
     try (PreparedStatement statement = connection.prepareStatement(
             "update t_upgrade_record set started_at = ?, release_path = ? where id = ?")) {
       statement.setTimestamp(1, Timestamp.from(Instant.now()));
       statement.setString(2, releasePath);
-      statement.setString(3, id);
+      statement.setLong(3, id);
       statement.executeUpdate();
     }
   }
 
   @Override
-  public void backup(String id, DatabaseBackupResult backup) throws Exception {
+  public void backup(long id, DatabaseBackupResult backup) throws Exception {
     String version;
     long build;
     try (PreparedStatement query = connection.prepareStatement(
             "select package_version, package_build from t_upgrade_record where id = ?")) {
-      query.setString(1, id);
+      query.setLong(1, id);
       try (ResultSet result = query.executeQuery()) {
         if (!result.next()) {
           throw new IllegalStateException("升级任务不存在: " + id);
@@ -130,19 +130,18 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
       }
     }
     try (PreparedStatement insert = connection.prepareStatement("""
-            insert into t_backup (id, name, status, version, build, created_at, protected_backup,
+            insert into t_backup (name, status, version, build, created_at, protected_backup,
                     manifest_sha256, total_bytes, source_operation_id, location, scope)
-            values (?, ?, 'AVAILABLE', ?, ?, ?, false, ?, ?, ?, ?, '数据库')
+            values (?, 'AVAILABLE', ?, ?, ?, false, ?, ?, ?, ?, '数据库')
             """)) {
-      insert.setString(1, backup.id());
-      insert.setString(2, "升级前数据库备份 " + version);
-      insert.setString(3, version);
-      insert.setString(4, Long.toString(build));
-      insert.setTimestamp(5, Timestamp.from(backup.completedAt()));
-      insert.setString(6, backup.sha256());
-      insert.setLong(7, backup.bytes());
-      insert.setString(8, id);
-      insert.setString(9, backup.location().toString());
+      insert.setString(1, "升级前数据库备份 " + version);
+      insert.setString(2, version);
+      insert.setString(3, Long.toString(build));
+      insert.setTimestamp(4, Timestamp.from(backup.completedAt()));
+      insert.setString(5, backup.sha256());
+      insert.setLong(6, backup.bytes());
+      insert.setLong(7, id);
+      insert.setString(8, backup.location().toString());
       insert.executeUpdate();
     }
     try (PreparedStatement update = connection.prepareStatement("""
@@ -154,29 +153,29 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
       update.setLong(2, backup.bytes());
       update.setString(3, backup.sha256());
       update.setTimestamp(4, Timestamp.from(backup.completedAt()));
-      update.setString(5, id);
+      update.setLong(5, id);
       update.executeUpdate();
     }
   }
 
   @Override
-  public void finished(String id, String status, String message) throws Exception {
+  public void finished(long id, String status, String message) throws Exception {
     try (PreparedStatement statement = connection.prepareStatement("""
             update t_upgrade_record set status = ?, message = ?, finished_at = ? where id = ?
             """)) {
       statement.setString(1, status);
       statement.setString(2, message);
       statement.setTimestamp(3, Timestamp.from(Instant.now()));
-      statement.setString(4, id);
+      statement.setLong(4, id);
       statement.executeUpdate();
     }
   }
 
   @Override
-  public void deletePackage(String packageId) throws Exception {
+  public void deletePackage(long packageId) throws Exception {
     try (PreparedStatement statement = connection.prepareStatement(
             "delete from t_upgrade_package where id = ?")) {
-      statement.setString(1, packageId);
+      statement.setLong(1, packageId);
       statement.executeUpdate();
     }
   }

@@ -24,8 +24,8 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 
-import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.ErrorMessageException;
+import infra.beans.factory.annotation.Autowired;
 import infra.http.HttpStatus;
 import infra.persistence.EntityManager;
 import infra.stereotype.Service;
@@ -44,6 +44,7 @@ public class UpgradePackageService {
 
   private final Path state;
 
+  @Autowired
   public UpgradePackageService(EntityManager entityManager) {
     this(entityManager, Path.of(System.getenv().getOrDefault(
             "BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade")));
@@ -60,8 +61,7 @@ public class UpgradePackageService {
             .toList();
   }
 
-  public UpgradePackageEntity find(String id) {
-    UpgradeFiles.checkId(id);
+  public UpgradePackageEntity find(long id) {
     UpgradePackageEntity entity = entityManager.findById(UpgradePackageEntity.class, id);
     if (entity == null) {
       throw ErrorMessageException.failed("升级包不存在", HttpStatus.NOT_FOUND);
@@ -75,7 +75,7 @@ public class UpgradePackageService {
   }
 
   @Transactional
-  public UpgradePackageEntity update(String id, String displayName, String note) {
+  public UpgradePackageEntity update(long id, String displayName, String note) {
     UpgradePackageEntity entity = find(id);
     if (displayName != null) {
       if (displayName.isBlank() || displayName.length() > 255) {
@@ -94,7 +94,7 @@ public class UpgradePackageService {
   }
 
   @Transactional
-  public void markConsumed(String id) {
+  public void markConsumed(long id) {
     UpgradePackageEntity entity = find(id);
     entity.setStatus(UpgradePackageStatus.CONSUMED);
     entity.setConsumedAt(Instant.now());
@@ -102,7 +102,7 @@ public class UpgradePackageService {
   }
 
   @Transactional
-  public void markReady(String id) {
+  public void markReady(long id) {
     UpgradePackageEntity entity = find(id);
     entity.setStatus(UpgradePackageStatus.READY);
     entity.setConsumedAt(null);
@@ -110,7 +110,7 @@ public class UpgradePackageService {
   }
 
   @Transactional
-  public void delete(String id) {
+  public void delete(long id) {
     UpgradePackageEntity entity = find(id);
     Path location = Path.of(entity.getLocation()).toAbsolutePath().normalize();
     entityManager.delete(UpgradePackageEntity.class, id);

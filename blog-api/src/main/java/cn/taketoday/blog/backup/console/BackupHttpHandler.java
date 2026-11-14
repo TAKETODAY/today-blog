@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import cn.taketoday.blog.backup.BackupService;
-import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
@@ -59,7 +58,7 @@ class BackupHttpHandler {
   }
 
   @GET("/{id}")
-  public BackupService.BackupDetail detail(@PathVariable String id) {
+  public BackupService.BackupDetail detail(@PathVariable long id) {
     return backups.backup(id);
   }
 
@@ -69,20 +68,17 @@ class BackupHttpHandler {
   }
 
   @POST("/{id}/restore")
-  public void restore(@PathVariable String id) {
-    UpgradeFiles.checkId(id);
+  public void restore(@PathVariable long id) {
     backups.requireExecutor();
   }
 
   @PUT("/{id}/protection")
-  public void protection(@PathVariable String id) {
-    UpgradeFiles.checkId(id);
+  public void protection(@PathVariable long id) {
     backups.requireExecutor();
   }
 
   @DELETE("/{id}")
-  public void delete(@PathVariable String id) {
-    UpgradeFiles.checkId(id);
+  public void delete(@PathVariable long id) {
     backups.requireExecutor();
   }
 }

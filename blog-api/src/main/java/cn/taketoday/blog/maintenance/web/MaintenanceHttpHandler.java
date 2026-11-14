@@ -209,7 +209,6 @@ class MaintenanceHttpHandler {
         originalName = "package.zip";
       }
       UpgradePackageEntity entity = new UpgradePackageEntity();
-      entity.setId(id);
       entity.setOriginalName(originalName);
       entity.setDisplayName(originalName);
       entity.setStatus(UpgradePackageStatus.READY);
@@ -234,14 +233,14 @@ class MaintenanceHttpHandler {
 
   @PUT("/upgrade/packages/{id}")
   @Logging(title = "修改升级包")
-  public PackageView updatePackage(@PathVariable String id, @RequestBody PackageUpdate request) {
+  public PackageView updatePackage(@PathVariable long id, @RequestBody PackageUpdate request) {
     enabled();
     return PackageView.from(packages.update(id, request.displayName(), request.note()));
   }
 
   @DELETE("/upgrade/packages/{id}")
   @Logging(title = "删除升级包", content = "升级包: [#{#id}]")
-  public void deletePackage(@PathVariable String id) {
+  public void deletePackage(@PathVariable long id) {
     enabled();
     if (records.hasRunning(id)) {
       throw ErrorMessageException.failed("该升级包正在被升级任务使用，不能删除", HttpStatus.CONFLICT);
@@ -251,7 +250,7 @@ class MaintenanceHttpHandler {
 
   @POST("/upgrade/packages/{id}/start")
   @Logging(title = "启动系统升级", content = "升级包: [#{#id}]")
-  public synchronized RecordView start(@PathVariable String id, @RequestBody StartUpgradeRequest request) throws Exception {
+  public synchronized RecordView start(@PathVariable long id, @RequestBody StartUpgradeRequest request) throws Exception {
     enabled();
     UpgradePackageEntity entity = packages.find(id);
     if (entity.getStatus() != UpgradePackageStatus.READY) {
@@ -283,9 +282,7 @@ class MaintenanceHttpHandler {
 
     CurrentRelease current = currentRelease();
     Long oldBuild = parseBuild(current.build());
-    String recordId = UUID.randomUUID().toString();
     UpgradeRecordEntity record = new UpgradeRecordEntity();
-    record.setId(recordId);
     record.setPackageId(entity.getId());
     record.setPackageName(entity.getDisplayName());
     record.setPackageVersion(entity.getVersion());
@@ -303,6 +300,7 @@ class MaintenanceHttpHandler {
     record.setMessage("任务已提交，请等待升级器启动");
     record.setCreatedAt(Instant.now());
     records.create(record);
+    long recordId = record.getId();
     pathMappings.replace(recordId, mappings);
     packages.markConsumed(entity.getId());
     enableMaintenance();
@@ -330,7 +328,7 @@ class MaintenanceHttpHandler {
   }
 
   @GET("/upgrade/records/{id}")
-  public RecordView record(@PathVariable String id) {
+  public RecordView record(@PathVariable long id) {
     return RecordView.from(records.find(id));
   }
 
@@ -429,7 +427,7 @@ class MaintenanceHttpHandler {
   public record ReleaseMappingSettingsRequest(List<ReleaseMapping> mappings) {
   }
 
-  public record PackageView(String id, String originalName, String displayName, String note,
+  public record PackageView(Long id, String originalName, String displayName, String note,
           UpgradePackageStatus status, String version, long build, long fileSize, String sha256,
           int entryCount, String location, Instant createdAt, Instant consumedAt) {
 
@@ -447,7 +445,7 @@ class MaintenanceHttpHandler {
   public record StartUpgradeRequest(UpgradeOptions options, boolean deletePackage) {
   }
 
-  public record RecordView(String id, String packageId, String packageName, String packageVersion,
+  public record RecordView(Long id, Long packageId, String packageName, String packageVersion,
           long packageBuild, String packageSha256, String packagePath,
           String oldVersion, Long oldBuild, UpgradeStatus status,
           boolean backupEnabled, int backupTimeoutSeconds, int healthTimeoutSeconds,

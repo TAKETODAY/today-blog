@@ -41,7 +41,7 @@ public class UpgradePathMappingService {
     this.entityManager = entityManager;
   }
 
-  public List<ReleaseMapping> find(String recordId) {
+  public List<ReleaseMapping> find(long recordId) {
     List<UpgradePathMappingEntity> entities = entityManager.find(
             UpgradePathMappingEntity.class, Map.of("recordId", recordId));
     List<ReleaseMapping> mappings = new ArrayList<>(entities.size());
@@ -53,7 +53,7 @@ public class UpgradePathMappingService {
   }
 
   @Transactional
-  public void replace(String recordId, List<ReleaseMapping> mappings) {
+  public void replace(long recordId, List<ReleaseMapping> mappings) {
     for (UpgradePathMappingEntity entity : entityManager.find(
             UpgradePathMappingEntity.class, Map.of("recordId", recordId))) {
       entityManager.delete(UpgradePathMappingEntity.class, entity.getId());

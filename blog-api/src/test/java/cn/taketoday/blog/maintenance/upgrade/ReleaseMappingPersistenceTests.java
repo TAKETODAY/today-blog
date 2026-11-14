@@ -55,7 +55,8 @@ class ReleaseMappingPersistenceTests {
     service.replaceAll(List.of(console));
 
     assertThat(service.findAll()).containsExactly(console);
-    ReleaseMappingEntity saved = entityManager.findById(ReleaseMappingEntity.class, "console");
+    ReleaseMappingEntity saved = entityManager.find(ReleaseMappingEntity.class).stream()
+            .filter(entity -> entity.getName().equals("console")).findFirst().orElseThrow();
     assertThat(saved.getCreatedAt()).isNotNull();
     assertThat(saved.getUpdatedAt()).isNotNull();
 
@@ -63,7 +64,8 @@ class ReleaseMappingPersistenceTests {
     service.replaceAll(List.of(desktop));
 
     assertThat(service.findAll()).containsExactly(desktop);
-    assertThat(entityManager.findById(ReleaseMappingEntity.class, "console")).isNull();
+    assertThat(entityManager.find(ReleaseMappingEntity.class))
+            .noneMatch(entity -> entity.getName().equals("console"));
   }
 
   @Test

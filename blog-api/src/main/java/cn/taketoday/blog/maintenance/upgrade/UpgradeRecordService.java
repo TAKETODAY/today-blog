@@ -23,7 +23,6 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 
-import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.web.ErrorMessageException;
 import infra.http.HttpStatus;
 import infra.persistence.EntityManager;
@@ -62,8 +61,7 @@ public class UpgradeRecordService {
             .toList();
   }
 
-  public UpgradeRecordEntity find(String id) {
-    UpgradeFiles.checkId(id);
+  public UpgradeRecordEntity find(long id) {
     UpgradeRecordEntity entity = entityManager.findById(UpgradeRecordEntity.class, id);
     if (entity == null) {
       throw ErrorMessageException.failed("升级记录不存在", HttpStatus.NOT_FOUND);
@@ -77,7 +75,7 @@ public class UpgradeRecordService {
   }
 
   @Transactional
-  public void status(String id, UpgradeStatus status, String message) {
+  public void status(long id, UpgradeStatus status, String message) {
     UpgradeRecordEntity entity = find(id);
     entity.setStatus(status);
     entity.setMessage(message);
@@ -85,7 +83,7 @@ public class UpgradeRecordService {
   }
 
   @Transactional
-  public void failed(String id, String message) {
+  public void failed(long id, String message) {
     UpgradeRecordEntity entity = find(id);
     entity.setStatus(UpgradeStatus.FAILED);
     entity.setMessage(message);
@@ -98,11 +96,11 @@ public class UpgradeRecordService {
     return records.isEmpty() ? null : records.getFirst();
   }
 
-  public List<UpgradeRecordEntity> byPackage(String packageId) {
+  public List<UpgradeRecordEntity> byPackage(long packageId) {
     return entityManager.find(UpgradeRecordEntity.class, new PackageRecords(packageId));
   }
 
-  public boolean hasRunning(String packageId) {
+  public boolean hasRunning(long packageId) {
     return byPackage(packageId).stream()
             .anyMatch(record -> RUNNING_STATUSES.contains(record.getStatus()));
   }
@@ -118,9 +116,9 @@ public class UpgradeRecordService {
   @EntityRef(UpgradeRecordEntity.class)
   static class PackageRecords {
 
-    public final String packageId;
+    public final long packageId;
 
-    PackageRecords(String packageId) {
+    PackageRecords(long packageId) {
       this.packageId = packageId;
     }
 

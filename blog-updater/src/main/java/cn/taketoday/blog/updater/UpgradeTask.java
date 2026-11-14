@@ -26,8 +26,8 @@ import java.util.List;
  * @since 4.0
  */
 public record UpgradeTask(
-        String id,
-        String packageId,
+        long id,
+        long packageId,
         String packagePath,
         String version,
         long build,

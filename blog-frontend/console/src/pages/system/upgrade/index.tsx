@@ -65,7 +65,7 @@ interface MappingSettings {
 }
 
 interface UpgradePackage {
-  id: string;
+  id: number;
   originalName: string;
   displayName: string;
   note?: string;
@@ -81,8 +81,8 @@ interface UpgradePackage {
 }
 
 interface UpgradeRecord {
-  id: string;
-  packageId: string;
+  id: number;
+  packageId: number;
   packageName: string;
   packageVersion: string;
   packageBuild: number;
@@ -169,7 +169,7 @@ export default function SystemUpgrade() {
   const [id, setId] = useState(() => localStorage.getItem(taskKey) || '');
   const [records, setRecords] = useState<UpgradeRecord[]>([]);
   const [packages, setPackages] = useState<UpgradePackage[]>([]);
-  const [selectedPackageId, setSelectedPackageId] = useState('');
+  const [selectedPackageId, setSelectedPackageId] = useState<number>();
   const [environment, setEnvironment] = useState<Environment>();
   const [uploading, setUploading] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -202,8 +202,8 @@ export default function SystemUpgrade() {
   const selectRecord = useCallback((next: UpgradeRecord) => {
     setRecord(next);
     setTab('run');
-    setId(next.id);
-    localStorage.setItem(taskKey, next.id);
+    setId(String(next.id));
+    localStorage.setItem(taskKey, String(next.id));
   }, []);
 
   const reloadPackages = useCallback(async () => {
@@ -214,7 +214,7 @@ export default function SystemUpgrade() {
       if (current && list.some(item => item.id === current && item.status === 'READY')) {
         return current;
       }
-      return list.find(item => item.status === 'READY')?.id || '';
+      return list.find(item => item.status === 'READY')?.id;
     });
     return list;
   }, []);
@@ -381,7 +381,7 @@ export default function SystemUpgrade() {
       async onOk() {
         await http.delete(`/api/console/maintenance/upgrade/packages/${item.id}`);
         if (selectedPackageId === item.id) {
-          setSelectedPackageId('');
+          setSelectedPackageId(undefined);
         }
         await reloadPackages();
         message.success('升级包已删除');
@@ -592,7 +592,7 @@ export default function SystemUpgrade() {
                                             type: 'radio',
                                             selectedRowKeys: selectedPackageId ? [selectedPackageId] : [],
                                             getCheckboxProps: item => ({ disabled: item.status !== 'READY' }),
-                                            onChange: keys => setSelectedPackageId(String(keys[0] || '')),
+                                            onChange: keys => setSelectedPackageId(keys.length ? Number(keys[0]) : undefined),
                                           }} locale={{
                     emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级包，请先上传"/>
                   }} columns={[
