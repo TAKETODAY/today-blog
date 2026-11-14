@@ -15,12 +15,12 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.backup.console;
+package cn.taketoday.blog.maintenance.backup.console;
 
 import java.util.List;
 import java.util.Map;
 
-import cn.taketoday.blog.backup.BackupService;
+import cn.taketoday.blog.maintenance.backup.BackupService;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
