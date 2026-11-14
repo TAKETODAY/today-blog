@@ -43,6 +43,33 @@
 
 框架详细文档（Context7 LLM 可读）: https://context7.com/taketoday/today-infrastructure/llms.txt
 
+### 查阅框架文档规则
+
+- **写后端代码前先查文档**：涉及 `infra.*` 的注解、接口、类名或方法签名不确定时，先读
+  https://context7.com/taketoday/today-infrastructure/llms.txt（可用 `webfetch` 抓取），不要凭 Spring Boot 记忆推断。
+- **以文档为准，不以 Spring 文档为准**：TODAY Infrastructure 大量 API 与 Spring 同名但行为/签名可能不同；冲突时一律采用框架文档。
+- **禁止凭印象造 API**：文档中查不到的类、注解属性或方法不要写；无法确认时先看项目内已有用法
+  （`blog-api/src/main/java` 中的 `infra.*` 导入）或直接询问用户。
+- **只导 `infra.*` 包**：任何 `org.springframework.*` 导入都是错误；Servlet 容器相关实现同理（框架使用 Netty，不是 Tomcat/Jetty）。
+- **文档覆盖范围**：框架文档涵盖 core/beans、AOP、web/webmvc（含 FreeMarker 视图、函数式路由、URI 编码）、数据访问（JDBC、事务、OXM）、
+  缓存、调度、RestClient、测试框架（`@InfraTest`、`MockMvcTester`、`RestTestClient`）、GraalVM 等；优先按模块目录定位章节。
+
+### 文档中易错的常用 API
+
+| 场景         | 正确用法                                                                                            |
+|--------------|-----------------------------------------------------------------------------------------------------|
+| 应用启动     | `infra.app.Application.run(XxxApplication.class, args)` + `@InfraApplication`                       |
+| 请求方法注解 | `@GET` / `@POST` / `@PUT` / `@DELETE`（`infra.web.annotation.*`），不是 `@GetMapping` 系列          |
+| 控制器       | `@RestController` = `@Controller` + `@ResponseBody`（同一包）                                       |
+| 请求参数     | `@RequestBody`、`@PathVariable`、`@RequestParam`；`Part` 用于文件上传（`infra.web.multipart.Part`） |
+| 临时目录     | `infra.core.ApplicationTemp`（`getDir(...)`），不要硬编码 `java.io.tmpdir`                          |
+| 事务         | `infra.transaction.annotation.Transactional`                                                        |
+| JDBC         | `infra.jdbc.core.JdbcTemplate` / `NamedParameterJdbcTemplate`（支持 `:name` 命名参数）              |
+| 缓存         | `@EnableCaching` + `infra.cache.support.CaffeineCacheManager`                                       |
+| 事件         | `infra.context.ApplicationEventPublisher` + `@EventListener`                                        |
+| 测试         | `@InfraTest`、`MockMvcTester`、`RestTestClient`（项目内优先使用 `@WebAPITest`）                     |
+| 启动插桩     | `ApplicationStartup.start(...)`（`StartupStep` + `tag`）                                            |
+
 ### 框架核心概念
 
 | 概念     | 对应 API                                                                                                                     |
@@ -190,7 +217,6 @@ pnpm build        # 生产构建
   BeanWrapperAutoGrowingTests 的……；infra-beans 对应测试全类通过”一类测试报告。
 - 若上游原测试或文档与代码一同提交，以生产行为为主题；仅测试或仅文档的独立提交才分别用 `:white_check_mark:` 或 `:memo:`。测试映射、运行命令及结果集中写入批末归档，不塞进每个提交正文。代码、原测试及适用中文文档优先放在同一个目标提交，不人为拆分凑数。
 - 提交信息可以按照上游的来，但是要保证中文
-
 
 ## Agent 技能
 
