@@ -556,6 +556,7 @@ export default function SystemUpgrade() {
                     action={<Button size="small" onClick={() => openConfig('mappings')}>去配置</Button>}/>}
                 <div>
                   <ProTable<UpgradePackage>
+                      className="upgrade-table"
                       rowKey="id"
                       dataSource={packages}
                       search={false}
@@ -628,6 +629,7 @@ export default function SystemUpgrade() {
             label: '升级记录',
             children: <>
               <ProTable<UpgradeRecord>
+                  className="upgrade-table"
                   rowKey="id"
                   headerTitle="升级记录"
                   loading={refreshing}
