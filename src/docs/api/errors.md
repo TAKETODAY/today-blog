@@ -41,7 +41,7 @@
 
 ## 定义位置
 
-统一契约：`blog-api/src/main/java/cn/taketoday/blog/error/Problem.java`。
+统一契约：`blog-api/src/main/java/cn/taketoday/blog/problem/Problem.java`。
 各领域枚举实现 `Problem`，定义 `code()` 和 `status()`；`type()` 默认从 code 派生。
 异常与响应仅依赖接口，不要求业务枚举继承集中式类型。
 `ProblemCatalog.all()` 显式汇总当前协议，供完整性检查使用，不参与运行时自动注册。

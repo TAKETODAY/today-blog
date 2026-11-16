@@ -19,8 +19,7 @@ package cn.taketoday.blog.maintenance;
 
 import java.io.IOException;
 
-import cn.taketoday.blog.error.ProblemResponses;
-import cn.taketoday.blog.error.CommonProblems;
+import cn.taketoday.blog.problem.ProblemResponses;
 import infra.core.Ordered;
 import infra.core.annotation.Order;
 import infra.http.HttpHeaders;
@@ -107,10 +106,10 @@ final class MaintenanceFilter implements Filter {
     request.setStatus(HttpStatus.SERVICE_UNAVAILABLE);
     request.setHeader(HttpHeaders.RETRY_AFTER, Integer.toString(status.retryAfterSeconds()));
     request.setHeader(HttpHeaders.CACHE_CONTROL, HttpHeaders.NO_STORE);
-    var problem = problems.create(CommonProblems.MAINTENANCE, request);
+    var problem = problems.create(MaintenanceProblems.MAINTENANCE, request);
     if (status.message() != null && !status.message().isBlank()) {
       problem.setDetail(status.message());
     }
-    problems.write(problem, request);
+    problems.write(request, problem);
   }
 }

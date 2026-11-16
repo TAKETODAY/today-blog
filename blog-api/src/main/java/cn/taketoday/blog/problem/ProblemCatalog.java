@@ -15,14 +15,13 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.error;
+package cn.taketoday.blog.problem;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 import cn.taketoday.blog.maintenance.backup.BackupProblems;
-import cn.taketoday.blog.maintenance.upgrade.UpgradeProblems;
 import cn.taketoday.blog.service.ArticleProblems;
 import cn.taketoday.blog.service.ContentProblems;
 import cn.taketoday.blog.service.UserProblems;
@@ -40,7 +39,7 @@ public final class ProblemCatalog {
 
   public static List<Problem> all() {
     return Stream.of(CommonProblems.values(), ArticleProblems.values(), ContentProblems.values(),
-                    UserProblems.values(), UpgradeProblems.values(), BackupProblems.values())
+                    UserProblems.values(), BackupProblems.values())
             .flatMap(Arrays::stream)
             .map(problem -> (Problem) problem)
             .toList();

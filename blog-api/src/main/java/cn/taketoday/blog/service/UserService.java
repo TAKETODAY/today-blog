@@ -23,7 +23,7 @@ import java.util.Map;
 
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
-import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.problem.ProblemException;
 import infra.cache.annotation.CacheConfig;
 import infra.cache.annotation.CacheEvict;
 import infra.cache.annotation.Cacheable;

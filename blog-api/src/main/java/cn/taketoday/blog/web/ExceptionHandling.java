@@ -26,17 +26,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import cn.taketoday.blog.UnauthorizedException;
-import cn.taketoday.blog.error.ProblemException;
-import cn.taketoday.blog.error.ProblemResponses;
-import cn.taketoday.blog.error.CommonProblems;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
+import cn.taketoday.blog.problem.ProblemResponses;
 import cn.taketoday.blog.util.BlogUtils;
 import infra.beans.TypeMismatchException;
 import infra.dao.DataAccessResourceFailureException;
 import infra.http.HttpHeaders;
 import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
-import infra.http.ResponseEntity;
 import infra.http.ProblemDetail;
+import infra.http.ResponseEntity;
 import infra.http.converter.HttpMessageNotReadableException;
 import infra.validation.FieldError;
 import infra.web.HttpContext;
@@ -108,7 +108,7 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<ProblemDetail> illegalArgument(IllegalArgumentException e, HttpContext request) {
     log.error("Unexpected illegal argument", e);
-    return problems.response(CommonProblems.INTERNAL_ERROR, request);
+    return problems.response(CommonProblems.ILLEGAL_ARGUMENT, request);
   }
 
   @ExceptionHandler(InternalServerException.class)
@@ -167,7 +167,7 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
           HttpHeaders headers, HttpStatusCode status, HttpContext request) {
     ProblemDetail problem = problems.create(CommonProblems.VALIDATION_FAILED, request);
     problem.setProperty("errors", ex.getAllErrors().stream().map(error -> {
-      Map<String, Object> item = new LinkedHashMap<>();
+      Map<String, @Nullable Object> item = new LinkedHashMap<>();
       if (error instanceof FieldError field) {
         item.put("field", field.getField());
       }

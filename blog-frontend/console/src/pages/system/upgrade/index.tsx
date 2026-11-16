@@ -187,16 +187,13 @@ export default function SystemUpgrade() {
   const mappingSettings = settings.mappingSettings;
 
   return <PageContainer className="system-update-page" title="系统升级" subTitle="发布新版本，保留可追溯的备份与升级记录"
-                        extra={<UpgradeHeaderExtra
-                            version={version}
-                            environment={environment}
-                            maintenance={maintenance}
-                            busy={busy}
-                            loaded={loaded}
-                            refreshing={refreshing}
-                            mappingPending={Boolean(mappingSettings && !mappingSettings.ready)}
-                            onRefresh={() => refresh().catch(() => message.error('刷新环境失败'))}
-                            onOpenConfig={() => openConfig()}/>}>
+                        extra={<UpgradeHeaderExtra version={version} environment={environment}
+                                                   maintenance={maintenance} busy={busy}
+                                                   loaded={loaded} refreshing={refreshing}
+                                                   mappingPending={Boolean(mappingSettings && !mappingSettings.ready)}
+                                                   onRefresh={() => refresh().catch(() => message.error('刷新环境失败'))}
+                                                   onOpenConfig={() => openConfig()}/>}>
+
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Alert type="warning" showIcon message="程序回滚不等于数据库恢复"
              description="仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份时间点之后的新数据；升级期间不得并发修改表结构。"/>
@@ -207,7 +204,7 @@ export default function SystemUpgrade() {
       <Card>
         <Tabs activeKey={tab} onChange={setTab}
               tabBarExtraContent={tab === 'run'
-                  ? <Button icon={<UploadOutlined/>} onClick={() => setDialog({ type: 'upload' })}
+                  ? <Button type='primary' icon={<UploadOutlined/>} onClick={() => setDialog({ type: 'upload' })}
                             disabled={!loaded}>上传升级包</Button>
                   : undefined}
               items={[
@@ -216,11 +213,12 @@ export default function SystemUpgrade() {
                   label: '执行升级',
                   children:
                       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                        {loaded && mappingSettings && !mappingSettings.ready && <Alert type="warning" showIcon
-                                                                                       message="文件映射配置未就绪"
-                                                                                       description={mappingSettings.message || '升级时将无法发布前端文件，请检查服务器目标根目录配置。'}
-                                                                                       action={<Button size="small"
-                                                                                                       onClick={() => openConfig('mappings')}>去配置</Button>}/>}
+                        {loaded && mappingSettings && !mappingSettings.ready
+                            && <Alert type="warning" showIcon
+                                      message="文件映射配置未就绪"
+                                      description={mappingSettings.message || '升级时将无法发布前端文件，请检查服务器目标根目录配置。'}
+                                      action={<Button size="small"
+                                                      onClick={() => openConfig('mappings')}>去配置</Button>}/>}
                         <div>
                           <UpgradePackageTable
                               packages={packages}

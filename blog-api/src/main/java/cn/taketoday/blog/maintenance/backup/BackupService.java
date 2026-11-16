@@ -21,7 +21,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.problem.ProblemException;
 import infra.persistence.EntityManager;
 import infra.persistence.Pageable;
 import infra.persistence.annotation.EntityRef;

@@ -20,8 +20,8 @@ package cn.taketoday.blog.web.interceptor;
 import org.jspecify.annotations.Nullable;
 
 import cn.taketoday.blog.config.UserSessionResolver;
-import cn.taketoday.blog.error.ProblemException;
-import cn.taketoday.blog.error.CommonProblems;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
 import infra.session.Session;

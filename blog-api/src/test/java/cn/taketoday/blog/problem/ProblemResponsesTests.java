@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.error;
+package cn.taketoday.blog.problem;
 
 import org.junit.jupiter.api.Test;
 

@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.error;
+package cn.taketoday.blog.problem;
 
 import org.jspecify.annotations.Nullable;
 
@@ -32,8 +32,9 @@ import infra.http.MediaType;
 import infra.http.ProblemDetail;
 import infra.http.ResponseEntity;
 import infra.stereotype.Component;
-import infra.web.HttpContext;
 import infra.validation.ObjectError;
+import infra.web.HttpContext;
+import infra.web.HttpContextUtils;
 import jakarta.validation.ConstraintViolation;
 import lombok.CustomLog;
 
@@ -57,42 +58,28 @@ public final class ProblemResponses {
     messages.setFallbackToSystemLocale(false);
   }
 
-  public Locale locale(HttpContext request) {
-    String header = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
-    if (header != null && !header.isBlank()) {
-      try {
-        Locale match = Locale.lookup(Locale.LanguageRange.parse(header), SUPPORTED);
-        if (match != null) {
-          return match;
-        }
-      }
-      catch (IllegalArgumentException ignored) {
-        // 非法语言头不应导致错误处理再次失败。
-      }
-    }
-    return Locale.SIMPLIFIED_CHINESE;
+  public Locale getLocale(HttpContext request) {
+    return HttpContextUtils.getLocale(request);
   }
 
-  public ProblemDetail create(Problem type, HttpContext request, Object... arguments) {
-    Locale locale = locale(request);
-    ProblemDetail problem = ProblemDetail.forStatus(type.status());
-    problem.setType(type.type());
-    problem.setTitle(message(type.code() + ".title", locale, "请求失败", "Request failed"));
-    problem.setDetail(message(type.code() + ".detail", locale,
-            "暂时无法完成操作，请稍后重试。", "Unable to complete the operation. Please try again later.", arguments));
-    problem.setProperty("code", type.code());
-    return problem;
+  public ProblemDetail create(Problem problem, HttpContext request, Object... arguments) {
+    Locale locale = getLocale(request);
+    ProblemDetail detail = ProblemDetail.forStatus(problem.status());
+    detail.setType(problem.type());
+    detail.setTitle(message(problem.code() + ".title", locale, "请求失败", "Request failed"));
+    detail.setDetail(message(problem.code() + ".detail", locale, "暂时无法完成操作，请稍后重试。",
+            "Unable to complete the operation. Please try again later.", arguments));
+    detail.setProperty("code", problem.code());
+    return detail;
   }
 
   private String message(String key, Locale locale, String chinese, String english, Object... arguments) {
-    String fallback = locale.getLanguage().equals("en") ? english : chinese;
     try {
-      String value = messages.getMessage(key, arguments, locale);
-      return value;
+      return messages.getMessage(key, arguments, locale);
     }
     catch (RuntimeException ex) {
       log.warn("Cannot resolve error message '{}' for {}", key, locale, ex);
-      return fallback;
+      return locale.getLanguage().equals("en") ? english : chinese;
     }
   }
 
@@ -105,7 +92,7 @@ public final class ProblemResponses {
     if (template != null && template.startsWith("{validation.") && template.endsWith("}")) {
       key = template.substring(1, template.length() - 1);
     }
-    return message(key, locale(request), "输入内容不合法。", "The input value is invalid.");
+    return message(key, getLocale(request), "输入内容不合法。", "The input value is invalid.");
   }
 
   public ResponseEntity<ProblemDetail> response(Problem type, HttpContext request, Object... arguments) {
@@ -116,11 +103,13 @@ public final class ProblemResponses {
           HttpStatusCode status, HttpContext request) {
     problem.setStatus(status.value());
     prepare(request);
-    return ResponseEntity.status(status).headers(headers)
-            .contentType(MediaType.APPLICATION_PROBLEM_JSON).body(problem);
+    return ResponseEntity.status(status)
+            .headers(headers)
+            .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+            .body(problem);
   }
 
-  public void write(ProblemDetail problem, HttpContext request) throws IOException {
+  public void write(HttpContext request, ProblemDetail problem) throws IOException {
     request.setStatus(problem.getStatus());
     prepare(request);
     ObjectUtils.writeValue(request, problem);
@@ -128,7 +117,8 @@ public final class ProblemResponses {
 
   public void prepare(HttpContext request) {
     request.setContentType(MediaType.APPLICATION_PROBLEM_JSON);
-    request.setHeader(HttpHeaders.CONTENT_LANGUAGE, locale(request).toLanguageTag());
-    request.responseHeaders().add(HttpHeaders.VARY, HttpHeaders.ACCEPT_LANGUAGE);
+    request.setHeader(HttpHeaders.CONTENT_LANGUAGE, getLocale(request).toLanguageTag());
+    request.addHeader(HttpHeaders.VARY, HttpHeaders.ACCEPT_LANGUAGE);
   }
+
 }

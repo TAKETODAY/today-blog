@@ -21,7 +21,6 @@ import org.jspecify.annotations.Nullable;
 
 import cn.taketoday.blog.model.enums.CommentStatus;
 import infra.persistence.annotation.Like;
-import infra.persistence.annotation.OrderBy;
 import infra.persistence.annotation.OrderByClause;
 import lombok.Data;
 

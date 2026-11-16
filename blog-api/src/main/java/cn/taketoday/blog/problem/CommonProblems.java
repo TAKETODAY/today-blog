@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.error;
+package cn.taketoday.blog.problem;
 
 import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
@@ -36,34 +36,39 @@ public enum CommonProblems implements Problem {
   PAYLOAD_TOO_LARGE("request.payload_too_large", HttpStatus.PAYLOAD_TOO_LARGE),
   UNSUPPORTED_MEDIA_TYPE("request.unsupported_media_type", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
   RATE_LIMIT_EXCEEDED("request.rate_limit_exceeded", HttpStatus.TOO_MANY_REQUESTS),
-  AUTH_REQUIRED("auth.required", HttpStatus.UNAUTHORIZED),
-  INVALID_CREDENTIALS("auth.invalid_credentials", HttpStatus.UNAUTHORIZED),
-  ACCESS_DENIED("auth.access_denied", HttpStatus.FORBIDDEN),
-  NOT_FOUND("resource.not_found", HttpStatus.NOT_FOUND),
-  CONFLICT("resource.conflict", HttpStatus.CONFLICT),
-  NO_CHANGES("resource.no_changes", HttpStatus.BAD_REQUEST),
   PAGE_INVALID("request.page_invalid", HttpStatus.BAD_REQUEST),
   PAGE_SIZE_INVALID("request.page_size_invalid", HttpStatus.BAD_REQUEST),
   PAGE_SIZE_EXCEEDED("request.page_size_exceeded", HttpStatus.BAD_REQUEST),
   DATE_RANGE_INVALID("request.date_range_invalid", HttpStatus.BAD_REQUEST),
-  MAINTENANCE("system.maintenance", HttpStatus.SERVICE_UNAVAILABLE),
-  UNAVAILABLE("system.unavailable", HttpStatus.SERVICE_UNAVAILABLE),
-  INTERNAL_ERROR("system.internal_error", HttpStatus.INTERNAL_SERVER_ERROR);
+  ILLEGAL_ARGUMENT("request.illegal_argument", HttpStatus.BAD_REQUEST),
+
+  AUTH_REQUIRED("auth.required", HttpStatus.UNAUTHORIZED),
+  ACCESS_DENIED("auth.access_denied", HttpStatus.FORBIDDEN),
+  INVALID_CREDENTIALS("auth.invalid_credentials", HttpStatus.UNAUTHORIZED),
+
+  CONFLICT("resource.conflict", HttpStatus.CONFLICT),
+  NOT_FOUND("resource.not_found", HttpStatus.NOT_FOUND),
+  NO_CHANGES("resource.no_changes", HttpStatus.BAD_REQUEST),
+
+  INTERNAL_ERROR("system.internal_error", HttpStatus.INTERNAL_SERVER_ERROR),
+  SERVICE_UNAVAILABLE("system.service_unavailable", HttpStatus.SERVICE_UNAVAILABLE);
 
   private final String code;
 
-  private final HttpStatus status;
+  private final HttpStatusCode status;
 
-  CommonProblems(String code, HttpStatus status) {
+  CommonProblems(String code, HttpStatusCode status) {
     this.code = code;
     this.status = status;
   }
 
+  @Override
   public String code() {
     return code;
   }
 
-  public HttpStatus status() {
+  @Override
+  public HttpStatusCode status() {
     return status;
   }
 
@@ -81,7 +86,7 @@ public enum CommonProblems implements Problem {
       case 413 -> PAYLOAD_TOO_LARGE;
       case 415 -> UNSUPPORTED_MEDIA_TYPE;
       case 429 -> RATE_LIMIT_EXCEEDED;
-      case 503 -> UNAVAILABLE;
+      case 503 -> SERVICE_UNAVAILABLE;
       default -> status.value() >= 500 ? INTERNAL_ERROR : INVALID_REQUEST;
     };
   }

@@ -20,9 +20,9 @@ package cn.taketoday.blog.web.http;
 import java.util.List;
 
 import cn.taketoday.blog.model.Label;
-import cn.taketoday.blog.service.LabelService;
-import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.service.ContentProblems;
+import cn.taketoday.blog.service.LabelService;
 import infra.web.annotation.GET;
 import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestMapping;

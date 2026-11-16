@@ -19,8 +19,8 @@ package cn.taketoday.blog.web;
 
 import org.junit.jupiter.api.Test;
 
-import cn.taketoday.blog.error.ProblemException;
-import cn.taketoday.blog.error.ProblemResponses;
+import cn.taketoday.blog.problem.ProblemException;
+import cn.taketoday.blog.problem.ProblemResponses;
 import cn.taketoday.blog.service.ArticleProblems;
 import infra.http.HttpHeaders;
 import infra.http.HttpStatus;

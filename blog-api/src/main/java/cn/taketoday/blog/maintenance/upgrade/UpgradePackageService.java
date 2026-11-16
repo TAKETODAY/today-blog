@@ -24,7 +24,8 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 
-import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.maintenance.MaintenanceProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import infra.beans.factory.annotation.Autowired;
 import infra.persistence.EntityManager;
 import infra.stereotype.Service;
@@ -63,7 +64,7 @@ public class UpgradePackageService {
   public UpgradePackageEntity find(long id) {
     UpgradePackageEntity entity = entityManager.findById(UpgradePackageEntity.class, id);
     if (entity == null) {
-      throw new ProblemException(UpgradeProblems.PACKAGE_NOT_FOUND);
+      throw new ProblemException(MaintenanceProblems.PACKAGE_NOT_FOUND);
     }
     return entity;
   }
@@ -78,13 +79,13 @@ public class UpgradePackageService {
     UpgradePackageEntity entity = find(id);
     if (displayName != null) {
       if (displayName.isBlank() || displayName.length() > 255) {
-        throw new ProblemException(UpgradeProblems.PACKAGE_NAME_INVALID);
+        throw new ProblemException(MaintenanceProblems.PACKAGE_NAME_INVALID);
       }
       entity.setDisplayName(displayName);
     }
     if (note != null) {
       if (note.length() > 500) {
-        throw new ProblemException(UpgradeProblems.PACKAGE_NOTE_INVALID);
+        throw new ProblemException(MaintenanceProblems.PACKAGE_NOTE_INVALID);
       }
       entity.setNote(note);
     }

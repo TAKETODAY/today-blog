@@ -15,11 +15,12 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.error;
+package cn.taketoday.blog.problem;
 
 import java.net.URI;
 
 import infra.http.HttpStatus;
+import infra.http.HttpStatusCode;
 
 /**
  * 定义可供客户端识别的问题类型，包括稳定错误码、默认 HTTP 状态和类型 URI。
@@ -35,22 +36,6 @@ import infra.http.HttpStatus;
  * @since 4.0 2026/11/16
  */
 public interface Problem {
-
-  /**
-   * 创建使用默认类型 URI 规则的不可变问题定义。
-   *
-   * <p>此方法不注册错误码或创建消息资源；调用方仍需为错误码配置相应的消息模板。
-   *
-   * @param code 稳定的业务错误码
-   * @param status 默认 HTTP 状态
-   * @return 不可变的问题定义
-   * @throws NullPointerException 如果错误码或 HTTP 状态为 {@code null}
-   * @throws IllegalArgumentException 如果错误码为空或仅包含空白字符
-   * @see DefaultProblem
-   */
-  static Problem of(String code, HttpStatus status) {
-    return new DefaultProblem(code, status);
-  }
 
   /**
    * 返回稳定的业务错误码，供客户端进行精确判断或按领域前缀分类。
@@ -76,7 +61,7 @@ public interface Problem {
    *
    * @return 默认 HTTP 状态
    */
-  HttpStatus status();
+  HttpStatusCode status();
 
   /**
    * 返回标识此问题类型的稳定 URI。
@@ -90,6 +75,22 @@ public interface Problem {
    */
   default URI type() {
     return URI.create("urn:today-blog:problem:" + code());
+  }
+
+  /**
+   * 创建使用默认类型 URI 规则的不可变问题定义。
+   *
+   * <p>此方法不注册错误码或创建消息资源；调用方仍需为错误码配置相应的消息模板。
+   *
+   * @param code 稳定的业务错误码
+   * @param status 默认 HTTP 状态
+   * @return 不可变的问题定义
+   * @throws NullPointerException 如果错误码或 HTTP 状态为 {@code null}
+   * @throws IllegalArgumentException 如果错误码为空或仅包含空白字符
+   * @see DefaultProblem
+   */
+  static Problem of(String code, HttpStatus status) {
+    return new DefaultProblem(code, status);
   }
 
 }

@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.List;
 
 import cn.taketoday.blog.model.Mail;
-import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.model.enums.MailStatus;
 import infra.beans.factory.BeanFactory;
 import infra.mail.javamail.JavaMailSender;

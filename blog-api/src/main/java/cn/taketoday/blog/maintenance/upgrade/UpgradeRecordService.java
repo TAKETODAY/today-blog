@@ -23,7 +23,8 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 
-import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.maintenance.MaintenanceProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import infra.persistence.EntityManager;
 import infra.persistence.annotation.EntityRef;
 import infra.persistence.annotation.In;
@@ -63,7 +64,7 @@ public class UpgradeRecordService {
   public UpgradeRecordEntity find(long id) {
     UpgradeRecordEntity entity = entityManager.findById(UpgradeRecordEntity.class, id);
     if (entity == null) {
-      throw new ProblemException(UpgradeProblems.RECORD_NOT_FOUND);
+      throw new ProblemException(MaintenanceProblems.RECORD_NOT_FOUND);
     }
     return entity;
   }

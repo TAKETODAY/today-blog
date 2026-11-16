@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.log.Logging;
+import cn.taketoday.blog.maintenance.MaintenanceProblems;
 import cn.taketoday.blog.maintenance.MaintenanceStatus;
 import cn.taketoday.blog.maintenance.ServerStatus;
 import cn.taketoday.blog.maintenance.upgrade.ReleaseMappingService;
@@ -44,6 +45,8 @@ import cn.taketoday.blog.maintenance.upgrade.UpgradeRecordEntity;
 import cn.taketoday.blog.maintenance.upgrade.UpgradeRecordService;
 import cn.taketoday.blog.maintenance.upgrade.UpgradeSettingService;
 import cn.taketoday.blog.maintenance.upgrade.UpgradeStatus;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.updater.DatabaseBackup;
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.ReleaseMappings;
@@ -51,9 +54,6 @@ import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeOptions;
 import cn.taketoday.blog.updater.UpgradePackage;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.error.ProblemException;
-import cn.taketoday.blog.error.CommonProblems;
-import cn.taketoday.blog.maintenance.upgrade.UpgradeProblems;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
@@ -179,7 +179,7 @@ class MaintenanceHttpHandler {
     }
     catch (Exception invalid) {
       upgradeLogger.warn("Invalid release mappings", invalid);
-      throw new ProblemException(UpgradeProblems.MAPPING_INVALID);
+      throw new ProblemException(MaintenanceProblems.MAPPING_INVALID);
     }
     releaseMappings.replaceAll(mappings);
     return mappings();
@@ -196,7 +196,7 @@ class MaintenanceHttpHandler {
     upgradeLogger.info("Upload TODAY BLOG Server package");
     enabled();
     if (file.getContentLength() <= 0 || file.getContentLength() > UpgradePackage.MAX_PACKAGE_BYTES) {
-      throw new ProblemException(UpgradeProblems.PACKAGE_SIZE_INVALID);
+      throw new ProblemException(MaintenanceProblems.PACKAGE_SIZE_INVALID);
     }
     String id = UUID.randomUUID().toString();
     Path directory = Files.createDirectories(packageRoot.resolve(id));
@@ -227,7 +227,7 @@ class MaintenanceHttpHandler {
     catch (Exception error) {
       deleteDirectory(directory);
       upgradeLogger.warn("Upgrade package upload failed", error);
-      throw new ProblemException(UpgradeProblems.PACKAGE_INVALID);
+      throw new ProblemException(MaintenanceProblems.PACKAGE_INVALID);
     }
     finally {
       Files.deleteIfExists(temp);
@@ -246,7 +246,7 @@ class MaintenanceHttpHandler {
   public void deletePackage(@PathVariable long id) {
     enabled();
     if (records.hasRunning(id)) {
-      throw new ProblemException(UpgradeProblems.PACKAGE_IN_USE);
+      throw new ProblemException(MaintenanceProblems.PACKAGE_IN_USE);
     }
     packages.delete(id);
   }
@@ -257,7 +257,7 @@ class MaintenanceHttpHandler {
     enabled();
     UpgradePackageEntity entity = packages.find(id);
     if (entity.getStatus() != UpgradePackageStatus.READY) {
-      throw new ProblemException(UpgradeProblems.PACKAGE_CONSUMED);
+      throw new ProblemException(MaintenanceProblems.PACKAGE_CONSUMED);
     }
     UpgradeOptions options = request == null || request.options() == null ? settings.get() : request.options();
     List<ReleaseMapping> mappings = releaseMappings.findAll();
@@ -268,20 +268,20 @@ class MaintenanceHttpHandler {
       }
       catch (Exception invalid) {
         upgradeLogger.warn("Invalid release mappings", invalid);
-        throw new ProblemException(UpgradeProblems.MAPPING_INVALID);
+        throw new ProblemException(MaintenanceProblems.MAPPING_INVALID);
       }
     }
     Map<String, Object> environment = environment();
     if (!Boolean.TRUE.equals(environment.get("updaterReady"))
             || (options.backupEnabled() && !Boolean.TRUE.equals(environment.get("backupReady")))) {
-      throw new ProblemException(UpgradeProblems.ENVIRONMENT_NOT_READY);
+      throw new ProblemException(MaintenanceProblems.ENVIRONMENT_NOT_READY);
     }
     if ((long) environment.get("installFreeBytes") < 3L * 1024 * 1024 * 1024
             || (options.backupEnabled() && (long) environment.get("backupFreeBytes") < 256L * 1024 * 1024)) {
-      throw new ProblemException(UpgradeProblems.SPACE_INSUFFICIENT);
+      throw new ProblemException(MaintenanceProblems.SPACE_INSUFFICIENT);
     }
     if (records.running() != null) {
-      throw new ProblemException(UpgradeProblems.IN_PROGRESS);
+      throw new ProblemException(MaintenanceProblems.IN_PROGRESS);
     }
 
     CurrentRelease current = currentRelease();
@@ -322,7 +322,7 @@ class MaintenanceHttpHandler {
       packages.markReady(entity.getId());
       records.failed(recordId, "无法启动升级服务，请检查 sudoers 和 systemd 日志");
       upgradeLogger.error("Cannot start upgrade service", failure);
-      throw new ProblemException(UpgradeProblems.START_FAILED);
+      throw new ProblemException(MaintenanceProblems.START_FAILED);
     }
     return RecordView.from(records.find(recordId));
   }
@@ -405,7 +405,7 @@ class MaintenanceHttpHandler {
 
   private void enabled() {
     if (System.getenv("BLOG_RELEASE_PATH") == null) {
-      throw new ProblemException(UpgradeProblems.DEPLOYMENT_REQUIRED);
+      throw new ProblemException(MaintenanceProblems.DEPLOYMENT_REQUIRED);
     }
   }
 

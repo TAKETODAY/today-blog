@@ -27,8 +27,8 @@ import java.util.Map;
 
 import cn.taketoday.blog.model.enums.StatisticsField;
 import cn.taketoday.blog.model.form.PageViewStatistics;
-import cn.taketoday.blog.error.ProblemException;
-import cn.taketoday.blog.error.CommonProblems;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import infra.jdbc.core.JdbcOperations;
 import infra.jdbc.core.PreparedStatementCallback;
 import infra.stereotype.Service;

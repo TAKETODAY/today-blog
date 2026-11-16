@@ -31,7 +31,7 @@ import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.CommentItem;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.model.form.CommentConditionForm;
-import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import infra.beans.aot.RegisterBeanMetadata;

@@ -21,11 +21,11 @@ import java.util.List;
 
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Category;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.service.CategoryService;
-import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.error.ProblemException;
-import cn.taketoday.blog.error.CommonProblems;
 import cn.taketoday.blog.service.ContentProblems;
+import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.http.HttpStatus;
 import infra.stereotype.Controller;

@@ -20,8 +20,8 @@ package cn.taketoday.blog.web.http;
 import java.util.List;
 
 import cn.taketoday.blog.model.Category;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.service.CategoryService;
-import cn.taketoday.blog.error.ProblemException;
 import cn.taketoday.blog.service.ContentProblems;
 import infra.stereotype.Controller;
 import infra.web.annotation.GET;

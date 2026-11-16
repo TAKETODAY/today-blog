@@ -15,11 +15,9 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.error;
+package cn.taketoday.blog.problem;
 
 import org.jspecify.annotations.Nullable;
-
-import java.util.Objects;
 
 import infra.core.NoStackTraceRuntimeException;
 import infra.http.HttpStatusCode;
@@ -31,14 +29,14 @@ import infra.web.HttpStatusProvider;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/16
  */
-public final class ProblemException extends NoStackTraceRuntimeException implements HttpStatusProvider {
+public class ProblemException extends NoStackTraceRuntimeException implements HttpStatusProvider {
 
   private final Problem problem;
 
   private final Object[] arguments;
 
   public ProblemException(Problem problem, Object... arguments) {
-    super(Objects.requireNonNull(problem).code(), null);
+    super(problem.code(), null);
     this.problem = problem;
     this.arguments = arguments.clone();
   }
@@ -48,7 +46,7 @@ public final class ProblemException extends NoStackTraceRuntimeException impleme
   }
 
   public Object[] getArguments() {
-    return arguments.clone();
+    return arguments;
   }
 
   @Override
