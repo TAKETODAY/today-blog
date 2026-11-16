@@ -35,7 +35,9 @@ import cn.taketoday.blog.service.UserService;
 import cn.taketoday.blog.util.HashUtils;
 import cn.taketoday.blog.util.PasswordEncoder;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.error.CommonProblems;
+import cn.taketoday.blog.service.UserProblems;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.beans.support.BeanPropertyUtils;
@@ -123,12 +125,12 @@ class AuthHttpHandler {
   static class UserFrom {
 
     /** 登录邮箱。 */
-    @NotEmpty(message = "邮箱不能为空")
-    @Email(message = "请您输入正确格式的邮箱")
+    @NotEmpty(message = "{validation.email.required}")
+    @Email(message = "{validation.email.invalid}")
     public String email;
 
     /** 登录密码。 */
-    @NotEmpty(message = "密码不能为空")
+    @NotEmpty(message = "{validation.password.required}")
     public String password;
   }
 
@@ -148,25 +150,26 @@ class AuthHttpHandler {
    * @return 登录成功后的用户信息
    */
   @POST(params = "v2")
-  @RequestLimit(unit = TimeUnit.MINUTES, count = 5, errorMessage = "一分钟只能尝试5次登陆,请稍后重试")
+  @RequestLimit(unit = TimeUnit.MINUTES, count = 5)
   @Logging(title = "登录", content = "邮箱:[#{#from.email}]登录")
   public User loginV2(@Valid @RequestBody UserFrom from, HttpContext request) {
     User loginUser = userService.getByEmail(from.email);
     if (loginUser == null) {
-      throw ErrorMessageException.failed(from.email + " 账号不存在!");
+      throw new ProblemException(CommonProblems.INVALID_CREDENTIALS);
     }
 
     if (!passwordEncoder.matches(from.password, loginUser.getPassword())) {
-      throw ErrorMessageException.failed("密码错误!");
+      throw new ProblemException(CommonProblems.INVALID_CREDENTIALS);
     }
 
     // check user state
     UserStatus status = loginUser.getStatus();
     // log.info("Check state: [{}]", status);
     switch (status) {
-      case NORMAL -> { }
-      case LOCKED, RECYCLE, INACTIVE -> throw ErrorMessageException.failed(status.getDescription());
-      default -> throw ErrorMessageException.failed("系统错误");
+      case NORMAL -> {
+      }
+      case LOCKED, RECYCLE, INACTIVE -> throw new ProblemException(UserProblems.ACCOUNT_UNAVAILABLE);
+      default -> throw new ProblemException(CommonProblems.INTERNAL_ERROR);
     }
 
     Session session = sessionManagerOperations.getSession(request);
@@ -199,7 +202,7 @@ class AuthHttpHandler {
   @NullUnmarked
   public static class InfoForm {
     /** 用户姓名或昵称。 */
-    @NotBlank(message = "请输入姓名或昵称")
+    @NotBlank(message = "{validation.name.required}")
     public String name;
 
     /** 个人站点地址。 */
@@ -207,7 +210,7 @@ class AuthHttpHandler {
     public String site;
 
     /** 个人简介，最多 256 个字符。 */
-    @Length(max = 256, message = "介绍最多256个字符")
+    @Length(max = 256, message = "{validation.introduce.length}")
     public String introduce;
 
     /** 是否接收邮件通知。 */
@@ -224,12 +227,12 @@ class AuthHttpHandler {
    * @return 更新后的用户信息
    */
   @PUT
-  @RequestLimit(count = 2, unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次用户信息")
+  @RequestLimit(count = 2, unit = TimeUnit.MINUTES)
   public User updateUserInfo(@RequiresUser User loginUser, @RequestBody @Valid InfoForm form) {
     // 要判断不一致才更新
     if (Objects.equals(form.name, loginUser.getName())
             && Objects.equals(form.introduce, loginUser.getIntroduce())) {
-      throw ErrorMessageException.failed("未更改任何信息");
+      throw new ProblemException(CommonProblems.NO_CHANGES);
     }
 
     Long id = loginUser.getId();
@@ -259,11 +262,11 @@ class AuthHttpHandler {
   public static class ChangePasswordForm {
 
     /** 当前密码。 */
-    @NotBlank(message = "旧密码不能为空")
+    @NotBlank(message = "{validation.password.required}")
     public String oldPassword;
 
     /** 新密码，长度为 6 至 48 个字符。 */
-    @Length(min = 6, max = 48, message = "新密码至少输入6个字符，最多48个字符")
+    @Length(min = 6, max = 48, message = "{validation.password.length}")
     public String newPassword;
 
     /** 新密码确认值，必须与 {@link #newPassword} 一致。 */
@@ -280,20 +283,20 @@ class AuthHttpHandler {
    */
   @PUT(params = "password")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次密码")
+  @RequestLimit(unit = TimeUnit.MINUTES)
   public void changePassword(@RequiresUser User loginUser, @RequestBody @Valid ChangePasswordForm form) {
     // 校验密码是否有效
     if (!Objects.equals(form.confirmNewPassword, form.newPassword)) {
-      throw ErrorMessageException.failed("两次输入的新密码不一致");
+      throw new ProblemException(UserProblems.PASSWORD_MISMATCH);
     }
 
     // 校验数据是否存在该用户
     User byId = userService.getById(loginUser.getId());
-    ErrorMessageException.notNull(byId, "要修改密码的用户不存在");
+    ProblemException.notNull(byId, UserProblems.NOT_FOUND);
 
     // 校验旧密码
     if (!passwordEncoder.matches(form.oldPassword, byId.getPassword())) {
-      throw ErrorMessageException.failed("原密码错误");
+      throw new ProblemException(UserProblems.PASSWORD_INVALID);
     }
 
     // 重新生成
@@ -316,11 +319,11 @@ class AuthHttpHandler {
   public static class UserEmailForm {
 
     /** 新邮箱地址。 */
-    @NotEmpty(message = "请输入新邮箱")
+    @NotEmpty(message = "{validation.email.required}")
     public String email;
 
     /** 当前登录密码，用于确认身份。 */
-    @NotEmpty(message = "请输入密码")
+    @NotEmpty(message = "{validation.password.required}")
     public String password;
   }
 
@@ -332,10 +335,10 @@ class AuthHttpHandler {
    * @return 更新后的用户信息
    */
   @PUT(params = "email-mobile-phone")
-  @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改2次邮箱或手机")
+  @RequestLimit(unit = TimeUnit.MINUTES)
   public User changeEmailAndMobilePhone(@RequiresUser User loginUser, @Valid @RequestBody UserEmailForm form) {
     if (Objects.equals(loginUser.getEmail(), form.email)) {
-      throw ErrorMessageException.failed("未更改任何信息");
+      throw new ProblemException(CommonProblems.NO_CHANGES);
     }
 
     // Check User's Password
@@ -352,7 +355,7 @@ class AuthHttpHandler {
 //      loginUser.setMobilePhone(form.mobilePhone);
     }
     else {
-      throw ErrorMessageException.failed("密码不正确");
+      throw new ProblemException(UserProblems.PASSWORD_INVALID);
     }
     return loginUser;
   }
@@ -365,7 +368,7 @@ class AuthHttpHandler {
    * @return 更新后的用户信息
    */
   @PUT(params = "avatar")
-  @RequestLimit(unit = TimeUnit.MINUTES, errorMessage = "一分钟只能最多修改1次头像")
+  @RequestLimit(unit = TimeUnit.MINUTES)
   @Logging(title = "用户保存头像", content = "上传:[#{#avatar.getOriginalFilename()}] 邮箱:[#{#loginUser.email}]")
   public User changeAvatar(@RequiresUser User loginUser, Part avatar) {
     String originalFilename = avatar.getOriginalFilename();

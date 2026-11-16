@@ -23,7 +23,9 @@ import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Category;
 import cn.taketoday.blog.service.CategoryService;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.error.CommonProblems;
+import cn.taketoday.blog.service.ContentProblems;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.http.HttpStatus;
 import infra.stereotype.Controller;
@@ -71,7 +73,7 @@ class CategoriesConsoleHttpHandler {
   @Logging(title = "创建分类", content = "name:[#{#category.name}]")
   public void create(@RequestBody Category category) {
     if (StringUtils.isBlank(category.getName())) {
-      throw ErrorMessageException.failed("分类名不能为空");
+      throw new ProblemException(ContentProblems.CATEGORY_REQUIRED);
     }
     if (category.getOrder() == null) {
       category.setOrder(Category.DEFAULT_ORDER);
@@ -81,7 +83,7 @@ class CategoriesConsoleHttpHandler {
     }
 
     if (categoryService.findCategory(category.getName()) != null) {
-      throw ErrorMessageException.failed("分类重复");
+      throw new ProblemException(ContentProblems.CATEGORY_EXISTS);
     }
 
     categoryService.persist(category);
@@ -94,10 +96,10 @@ class CategoriesConsoleHttpHandler {
   @Logging(title = "更新分类", content = "name:[#{#name}]")
   public void update(@RequestBody Category category, @PathVariable String name) {
     Category oldCategory = categoryService.findCategory(name);
-    ErrorMessageException.notNull(oldCategory, "要更新的分类不存在");
+    ProblemException.notNull(oldCategory, ContentProblems.CATEGORY_NOT_FOUND);
 
     if (oldCategory.equals(category)) {
-      throw ErrorMessageException.failed("分类未更改");
+      throw new ProblemException(CommonProblems.NO_CHANGES);
     }
     categoryService.updateById(category, name);
   }
@@ -110,7 +112,7 @@ class CategoriesConsoleHttpHandler {
   @DELETE("/{name}")
   @Logging(title = "删除分类", content = "delete name:[#{#name}]")
   public void delete(@PathVariable String name) {
-    ErrorMessageException.notNull(categoryService.findCategory(name), () -> "分类'" + name + "'不存在");
+    ProblemException.notNull(categoryService.findCategory(name), ContentProblems.CATEGORY_NOT_FOUND);
     categoryService.deleteById(name);
   }
 

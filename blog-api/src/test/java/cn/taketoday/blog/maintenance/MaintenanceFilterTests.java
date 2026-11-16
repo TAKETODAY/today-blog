@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import cn.taketoday.blog.error.ProblemResponses;
 import infra.context.ApplicationEventPublisher;
 import infra.context.availability.ApplicationAvailability;
 import infra.web.mock.MockHttpContext;
@@ -44,6 +45,20 @@ class MaintenanceFilterTests {
     assertThat(context.getStatus()).isEqualTo(503);
     assertThat(context.responseHeaders().getFirst("Retry-After")).isEqualTo("60");
     assertThat(context.getResponse().getContentAsString()).contains("系统升级中");
+  }
+
+  @Test
+  void localizesDefaultMaintenanceWithoutMvcContext() throws Exception {
+    MockHttpContext context = request("GET", "/api/articles");
+    context.getRequest().addHeader("Accept-Language", "en-US");
+    filter(new MaintenanceStatus(true, null, 30, MaintenanceStatus.Source.MANUAL))
+            .doFilter(context, ignored -> {
+            });
+    assertThat(context.responseHeaders().getFirst("Content-Type")).contains("application/problem+json");
+    assertThat(context.responseHeaders().getFirst("Content-Language")).isEqualTo("en");
+    assertThat(context.getResponse().getContentAsString())
+            .contains("System under maintenance", "\"code\":\"system.maintenance\"")
+            .doesNotContain("\"properties\"");
   }
 
   @Test
@@ -121,7 +136,7 @@ class MaintenanceFilterTests {
     ServerStatus serverStatus = new ServerStatus(
             mock(ApplicationAvailability.class), mock(ApplicationEventPublisher.class));
     serverStatus.setMaintenanceStatus(status);
-    return new MaintenanceFilter(serverStatus);
+    return new MaintenanceFilter(serverStatus, new ProblemResponses());
   }
 
   private static MockHttpContext request(String method, String uri) {

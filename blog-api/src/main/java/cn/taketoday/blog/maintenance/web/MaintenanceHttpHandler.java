@@ -51,9 +51,10 @@ import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeOptions;
 import cn.taketoday.blog.updater.UpgradePackage;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.error.CommonProblems;
+import cn.taketoday.blog.maintenance.upgrade.UpgradeProblems;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
-import infra.http.HttpStatus;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
@@ -127,7 +128,7 @@ class MaintenanceHttpHandler {
     if (request.enabled) {
       String message = request.message;
       if (StringUtils.isBlank(message)) {
-        message = DEFAULT_MESSAGE;
+        message = null;
       }
       MaintenanceStatus status = new MaintenanceStatus(request.enabled,
               message, retryAfter(request.retryAfter), MaintenanceStatus.Source.MANUAL);
@@ -177,7 +178,8 @@ class MaintenanceHttpHandler {
       ReleaseMappings.validateTargets(mappings, installRoot, state);
     }
     catch (Exception invalid) {
-      throw ErrorMessageException.failed(invalid.getMessage());
+      upgradeLogger.warn("Invalid release mappings", invalid);
+      throw new ProblemException(UpgradeProblems.MAPPING_INVALID);
     }
     releaseMappings.replaceAll(mappings);
     return mappings();
@@ -194,7 +196,7 @@ class MaintenanceHttpHandler {
     upgradeLogger.info("Upload TODAY BLOG Server package");
     enabled();
     if (file.getContentLength() <= 0 || file.getContentLength() > UpgradePackage.MAX_PACKAGE_BYTES) {
-      throw ErrorMessageException.failed("升级包大小必须在 1 字节至 512 MiB 之间");
+      throw new ProblemException(UpgradeProblems.PACKAGE_SIZE_INVALID);
     }
     String id = UUID.randomUUID().toString();
     Path directory = Files.createDirectories(packageRoot.resolve(id));
@@ -224,7 +226,8 @@ class MaintenanceHttpHandler {
     }
     catch (Exception error) {
       deleteDirectory(directory);
-      throw ErrorMessageException.failed("升级包校验失败: " + error.getMessage());
+      upgradeLogger.warn("Upgrade package upload failed", error);
+      throw new ProblemException(UpgradeProblems.PACKAGE_INVALID);
     }
     finally {
       Files.deleteIfExists(temp);
@@ -243,7 +246,7 @@ class MaintenanceHttpHandler {
   public void deletePackage(@PathVariable long id) {
     enabled();
     if (records.hasRunning(id)) {
-      throw ErrorMessageException.failed("该升级包正在被升级任务使用，不能删除", HttpStatus.CONFLICT);
+      throw new ProblemException(UpgradeProblems.PACKAGE_IN_USE);
     }
     packages.delete(id);
   }
@@ -254,7 +257,7 @@ class MaintenanceHttpHandler {
     enabled();
     UpgradePackageEntity entity = packages.find(id);
     if (entity.getStatus() != UpgradePackageStatus.READY) {
-      throw ErrorMessageException.failed("该升级包已被使用，不能重复升级", HttpStatus.CONFLICT);
+      throw new ProblemException(UpgradeProblems.PACKAGE_CONSUMED);
     }
     UpgradeOptions options = request == null || request.options() == null ? settings.get() : request.options();
     List<ReleaseMapping> mappings = releaseMappings.findAll();
@@ -264,20 +267,21 @@ class MaintenanceHttpHandler {
         ReleaseMappings.validateTargets(mappings, installRoot, state);
       }
       catch (Exception invalid) {
-        throw ErrorMessageException.failed("文件映射配置无效: " + invalid.getMessage());
+        upgradeLogger.warn("Invalid release mappings", invalid);
+        throw new ProblemException(UpgradeProblems.MAPPING_INVALID);
       }
     }
     Map<String, Object> environment = environment();
     if (!Boolean.TRUE.equals(environment.get("updaterReady"))
             || (options.backupEnabled() && !Boolean.TRUE.equals(environment.get("backupReady")))) {
-      throw ErrorMessageException.failed("升级器或数据库备份配置未就绪");
+      throw new ProblemException(UpgradeProblems.ENVIRONMENT_NOT_READY);
     }
     if ((long) environment.get("installFreeBytes") < 3L * 1024 * 1024 * 1024
             || (options.backupEnabled() && (long) environment.get("backupFreeBytes") < 256L * 1024 * 1024)) {
-      throw ErrorMessageException.failed("安装盘或备份盘可用空间不足");
+      throw new ProblemException(UpgradeProblems.SPACE_INSUFFICIENT);
     }
     if (records.running() != null) {
-      throw ErrorMessageException.failed("已有升级任务运行，请先确认其结果", HttpStatus.CONFLICT);
+      throw new ProblemException(UpgradeProblems.IN_PROGRESS);
     }
 
     CurrentRelease current = currentRelease();
@@ -317,7 +321,8 @@ class MaintenanceHttpHandler {
       serverStatus.setMaintenanceStatus(MaintenanceStatus.DISABLED);
       packages.markReady(entity.getId());
       records.failed(recordId, "无法启动升级服务，请检查 sudoers 和 systemd 日志");
-      throw ErrorMessageException.failed("无法启动升级服务，请检查 sudoers 和 systemd 日志");
+      upgradeLogger.error("Cannot start upgrade service", failure);
+      throw new ProblemException(UpgradeProblems.START_FAILED);
     }
     return RecordView.from(records.find(recordId));
   }
@@ -393,14 +398,14 @@ class MaintenanceHttpHandler {
   }
 
   private void enableMaintenance() {
-    MaintenanceStatus status = new MaintenanceStatus(true, DEFAULT_MESSAGE,
+    MaintenanceStatus status = new MaintenanceStatus(true, null,
             DEFAULT_RETRY_AFTER_SECONDS, MaintenanceStatus.Source.UPGRADE);
     serverStatus.setMaintenanceStatus(status);
   }
 
   private void enabled() {
     if (System.getenv("BLOG_RELEASE_PATH") == null) {
-      throw ErrorMessageException.failed("请先完成 systemd 部署配置");
+      throw new ProblemException(UpgradeProblems.DEPLOYMENT_REQUIRED);
     }
   }
 
@@ -409,7 +414,7 @@ class MaintenanceHttpHandler {
       return DEFAULT_RETRY_AFTER_SECONDS;
     }
     if (value < 1 || value > 86400) {
-      throw ErrorMessageException.failed("重试等待时间必须在 1 至 86400 秒之间");
+      throw new ProblemException(CommonProblems.INVALID_REQUEST);
     }
     return value;
   }

@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.List;
 
 import cn.taketoday.blog.model.Mail;
+import cn.taketoday.blog.error.ProblemException;
 import cn.taketoday.blog.model.enums.MailStatus;
 import infra.beans.factory.BeanFactory;
 import infra.mail.javamail.JavaMailSender;
@@ -104,7 +105,10 @@ class MailQueueServiceTests {
     Mail sent = pendingMail(2L);
     sent.setStatus(MailStatus.SENT);
     when(entityManager.findById(Mail.class, 2L)).thenReturn(sent);
-    assertThatThrownBy(() -> queue.retry(2L)).hasMessageContaining("只有发送失败");
+    assertThatThrownBy(() -> queue.retry(2L)).isInstanceOfSatisfying(ProblemException.class, error -> {
+      assertThat(error.getProblem()).isEqualTo(ContentProblems.MAIL_NOT_RETRYABLE);
+      assertThat(error.getStatusCode().value()).isEqualTo(409);
+    });
     verify(entityManager, never()).updateById(any(Mail.class), any(PropertyUpdateStrategy.class));
   }
 

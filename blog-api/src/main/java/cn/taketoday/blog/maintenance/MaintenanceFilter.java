@@ -19,14 +19,13 @@ package cn.taketoday.blog.maintenance;
 
 import java.io.IOException;
 
-import cn.taketoday.blog.util.ObjectUtils;
-import cn.taketoday.blog.web.ErrorMessage;
+import cn.taketoday.blog.error.ProblemResponses;
+import cn.taketoday.blog.error.CommonProblems;
 import infra.core.Ordered;
 import infra.core.annotation.Order;
 import infra.http.HttpHeaders;
 import infra.http.HttpMethod;
 import infra.http.HttpStatus;
-import infra.http.MediaType;
 import infra.http.server.PathContainer;
 import infra.stereotype.Component;
 import infra.web.Filter;
@@ -68,8 +67,11 @@ final class MaintenanceFilter implements Filter {
 
   private final ServerStatus serverStatus;
 
-  MaintenanceFilter(ServerStatus serverStatus) {
+  private final ProblemResponses problems;
+
+  MaintenanceFilter(ServerStatus serverStatus, ProblemResponses problems) {
     this.serverStatus = serverStatus;
+    this.problems = problems;
   }
 
   @Override
@@ -101,11 +103,14 @@ final class MaintenanceFilter implements Filter {
     return HttpMethod.GET.equals(request.getMethod()) && UPGRADE_PATTERN.matches(path);
   }
 
-  private static void writeUnavailable(HttpContext request, MaintenanceStatus status) throws IOException {
+  private void writeUnavailable(HttpContext request, MaintenanceStatus status) throws IOException {
     request.setStatus(HttpStatus.SERVICE_UNAVAILABLE);
-    request.setContentType(MediaType.APPLICATION_JSON);
     request.setHeader(HttpHeaders.RETRY_AFTER, Integer.toString(status.retryAfterSeconds()));
     request.setHeader(HttpHeaders.CACHE_CONTROL, HttpHeaders.NO_STORE);
-    ObjectUtils.writeValue(request, ErrorMessage.failed(status.message()));
+    var problem = problems.create(CommonProblems.MAINTENANCE, request);
+    if (status.message() != null && !status.message().isBlank()) {
+      problem.setDetail(status.message());
+    }
+    problems.write(problem, request);
   }
 }

@@ -17,6 +17,9 @@
 
 package cn.taketoday.blog.web.console;
 
+import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.service.ArticleProblems;
+
 import org.jspecify.annotations.Nullable;
 
 import java.util.LinkedHashSet;
@@ -63,11 +66,11 @@ public class ArticleForm {
 
   public static Article forArticle(ArticleForm form, LabelService labelService) {
     if (StringUtils.isBlank(form.title)) {
-      throw new IllegalArgumentException("Article title is required");
+      throw new ProblemException(ArticleProblems.TITLE_REQUIRED);
     }
 
     if (StringUtils.isBlank(form.uri)) {
-      throw new IllegalArgumentException("Article URI is required");
+      throw new ProblemException(ArticleProblems.URI_REQUIRED);
     }
 
     Set<Label> labels = getLabels(form, labelService);

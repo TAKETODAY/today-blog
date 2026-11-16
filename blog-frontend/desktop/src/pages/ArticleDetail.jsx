@@ -114,7 +114,9 @@ export default () => {
         status: err.response ? err.response.status : 500,
         title: "文章加载失败",
         subTitle: err.message,
-        needPassword: status === 403
+        needPassword: status === 403 && (!err.response.data?.code
+          || err.response.data.code === 'article.password_required'
+          || err.response.data.code === 'article.password_invalid')
       }
 
       if (status === 404) {
@@ -122,7 +124,7 @@ export default () => {
       }
 
       if (err.response) {
-        message.error(err.response.data.message)
+        message.error(err.response.data?.detail || err.response.data?.message || err.message)
       }
 
       throw error

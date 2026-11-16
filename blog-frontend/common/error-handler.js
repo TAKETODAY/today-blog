@@ -3,7 +3,8 @@ import { isNull } from "./object";
 import { message, notification } from "antd";
 
 const errorMessage = (err, message) => {
-  err.message = (err && err.response && err.response.data) ? err.response.data.message || message : message
+  err.message = (err && err.response && err.response.data)
+    ? err.response.data.detail || err.response.data.message || message : message
 }
 
 const handleNotFound = (err) => {

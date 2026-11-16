@@ -130,6 +130,20 @@ class ArticleHttpHandlerTests {
   }
 
   @Test
+  void missingArticleReturnsLocalizedProblemDetails() {
+    client.get().uri("/api/articles/non-existent-problem-details-test")
+            .header("Accept-Language", "en")
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+            .expectHeader().valueEquals("Content-Language", "en")
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("article.not_found")
+            .jsonPath("$.status").isEqualTo(404)
+            .jsonPath("$.detail").isEqualTo("The article does not exist or has been deleted.");
+  }
+
+  @Test
   @Transactional
   public void search() {
     ArticleForm form = new ArticleForm();

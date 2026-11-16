@@ -31,7 +31,7 @@ import cn.taketoday.blog.model.Comment;
 import cn.taketoday.blog.model.CommentItem;
 import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.model.form.CommentConditionForm;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import infra.beans.aot.RegisterBeanMetadata;
@@ -171,7 +171,7 @@ public class CommentService {
   public Comment obtainById(long id) {
     Comment comment = getById(id);
     if (comment == null) {
-      throw ErrorMessageException.failed("该评论不存在");
+      throw new ProblemException(ContentProblems.COMMENT_NOT_FOUND);
     }
     return comment;
   }

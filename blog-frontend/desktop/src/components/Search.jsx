@@ -65,7 +65,7 @@ class SearchComponent extends React.Component {
       })
       .catch(err => {
         if (err.response) {
-          message.error(err.response.data.message)
+          message.error(err.response.data?.detail || err.response.data?.message || err.message)
           this.setState({ data: null, loading: false })
         }
       })

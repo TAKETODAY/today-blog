@@ -30,14 +30,13 @@ import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.model.enums.PostStatus;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.LabelService;
-import cn.taketoday.blog.web.ArticlePasswordException;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.service.ArticleProblems;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.ArticleFilterInterceptor;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
-import infra.http.HttpStatus;
 import infra.web.annotation.GET;
 import infra.web.annotation.Interceptor;
 import infra.web.annotation.PATCH;
@@ -210,7 +209,7 @@ class ArticleHttpHandler {
       catch (NumberFormatException ignored) { }
 
       if (article == null) {
-        throw ErrorMessageException.failed("文章不存在", HttpStatus.NOT_FOUND);
+        throw new ProblemException(ArticleProblems.NOT_FOUND);
       }
     }
 
@@ -219,14 +218,14 @@ class ArticleHttpHandler {
     }
 
     if (article.getStatus() != PostStatus.PUBLISHED) { // 放在控制器层控制
-      throw ErrorMessageException.failed("文章不能访问");
+      throw new ProblemException(ArticleProblems.NOT_ACCESSIBLE);
     }
     if (article.needPassword()) {
       if (key == null) {
-        throw new ArticlePasswordException("需要访问密码");
+        throw new ProblemException(ArticleProblems.PASSWORD_REQUIRED);
       }
       if (!key.equals(article.getPassword())) {
-        throw new ArticlePasswordException("访问密码错误");
+        throw new ProblemException(ArticleProblems.PASSWORD_INVALID);
       }
     }
     // 重置

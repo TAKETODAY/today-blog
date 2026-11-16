@@ -24,7 +24,8 @@ import React from "react"
 import { Iterable } from "immutable"
 
 const errorMessage = (err, message) => {
-  err.message = (err && err.response && err.response.data) ? err.response.data.message || message : message
+  err.message = (err && err.response && err.response.data)
+    ? err.response.data.detail || err.response.data.message || message : message
   notification.warn({
     message: '提示',
     description: err.message

@@ -24,9 +24,8 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
 import infra.beans.factory.annotation.Autowired;
-import infra.http.HttpStatus;
 import infra.persistence.EntityManager;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
@@ -64,7 +63,7 @@ public class UpgradePackageService {
   public UpgradePackageEntity find(long id) {
     UpgradePackageEntity entity = entityManager.findById(UpgradePackageEntity.class, id);
     if (entity == null) {
-      throw ErrorMessageException.failed("升级包不存在", HttpStatus.NOT_FOUND);
+      throw new ProblemException(UpgradeProblems.PACKAGE_NOT_FOUND);
     }
     return entity;
   }
@@ -79,13 +78,13 @@ public class UpgradePackageService {
     UpgradePackageEntity entity = find(id);
     if (displayName != null) {
       if (displayName.isBlank() || displayName.length() > 255) {
-        throw ErrorMessageException.failed("升级包名称必须在 1 至 255 字之间");
+        throw new ProblemException(UpgradeProblems.PACKAGE_NAME_INVALID);
       }
       entity.setDisplayName(displayName);
     }
     if (note != null) {
       if (note.length() > 500) {
-        throw ErrorMessageException.failed("升级包备注不能超过 500 字");
+        throw new ProblemException(UpgradeProblems.PACKAGE_NOTE_INVALID);
       }
       entity.setNote(note);
     }

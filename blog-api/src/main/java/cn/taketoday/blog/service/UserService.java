@@ -23,7 +23,7 @@ import java.util.Map;
 
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
 import infra.cache.annotation.CacheConfig;
 import infra.cache.annotation.CacheEvict;
 import infra.cache.annotation.Cacheable;
@@ -51,7 +51,7 @@ public class UserService {
   public String getAvatar(String email) {
     User findByEmail = getByEmail(email);
     if (findByEmail == null) {
-      throw ErrorMessageException.failed("用户 '%s' 不存在".formatted(email));
+      throw new ProblemException(UserProblems.NOT_FOUND);
     }
     return findByEmail.getAvatar();
   }

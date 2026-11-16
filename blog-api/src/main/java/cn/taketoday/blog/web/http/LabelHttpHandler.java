@@ -21,7 +21,8 @@ import java.util.List;
 
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.service.LabelService;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.service.ContentProblems;
 import infra.web.annotation.GET;
 import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestMapping;
@@ -49,7 +50,7 @@ class LabelHttpHandler {
   @GET("/{name}")
   public Label name(@PathVariable String name) {
     Label label = labelService.getByName(name);
-    ErrorMessageException.notNull(label, "标签不存在");
+    ProblemException.notNull(label, ContentProblems.LABEL_NOT_FOUND);
     return label;
   }
 

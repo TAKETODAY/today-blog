@@ -21,8 +21,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import cn.taketoday.blog.web.ErrorMessageException;
-import infra.http.HttpStatus;
+import cn.taketoday.blog.error.ProblemException;
 import infra.persistence.EntityManager;
 import infra.persistence.Pageable;
 import infra.persistence.annotation.EntityRef;
@@ -67,14 +66,14 @@ public class BackupService {
   public BackupDetail backup(long id) {
     Backup record = entityManager.findById(Backup.class, id);
     if (record == null) {
-      throw ErrorMessageException.failed("备份不存在", HttpStatus.NOT_FOUND);
+      throw new ProblemException(BackupProblems.NOT_FOUND);
     }
     return new BackupDetail(BackupView.from(record), record.getScope(),
             record.getRestoreVerifiedAt(), record.getLocation());
   }
 
   public void requireExecutor() {
-    throw ErrorMessageException.failed("备份与恢复执行器尚未接通，未执行任何备份操作", HttpStatus.SERVICE_UNAVAILABLE);
+    throw new ProblemException(BackupProblems.EXECUTOR_UNAVAILABLE);
   }
 
   /**

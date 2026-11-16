@@ -31,7 +31,8 @@ import cn.taketoday.blog.model.enums.CommentStatus;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.CommentService;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.service.ContentProblems;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequestLimit;
 import infra.http.HttpStatus;
@@ -77,7 +78,7 @@ class CommentHttpHandler {
   @NullUnmarked
   static class CommentFrom {
 
-    @NotEmpty(message = "请输入评论内容")
+    @NotEmpty(message = "{validation.comment.required}")
     public String content;
 
     @NotNull
@@ -94,7 +95,7 @@ class CommentHttpHandler {
     /**
      * 评论者的昵称/名字
      */
-    @NotEmpty(message = "请输入昵称")
+    @NotEmpty(message = "{validation.name.required}")
     public String commenter;
 
     /**
@@ -150,7 +151,7 @@ class CommentHttpHandler {
     else {
       // check comment length
       if (comment.getContent().length() >= commentConfig.getContentLength()) {
-        throw ErrorMessageException.failed("字数超出限制");
+        throw new ProblemException(ContentProblems.COMMENT_TOO_LONG, commentConfig.getContentLength());
       }
       if (commentConfig.isCheck()) {
         // 检查是否需要审核

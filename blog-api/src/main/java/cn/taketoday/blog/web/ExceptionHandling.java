@@ -22,9 +22,13 @@ import com.aliyun.oss.OSSException;
 
 import org.jspecify.annotations.Nullable;
 
-import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import cn.taketoday.blog.UnauthorizedException;
+import cn.taketoday.blog.error.ProblemException;
+import cn.taketoday.blog.error.ProblemResponses;
+import cn.taketoday.blog.error.CommonProblems;
 import cn.taketoday.blog.util.BlogUtils;
 import infra.beans.TypeMismatchException;
 import infra.dao.DataAccessResourceFailureException;
@@ -32,13 +36,13 @@ import infra.http.HttpHeaders;
 import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
 import infra.http.ResponseEntity;
+import infra.http.ProblemDetail;
 import infra.http.converter.HttpMessageNotReadableException;
-import infra.validation.ObjectError;
+import infra.validation.FieldError;
 import infra.web.HttpContext;
 import infra.web.MultipartException;
 import infra.web.NotFoundHandler;
 import infra.web.annotation.ExceptionHandler;
-import infra.web.annotation.ResponseStatus;
 import infra.web.annotation.RestControllerAdvice;
 import infra.web.bind.MethodArgumentNotValidException;
 import infra.web.bind.MissingRequestParameterException;
@@ -58,9 +62,11 @@ import lombok.CustomLog;
 @RestControllerAdvice
 class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFoundHandler {
 
-  private static final ErrorMessage illegalArgument = ErrorMessage.failed("参数错误");
+  private final ProblemResponses problems;
 
-  private static final ErrorMessage internalServerError = ErrorMessage.failed("服务器内部异常");
+  ExceptionHandling(ProblemResponses problems) {
+    this.problems = problems;
+  }
 
   @Override
   public @Nullable Object handleNotFound(HttpContext request) {
@@ -69,119 +75,146 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
       pageNotFoundLogger.warn("No mapping for {} {}, [{}]",
               request.getMethodAsString(), request.getRequestURI(), BlogUtils.remoteAddress(request));
     }
-    return ErrorMessage.failed("资源找不到");
+    problems.prepare(request);
+    return problems.create(CommonProblems.NOT_FOUND, request);
   }
 
   @ExceptionHandler(ErrorMessageException.class)
-  public ResponseEntity<ErrorMessage> errorMessage(ErrorMessageException errorMessage) {
+  public ResponseEntity<ProblemDetail> errorMessage(ErrorMessageException errorMessage, HttpContext request) {
     HttpStatusCode httpStatus = errorMessage.getStatusCode();
-    return ResponseEntity.status(httpStatus)
-            .body(ErrorMessage.failed(errorMessage.getMessage()));
+    ProblemDetail problem = problems.create(CommonProblems.forStatus(httpStatus), request);
+    if (httpStatus.value() < 500 && errorMessage.getMessage() != null) {
+      problem.setDetail(errorMessage.getMessage());
+    }
+    if (httpStatus.value() >= 500) {
+      log.error("Business request failed", errorMessage);
+    }
+    return problems.response(problem, null, httpStatus, request);
   }
 
-  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  @ExceptionHandler(ProblemException.class)
+  public ResponseEntity<ProblemDetail> problem(ProblemException exception, HttpContext request) {
+    if (exception.getStatusCode().value() >= 500) {
+      log.error("Business request failed: {}", exception.getProblem().code(), exception);
+    }
+    return problems.response(exception.getProblem(), request, exception.getArguments());
+  }
+
   @ExceptionHandler(UnauthorizedException.class)
-  public ErrorMessage unauthorized() {
-    return ErrorMessage.unauthorized;
+  public ResponseEntity<ProblemDetail> unauthorized(HttpContext request) {
+    return problems.response(CommonProblems.AUTH_REQUIRED, request);
   }
 
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(IllegalArgumentException.class)
-  public ErrorMessage illegalArgument(IllegalArgumentException e) {
-    return ErrorMessage.failed("参数错误: " + e.getMessage());
+  public ResponseEntity<ProblemDetail> illegalArgument(IllegalArgumentException e, HttpContext request) {
+    log.error("Unexpected illegal argument", e);
+    return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
   @ExceptionHandler(InternalServerException.class)
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public ErrorMessage internal(InternalServerException internal) {
+  public ResponseEntity<ProblemDetail> internal(InternalServerException internal, HttpContext request) {
     log.error("服务器内部错误", internal);
-    return ErrorMessage.failed(internal.getReason());
+    return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
   @ExceptionHandler(ResponseStatusException.class)
-  public ResponseEntity<?> statusException(ResponseStatusException e) {
-    return ResponseEntity.status(e.getStatusCode())
-            .headers(e.getHeaders())
-            .body(ErrorMessage.failed(e.getReason()));
+  public ResponseEntity<?> statusException(ResponseStatusException e, HttpContext request) {
+    if (e.getStatusCode().value() >= 500) {
+      log.error("Request failed", e);
+    }
+    return problems.response(problems.create(CommonProblems.forStatus(e.getStatusCode()), request),
+            e.getHeaders(), e.getStatusCode(), request);
   }
 
-  @ResponseStatus(HttpStatus.FORBIDDEN)
   @ExceptionHandler(ArticlePasswordException.class)
-  public ErrorMessage articlePassword(ArticlePasswordException exception) {
-    return ErrorMessage.failed(exception.getMessage());
+  public ResponseEntity<ProblemDetail> articlePassword(ArticlePasswordException exception, HttpContext request) {
+    ProblemDetail problem = problems.create(CommonProblems.ACCESS_DENIED, request);
+    problem.setDetail(exception.getMessage());
+    return problems.response(problem, null, HttpStatus.FORBIDDEN, request);
   }
 
   @ExceptionHandler
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public ErrorMessage error(Throwable exception) {
+  public ResponseEntity<ProblemDetail> error(Throwable exception, HttpContext request) {
     log.error("An Exception occurred", exception);
-    if (exception instanceof SQLException) {
-      return internalServerError;
-    }
-    return ErrorMessage.failed("服务器内部错误,稍后重试");
+    return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   @ExceptionHandler(NullPointerException.class)
-  public ErrorMessage nullPointer(NullPointerException exception) {
+  public ResponseEntity<ProblemDetail> nullPointer(NullPointerException exception, HttpContext request) {
     log.error("Null Pointer occurred", exception);
-    return internalServerError;
+    return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(NotMultipartRequestException.class)
-  public ErrorMessage notMultipart() {
-    return ErrorMessage.failed("请求错误");
+  public ResponseEntity<ProblemDetail> notMultipart(HttpContext request) {
+    return problems.response(CommonProblems.INVALID_REQUEST, request);
   }
 
   @ExceptionHandler({ OSSException.class, ClientException.class })
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public ErrorMessage ossException(Exception e) {
-    return ErrorMessage.failed(e.getMessage());
+  public ResponseEntity<ProblemDetail> ossException(Exception e, HttpContext request) {
+    log.error("Object storage request failed", e);
+    return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   @ExceptionHandler(DataAccessResourceFailureException.class)
-  public ErrorMessage dataAccessException(DataAccessResourceFailureException accessException) {
+  public ResponseEntity<ProblemDetail> dataAccessException(DataAccessResourceFailureException accessException, HttpContext request) {
     log.error("数据库连接出错", accessException);
-    return ErrorMessage.failed("数据库连接出错");
+    return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
   @Override
   protected @Nullable ResponseEntity<@Nullable Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
           HttpHeaders headers, HttpStatusCode status, HttpContext request) {
-    if (ex.hasErrors()) {
-      ObjectError objectError = ex.getGlobalError();
-      if (objectError == null) {
-        objectError = ex.getFieldError();
+    ProblemDetail problem = problems.create(CommonProblems.VALIDATION_FAILED, request);
+    problem.setProperty("errors", ex.getAllErrors().stream().map(error -> {
+      Map<String, Object> item = new LinkedHashMap<>();
+      if (error instanceof FieldError field) {
+        item.put("field", field.getField());
       }
-      if (objectError != null) {
-        String defaultMessage = objectError.getDefaultMessage();
-        return handleExceptionInternal(ex, ErrorMessage.failed(defaultMessage), headers, status, request);
-      }
-    }
-    return handleExceptionInternal(ex, illegalArgument, headers, status, request);
+      item.put("code", error.getCode());
+      item.put("detail", problems.validationMessage(error, request));
+      return item;
+    }).toList());
+    return handleExceptionInternal(ex, problem, headers, status, request);
   }
 
   @Override
   protected @Nullable ResponseEntity<@Nullable Object> handleMissingRequestParameter(
           MissingRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
-    return handleExceptionInternal(ex, ErrorMessage.failed("缺少参数'" + ex.getParameterName() + "'"), headers, status, request);
+    return handleExceptionInternal(ex, problems.create(CommonProblems.PARAMETER_MISSING, request,
+            ex.getParameterName()), headers, status, request);
   }
 
   @Override
   protected @Nullable ResponseEntity<@Nullable Object> handleMultipartException(MultipartException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
-    return handleExceptionInternal(ex, ErrorMessage.failed("上传文件大小超出限制"), headers, status, request);
+    return handleExceptionInternal(ex, problems.create(CommonProblems.forStatus(status), request), headers, status, request);
   }
 
   @Override
   protected @Nullable ResponseEntity<@Nullable Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
-    return handleExceptionInternal(ex, ErrorMessage.failed("参数读取错误，请检查格式"), headers, status, request);
+    return handleExceptionInternal(ex, problems.create(CommonProblems.INVALID_REQUEST, request), headers, status, request);
   }
 
   @Override
   protected @Nullable ResponseEntity<@Nullable Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
-    return handleExceptionInternal(ex, ErrorMessage.failed("参数错误，请检查"), headers, status, request);
+    return handleExceptionInternal(ex, problems.create(CommonProblems.INVALID_REQUEST, request), headers, status, request);
+  }
+
+  @Override
+  protected ResponseEntity<@Nullable Object> createResponseEntity(@Nullable Object body,
+          @Nullable HttpHeaders headers, HttpStatusCode status, HttpContext request) {
+    ProblemDetail problem;
+    if (body instanceof ProblemDetail candidate && candidate.getProperties() != null
+            && candidate.getProperties().containsKey("code")) {
+      problem = candidate;
+    }
+    else {
+      problem = problems.create(CommonProblems.forStatus(status), request);
+    }
+    problem.setStatus(status.value());
+    problems.prepare(request);
+    return ResponseEntity.status(status).headers(headers)
+            .contentType(infra.http.MediaType.APPLICATION_PROBLEM_JSON).body(problem);
   }
 
 }

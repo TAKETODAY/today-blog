@@ -25,7 +25,7 @@ import cn.taketoday.blog.model.Mail;
 import cn.taketoday.blog.model.enums.MailStatus;
 import cn.taketoday.blog.model.form.MailConditionForm;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.error.ProblemException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import infra.beans.factory.BeanFactory;
@@ -117,7 +117,7 @@ public class MailQueueService {
   public void retry(long id) {
     Mail mail = entityManager.findById(Mail.class, id);
     if (mail == null || mail.getStatus() != MailStatus.FAILED) {
-      throw ErrorMessageException.failed("只有发送失败的邮件可以重发");
+      throw new ProblemException(ContentProblems.MAIL_NOT_RETRYABLE);
     }
     mail.setStatus(MailStatus.PENDING);
     update(mail);
