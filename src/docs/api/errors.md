@@ -25,6 +25,20 @@
 例如 `upgrade.`，不能认为同一前缀下的错误都应采取相同动作。
 未知错误码使用通用展示，不能要求客户端穷举。
 
+### 错误码格式
+
+格式为 `域[.子域...].错误标识`，`.` 分隔域、各级子域和最终错误标识，支持多个子域：
+
+| 示例 | 域 | 子域 | 错误标识 |
+| --- | --- | --- | --- |
+| `article.password_required` | `article` | 无 | `password_required` |
+| `upgrade.package.not_found` | `upgrade` | `package` | `not_found` |
+| `notification.mail.not_retryable` | `notification` | `mail` | `not_retryable` |
+
+各段以小写字母开头，使用小写字母、数字和下划线；当前协议以下划线分隔段内单词，
+不混用连字符。可按业务语义继续增加子域，不要求固定段数，也不要为增加层级而机械拆开词组。
+已经发布的错误码和默认派生的类型 URI 都是协议的一部分，改名需考虑客户端兼容性。
+
 ## 定义位置
 
 统一契约：`blog-api/src/main/java/cn/taketoday/blog/error/Problem.java`。
@@ -79,11 +93,44 @@
 - 目标语言缺键时先回退默认资源；加载或格式化失败时记录告警并使用安全兜底，不能输出消息键。
 - 维护响应继续使用 `Retry-After` 和 `Cache-Control: no-store`。
 
-新增类型化业务错误示例：
+## 使用方法
+
+### 抛出现有业务问题
+
+优先复用领域问题定义，在发现业务失败的位置抛出异常：
 
 ```java
 throw new ProblemException(ArticleProblems.PASSWORD_INVALID);
 ```
+
+对可能为空的查询结果，可使用空值检查工具；非空时不会抛出异常，该方法不返回查询对象：
+
+```java
+ProblemException.notNull(article, ArticleProblems.NOT_FOUND);
+```
+
+### 在 Service 中使用
+
+`Problem` 和 `ProblemException` 位于公共 `error` 包，Service 可以直接使用。
+以下为 Service 内部的示意方法，其中 `getById` 为既有查询方法：
+
+```java
+public Article obtainById(long id) {
+  Article article = getById(id);
+  ProblemException.notNull(article, ArticleProblems.NOT_FOUND);
+  return article;
+}
+```
+
+Service 决定具体业务问题并向上抛出；Controller 通常不必捕获或重新包装，
+`ExceptionHandling` 会统一交给 `ProblemResponses` 转为本地化 HTTP 响应。
+不要为了生成错误响应而向 Service 传入 `HttpContext`、响应对象或已经翻译的消息。
+
+当前 `Problem` 包含 `HttpStatus`，属于带 HTTP 语义的应用错误契约，
+不是完全独立于传输协议的领域模型。它可以在进程内部跨层传播，
+但不能直接当作 RPC 错误报文或序列化 Java 异常跨进程传递。
+
+### 使用默认实现，不定义枚举
 
 无需领域枚举时，可通过静态工厂创建不可变的默认实现 `DefaultProblem`：
 
@@ -95,9 +142,79 @@ throw new ProblemException(problem, "email");
 静态工厂不自动注册错误码。新增稳定业务码仍需补齐两种语言的消息资源，
 并将常量纳入协议清单及相应测试；优先复用已有领域定义。
 
+复用默认实现时，建议把问题保存为 `static final Problem` 常量，避免在每次请求中重复构造。
+也可以使用常量类组织领域问题，不要求所有问题都以枚举表示。
+当前 `ProblemCatalog` 使用枚举的 `values()` 汇总，防遗漏测试也只自动发现枚举；
+若引入常量类，必须显式加入其常量，并补充对应的防遗漏测试，不能认为现有扫描会自动覆盖。
+
+### 传递消息模板参数
+
+例如分页大小超过限制时，传入允许公开的最大值：
+
+```java
+throw new ProblemException(CommonProblems.PAGE_SIZE_EXCEEDED, 100);
+```
+
+中文资源 `errors.properties`：
+
+```properties
+request.page_size_exceeded.title=分页大小超出限制
+request.page_size_exceeded.detail=每页大小不能超过 {0}。
+```
+
+英文资源 `errors_en.properties`：
+
+```properties
+request.page_size_exceeded.title=Page size limit exceeded
+request.page_size_exceeded.detail=The page size must not exceed {0}.
+```
+
+`{0}` 对应异常构造器中第一个消息参数，而不是错误码或 HTTP 状态。
+英文请求将按模板返回 `The page size must not exceed 100.`；消息在响应阶段才解析。
+
 新增带参数的类型时，同时在两种资源中配置兼容模板，只传允许公开的参数。
 不可传入 SQL、凭据、内部异常或连接配置。
 新增领域枚举后，将其加入 `ProblemCatalog`；清单测试扫描编译产物中的所有 `Problem` 枚举，防止漏注册。
+
+### 字段校验消息
+
+校验注解使用资源键，而不是硬编码某一种语言的消息，例如：
+
+```java
+@NotEmpty(message = "{validation.email.required}")
+@Email(message = "{validation.email.invalid}")
+public String email;
+```
+
+对应的 `validation.email.required` 和 `validation.email.invalid` 必须在两种语言资源中定义。
+请求触发校验失败后，顶层错误码为 `request.validation_failed`，
+具体字段信息位于 `errors` 数组，不包含被拒绝的输入值。
+
+### 客户端判断与展示
+
+精确错误码用于决定业务动作，带点号的域前缀用于分类；不要匹配 `detail` 文案：
+
+```javascript
+const code = problem.code || '';
+if (code === 'article.password_required' || code === 'article.password_invalid') {
+  // 展示文章密码输入界面。
+}
+else if (code.startsWith('upgrade.package.')) {
+  // 将错误归类到升级包相关问题，具体动作仍需检查完整错误码。
+}
+```
+
+通用提示优先读取 `detail`，再兼容旧响应的 `message`，最后使用本地通用提示。
+未知错误码也必须能够展示，不能因为没有匹配分支而丢失错误提示。
+
+### 新增业务问题检查清单
+
+1. 选择稳定的域、子域和错误标识，确认不存在语义相同的已有问题。
+2. 在所属领域定义 `Problem`，明确默认 HTTP 状态；不要仅按状态猜测业务错误码。
+3. 在两种语言资源中补齐 `.title`、`.detail`，保持模板参数兼容。
+4. 将问题加入 `ProblemCatalog`；非枚举常量额外补充清单防遗漏检查。
+5. 在真实业务判断点抛出 `ProblemException`，补充错误码、状态及响应测试。
+6. 只有需要特殊交互时才新增客户端分支，其余错误使用通用展示。
 
 ## 迁移范围与兼容
 

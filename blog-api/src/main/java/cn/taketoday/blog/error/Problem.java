@@ -55,9 +55,17 @@ public interface Problem {
   /**
    * 返回稳定的业务错误码，供客户端进行精确判断或按领域前缀分类。
    *
-   * <p>错误码约定使用小写字母，以点号分层、下划线分隔层内单词，例如
-   * {@code article.password_required}。本地化消息资源使用
-   * {@code <code>.title} 和 {@code <code>.detail} 作为键。
+   * <p>错误码格式为 {@code 域[.子域...].错误标识}，使用点号 {@code .} 分隔域、
+   * 子域和最终的错误标识，支持多级子域，不限定为两段。例如
+   * {@code article.password_required} 中的域为 {@code article}，
+   * {@code upgrade.package.not_found} 中的域为 {@code upgrade}、子域为 {@code package}。
+   * 各段使用小写字母和数字，当前约定以下划线分隔段内单词。
+   *
+   * <p>按域分类时应使用以点号结尾的完整前缀，例如 {@code upgrade.} 或
+   * {@code upgrade.package.}，避免匹配到名称相近但不属于该域的错误码。
+   * 具体业务判断应使用完整错误码，不应仅凭域前缀推断处理动作。
+   *
+   * <p>本地化消息资源使用 {@code <code>.title} 和 {@code <code>.detail} 作为键。
    *
    * @return 非空的业务错误码
    */
