@@ -86,7 +86,8 @@
 
 - 消息按领域放在 `blog-api/src/main/resources/problems/<领域>/`，不再集中在 `i18n/errors`。
 - 每个领域的默认简体中文文件为 `messages.properties`，英文文件为 `messages_en.properties`。
-- 所有资源显式按 UTF-8 加载，消息键为 `code.title` 和 `code.detail`。
+- 所有资源显式按 UTF-8 加载，正文直接使用完整 `code` 作为键，标题使用 `code.title`。
+  这只影响资源键，HTTP 响应仍使用 `title` 和 `detail` 字段。
 - 参数使用 `MessageFormat` 的 `{0}` 等占位符；单引号需按其规则转义。
 - `Accept-Language` 按语言范围和权重匹配简体中文、英文；缺失、非法或不支持时回退中文。
 - 禁止回退服务器系统 Locale。响应包含 `Content-Language` 和 `Vary: Accept-Language`。
@@ -105,7 +106,7 @@
 | `problems/backup/` | 备份问题 |
 | `problems/validation/` | 字段校验消息 |
 
-文件内保留完整消息键，例如 `maintenance.upgrade.package.not_found.detail`。
+文件内保留完整消息键，例如 `maintenance.upgrade.package.not_found`。
 目录按领域职责组织，不要求与错误码每一级子域一一对应。
 `ProblemResponses` 在启动时直接扫描 `classpath*:problems/**/messages.properties`，
 自动提取 basename，按名称排序后统一加载并按完整键查找；支持目录及 JAR 中的资源和多级领域目录。
@@ -181,14 +182,14 @@ throw new ProblemException(CommonProblems.PAGE_SIZE_EXCEEDED, 100);
 
 ```properties
 request.page_size_exceeded.title=分页大小超出限制
-request.page_size_exceeded.detail=每页大小不能超过 {0}。
+request.page_size_exceeded=每页大小不能超过 {0}。
 ```
 
 英文资源 `problems/common/messages_en.properties`：
 
 ```properties
 request.page_size_exceeded.title=Page size limit exceeded
-request.page_size_exceeded.detail=The page size must not exceed {0}.
+request.page_size_exceeded=The page size must not exceed {0}.
 ```
 
 `{0}` 对应异常构造器中第一个消息参数，而不是错误码或 HTTP 状态。
@@ -234,7 +235,7 @@ else if (code.startsWith('maintenance.upgrade.package.')) {
 
 1. 选择稳定的域、子域和错误标识，确认不存在语义相同的已有问题。
 2. 在所属领域定义 `Problem`，明确默认 HTTP 状态；不要仅按状态猜测业务错误码。
-3. 在所属领域的两种语言资源中补齐 `.title`、`.detail`，保持模板参数兼容；新增目录会在启动时自动发现。
+3. 在所属领域的两种语言资源中补齐 `code` 正文和 `code.title` 标题，保持模板参数兼容；新增目录会在启动时自动发现。
 4. 将问题加入 `ProblemCatalog`；非枚举常量额外补充清单防遗漏检查。
 5. 在真实业务判断点抛出 `ProblemException`，补充错误码、状态及响应测试。
 6. 只有需要特殊交互时才新增客户端分支，其余错误使用通用展示。

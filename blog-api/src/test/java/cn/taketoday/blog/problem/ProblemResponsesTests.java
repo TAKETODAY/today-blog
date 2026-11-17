@@ -113,7 +113,7 @@ class ProblemResponsesTests {
     for (Problem type : ProblemCatalog.all()) {
       assertThat(codes.add(type.code())).isTrue();
       assertThat(type.code()).matches("[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+");
-      for (String suffix : new String[] { ".title", ".detail" }) {
+      for (String suffix : new String[] { ".title", "" }) {
         String key = type.code() + suffix;
         assertThat(chinese.getProperty(key)).isNotBlank();
         assertThat(english.getProperty(key)).isNotBlank();
@@ -188,15 +188,15 @@ class ProblemResponsesTests {
     for (var field : cn.taketoday.blog.maintenance.MaintenanceProblems.class.getFields()) {
       if (field.getType() == Problem.class) {
         Problem problem = (Problem) field.get(null);
-        for (String suffix : new String[] { ".title", ".detail" }) {
+        for (String suffix : new String[] { ".title", "" }) {
           String key = problem.code() + suffix;
           assertThat(chinese.getProperty(key)).as(key).isNotBlank();
           assertThat(english.getProperty(key)).as(key).isNotBlank();
         }
         assertThat(problems.create(problem, request("en")).getDetail())
-                .isEqualTo(english.getProperty(problem.code() + ".detail"));
+                .isEqualTo(english.getProperty(problem.code()));
         assertThat(problems.create(problem, request("zh-CN")).getDetail())
-                .isEqualTo(chinese.getProperty(problem.code() + ".detail"));
+                .isEqualTo(chinese.getProperty(problem.code()));
       }
     }
   }

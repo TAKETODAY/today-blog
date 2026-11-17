@@ -50,7 +50,7 @@ public interface Problem {
    * {@code upgrade.package.}，避免匹配到名称相近但不属于该域的错误码。
    * 具体业务判断应使用完整错误码，不应仅凭域前缀推断处理动作。
    *
-   * <p>本地化消息资源使用 {@code <code>.title} 和 {@code <code>.detail} 作为键。
+   * <p>本地化消息资源直接使用 {@code <code>} 作为正文键，使用 {@code <code>.title} 作为标题键。
    *
    * @return 非空的业务错误码
    */

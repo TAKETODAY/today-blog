@@ -109,7 +109,7 @@ public final class ProblemResponses {
     ProblemDetail detail = ProblemDetail.forStatus(problem.status());
     detail.setType(problem.type());
     detail.setTitle(message(problem.code() + ".title", locale, "请求失败", "Request failed"));
-    detail.setDetail(message(problem.code() + ".detail", locale, "暂时无法完成操作，请稍后重试。",
+    detail.setDetail(message(problem.code(), locale, "暂时无法完成操作，请稍后重试。",
             "Unable to complete the operation. Please try again later.", arguments));
     detail.setProperty("code", problem.code());
     return detail;
