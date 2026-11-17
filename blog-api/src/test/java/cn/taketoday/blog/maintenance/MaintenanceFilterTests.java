@@ -17,6 +17,7 @@
 
 package cn.taketoday.blog.maintenance;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,6 +27,7 @@ import infra.context.ApplicationEventPublisher;
 import infra.context.availability.ApplicationAvailability;
 import infra.context.support.AbstractApplicationContext;
 import infra.core.io.PathMatchingPatternResourceLoader;
+import infra.http.ProblemDetail;
 import infra.web.mock.MockHttpContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,28 +41,33 @@ class MaintenanceFilterTests {
             true, "系统升级中", 60, MaintenanceStatus.Source.MANUAL));
 
     AtomicBoolean proceeded = new AtomicBoolean();
-    MockHttpContext context = request("GET", "/api/articles");
+    RecordingHttpContext context = request("GET", "/api/articles");
 
     filter.doFilter(context, ignored -> proceeded.set(true));
 
     assertThat(proceeded).isFalse();
     assertThat(context.getStatus()).isEqualTo(503);
     assertThat(context.responseHeaders().getFirst("Retry-After")).isEqualTo("60");
-    assertThat(context.getResponse().getContentAsString()).contains("系统升级中");
+    assertThat(context.responseHeaders().getFirst("Content-Type")).contains("application/problem+json");
+    assertThat(context.getSentProblem().getDetail()).isEqualTo("系统升级中");
   }
 
   @Test
-  void localizesDefaultMaintenanceWithoutMvcContext() throws Exception {
-    MockHttpContext context = request("GET", "/api/articles");
+  void localizesDefaultMaintenance() throws Exception {
+    RecordingHttpContext context = request("GET", "/api/articles");
     context.getRequest().addHeader("Accept-Language", "en-US");
     filter(new MaintenanceStatus(true, null, 30, MaintenanceStatus.Source.MANUAL))
             .doFilter(context, ignored -> {
             });
     assertThat(context.responseHeaders().getFirst("Content-Type")).contains("application/problem+json");
     assertThat(context.responseHeaders().getFirst("Content-Language")).isEqualTo("en");
-    assertThat(context.getResponse().getContentAsString())
-            .contains("System under maintenance", "\"code\":\"maintenance.under_maintenance\"")
-            .doesNotContain("\"properties\"");
+    assertThat(context.getSentProblem())
+            .satisfies(problem -> {
+              assertThat(problem.getTitle()).isEqualTo("System under maintenance");
+              assertThat(problem.getDetail()).isEqualTo("The system is under maintenance. Please try again later.");
+              assertThat(problem.getProperties()).containsOnlyKeys("code");
+              assertThat(problem.getProperty("code")).isEqualTo("maintenance.under_maintenance");
+            });
   }
 
   @Test
@@ -141,10 +148,30 @@ class MaintenanceFilterTests {
     return new MaintenanceFilter(serverStatus, new ProblemResponses(new PathMatchingPatternResourceLoader()));
   }
 
-  private static MockHttpContext request(String method, String uri) {
-    MockHttpContext context = new MockHttpContext();
+  private static RecordingHttpContext request(String method, String uri) {
+    RecordingHttpContext context = new RecordingHttpContext();
     context.getRequest().setMethod(method);
     context.getRequest().setRequestURI(uri);
     return context;
+  }
+
+  /**
+   * 记录过滤器直接发送的问题响应，避免单元测试依赖完整的 MVC 调度上下文。
+   */
+  private static final class RecordingHttpContext extends MockHttpContext {
+
+    private @Nullable ProblemDetail sentProblem;
+
+    @Override
+    public void send(@Nullable Object result) {
+      if (result instanceof ProblemDetail problem) {
+        this.sentProblem = problem;
+      }
+    }
+
+    ProblemDetail getSentProblem() {
+      assertThat(sentProblem).isNotNull();
+      return sentProblem;
+    }
   }
 }

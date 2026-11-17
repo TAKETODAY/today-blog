@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TreeSet;
 
-import cn.taketoday.blog.util.ObjectUtils;
 import infra.context.support.ResourceBundleMessageSource;
 import infra.core.io.PatternResourceLoader;
 import infra.http.HttpHeaders;
@@ -149,12 +148,6 @@ public final class ProblemResponses {
             .headers(headers)
             .contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .body(problem);
-  }
-
-  public void write(HttpContext request, ProblemDetail problem) throws IOException {
-    request.setStatus(problem.getStatus());
-    prepare(request);
-    ObjectUtils.writeValue(request, problem);
   }
 
   public void prepare(HttpContext request) {

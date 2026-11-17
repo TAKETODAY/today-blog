@@ -35,6 +35,7 @@ import infra.dao.DataAccessResourceFailureException;
 import infra.http.HttpHeaders;
 import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
+import infra.http.MediaType;
 import infra.http.ProblemDetail;
 import infra.http.ResponseEntity;
 import infra.http.converter.HttpMessageNotReadableException;
@@ -204,17 +205,18 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   protected ResponseEntity<@Nullable Object> createResponseEntity(@Nullable Object body,
           @Nullable HttpHeaders headers, HttpStatusCode status, HttpContext request) {
     ProblemDetail problem;
-    if (body instanceof ProblemDetail candidate && candidate.getProperties() != null
-            && candidate.getProperties().containsKey("code")) {
+    if (body instanceof ProblemDetail candidate && candidate.getProperty("code") != null) {
       problem = candidate;
     }
     else {
       problem = problems.create(CommonProblems.forStatus(status), request);
     }
-    problem.setStatus(status.value());
+    problem.setStatus(status);
     problems.prepare(request);
-    return ResponseEntity.status(status).headers(headers)
-            .contentType(infra.http.MediaType.APPLICATION_PROBLEM_JSON).body(problem);
+    return ResponseEntity.status(status)
+            .headers(headers)
+            .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+            .body(problem);
   }
 
 }
