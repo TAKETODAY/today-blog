@@ -7,11 +7,11 @@
 
 ```json
 {
-  "type": "urn:today-blog:problem:system.maintenance",
+  "type": "urn:today-blog:problem:maintenance.under_maintenance",
   "title": "系统维护中",
   "status": 503,
   "detail": "系统维护中，请稍后重试。",
-  "code": "system.maintenance"
+  "code": "maintenance.under_maintenance"
 }
 ```
 
@@ -22,7 +22,7 @@
 - `instance`：目前不主动生成，也未新增请求追踪系统。
 
 完整错误码用于登录、文章密码、维护等特殊动作。分类必须使用带点号的前缀，
-例如 `upgrade.`，不能认为同一前缀下的错误都应采取相同动作。
+例如 `maintenance.upgrade.`，不能认为同一前缀下的错误都应采取相同动作。
 未知错误码使用通用展示，不能要求客户端穷举。
 
 ### 错误码格式
@@ -32,7 +32,7 @@
 | 示例 | 域 | 子域 | 错误标识 |
 | --- | --- | --- | --- |
 | `article.password_required` | `article` | 无 | `password_required` |
-| `upgrade.package.not_found` | `upgrade` | `package` | `not_found` |
+| `maintenance.upgrade.package.not_found` | `maintenance` | `upgrade`、`package` | `not_found` |
 | `notification.mail.not_retryable` | `notification` | `mail` | `not_retryable` |
 
 各段以小写字母开头，使用小写字母、数字和下划线；当前协议以下划线分隔段内单词，
@@ -49,11 +49,11 @@
 
 | 定义 | 覆盖范围 |
 | --- | --- |
-| `error/CommonProblems` | HTTP 通用请求、分页、日期、认证、维护及内部错误 |
+| `problem/CommonProblems` | HTTP 通用请求、分页、日期、认证及内部错误 |
 | `service/ArticleProblems` | 文章存在性、可见性、访问密码、置顶与必填项 |
 | `service/ContentProblems` | 分类、标签、评论、附件、邮件重试 |
 | `service/UserProblems` | 用户存在性、账号状态、密码修改 |
-| `maintenance/upgrade/UpgradeProblems` | 升级包、记录、映射、环境及任务提交 |
+| `maintenance/MaintenanceProblems` | 维护状态、升级包、记录、映射、环境及任务提交（接口常量） |
 | `maintenance/backup/BackupProblems` | 备份存在性、执行器可用性 |
 
 以下为通用码及需特殊处理的代表性错误；完整列表以领域枚举及总清单为准。
@@ -75,8 +75,8 @@
 | `resource.conflict` | 409 | 通用资源状态冲突 |
 | `article.password_required` | 403 | 需要文章密码 |
 | `article.password_invalid` | 403 | 文章密码错误 |
-| `system.maintenance` | 503 | 主动维护 |
-| `system.unavailable` | 503 | 服务暂不可用，不表示主动维护 |
+| `maintenance.under_maintenance` | 503 | 主动维护 |
+| `system.service_unavailable` | 503 | 服务暂不可用，不表示主动维护 |
 | `system.internal_error` | 500 | 内部错误，原因只记录日志 |
 
 旧异常根据状态选择通用 code，但保留原 HTTP 状态，不能从通用 code 推断实际状态。
@@ -84,14 +84,36 @@
 
 ## 消息与国际化
 
-- 默认简体中文：`blog-api/src/main/resources/i18n/errors.properties`。
-- 英文：`blog-api/src/main/resources/i18n/errors_en.properties`。
+- 消息按领域放在 `blog-api/src/main/resources/problems/<领域>/`，不再集中在 `i18n/errors`。
+- 每个领域的默认简体中文文件为 `messages.properties`，英文文件为 `messages_en.properties`。
 - 所有资源显式按 UTF-8 加载，消息键为 `code.title` 和 `code.detail`。
 - 参数使用 `MessageFormat` 的 `{0}` 等占位符；单引号需按其规则转义。
 - `Accept-Language` 按语言范围和权重匹配简体中文、英文；缺失、非法或不支持时回退中文。
 - 禁止回退服务器系统 Locale。响应包含 `Content-Language` 和 `Vary: Accept-Language`。
 - 目标语言缺键时先回退默认资源；加载或格式化失败时记录告警并使用安全兜底，不能输出消息键。
 - 维护响应继续使用 `Retry-After` 和 `Cache-Control: no-store`。
+
+### 领域资源目录
+
+| 目录（相对于 `src/main/resources/`） | 维护内容 |
+| --- | --- |
+| `problems/common/` | 通用请求、认证、资源与系统错误 |
+| `problems/article/` | 文章与文章访问密码 |
+| `problems/user/` | 用户资料、密码与账号状态 |
+| `problems/content/` | 分类、标签、评论、附件与邮件重试 |
+| `problems/maintenance/` | 维护状态与在线升级 |
+| `problems/backup/` | 备份问题 |
+| `problems/validation/` | 字段校验消息 |
+
+文件内保留完整消息键，例如 `maintenance.upgrade.package.not_found.detail`。
+目录按领域职责组织，不要求与错误码每一级子域一一对应。
+`ProblemResponses` 在启动时直接扫描 `classpath*:problems/**/messages.properties`，
+自动提取 basename，按名称排序后统一加载并按完整键查找；支持目录及 JAR 中的资源和多级领域目录。
+业务代码不需要知道资源路径，也不根据错误码动态推导文件位置。
+新增领域目录无需修改 Java 清单，同时提供中英文文件即可；扫描只在初始化时执行，不支持运行时热发现。
+扫描失败、没有发现默认消息文件或不同类路径位置使用相同 basename 时启动失败，避免静默覆盖。
+JAR 应保留 `problems/` 目录条目；Native Image 还需在构建时包含消息资源与资源包，不能假定 JVM 扫描测试代表原生镜像已验证。
+不同领域之间不得重复定义消息键，同一文件内也不得重复，以免依赖加载顺序覆盖文案。
 
 ## 使用方法
 
@@ -111,7 +133,7 @@ ProblemException.notNull(article, ArticleProblems.NOT_FOUND);
 
 ### 在 Service 中使用
 
-`Problem` 和 `ProblemException` 位于公共 `error` 包，Service 可以直接使用。
+`Problem` 和 `ProblemException` 位于公共 `problem` 包，Service 可以直接使用。
 以下为 Service 内部的示意方法，其中 `getById` 为既有查询方法：
 
 ```java
@@ -126,7 +148,7 @@ Service 决定具体业务问题并向上抛出；Controller 通常不必捕获�
 `ExceptionHandling` 会统一交给 `ProblemResponses` 转为本地化 HTTP 响应。
 不要为了生成错误响应而向 Service 传入 `HttpContext`、响应对象或已经翻译的消息。
 
-当前 `Problem` 包含 `HttpStatus`，属于带 HTTP 语义的应用错误契约，
+当前 `Problem` 包含 `HttpStatusCode`，属于带 HTTP 语义的应用错误契约，
 不是完全独立于传输协议的领域模型。它可以在进程内部跨层传播，
 但不能直接当作 RPC 错误报文或序列化 Java 异常跨进程传递。
 
@@ -155,14 +177,14 @@ throw new ProblemException(problem, "email");
 throw new ProblemException(CommonProblems.PAGE_SIZE_EXCEEDED, 100);
 ```
 
-中文资源 `errors.properties`：
+中文资源 `problems/common/messages.properties`：
 
 ```properties
 request.page_size_exceeded.title=分页大小超出限制
 request.page_size_exceeded.detail=每页大小不能超过 {0}。
 ```
 
-英文资源 `errors_en.properties`：
+英文资源 `problems/common/messages_en.properties`：
 
 ```properties
 request.page_size_exceeded.title=Page size limit exceeded
@@ -186,7 +208,8 @@ request.page_size_exceeded.detail=The page size must not exceed {0}.
 public String email;
 ```
 
-对应的 `validation.email.required` 和 `validation.email.invalid` 必须在两种语言资源中定义。
+对应的 `validation.email.required` 和 `validation.email.invalid` 必须在
+`problems/validation/messages.properties` 和 `messages_en.properties` 中定义。
 请求触发校验失败后，顶层错误码为 `request.validation_failed`，
 具体字段信息位于 `errors` 数组，不包含被拒绝的输入值。
 
@@ -199,7 +222,7 @@ const code = problem.code || '';
 if (code === 'article.password_required' || code === 'article.password_invalid') {
   // 展示文章密码输入界面。
 }
-else if (code.startsWith('upgrade.package.')) {
+else if (code.startsWith('maintenance.upgrade.package.')) {
   // 将错误归类到升级包相关问题，具体动作仍需检查完整错误码。
 }
 ```
@@ -211,7 +234,7 @@ else if (code.startsWith('upgrade.package.')) {
 
 1. 选择稳定的域、子域和错误标识，确认不存在语义相同的已有问题。
 2. 在所属领域定义 `Problem`，明确默认 HTTP 状态；不要仅按状态猜测业务错误码。
-3. 在两种语言资源中补齐 `.title`、`.detail`，保持模板参数兼容。
+3. 在所属领域的两种语言资源中补齐 `.title`、`.detail`，保持模板参数兼容；新增目录会在启动时自动发现。
 4. 将问题加入 `ProblemCatalog`；非枚举常量额外补充清单防遗漏检查。
 5. 在真实业务判断点抛出 `ProblemException`，补充错误码、状态及响应测试。
 6. 只有需要特殊交互时才新增客户端分支，其余错误使用通用展示。
@@ -239,6 +262,7 @@ else if (code.startsWith('upgrade.package.')) {
 
 ## 验证
 
-`ProblemResponsesTests` 检查错误码唯一性、命名格式、翻译键完整性、模板参数、语言协商和 JSON 扩展展开。
+`ProblemResponsesTests` 检查错误码唯一性、命名格式、各领域翻译键完整性、文件内及跨领域重复键、
+目录与 JAR 资源发现、模板参数、语言协商和 JSON 扩展展开。
 `ExceptionHandlingTests` 检查业务兼容、服务器信息脱敏、HTTP 头保留和类型化响应。
 `MaintenanceFilterTests` 覆盖早期过滤器的本地化与维护放行规则。

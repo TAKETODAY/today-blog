@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.problem.ProblemResponses;
 import cn.taketoday.blog.service.ArticleProblems;
+import infra.core.io.PathMatchingPatternResourceLoader;
 import infra.http.HttpHeaders;
 import infra.http.HttpStatus;
 import infra.http.ProblemDetail;
@@ -38,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class ExceptionHandlingTests {
 
-  private final ExceptionHandling handler = new ExceptionHandling(new ProblemResponses());
+  private final ExceptionHandling handler = new ExceptionHandling(new ProblemResponses(new PathMatchingPatternResourceLoader()));
 
   @Test
   void typedBusinessErrorsUseRequestLanguage() {

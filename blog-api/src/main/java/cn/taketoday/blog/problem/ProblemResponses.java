@@ -23,9 +23,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
+import java.util.TreeSet;
 
 import cn.taketoday.blog.util.ObjectUtils;
 import infra.context.support.ResourceBundleMessageSource;
+import infra.core.io.PatternResourceLoader;
 import infra.http.HttpHeaders;
 import infra.http.HttpStatusCode;
 import infra.http.MediaType;
@@ -34,7 +36,7 @@ import infra.http.ResponseEntity;
 import infra.stereotype.Component;
 import infra.validation.ObjectError;
 import infra.web.HttpContext;
-import infra.web.HttpContextUtils;
+import infra.web.util.WebUtils;
 import jakarta.validation.ConstraintViolation;
 import lombok.CustomLog;
 
@@ -52,14 +54,54 @@ public final class ProblemResponses {
 
   private final ResourceBundleMessageSource messages = new ResourceBundleMessageSource();
 
-  public ProblemResponses() {
-    messages.setBasename("i18n/errors");
+  public ProblemResponses(PatternResourceLoader patternResourceLoader) {
+    messages.setBasenames(discoverMessageBasenames(patternResourceLoader).toArray(String[]::new));
     messages.setDefaultCharset(StandardCharsets.UTF_8);
-    messages.setFallbackToSystemLocale(false);
+    messages.setDefaultLocale(Locale.CHINESE);
+  }
+
+  /**
+   * 启动时发现类路径目录及 JAR 中的消息资源，按 basename 排序以保持加载顺序稳定。
+   */
+  static List<String> discoverMessageBasenames(PatternResourceLoader loader) {
+    TreeSet<String> basenames = new TreeSet<>();
+    try {
+      for (var resource : loader.getResources("classpath*:problems/**/messages.properties")) {
+        String url = resource.getURL().toExternalForm();
+        String basename = messageBasename(loader, url);
+        if (!basenames.add(basename)) {
+          throw new IllegalStateException("Duplicate problem message basename: " + basename);
+        }
+      }
+    }
+    catch (IOException ex) {
+      throw new IllegalStateException("Cannot discover problem messages", ex);
+    }
+    if (basenames.isEmpty()) {
+      throw new IllegalStateException("No problem messages found under classpath*:problems/");
+    }
+    return List.copyOf(basenames);
+  }
+
+  /**
+   * 通过类路径精确查找确认相对路径，避免物理目录中的同名 problems 路径干扰。
+   */
+  private static String messageBasename(PatternResourceLoader loader, String url) throws IOException {
+    int index = url.indexOf("/problems/");
+    while (index >= 0) {
+      String path = url.substring(index + 1);
+      for (var candidate : loader.getResources("classpath*:" + path)) {
+        if (candidate.getURL().toExternalForm().equals(url)) {
+          return path.substring(0, path.length() - ".properties".length());
+        }
+      }
+      index = url.indexOf("/problems/", index + 1);
+    }
+    throw new IllegalStateException("Cannot determine problem message basename: " + url);
   }
 
   public Locale getLocale(HttpContext request) {
-    return HttpContextUtils.getLocale(request);
+    return WebUtils.resolveLocale(request);
   }
 
   public ProblemDetail create(Problem problem, HttpContext request, Object... arguments) {

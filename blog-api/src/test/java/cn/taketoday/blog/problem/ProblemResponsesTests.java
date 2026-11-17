@@ -18,8 +18,11 @@
 package cn.taketoday.blog.problem;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,8 +31,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 import cn.taketoday.blog.util.ObjectUtils;
+import infra.core.io.PathMatchingPatternResourceLoader;
 import infra.web.mock.MockHttpContext;
 import infra.http.HttpStatus;
 import infra.validation.ObjectError;
@@ -47,7 +53,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class ProblemResponsesTests {
 
-  private final ProblemResponses problems = new ProblemResponses();
+  private final ProblemResponses problems = new ProblemResponses(new PathMatchingPatternResourceLoader());
 
   @Test
   void createsDefaultProblemThroughStaticFactory() {
@@ -100,8 +106,8 @@ class ProblemResponsesTests {
 
   @Test
   void allTypesHaveCompleteUniqueMessagesAndCompatibleTemplates() throws Exception {
-    Properties chinese = load("errors.properties");
-    Properties english = load("errors_en.properties");
+    Properties chinese = loadMessages("");
+    Properties english = loadMessages("_en");
     assertThat(english.keySet()).isEqualTo(chinese.keySet());
     HashSet<String> codes = new HashSet<>();
     for (Problem type : ProblemCatalog.all()) {
@@ -162,11 +168,118 @@ class ProblemResponsesTests {
     String email = "";
   }
 
+  @Test
+  void discoversEveryDomainResource() throws Exception {
+    Path root = Path.of(ProblemResponsesTests.class.getResource("/problems").toURI());
+    try (var paths = Files.walk(root)) {
+      var basenames = paths.filter(path -> path.getFileName().toString().equals("messages.properties"))
+              .map(path -> "problems/" + root.relativize(path).toString().replace('\\', '/'))
+              .map(path -> path.substring(0, path.length() - ".properties".length()))
+              .toList();
+      assertThat(ProblemResponses.discoverMessageBasenames(new PathMatchingPatternResourceLoader()))
+              .containsExactlyInAnyOrderElementsOf(basenames);
+    }
+  }
+
+  @Test
+  void maintenanceConstantsHaveLocalizedMessages() throws Exception {
+    Properties chinese = loadMessages("");
+    Properties english = loadMessages("_en");
+    for (var field : cn.taketoday.blog.maintenance.MaintenanceProblems.class.getFields()) {
+      if (field.getType() == Problem.class) {
+        Problem problem = (Problem) field.get(null);
+        for (String suffix : new String[] { ".title", ".detail" }) {
+          String key = problem.code() + suffix;
+          assertThat(chinese.getProperty(key)).as(key).isNotBlank();
+          assertThat(english.getProperty(key)).as(key).isNotBlank();
+        }
+        assertThat(problems.create(problem, request("en")).getDetail())
+                .isEqualTo(english.getProperty(problem.code() + ".detail"));
+        assertThat(problems.create(problem, request("zh-CN")).getDetail())
+                .isEqualTo(chinese.getProperty(problem.code() + ".detail"));
+      }
+    }
+  }
+
+  @Test
+  void discoversNestedDirectoriesAndJarResources(@TempDir Path directory) throws Exception {
+    Path classes = directory.resolve("problems/classes");
+    Path nested = classes.resolve("problems/custom/problems/nested/messages.properties");
+    Files.createDirectories(nested.getParent());
+    Files.writeString(nested, "custom.title=Custom");
+    Files.writeString(nested.resolveSibling("messages_en.properties"), "custom.title=English");
+    Path jar = directory.resolve("problems/messages.jar");
+    try (var output = new JarOutputStream(Files.newOutputStream(jar))) {
+      for (String entry : new String[] { "problems/", "problems/plugin/", "problems/plugin/messages.properties" }) {
+        output.putNextEntry(new JarEntry(entry));
+        if (entry.endsWith(".properties")) {
+          output.write("plugin.title=Plugin".getBytes(StandardCharsets.UTF_8));
+        }
+        output.closeEntry();
+      }
+    }
+    try (var loader = new URLClassLoader(new URL[] { classes.toUri().toURL(), jar.toUri().toURL() }, null)) {
+      assertThat(ProblemResponses.discoverMessageBasenames(new PathMatchingPatternResourceLoader(loader)))
+              .containsExactly("problems/custom/problems/nested/messages", "problems/plugin/messages");
+    }
+  }
+
+  @Test
+  void rejectsMissingMessageResources(@TempDir Path directory) throws Exception {
+    try (var loader = new URLClassLoader(new URL[] { directory.toUri().toURL() }, null)) {
+      assertThatThrownBy(() -> ProblemResponses.discoverMessageBasenames(new PathMatchingPatternResourceLoader(loader)))
+              .isInstanceOf(IllegalStateException.class)
+              .hasMessageContaining("No problem messages found");
+    }
+  }
+
+  @Test
+  void rejectsDuplicateBasenamesAcrossClasspathRoots(@TempDir Path directory) throws Exception {
+    Path first = directory.resolve("first");
+    Path second = directory.resolve("second");
+    for (Path root : new Path[] { first, second }) {
+      Path message = root.resolve("problems/shared/messages.properties");
+      Files.createDirectories(message.getParent());
+      Files.writeString(message, "shared.title=Shared");
+    }
+    try (var loader = new URLClassLoader(new URL[] { first.toUri().toURL(), second.toUri().toURL() }, null)) {
+      assertThatThrownBy(() -> ProblemResponses.discoverMessageBasenames(new PathMatchingPatternResourceLoader(loader)))
+              .isInstanceOf(IllegalStateException.class)
+              .hasMessageContaining("Duplicate problem message basename: problems/shared/messages");
+    }
+  }
+
+  private static Properties loadMessages(String languageSuffix) throws Exception {
+    Properties combined = new Properties();
+    for (String basename : ProblemResponses.discoverMessageBasenames(new PathMatchingPatternResourceLoader())) {
+      Properties domain = load(basename + languageSuffix + ".properties");
+      Properties chinese = load(basename + ".properties");
+      assertThat(domain.keySet()).as(basename).isEqualTo(chinese.keySet());
+      for (String key : domain.stringPropertyNames()) {
+        assertThat(combined.containsKey(key)).as("Duplicate message key: %s", key).isFalse();
+        assertThat(domain.getProperty(key)).as(key).isNotBlank();
+        assertThat(new MessageFormat(domain.getProperty(key), Locale.ROOT).getFormatsByArgumentIndex().length)
+                .as(key)
+                .isEqualTo(new MessageFormat(chinese.getProperty(key), Locale.ROOT).getFormatsByArgumentIndex().length);
+        combined.setProperty(key, domain.getProperty(key));
+      }
+    }
+    return combined;
+  }
+
   private static Properties load(String file) throws Exception {
     Properties properties = new Properties();
-    try (var reader = new InputStreamReader(ProblemResponsesTests.class.getResourceAsStream("/i18n/" + file),
+    try (var reader = new InputStreamReader(ProblemResponsesTests.class.getResourceAsStream("/" + file),
             StandardCharsets.UTF_8)) {
-      properties.load(reader);
+      Properties unique = new Properties() {
+        @Override
+        public synchronized Object put(Object key, Object value) {
+          assertThat(containsKey(key)).as("Duplicate message key in %s: %s", file, key).isFalse();
+          return super.put(key, value);
+        }
+      };
+      unique.load(reader);
+      properties.putAll(unique);
     }
     return properties;
   }

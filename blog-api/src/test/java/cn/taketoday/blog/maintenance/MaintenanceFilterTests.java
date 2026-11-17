@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import cn.taketoday.blog.problem.ProblemResponses;
 import infra.context.ApplicationEventPublisher;
 import infra.context.availability.ApplicationAvailability;
+import infra.context.support.AbstractApplicationContext;
+import infra.core.io.PathMatchingPatternResourceLoader;
 import infra.web.mock.MockHttpContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -136,7 +138,7 @@ class MaintenanceFilterTests {
     ServerStatus serverStatus = new ServerStatus(
             mock(ApplicationAvailability.class), mock(ApplicationEventPublisher.class));
     serverStatus.setMaintenanceStatus(status);
-    return new MaintenanceFilter(serverStatus, new ProblemResponses());
+    return new MaintenanceFilter(serverStatus, new ProblemResponses(new PathMatchingPatternResourceLoader()));
   }
 
   private static MockHttpContext request(String method, String uri) {
