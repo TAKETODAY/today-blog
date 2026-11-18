@@ -44,7 +44,7 @@
 统一契约：`blog-api/src/main/java/cn/taketoday/blog/problem/Problem.java`。
 各领域枚举实现 `Problem`，定义 `code()` 和 `status()`；`type()` 默认从 code 派生。
 异常与响应仅依赖接口，不要求业务枚举继承集中式类型。
-`ProblemCatalog.all()` 显式汇总当前协议，供完整性检查使用，不参与运行时自动注册。
+错误码不需要集中登记；协议一致性测试从编译产物中发现领域枚举，并纳入维护模块的问题常量。
 不要在 properties 中配置状态或 URI。
 
 | 定义 | 覆盖范围 |
@@ -56,7 +56,7 @@
 | `maintenance/MaintenanceProblems` | 维护状态、升级包、记录、映射、环境及任务提交（接口常量） |
 | `maintenance/backup/BackupProblems` | 备份存在性、执行器可用性 |
 
-以下为通用码及需特殊处理的代表性错误；完整列表以领域枚举及总清单为准。
+以下为通用码及需特殊处理的代表性错误；完整列表以各领域定义为准。
 
 | code | 默认状态 | 含义 |
 | --- | ---: | --- |
@@ -111,7 +111,7 @@
 `ProblemResponses` 在启动时直接扫描 `classpath*:problems/**/messages.properties`，
 自动提取 basename，按名称排序后统一加载并按完整键查找；支持目录及 JAR 中的资源和多级领域目录。
 业务代码不需要知道资源路径，也不根据错误码动态推导文件位置。
-新增领域目录无需修改 Java 清单，同时提供中英文文件即可；扫描只在初始化时执行，不支持运行时热发现。
+新增领域目录只需同时提供中英文文件；扫描只在初始化时执行，不支持运行时热发现。
 扫描失败、没有发现默认消息文件或不同类路径位置使用相同 basename 时启动失败，避免静默覆盖。
 JAR 应保留 `problems/` 目录条目；Native Image 还需在构建时包含消息资源与资源包，不能假定 JVM 扫描测试代表原生镜像已验证。
 不同领域之间不得重复定义消息键，同一文件内也不得重复，以免依赖加载顺序覆盖文案。
@@ -162,13 +162,12 @@ Problem problem = Problem.of("request.parameter_missing", HttpStatus.BAD_REQUEST
 throw new ProblemException(problem, "email");
 ```
 
-静态工厂不自动注册错误码。新增稳定业务码仍需补齐两种语言的消息资源，
-并将常量纳入协议清单及相应测试；优先复用已有领域定义。
+静态工厂不自动注册错误码。新增稳定业务码仍需补齐两种语言的消息资源；优先复用已有领域定义。
 
 复用默认实现时，建议把问题保存为 `static final Problem` 常量，避免在每次请求中重复构造。
 也可以使用常量类组织领域问题，不要求所有问题都以枚举表示。
-当前 `ProblemCatalog` 使用枚举的 `values()` 汇总，防遗漏测试也只自动发现枚举；
-若引入常量类，必须显式加入其常量，并补充对应的防遗漏测试，不能认为现有扫描会自动覆盖。
+协议一致性测试自动发现枚举，并单独收集 `MaintenanceProblems` 的常量；
+若新增其他常量类，需显式将其纳入测试。
 
 ### 传递消息模板参数
 
@@ -197,7 +196,6 @@ request.page_size_exceeded=The page size must not exceed {0}.
 
 新增带参数的类型时，同时在两种资源中配置兼容模板，只传允许公开的参数。
 不可传入 SQL、凭据、内部异常或连接配置。
-新增领域枚举后，将其加入 `ProblemCatalog`；清单测试扫描编译产物中的所有 `Problem` 枚举，防止漏注册。
 
 ### 携带请求级 detail
 
@@ -250,7 +248,7 @@ else if (code.startsWith('maintenance.upgrade.package.')) {
 1. 选择稳定的域、子域和错误标识，确认不存在语义相同的已有问题。
 2. 在所属领域定义 `Problem`，明确默认 HTTP 状态；不要仅按状态猜测业务错误码。
 3. 在所属领域的两种语言资源中补齐 `code` 正文和 `code.title` 标题，保持模板参数兼容；新增目录会在启动时自动发现。
-4. 将问题加入 `ProblemCatalog`；非枚举常量额外补充清单防遗漏检查。
+4. 若新增非枚举常量类，将其纳入协议一致性测试；枚举无需登记。
 5. 在真实业务判断点抛出 `ProblemException`，补充错误码、状态及响应测试。
 6. 只有需要特殊交互时才新增客户端分支，其余错误使用通用展示。
 

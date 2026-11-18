@@ -27,13 +27,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
+import cn.taketoday.blog.maintenance.MaintenanceProblems;
 import cn.taketoday.blog.util.ObjectUtils;
 import infra.core.io.PathMatchingPatternResourceLoader;
 import infra.web.mock.MockHttpContext;
@@ -137,8 +140,8 @@ class ProblemResponsesTests {
     Properties english = loadMessages("_en");
     assertThat(english.keySet()).isEqualTo(chinese.keySet());
     HashSet<String> codes = new HashSet<>();
-    for (Problem type : ProblemCatalog.all()) {
-      assertThat(codes.add(type.code())).isTrue();
+    for (Problem type : discoverProblems()) {
+      assertThat(codes.add(type.code())).as("unique problem code: %s", type.code()).isTrue();
       assertThat(type.code()).matches("[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+");
       for (String suffix : new String[] { ".title", "" }) {
         String key = type.code() + suffix;
@@ -158,10 +161,9 @@ class ProblemResponsesTests {
     }
   }
 
-  @Test
-  void catalogIncludesEveryProblemEnum() throws Exception {
+  private static List<Problem> discoverProblems() throws Exception {
     Path root = Path.of(Problem.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-    HashSet<Problem> discovered = new HashSet<>();
+    List<Problem> discovered = new ArrayList<>();
     try (var paths = Files.walk(root.resolve("cn/taketoday/blog"))) {
       for (Path path : paths.filter(file -> file.toString().endsWith(".class")).toList()) {
         String name = root.relativize(path).toString().replace('/', '.').replace('\\', '.');
@@ -171,7 +173,19 @@ class ProblemResponsesTests {
         }
       }
     }
-    assertThat(ProblemCatalog.all()).containsExactlyInAnyOrderElementsOf(discovered);
+    assertThat(discovered).isNotEmpty();
+    discovered.addAll(maintenanceProblems());
+    return discovered;
+  }
+
+  private static List<Problem> maintenanceProblems() throws IllegalAccessException {
+    List<Problem> constants = new ArrayList<>();
+    for (var field : MaintenanceProblems.class.getFields()) {
+      if (field.getType() == Problem.class) {
+        constants.add((Problem) field.get(null));
+      }
+    }
+    return constants;
   }
 
   @Test
@@ -212,19 +226,11 @@ class ProblemResponsesTests {
   void maintenanceConstantsHaveLocalizedMessages() throws Exception {
     Properties chinese = loadMessages("");
     Properties english = loadMessages("_en");
-    for (var field : cn.taketoday.blog.maintenance.MaintenanceProblems.class.getFields()) {
-      if (field.getType() == Problem.class) {
-        Problem problem = (Problem) field.get(null);
-        for (String suffix : new String[] { ".title", "" }) {
-          String key = problem.code() + suffix;
-          assertThat(chinese.getProperty(key)).as(key).isNotBlank();
-          assertThat(english.getProperty(key)).as(key).isNotBlank();
-        }
-        assertThat(problems.create(problem, request("en")).getDetail())
-                .isEqualTo(english.getProperty(problem.code()));
-        assertThat(problems.create(problem, request("zh-CN")).getDetail())
-                .isEqualTo(chinese.getProperty(problem.code()));
-      }
+    for (Problem problem : maintenanceProblems()) {
+      assertThat(problems.create(problem, request("en")).getDetail())
+              .isEqualTo(english.getProperty(problem.code()));
+      assertThat(problems.create(problem, request("zh-CN")).getDetail())
+              .isEqualTo(chinese.getProperty(problem.code()));
     }
   }
 
