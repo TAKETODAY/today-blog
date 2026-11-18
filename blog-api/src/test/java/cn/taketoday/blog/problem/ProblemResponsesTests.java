@@ -73,7 +73,6 @@ class ProblemResponsesTests {
             .isEqualTo(new DefaultProblem("request.parameter_missing", HttpStatus.BAD_REQUEST));
     assertThat(problem.code()).isEqualTo("request.parameter_missing");
     assertThat(problem.status()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(problem.type().toString()).isEqualTo("urn:today-blog:problem:request.parameter_missing");
     var exception = new ProblemException(problem, "email");
     assertThat(exception.getProblem()).isSameAs(problem);
     var response = problems.response(exception.getProblem(), request("en"), exception.getArguments());
@@ -121,7 +120,6 @@ class ProblemResponsesTests {
     var problem = problems.create(CommonProblems.PARAMETER_MISSING, request, "email");
     assertThat(problem.getTitle()).isEqualTo("Missing request parameter");
     assertThat(problem.getDetail()).isEqualTo("A required parameter is missing: email.");
-    assertThat(problem.getType()).isEqualTo(CommonProblems.PARAMETER_MISSING.type());
     assertThat(problem.getProperties()).containsEntry("code", "request.parameter_missing");
   }
 

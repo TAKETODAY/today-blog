@@ -189,8 +189,7 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   protected ResponseEntity<@Nullable Object> createResponseEntity(@Nullable Object body,
           @Nullable HttpHeaders headers, HttpStatusCode status, HttpContext request) {
     ProblemDetail problem;
-    if (body instanceof ProblemDetail candidate && candidate.getProperties() != null
-            && candidate.getProperties().containsKey("code")) {
+    if (body instanceof ProblemDetail candidate && candidate.getProperty("code") != null) {
       problem = candidate;
     }
     else {

@@ -102,29 +102,22 @@ public final class ProblemResponses {
   }
 
   public ProblemDetail create(Problem problem, HttpContext request, Object... arguments) {
-    return create(problem, request, null, arguments);
+    return createWithDetail(problem, request, null, arguments);
   }
 
   /**
    * 创建问题响应；请求级 detail 作为消息键按请求语言解析，找不到消息键时保留原文，并覆盖默认 detail。
    */
-  public ProblemDetail createWithDetail(Problem problem, HttpContext request, @Nullable String customDetail,
-          Object... arguments) {
-    return create(problem, request, customDetail, arguments);
-  }
-
-  private ProblemDetail create(Problem problem, HttpContext request, @Nullable String customDetail,
-          Object[] arguments) {
+  public ProblemDetail createWithDetail(Problem problem, HttpContext request, @Nullable String customDetail, Object... arguments) {
     Locale locale = getLocale(request);
+    String code = problem.code();
     ProblemDetail detail = ProblemDetail.forStatus(problem.status());
-    detail.setType(problem.type());
-    detail.setTitle(message(problem.code() + ".title", locale, "请求失败", "Request failed"));
-    detail.setDetail(message(problem.code(), locale, "暂时无法完成操作，请稍后重试。",
-            "Unable to complete the operation. Please try again later.", arguments));
-    if (customDetail != null) {
-      detail.setDetail(customMessage(customDetail, locale, arguments));
-    }
-    detail.setProperty("code", problem.code());
+    detail.setTitle(message(code + ".title", locale, "请求失败", "Request failed"));
+    detail.setDetail(customDetail != null
+            ? customMessage(customDetail, locale, arguments)
+            : message(code, locale, "暂时无法完成操作，请稍后重试。",
+                    "Unable to complete the operation. Please try again later.", arguments));
+    detail.setProperty("code", code);
     return detail;
   }
 
@@ -140,7 +133,8 @@ public final class ProblemResponses {
 
   private String customMessage(String keyOrMessage, Locale locale, Object... arguments) {
     try {
-      return messages.getMessage(keyOrMessage, arguments, locale);
+      String message = messages.getMessage(keyOrMessage, arguments, null, locale);
+      return message != null ? message : keyOrMessage;
     }
     catch (RuntimeException ex) {
       return keyOrMessage;

@@ -17,13 +17,11 @@
 
 package cn.taketoday.blog.problem;
 
-import java.net.URI;
-
 import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
 
 /**
- * 定义可供客户端识别的问题类型，包括稳定错误码、默认 HTTP 状态和类型 URI。
+ * 定义可供客户端识别的问题类型，包括稳定错误码和默认 HTTP 状态。
  *
  * <p>领域可通过枚举实现此接口，也可使用 {@link #of(String, HttpStatus)} 创建
  * 不可变的默认实现。问题定义应保持稳定，不包含单次请求的数据或本地化文案；
@@ -64,21 +62,7 @@ public interface Problem {
   HttpStatusCode status();
 
   /**
-   * 返回标识此问题类型的稳定 URI。
-   *
-   * <p>默认返回 {@code urn:today-blog:problem:<code>}，其中 {@code <code>}
-   * 为 {@link #code()} 的返回值。此 URI 用作类型标识，不表示可访问的文档地址；
-   * 实现可按需覆盖此方法提供其他稳定 URI。
-   *
-   * @return 问题类型 URI
-   * @throws IllegalArgumentException 如果错误码导致生成的 URI 不合法
-   */
-  default URI type() {
-    return URI.create("urn:today-blog:problem:" + code());
-  }
-
-  /**
-   * 创建使用默认类型 URI 规则的不可变问题定义。
+   * 创建不可变的问题定义。
    *
    * <p>此方法不注册错误码或创建消息资源；调用方仍需为错误码配置相应的消息模板。
    *
