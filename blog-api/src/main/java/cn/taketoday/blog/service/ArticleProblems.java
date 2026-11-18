@@ -29,12 +29,12 @@ import infra.http.HttpStatus;
 public enum ArticleProblems implements Problem {
 
   NOT_FOUND("article.not_found", HttpStatus.NOT_FOUND),
+  URI_REQUIRED("article.uri_required", HttpStatus.BAD_REQUEST),
   NOT_ACCESSIBLE("article.not_accessible", HttpStatus.FORBIDDEN),
-  PASSWORD_REQUIRED("article.password_required", HttpStatus.FORBIDDEN),
-  PASSWORD_INVALID("article.password_invalid", HttpStatus.FORBIDDEN),
-  PIN_REQUIRES_PUBLISHED("article.pin_requires_published", HttpStatus.CONFLICT),
   TITLE_REQUIRED("article.title_required", HttpStatus.BAD_REQUEST),
-  URI_REQUIRED("article.uri_required", HttpStatus.BAD_REQUEST);
+  PASSWORD_INVALID("article.password_invalid", HttpStatus.FORBIDDEN),
+  PASSWORD_REQUIRED("article.password_required", HttpStatus.FORBIDDEN),
+  PIN_REQUIRES_PUBLISHED("article.pin_requires_published", HttpStatus.CONFLICT);
 
   private final String code;
 

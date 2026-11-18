@@ -440,8 +440,7 @@ public class ArticleService implements InitializingBean {
   private Article lockArticle(long id) {
     try (var query = repository.createQuery("select * from article where id = ? for update")) {
       query.addParameter(id);
-      List<Article> articles = query.fetch(Article.class);
-      Article article = articles.isEmpty() ? null : articles.get(0);
+      Article article = CollectionUtils.firstElement(query.fetch(Article.class));
       ProblemException.notNull(article, ArticleProblems.NOT_FOUND);
       return article;
     }

@@ -115,8 +115,7 @@ public final class ProblemResponses {
     detail.setTitle(message(code + ".title", locale, "请求失败", "Request failed"));
     detail.setDetail(customDetail != null
             ? customMessage(customDetail, locale, arguments)
-            : message(code, locale, "暂时无法完成操作，请稍后重试。",
-                    "Unable to complete the operation. Please try again later.", arguments));
+            : message(code, locale, "暂时无法完成操作，请稍后重试。", "Unable to complete the operation. Please try again later.", arguments));
     detail.setProperty("code", code);
     return detail;
   }
