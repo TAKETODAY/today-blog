@@ -6,6 +6,7 @@
 - `if`、`else`、`for`、`while`、`do` 等控制语句始终保留完整的 `{}`，即使语句体只有一行；语言不支持花括号的语法按其自身规范书写。
 - 块体采用多行格式：起始 `{` 后换行，语句逐行书写，结束 `}` 独占行；方法、构造器、`try/catch/finally` 和块形式的 lambda/Gradle 闭包同样遵循，不压缩成单行。
 - 修改既有文件时，所触及的代码遵循以上规则；未经要求不批量重排无关代码。
+- 新增 Java 顶层类型（包括测试）时，类级 Javadoc 必须包含 `@author <a href="https://github.com/TAKETODAY">Harry Yang</a>` 和 `@since <引入版本> <YYYY/MM/DD>`（例如 `@since 4.0 2026/11/18`）。修改已有类型时保留原有的 `@author` 和 `@since`。
 
 ## Java 文件版权头
 
