@@ -22,18 +22,25 @@ import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import cn.taketoday.blog.config.BlogLocaleResolver;
 import cn.taketoday.blog.problem.ProblemResponses;
+import infra.beans.factory.annotation.Autowired;
+import infra.context.ApplicationContext;
 import infra.context.ApplicationEventPublisher;
 import infra.context.availability.ApplicationAvailability;
-import infra.context.support.AbstractApplicationContext;
 import infra.core.io.PathMatchingPatternResourceLoader;
 import infra.http.ProblemDetail;
+import infra.test.context.junit.jupiter.JUnitConfig;
 import infra.web.mock.MockHttpContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+@JUnitConfig(BlogLocaleResolver.class)
 class MaintenanceFilterTests {
+
+  @Autowired
+  ApplicationContext applicationContext;
 
   @Test
   void rejectsRequestsDuringMaintenance() throws Exception {
@@ -148,8 +155,8 @@ class MaintenanceFilterTests {
     return new MaintenanceFilter(serverStatus, new ProblemResponses(new PathMatchingPatternResourceLoader()));
   }
 
-  private static RecordingHttpContext request(String method, String uri) {
-    RecordingHttpContext context = new RecordingHttpContext();
+  private RecordingHttpContext request(String method, String uri) {
+    RecordingHttpContext context = new RecordingHttpContext(applicationContext);
     context.getRequest().setMethod(method);
     context.getRequest().setRequestURI(uri);
     return context;
@@ -161,6 +168,10 @@ class MaintenanceFilterTests {
   private static final class RecordingHttpContext extends MockHttpContext {
 
     private @Nullable ProblemDetail sentProblem;
+
+    RecordingHttpContext(ApplicationContext applicationContext) {
+      super(applicationContext);
+    }
 
     @Override
     public void send(@Nullable Object result) {

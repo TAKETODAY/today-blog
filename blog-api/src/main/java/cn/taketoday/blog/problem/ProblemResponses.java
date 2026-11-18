@@ -35,6 +35,7 @@ import infra.http.ResponseEntity;
 import infra.stereotype.Component;
 import infra.validation.ObjectError;
 import infra.web.HttpContext;
+import infra.web.util.WebUtils;
 import jakarta.validation.ConstraintViolation;
 import lombok.CustomLog;
 
@@ -47,8 +48,6 @@ import lombok.CustomLog;
 @CustomLog
 @Component
 public final class ProblemResponses {
-
-  private static final List<Locale> SUPPORTED = List.of(Locale.SIMPLIFIED_CHINESE, Locale.ENGLISH);
 
   private final ResourceBundleMessageSource messages = new ResourceBundleMessageSource();
 
@@ -98,19 +97,8 @@ public final class ProblemResponses {
     throw new IllegalStateException("Cannot determine problem message basename: " + url);
   }
 
-  public Locale getLocale(HttpContext request) {
-    String header = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
-    if (header == null || header.isBlank()) {
-      return Locale.SIMPLIFIED_CHINESE;
-    }
-    try {
-      var ranges = Locale.LanguageRange.parse(header);
-      Locale locale = Locale.lookup(ranges, SUPPORTED);
-      return locale != null ? locale : Locale.SIMPLIFIED_CHINESE;
-    }
-    catch (IllegalArgumentException ex) {
-      return Locale.SIMPLIFIED_CHINESE;
-    }
+  private static Locale getLocale(HttpContext request) {
+    return WebUtils.resolveLocale(request);
   }
 
   public ProblemDetail create(Problem problem, HttpContext request, Object... arguments) {

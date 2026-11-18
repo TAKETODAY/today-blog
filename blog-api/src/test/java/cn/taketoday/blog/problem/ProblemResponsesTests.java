@@ -36,8 +36,12 @@ import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
+import cn.taketoday.blog.config.BlogLocaleResolver;
 import cn.taketoday.blog.maintenance.MaintenanceProblems;
 import cn.taketoday.blog.util.ObjectUtils;
+import infra.beans.factory.annotation.Autowired;
+import infra.context.ApplicationContext;
+import infra.test.context.junit.jupiter.JUnitConfig;
 import infra.core.io.PathMatchingPatternResourceLoader;
 import infra.web.mock.MockHttpContext;
 import infra.http.HttpStatus;
@@ -54,7 +58,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/16
  */
+@JUnitConfig(BlogLocaleResolver.class)
 class ProblemResponsesTests {
+
+  @Autowired
+  ApplicationContext context;
 
   private final ProblemResponses problems = new ProblemResponses(new PathMatchingPatternResourceLoader());
 
@@ -317,8 +325,8 @@ class ProblemResponsesTests {
     return properties;
   }
 
-  private static MockHttpContext request(String language) {
-    MockHttpContext request = new MockHttpContext();
+  private MockHttpContext request(String language) {
+    MockHttpContext request = new MockHttpContext(context);
     request.getRequest().addHeader("Accept-Language", language);
     return request;
   }
