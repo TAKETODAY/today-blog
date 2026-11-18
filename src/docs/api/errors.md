@@ -2,8 +2,10 @@
 
 ## 响应约定
 
-控制器异常、默认维护拒绝和限流使用 RFC 9457 Problem Details，媒体类型为
+控制器异常、应用的兜底错误（`/error` 和服务器 `sendError`）、默认维护拒绝和限流使用 RFC 9457 Problem Details，媒体类型为
 `application/problem+json`。HTTP 状态与 `status` 相同；成功响应不增加错误包装。
+
+兜底错误按 HTTP 状态选择通用错误码和本地化文案，不返回框架内部消息或 HTML 错误页。连接在应用接管前被拒绝、响应已提交或由代理生成错误时，不保证采用此格式。
 
 ```json
 {
