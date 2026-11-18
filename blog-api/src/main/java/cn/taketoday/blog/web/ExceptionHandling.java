@@ -83,22 +83,21 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   @ExceptionHandler(ErrorMessageException.class)
   public ResponseEntity<ProblemDetail> errorMessage(ErrorMessageException errorMessage, HttpContext request) {
     HttpStatusCode httpStatus = errorMessage.getStatusCode();
-    ProblemDetail problem = problems.create(CommonProblems.forStatus(httpStatus), request);
-    if (httpStatus.value() < 500 && errorMessage.getMessage() != null) {
-      problem.setDetail(errorMessage.getMessage());
-    }
     if (httpStatus.value() >= 500) {
       log.error("Business request failed", errorMessage);
     }
-    return problems.response(problem, null, httpStatus, request);
+    return problem(ProblemException.of(CommonProblems.forStatus(httpStatus), errorMessage.getMessage()), httpStatus, request);
   }
 
   @ExceptionHandler(ProblemException.class)
   public ResponseEntity<ProblemDetail> problem(ProblemException exception, HttpContext request) {
-    if (exception.getStatusCode().value() >= 500) {
-      log.error("Business request failed: {}", exception.getProblem().code(), exception);
-    }
-    return problems.response(exception.getProblem(), request, exception.getArguments());
+    return problem(exception, exception.getStatusCode(), request);
+  }
+
+  private ResponseEntity<ProblemDetail> problem(ProblemException exception, HttpStatusCode status, HttpContext request) {
+    ProblemDetail problem = problems.createWithDetail(exception.getProblem(), request,
+            exception.getDetail(), exception.getArguments());
+    return problems.response(problem, null, status, request);
   }
 
   @ExceptionHandler(UnauthorizedException.class)
@@ -129,9 +128,7 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
 
   @ExceptionHandler(ArticlePasswordException.class)
   public ResponseEntity<ProblemDetail> articlePassword(ArticlePasswordException exception, HttpContext request) {
-    ProblemDetail problem = problems.create(CommonProblems.ACCESS_DENIED, request);
-    problem.setDetail(exception.getMessage());
-    return problems.response(problem, null, HttpStatus.FORBIDDEN, request);
+    return problem(ProblemException.of(CommonProblems.ACCESS_DENIED, exception.getMessage()), request);
   }
 
   @ExceptionHandler
@@ -205,13 +202,14 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   protected ResponseEntity<@Nullable Object> createResponseEntity(@Nullable Object body,
           @Nullable HttpHeaders headers, HttpStatusCode status, HttpContext request) {
     ProblemDetail problem;
-    if (body instanceof ProblemDetail candidate && candidate.getProperty("code") != null) {
+    if (body instanceof ProblemDetail candidate && candidate.getProperties() != null
+            && candidate.getProperties().containsKey("code")) {
       problem = candidate;
     }
     else {
       problem = problems.create(CommonProblems.forStatus(status), request);
     }
-    problem.setStatus(status);
+    problem.setStatus(status.value());
     problems.prepare(request);
     return ResponseEntity.status(status)
             .headers(headers)

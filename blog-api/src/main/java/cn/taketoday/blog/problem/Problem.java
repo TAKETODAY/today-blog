@@ -27,7 +27,7 @@ import infra.http.HttpStatusCode;
  *
  * <p>领域可通过枚举实现此接口，也可使用 {@link #of(String, HttpStatus)} 创建
  * 不可变的默认实现。问题定义应保持稳定，不包含单次请求的数据或本地化文案；
- * 请求相关的消息参数由 {@link ProblemException} 携带，文案由
+ * 请求相关的消息参数和可选的请求级 detail 由 {@link ProblemException} 携带，文案由
  * {@link ProblemResponses} 根据请求语言和错误码对应的资源模板解析。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>

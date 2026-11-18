@@ -66,7 +66,7 @@ class MaintenanceFilterTests {
               assertThat(problem.getTitle()).isEqualTo("System under maintenance");
               assertThat(problem.getDetail()).isEqualTo("The system is under maintenance. Please try again later.");
               assertThat(problem.getProperties()).containsOnlyKeys("code");
-              assertThat(problem.getProperty("code")).isEqualTo("maintenance.under_maintenance");
+              assertThat(problem.getProperties().get("code")).isEqualTo("maintenance.under_maintenance");
             });
   }
 

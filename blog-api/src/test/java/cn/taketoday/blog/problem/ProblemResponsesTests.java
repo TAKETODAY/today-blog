@@ -71,6 +71,33 @@ class ProblemResponsesTests {
   }
 
   @Test
+  void customDetailOverridesTemplateWithoutMutatingProblemDefinition() {
+    Problem problem = CommonProblems.PARAMETER_MISSING;
+    var response = problems.createWithDetail(problem, request("en"), "The parameter is configured by the client.", "email");
+
+    assertThat(response.getDetail()).isEqualTo("The parameter is configured by the client.");
+    assertThat(problems.create(problem, request("en"), "email").getDetail())
+            .isEqualTo("A required parameter is missing: email.");
+  }
+
+  @Test
+  void localizesCustomDetailMessageKey() {
+    Problem problem = CommonProblems.PARAMETER_MISSING;
+
+    assertThat(problems.createWithDetail(problem, request("zh-CN"), "request.rate_limit_exceeded").getDetail())
+            .isEqualTo("操作过于频繁，请稍后重试。");
+    assertThat(problems.createWithDetail(problem, request("en"), "request.rate_limit_exceeded").getDetail())
+            .isEqualTo("Too many requests. Please try again later.");
+  }
+
+  @Test
+  void customDetailOverridesTemplateForServerProblems() {
+    var response = problems.createWithDetail(CommonProblems.INTERNAL_ERROR, request("en"), "secret SQL");
+
+    assertThat(response.getDetail()).isEqualTo("secret SQL");
+  }
+
+  @Test
   void defaultProblemRejectsMissingDefinition() {
     assertThatThrownBy(() -> Problem.of(null, HttpStatus.BAD_REQUEST)).isInstanceOf(NullPointerException.class);
     assertThatThrownBy(() -> Problem.of("request.invalid", null)).isInstanceOf(NullPointerException.class);

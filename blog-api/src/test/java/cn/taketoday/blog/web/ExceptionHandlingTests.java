@@ -51,13 +51,62 @@ class ExceptionHandlingTests {
   }
 
   @Test
-  void preservesLegacyClientMessageButHidesServerDetails() {
+  void typedBusinessErrorsCanCarryCustomDetail() {
+    MockHttpContext request = new MockHttpContext();
+    request.getRequest().addHeader("Accept-Language", "en");
+    var response = handler.problem(ProblemException.of(ArticleProblems.PASSWORD_INVALID,
+            "The password was rejected by the article owner."), request);
+
+    assertThat(response.getBody().getDetail()).isEqualTo("The password was rejected by the article owner.");
+    assertThat(response.getBody().getProperties()).containsEntry("code", "article.password_invalid");
+  }
+
+  @Test
+  void localizesTypedCustomDetailUsingRequestLanguage() {
+    MockHttpContext request = new MockHttpContext();
+    request.getRequest().addHeader("Accept-Language", "en");
+    var response = handler.problem(ProblemException.of(ArticleProblems.PASSWORD_INVALID,
+            "request.rate_limit_exceeded"), request);
+
+    assertThat(response.getBody().getDetail()).isEqualTo("Too many requests. Please try again later.");
+  }
+
+  @Test
+  void customDetailAndTemplateArgumentsAreIndependent() {
+    MockHttpContext request = new MockHttpContext();
+    var exception = ProblemException.of(cn.taketoday.blog.problem.CommonProblems.PARAMETER_MISSING,
+            "A custom parameter message.", "email");
+
+    var response = handler.problem(exception, request);
+
+    assertThat(response.getBody().getDetail()).isEqualTo("A custom parameter message.");
+  }
+
+  @Test
+  void usesTypedCustomDetailForServerProblems() {
+    var response = handler.problem(ProblemException.of(cn.taketoday.blog.problem.CommonProblems.INTERNAL_ERROR,
+            "secret SQL"), new MockHttpContext());
+
+    assertThat(response.getBody().getDetail()).isEqualTo("secret SQL");
+  }
+
+  @Test
+  void preservesLegacyClientMessageForAllStatuses() {
     MockHttpContext request = new MockHttpContext();
     var client = handler.errorMessage(ErrorMessageException.failed("业务说明", HttpStatus.CONFLICT), request);
     assertThat(client.getBody().getDetail()).isEqualTo("业务说明");
     assertThat(client.getBody().getProperties()).containsEntry("code", "resource.conflict");
     var server = handler.errorMessage(ErrorMessageException.failed("secret SQL", HttpStatus.INTERNAL_SERVER_ERROR), request);
-    assertThat(server.getBody().getDetail()).doesNotContain("secret SQL");
+    assertThat(server.getBody().getDetail()).isEqualTo("secret SQL");
+  }
+
+  @Test
+  void localizesLegacyErrorMessageKeyUsingRequestLanguage() {
+    MockHttpContext request = new MockHttpContext();
+    request.getRequest().addHeader("Accept-Language", "en");
+    var response = handler.errorMessage(ErrorMessageException.failed("request.rate_limit_exceeded"), request);
+
+    assertThat(response.getBody().getDetail()).isEqualTo("Too many requests. Please try again later.");
   }
 
   @Test

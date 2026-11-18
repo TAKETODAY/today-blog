@@ -30,9 +30,12 @@ import infra.web.HttpStatusProvider;
 /**
  * No StackTrace Exception
  *
+ * @deprecated 使用 {@link cn.taketoday.blog.problem.ProblemException#of} 携带稳定问题类型和自定义 detail。
+ *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2022/7/19 22:01
  */
+@Deprecated(since = "4.0", forRemoval = false)
 public class ErrorMessageException extends NoStackTraceRuntimeException implements HttpStatusProvider {
 
   private final HttpStatus status;

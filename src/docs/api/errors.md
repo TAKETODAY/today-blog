@@ -199,6 +199,20 @@ request.page_size_exceeded=The page size must not exceed {0}.
 不可传入 SQL、凭据、内部异常或连接配置。
 新增领域枚举后，将其加入 `ProblemCatalog`；清单测试扫描编译产物中的所有 `Problem` 枚举，防止漏注册。
 
+### 携带请求级 detail
+
+当 detail 来自限流注解、维护配置或其他已经确认可展示的请求输入时，使用
+`ProblemException.of(problem, detail, arguments)` 携带稳定错误码和本次请求说明：
+
+```java
+throw ProblemException.of(CommonProblems.RATE_LIMIT_EXCEEDED, errorMessage);
+```
+
+请求级 detail 优先于问题默认消息模板，但不修改共享的 `Problem` 定义。它首先作为消息资源键按请求的
+`Accept-Language` 在响应阶段解析；消息键不存在时将传入值作为原文返回，因此也兼容直接传入已经确认安全的文案。
+detail 使用的模板参数与默认消息模板共用异常中的参数。detail 只能包含安全、可展示内容，不能传入 SQL、凭据、内部异常或连接配置。
+即使问题状态为 5xx，只要传入了自定义 detail，系统也会使用该 detail；调用方必须确保其内容安全、可展示。
+
 ### 字段校验消息
 
 校验注解使用资源键，而不是硬编码某一种语言的消息，例如：
@@ -242,7 +256,9 @@ else if (code.startsWith('maintenance.upgrade.package.')) {
 
 ## 迁移范围与兼容
 
-- 旧 `ErrorMessageException` 的客户端消息保留原文；服务端消息不再直接公开。
+- 旧 `ErrorMessageException` 的消息也会先作为资源键按请求语言解析；找不到键时保留原文。
+- 新代码使用 `ProblemException.of(problem, detail, arguments)` 替代 `ErrorMessageException`，保留稳定业务码；
+  `ErrorMessageException` 暂保留为兼容入口，并在统一问题响应路径中按 HTTP 状态映射旧 code。
 - 普通 `ResponseStatusException` 保留状态和响应头，原因使用安全的通用模板。
 - 未明确为客户端输入错误的 `IllegalArgumentException` 按内部错误处理；业务校验应使用类型化异常。
 - OSS、数据库、空指针等异常对外统一安全提示，完整异常留在日志中。
@@ -258,7 +274,8 @@ else if (code.startsWith('maintenance.upgrade.package.')) {
 - 内部技术异常仍通过安全通用码处理，不为每种 IO、SQL、加密实现故障建立业务枚举。
 - 后台任务记录的执行结果、环境就绪信息不是 HTTP 请求失败，保留其业务数据语义。
 
-维护公告、限流注解或配置中的自定义消息属于输入内容，原样展示，不自动翻译。
+维护公告、限流注解或配置中的自定义消息可以填写消息资源键并按请求语言翻译；找不到键时原样展示。
+5xx 状态同样使用自定义消息，因此调用方必须确保传入内容不会泄露敏感信息。
 维护消息为空时使用资源默认提示；已有状态保存的非空默认中文也会视为原文保留。
 
 ## 验证

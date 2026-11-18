@@ -24,7 +24,7 @@ import infra.http.HttpStatusCode;
 import infra.web.HttpStatusProvider;
 
 /**
- * 业务失败携带稳定类型和允许公开的模板参数，在响应阶段才选择语言。
+ * 业务失败携带稳定类型、可选的请求级 detail 和允许公开的模板参数，在响应阶段才选择语言。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/16
@@ -35,10 +35,30 @@ public class ProblemException extends NoStackTraceRuntimeException implements Ht
 
   private final Object[] arguments;
 
+  private final @Nullable String detail;
+
   public ProblemException(Problem problem, Object... arguments) {
+    this(problem, null, arguments);
+  }
+
+  private ProblemException(Problem problem, @Nullable String detail, Object[] arguments) {
     super(problem.code(), null);
     this.problem = problem;
+    this.detail = detail;
     this.arguments = arguments.clone();
+  }
+
+  /**
+   * 创建携带请求级 detail 的问题异常。detail 优先作为消息键按请求语言解析；找不到消息键时保留原文，
+   * 并覆盖问题默认 detail。
+   *
+   * @param problem 稳定的问题类型
+   * @param detail 允许展示给客户端的本次请求说明
+   * @param arguments 问题资源模板参数
+   * @return 问题异常
+   */
+  public static ProblemException of(Problem problem, @Nullable String detail, Object... arguments) {
+    return new ProblemException(problem, detail, arguments);
   }
 
   public Problem getProblem() {
@@ -47,6 +67,10 @@ public class ProblemException extends NoStackTraceRuntimeException implements Ht
 
   public Object[] getArguments() {
     return arguments;
+  }
+
+  public @Nullable String getDetail() {
+    return detail;
   }
 
   @Override

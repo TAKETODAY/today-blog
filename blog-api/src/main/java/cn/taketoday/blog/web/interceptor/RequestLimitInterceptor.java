@@ -33,8 +33,6 @@ import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.problem.CommonProblems;
 import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.util.BlogUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
-import infra.http.HttpStatus;
 import infra.lang.Constant;
 import infra.stereotype.Component;
 import infra.util.Assert;
@@ -118,7 +116,7 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
     // X-RateLimit-Remaining: The number of requests remaining in the current rate limit window.
     // X-RateLimit-Reset: the time at which the current rate limit window resets in UTC epoch seconds
 
-    return ErrorMessageException.failed(errorMessage, HttpStatus.TOO_MANY_REQUESTS);
+    return ProblemException.of(CommonProblems.RATE_LIMIT_EXCEEDED, errorMessage);
   }
 
   private void checkMaxCacheLimit() {
