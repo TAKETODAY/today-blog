@@ -256,9 +256,7 @@ else if (code.startsWith('maintenance.upgrade.package.')) {
 
 ## 迁移范围与兼容
 
-- 旧 `ErrorMessageException` 的消息也会先作为资源键按请求语言解析；找不到键时保留原文。
-- 新代码使用 `ProblemException.of(problem, detail, arguments)` 替代 `ErrorMessageException`，保留稳定业务码；
-  `ErrorMessageException` 暂保留为兼容入口，并在统一问题响应路径中按 HTTP 状态映射旧 code。
+- 业务异常使用 `ProblemException.of(problem, detail, arguments)` 携带稳定业务码；自定义 `detail` 按请求语言解析为消息，找不到资源键时保留原文。
 - 普通 `ResponseStatusException` 保留状态和响应头，原因使用安全的通用模板。
 - 未明确为客户端输入错误的 `IllegalArgumentException` 按内部错误处理；业务校验应使用类型化异常。
 - OSS、数据库、空指针等异常对外统一安全提示，完整异常留在日志中。

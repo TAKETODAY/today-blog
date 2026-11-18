@@ -91,25 +91,6 @@ class ExceptionHandlingTests {
   }
 
   @Test
-  void preservesLegacyClientMessageForAllStatuses() {
-    MockHttpContext request = new MockHttpContext();
-    var client = handler.errorMessage(ErrorMessageException.failed("业务说明", HttpStatus.CONFLICT), request);
-    assertThat(client.getBody().getDetail()).isEqualTo("业务说明");
-    assertThat(client.getBody().getProperties()).containsEntry("code", "resource.conflict");
-    var server = handler.errorMessage(ErrorMessageException.failed("secret SQL", HttpStatus.INTERNAL_SERVER_ERROR), request);
-    assertThat(server.getBody().getDetail()).isEqualTo("secret SQL");
-  }
-
-  @Test
-  void localizesLegacyErrorMessageKeyUsingRequestLanguage() {
-    MockHttpContext request = new MockHttpContext();
-    request.getRequest().addHeader("Accept-Language", "en");
-    var response = handler.errorMessage(ErrorMessageException.failed("request.rate_limit_exceeded"), request);
-
-    assertThat(response.getBody().getDetail()).isEqualTo("Too many requests. Please try again later.");
-  }
-
-  @Test
   void replacesFrameworkDetailsAndPreservesHeadersAndStatus() {
     MockHttpContext request = new MockHttpContext();
     HttpHeaders headers = HttpHeaders.forWritable();

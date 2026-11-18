@@ -80,24 +80,11 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
     return problems.create(CommonProblems.NOT_FOUND, request);
   }
 
-  @ExceptionHandler(ErrorMessageException.class)
-  public ResponseEntity<ProblemDetail> errorMessage(ErrorMessageException errorMessage, HttpContext request) {
-    HttpStatusCode httpStatus = errorMessage.getStatusCode();
-    if (httpStatus.value() >= 500) {
-      log.error("Business request failed", errorMessage);
-    }
-    return problem(ProblemException.of(CommonProblems.forStatus(httpStatus), errorMessage.getMessage()), httpStatus, request);
-  }
-
   @ExceptionHandler(ProblemException.class)
   public ResponseEntity<ProblemDetail> problem(ProblemException exception, HttpContext request) {
-    return problem(exception, exception.getStatusCode(), request);
-  }
-
-  private ResponseEntity<ProblemDetail> problem(ProblemException exception, HttpStatusCode status, HttpContext request) {
     ProblemDetail problem = problems.createWithDetail(exception.getProblem(), request,
             exception.getDetail(), exception.getArguments());
-    return problems.response(problem, null, status, request);
+    return problems.response(problem, null, exception.getStatusCode(), request);
   }
 
   @ExceptionHandler(UnauthorizedException.class)
