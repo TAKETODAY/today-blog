@@ -27,26 +27,28 @@ import styles from './index.less';
 import { outLogin } from '@/services/ant-design-pro/login';
 import { goToLogin, isNotLoginPage } from "@/utils";
 import Image from "@/components/Image";
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 export type GlobalHeaderRightProps = {
   menu?: boolean;
 };
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
+  const t = useSiteTranslation();
   const { initialState, setInitialState } = useModel('@@initialState');
   /**
    * 退出登录，并且将当前的 url 保存
    */
   const loginOut = async () => {
     Modal.confirm({
-      title: "确定退出登录吗",
+      title: t('确定退出登录吗', 'Sign out?'),
       content: (
           <span style={{ color: "red" }}>
-          <strong>如果有数据未保存请保存后退出</strong>
+          <strong>{t('如果有数据未保存请保存后退出', 'Save any unsaved changes before signing out')}</strong>
         </span>
       ),
-      cancelText: '手滑了',
-      okText: '确认退出',
+      cancelText: t('取消', 'Cancel'),
+      okText: t('确认退出', 'Sign out'),
       onOk: async () => {
         await outLogin();
         if (isNotLoginPage(history.location)) {
@@ -84,12 +86,12 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     {
       key: 'account',
       icon: <SettingOutlined/>,
-      label: <Link to="/system/account">账户设置</Link>,
+      label: <Link to="/system/account">{t('账户设置', 'Account settings')}</Link>,
     },
     {
       key: 'logout',
       icon: <LogoutOutlined/>,
-      label: <a href="javascript:void(0)" onClick={loginOut}>退出登录</a>,
+      label: <a href="javascript:void(0)" onClick={loginOut}>{t('退出登录', 'Sign out')}</a>,
     }
   ]
 
@@ -100,7 +102,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   return (
       <HeaderDropdown overlay={menuHeaderDropdown}>
         <span className={`${styles.action} ${styles.account}`}>
-          <Avatar size="small" className={styles.avatar} icon={<Image alt="头像" src={userSession.avatar}/>}/>
+          <Avatar size="small" className={styles.avatar} icon={<Image alt={t('头像', 'Avatar')} src={userSession.avatar}/>}/>
           <span className={`${styles.name} anticon`}>{userSession.name}</span>
         </span>
       </HeaderDropdown>

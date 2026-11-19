@@ -19,15 +19,19 @@ package cn.taketoday.blog.service;
 
 import org.jspecify.annotations.Nullable;
 
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cn.taketoday.blog.BlogConstant;
 import cn.taketoday.blog.ConfigBinding;
 import cn.taketoday.blog.event.OptionsUpdateEvent;
 import cn.taketoday.blog.model.Option;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.util.StringUtils;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
@@ -51,6 +55,12 @@ import infra.util.CollectionUtils;
  */
 @Service
 public class OptionService {
+
+  public static final String SITE_LOCALE = "site.locale";
+
+  public static final String SITE_TIME_ZONE = "site.timezone";
+
+  private static final Set<String> SITE_TIME_ZONES = ZoneId.getAvailableZoneIds();
 
   private final BeanFactory beanFactory;
 
@@ -76,6 +86,7 @@ public class OptionService {
    * @since 3.2
    */
   public void persist(Option value) {
+    validateSiteOption(value);
     entityManager.persist(value);
   }
 
@@ -83,17 +94,22 @@ public class OptionService {
    * @since 3.2
    */
   public void persist(List<Option> value) {
+    value.forEach(OptionService::validateSiteOption);
     entityManager.persist(value);
   }
 
   @Unmodifiable
   public Map<String, String> getOptionsMap() {
-    return Collections.unmodifiableMap(optionsPropertySource.optionsMap);
+    return optionsPropertySource.optionsMap;
+  }
+
+  public @Nullable String getOptionValue(String name) {
+    return optionsPropertySource.optionsMap.get(name);
   }
 
   @Unmodifiable
   public Map<String, String> publicOptions() {
-    return Collections.unmodifiableMap(optionsPropertySource.publicOptionsMap);
+    return optionsPropertySource.publicOptionsMap;
   }
 
   /**
@@ -114,10 +130,7 @@ public class OptionService {
   @Transactional
   public void update(Map<String, String> optionsMap) {
     if (CollectionUtils.isNotEmpty(optionsMap)) {
-      for (Map.Entry<String, String> entry : optionsMap.entrySet()) {
-        doUpdateDatabase(new Option(entry.getKey(), entry.getValue()));
-      }
-      onUpdate();
+      update(optionsMap.entrySet().stream().map(entry -> new Option(entry.getKey(), entry.getValue())).toList());
     }
   }
 
@@ -126,12 +139,35 @@ public class OptionService {
    */
   @Transactional
   public void update(List<Option> options) {
+    options.forEach(OptionService::validateSiteOption);
     options.forEach(entityManager::updateById);
     onUpdate();
   }
 
   private void doUpdateDatabase(Option option) {
+    validateSiteOption(option);
     entityManager.updateById(option);
+  }
+
+  private static void validateSiteOption(Option option) {
+    String name = option.getName();
+    String value = option.getValue();
+    if (SITE_LOCALE.equalsIgnoreCase(name)) {
+      if (!"zh-CN".equals(value) && !"en-US".equals(value)) {
+        throw ProblemException.of(CommonProblems.INVALID_REQUEST, "option.site_locale.invalid");
+      }
+    }
+    else if (SITE_TIME_ZONE.equalsIgnoreCase(name)) {
+      if (value == null || !SITE_TIME_ZONES.contains(value)) {
+        throw ProblemException.of(CommonProblems.INVALID_REQUEST, "option.site_timezone.invalid");
+      }
+    }
+    else {
+      return;
+    }
+    if (Boolean.FALSE.equals(option.getOpen())) {
+      throw ProblemException.of(CommonProblems.INVALID_REQUEST, "option.site_display.public_required");
+    }
   }
 
   private List<Option> listOptions() {
@@ -180,17 +216,17 @@ public class OptionService {
 
   private final static class OptionsPropertySource extends EnumerablePropertySource<OptionService> {
 
-    private final HashMap<String, String> optionsMap = new HashMap<>();
+    private volatile Map<String, String> optionsMap = Collections.emptyMap();
 
-    private final HashMap<String, String> publicOptionsMap = new HashMap<>();
+    private volatile Map<String, String> publicOptionsMap = Collections.emptyMap();
 
     public OptionsPropertySource(String name, OptionService source) {
       super(name, source);
     }
 
     public synchronized void updateCache() {
-      optionsMap.clear();
-      publicOptionsMap.clear();
+      var optionsMap = new HashMap<String, String>();
+      var publicOptionsMap = new HashMap<String, String>();
       List<Option> options = source.listOptions();
       for (Option option : options) {
         optionsMap.put(option.getName(), option.getValue());
@@ -198,6 +234,9 @@ public class OptionService {
           publicOptionsMap.put(option.getName(), option.getValue());
         }
       }
+
+      this.optionsMap = Collections.unmodifiableMap(optionsMap);
+      this.publicOptionsMap = Collections.unmodifiableMap(publicOptionsMap);
 
       List<Object> configBindingBeans = source.beanFactory.getAnnotatedBeans(ConfigBinding.class);
       for (Object configBindingBean : configBindingBeans) {

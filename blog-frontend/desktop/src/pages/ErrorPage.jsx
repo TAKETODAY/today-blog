@@ -22,33 +22,32 @@ import React from 'react';
 import head from '../assets/images/404/head.png';
 import { Button } from "antd";
 import 'antd/es/button/style';
+import { translate } from 'core';
 
 const errors = {
-  '400': { msg: '400 Bad Request !', desc: '错误请求 !' },
-  '403': { msg: '403 Access Forbidden !', desc: '服务器拒绝处理您的请求！您可能没有访问此操作的权限 !' },
-  '404': { msg: '404 NOT Found !', desc: '您请求的页面,我找遍了整个服务器都没找到 !' },
-  '405': { msg: '405 Method Not Allowed !', desc: '您请求的方式不正确 !' },
-  '500': { msg: '500 Internal Server Error !', desc: '服务器出错啦 !' },
+  '400': ['错误请求', 'Bad request', '请检查请求后重试。', 'Check your request and try again.'],
+  '403': ['禁止访问', 'Access forbidden', '您可能没有访问权限。', 'You may not have permission to access this page.'],
+  '404': ['页面未找到', 'Page not found', '您请求的页面不存在。', 'The requested page could not be found.'],
+  '405': ['不支持此请求方式', 'Method not allowed', '此页面不支持您使用的请求方式。', 'This page does not support the requested method.'],
+  '500': ['服务器错误', 'Internal server error', '服务器出错，请稍后重试。', 'Something went wrong. Please try again later.'],
 }
 
 export default props => {
-  let error = errors[`${props.status}`]
-  if (!error) {
-    error = errors['500']
-  }
-  document.title = error.msg
+  const status = Object.hasOwn(errors, props.status) ? props.status : '500';
+  const [zhTitle, enTitle, zhDetail, enDetail] = errors[status];
+  const title = `${status} ${translate(zhTitle, enTitle)}`;
+  document.title = title;
   return (<>
     <div className="container" style={{ marginTop: '100px' }} align="center">
       <div className="img">
-        <img src={head} alt={error.msg}/>
+        <img src={head} alt=""/>
       </div>
-      <h1 style={{ fontSize: '48px' }}>{error.msg}</h1>
-      <div id="msg" style={{ fontSize: '15px', marginBottom: 20 }}>{error.desc}</div>
+      <h1 style={{ fontSize: '48px' }}>{title}</h1>
+      <div id="msg" style={{ fontSize: '15px', marginBottom: 20 }}>{translate(zhDetail, enDetail)}</div>
 
-      <Button onClick={() => window.location.replace('/')} style={{ marginRight: 10 }}>首页</Button>
+      <Button onClick={() => window.location.replace('/')} style={{ marginRight: 10 }}>{translate('首页', 'Home')}</Button>
 
-      <Button type="primary" onClick={() => window.history.back()}>返回</Button>
+      <Button type="primary" onClick={() => window.history.back()}>{translate('返回', 'Back')}</Button>
     </div>
   </>)
 }
-

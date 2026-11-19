@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Form, message } from 'antd';
 import type { FormInstance } from 'antd';
 import { http } from '@/utils/http';
+import { siteText as t } from '@/utils/site-format';
 import type { MappingSettings, Options, ReleaseMapping } from './types';
 import { parseOptions, requestOptions } from './utils';
 
@@ -37,7 +38,7 @@ export function useUpgradeSettings(): UpgradeSettingsController {
     try {
       const response = await http.put('/api/console/maintenance/upgrade/settings', requestOptions(options));
       settingsForm.setFieldsValue(parseOptions(response.data));
-      message.success('默认设置已保存；本次升级参数保持不变');
+      message.success(t('默认设置已保存；本次升级参数保持不变', 'Defaults saved. Current upgrade parameters are unchanged.'));
     }
     finally {
       setSaving(false);
@@ -57,7 +58,7 @@ export function useUpgradeSettings(): UpgradeSettingsController {
       });
       setMappingSettings(response.data);
       mappingForm.setFieldsValue({ mappings: response.data.mappings || [] });
-      message.success('文件映射已保存；已提交的升级任务不受影响');
+      message.success(t('文件映射已保存；已提交的升级任务不受影响', 'File mappings saved. Submitted tasks are unchanged.'));
     }
     finally {
       setMappingSaving(false);

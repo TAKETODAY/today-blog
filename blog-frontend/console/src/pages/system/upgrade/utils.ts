@@ -1,14 +1,22 @@
 import type { Options } from './types';
+import { siteText } from '@/utils/site-format';
 
 export const terminal = ['SUCCESS', 'FAILED', 'ROLLED_BACK'];
 export const taskKey = 'today-blog-upgrade-task';
 export const phases = ['VALIDATING', 'INSTALLING', 'BACKING_UP', 'RESTARTING', 'HEALTH_CHECKING', 'SUCCESS'];
-export const statusLabels: Record<string, string> = {
-  STARTING: '已提交', VALIDATING: '校验升级包', INSTALLING: '准备版本',
-  BACKING_UP: '数据库备份', RESTARTING: '切换并重启', HEALTH_CHECKING: '健康检查',
-  SUCCESS: '升级成功', FAILED: '升级失败', ROLLING_BACK: '正在恢复旧程序', ROLLED_BACK: '升级失败，已恢复旧版本',
-  READY: '待升级', CONSUMED: '已使用',
+const statusLabels: Record<string, [string, string]> = {
+  STARTING: ['已提交', 'Submitted'], VALIDATING: ['校验升级包', 'Validating package'],
+  INSTALLING: ['准备版本', 'Preparing release'], BACKING_UP: ['数据库备份', 'Backing up database'],
+  RESTARTING: ['切换并重启', 'Switching and restarting'], HEALTH_CHECKING: ['健康检查', 'Checking health'],
+  SUCCESS: ['升级成功', 'Upgrade succeeded'], FAILED: ['升级失败', 'Upgrade failed'],
+  ROLLING_BACK: ['正在恢复旧程序', 'Rolling back'], ROLLED_BACK: ['升级失败，已恢复旧版本', 'Upgrade failed and was rolled back'],
+  READY: ['待升级', 'Ready'], CONSUMED: ['已使用', 'Used'],
 };
+
+export function statusLabel(status: string) {
+  const label = statusLabels[status];
+  return Array.isArray(label) ? siteText(...label) : status;
+}
 
 export function parseOptions(data?: Partial<Options>): Options {
   return {

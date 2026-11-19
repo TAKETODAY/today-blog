@@ -21,8 +21,10 @@
 import { Result } from 'antd';
 import React, { useEffect } from 'react';
 import { showLoginDialog } from '@/utils/error-handler';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 const Forbidden: React.FC = () => {
+  const t = useSiteTranslation();
   useEffect(() => {
     showLoginDialog();
   }, []);
@@ -31,7 +33,7 @@ const Forbidden: React.FC = () => {
     <Result
         status="403"
         title="403"
-        subTitle="对不起，你没有所访问页面的权限"
+        subTitle={t('对不起，你没有所访问页面的权限', 'You do not have permission to view this page')}
     />
   );
 };

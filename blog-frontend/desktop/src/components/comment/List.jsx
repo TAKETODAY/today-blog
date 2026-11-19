@@ -20,7 +20,7 @@ import 'antd/es/tooltip/style';
 import React from 'react';
 import { RollbackOutlined } from '@ant-design/icons';
 
-import { format, fromNow, getGravatarURL, isEmpty, scrollTo } from 'core';
+import { formatDate, fromNow, getGravatarURL, isEmpty, scrollTo, translate } from 'core';
 import { Image } from '../index';
 
 
@@ -49,11 +49,11 @@ export default class CommentList extends React.Component {
                   <div className='user_info'>
                     <a href={reply.commenterSite} target='_blank'>
                       <span className='user_name'>{reply.commenter}</span>
-                    </a>回复
+                    </a>{translate('回复', ' replying to ')}
                     <a href={reply.commenterSite} target='_blank'>
                       <span className='user_name'>{parent.commenter}</span>
                     </a>
-                    <Tooltip title={format(reply.createAt)}>
+                    <Tooltip title={formatDate(reply.createAt)}>
                       <span style={{ cursor: 'pointer' }}>
                         <time> {fromNow(reply.createAt)} </time>
                       </span>
@@ -64,11 +64,11 @@ export default class CommentList extends React.Component {
                 <div className='sub_comment_content'>
                   <div className='content' dangerouslySetInnerHTML={{ __html: reply.content }}/>
                   <div className='replyOper'>
-                    <a className='replyBtn' title={`回复 ${reply.commenter}`}
+                    <a className='replyBtn' title={translate(`回复 ${reply.commenter}`, `Reply to ${reply.commenter}`)}
                        onClick={() => {
                          this.onReply(reply)
                        }}>
-                      <RollbackOutlined aria-hidden="true"/><span> 回复 </span>
+                      <RollbackOutlined aria-hidden="true"/><span> {translate('回复', 'Reply')} </span>
                     </a>
                   </div>
                 </div>
@@ -97,7 +97,7 @@ export default class CommentList extends React.Component {
                 <a href={comment.commenterSite} target='_blank'>
                   <span className='user_name'> {comment.commenter} </span>
                 </a>
-                <Tooltip title={format(comment.createAt)}>
+                <Tooltip title={formatDate(comment.createAt)}>
                   <span style={{ cursor: 'pointer' }}>
                     <time> {fromNow(comment.createAt)} </time>
                   </span>
@@ -108,9 +108,9 @@ export default class CommentList extends React.Component {
             <div className='comment_content'>
               <div className='content' dangerouslySetInnerHTML={{ __html: comment.content }}></div>
               <div className='replyOper'>
-                <a className='replyBtn' title={`回复 ${comment.commenter}`}
+                <a className='replyBtn' title={translate(`回复 ${comment.commenter}`, `Reply to ${comment.commenter}`)}
                    onClick={() => this.onReply(comment)}>
-                  <RollbackOutlined aria-hidden="true"/><span> 回复 </span>
+                  <RollbackOutlined aria-hidden="true"/><span> {translate('回复', 'Reply')} </span>
                 </a>
               </div>
             </div>

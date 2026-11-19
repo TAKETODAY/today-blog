@@ -21,20 +21,21 @@
 import React, { useEffect, useState } from 'react';
 import { getCacheable } from "@/utils";
 import ReactEcharts from "echarts-for-react";
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 export default () => {
+  const t = useSiteTranslation();
+  const date = t('日期', 'Date');
+  const count = t('数量', 'Count');
   return <>
-    <Statistics name={{ x: '日期', y: '数量', series: '数量' }}/>
+    <Statistics date={date} count={count}/>
   </>;
 };
 
 
 type StatisticsProps = {
-  name: {
-    x: string,
-    y: string,
-    series: string
-  }
+  date: string;
+  count: string;
 }
 
 // function applyData(map: any, data: any, dataKey: string) {
@@ -52,7 +53,7 @@ type StatisticsProps = {
 //   })
 // }
 
-const Statistics: React.FC<StatisticsProps> = (props) => {
+const Statistics: React.FC<StatisticsProps> = ({ date, count }) => {
   const [options, setOptions] = useState({});
 
   useEffect(() => {
@@ -106,14 +107,14 @@ const Statistics: React.FC<StatisticsProps> = (props) => {
             type: 'category',
             boundaryGap: true,
             data: xAxisData,
-            name: props.name.x
+            name: date
           },
         ],
         yAxis: [
           {
             type: 'value',
             scale: true,
-            name: props.name.y,
+            name: count,
             // max: 30,
             // min: 0,
             // boundaryGap: [0.2, 0.2]
@@ -143,10 +144,9 @@ const Statistics: React.FC<StatisticsProps> = (props) => {
       }
     })
 
-  }, [])
+  }, [date, count])
 
   return <>
     <ReactEcharts option={options} style={{ height: 400 }}/>
   </>
 }
-

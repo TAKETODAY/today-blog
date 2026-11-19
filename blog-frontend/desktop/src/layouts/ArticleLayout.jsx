@@ -8,6 +8,7 @@ import { Affix, Col, Row } from 'antd'
 import 'antd/es/affix/style';
 import 'antd/es/grid/style';
 import { connect } from "react-redux";
+import { useDisplayPreferences } from '../components/hooks/useDisplayPreferences';
 
 const RightNav = connect((state) => {
       return {
@@ -15,6 +16,7 @@ const RightNav = connect((state) => {
       }
     }
 )((props) => {
+  useDisplayPreferences();
   const { categories, labels, popular } = props
   const [container, setContainer] = useState(null)
   return (

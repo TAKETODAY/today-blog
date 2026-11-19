@@ -9,6 +9,14 @@ import Header from '../src/components/Header';
 
 vi.mock('../src/components/Search', () => ({ default: () => <input aria-label="搜索文章"/> }));
 
+beforeEach(() => {
+  vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['zh-CN']);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 function renderHeader(session = null) {
   const store = createStore((state = {
     user: { session }, options: {},

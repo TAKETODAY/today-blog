@@ -7,6 +7,8 @@ import type { Environment, Options, UpgradePackage, UpgradeRecord, VersionInfo }
 import { parseOptions, taskKey, terminal } from './utils';
 import { useMaintenance } from './useMaintenance';
 import { useUpgradeSettings } from './useUpgradeSettings';
+import { useSiteTranslation } from '@/utils/use-site-translation';
+import { siteText } from '@/utils/site-format';
 import UpgradeHeaderExtra from './UpgradeHeaderExtra';
 import UpgradePackageTable from './UpgradePackageTable';
 import UpgradeTaskProgress from './UpgradeTaskProgress';
@@ -29,7 +31,8 @@ interface ConfigState {
 }
 
 export default function SystemUpgrade() {
-  const [version, setVersion] = useState<VersionInfo>({ version: '加载中' });
+  const t = useSiteTranslation();
+  const [version, setVersion] = useState<VersionInfo>({ version: '' });
   const [record, setRecord] = useState<UpgradeRecord>();
   const [id, setId] = useState(() => localStorage.getItem(taskKey) || '');
   const [records, setRecords] = useState<UpgradeRecord[]>([]);
@@ -106,7 +109,7 @@ export default function SystemUpgrade() {
         setLoaded(true);
       }
       catch (error) {
-        message.error('无法加载升级环境，请刷新页面重试');
+        message.error(siteText('无法加载升级环境，请刷新页面重试', 'Could not load upgrade status. Refresh and try again.'));
       }
     }
 
@@ -161,14 +164,15 @@ export default function SystemUpgrade() {
 
   async function removePackage(item: UpgradePackage) {
     Modal.confirm({
-      title: `删除升级包「${item.displayName || item.originalName}」？`,
-      content: '将同时删除数据库记录和本地 ZIP 文件。已被升级记录使用的包会保留历史快照。',
-      okText: '删除',
+      title: t(`删除升级包「${item.displayName || item.originalName}」？`, `Delete “${item.displayName || item.originalName}”?`),
+      content: t('将同时删除数据库记录和本地 ZIP 文件。已被升级记录使用的包会保留历史快照。', 'This deletes the record and local ZIP. Upgrade history retains snapshots of packages already used.'),
+      okText: t('删除', 'Delete'),
+      cancelText: t('取消', 'Cancel'),
       okButtonProps: { danger: true },
       async onOk() {
         await http.delete(`/api/console/maintenance/upgrade/packages/${item.id}`);
         await reloadPackages();
-        message.success('升级包已删除');
+        message.success(t('升级包已删除', 'Package deleted'));
       },
     });
   }
@@ -186,39 +190,42 @@ export default function SystemUpgrade() {
 
   const mappingSettings = settings.mappingSettings;
 
-  return <PageContainer className="system-update-page" title="系统升级" subTitle="发布新版本，保留可追溯的备份与升级记录"
+  return <PageContainer className="system-update-page" title={t('系统升级', 'System upgrade')}
+                        subTitle={t('发布新版本，保留可追溯的备份与升级记录', 'Publish new releases and retain backup and upgrade history')}
                         extra={<UpgradeHeaderExtra version={version} environment={environment}
                                                    maintenance={maintenance} busy={busy}
                                                    loaded={loaded} refreshing={refreshing}
                                                    mappingPending={Boolean(mappingSettings && !mappingSettings.ready)}
-                                                   onRefresh={() => refresh().catch(() => message.error('刷新环境失败'))}
+                                                   onRefresh={() => refresh().catch(() => message.error(t('刷新环境失败', 'Could not refresh upgrade status')))}
                                                    onOpenConfig={() => openConfig()}/>}>
 
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Alert type="warning" showIcon message="程序回滚不等于数据库恢复"
-             description="仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份时间点之后的新数据；升级期间不得并发修改表结构。"/>
-      {maintenance.status?.enabled && <Alert type="warning" showIcon message="维护状态已开启"
-                                             description={`${maintenance.status.message || '系统维护中，请稍后重试'}；建议重试间隔 ${maintenance.status.retryAfterSeconds || 120} 秒。${maintenance.sourceLabel}。`}/>}
-      {disconnected && <Alert type="info" showIcon message={needsLogin ? '登录已失效，请重新登录后查看任务' : '连接暂时中断，正在自动重试'}
-                              description="任务在服务器独立运行，请勿重复提交。长时间未恢复时请通过 SSH 检查 systemd 日志。"/>}
+      <Alert type="warning" showIcon message={t('程序回滚不等于数据库恢复', 'Rolling back the application does not restore the database')}
+             description={t('仅发布数据库迁移向后兼容的版本。在线备份针对 InnoDB，不包含附件，也不包含备份时间点之后的新数据；升级期间不得并发修改表结构。',
+               'Only publish releases with backward-compatible migrations. Online backups cover InnoDB, not attachments or later changes. Do not change table schemas during an upgrade.')}/>
+      {maintenance.status?.enabled && <Alert type="warning" showIcon message={t('维护状态已开启', 'Maintenance is active')}
+                                             description={<>{maintenance.status.message || t('系统维护中，请稍后重试', 'Maintenance in progress. Try again later.')}{' '}
+                                               {t(`建议重试间隔 ${maintenance.status.retryAfterSeconds || 120} 秒。`, `Retry after ${maintenance.status.retryAfterSeconds || 120} seconds.`)}{' '}{maintenance.sourceLabel}</>}/>}
+      {disconnected && <Alert type="info" showIcon message={needsLogin ? t('登录已失效，请重新登录后查看任务', 'Session expired. Sign in again to view the task.') : t('连接暂时中断，正在自动重试', 'Connection lost. Retrying automatically.')}
+                              description={t('任务在服务器独立运行，请勿重复提交。长时间未恢复时请通过 SSH 检查 systemd 日志。', 'The task runs independently on the server. Do not submit it again. If the connection does not recover, check systemd logs over SSH.')}/>}
       <Card>
         <Tabs activeKey={tab} onChange={setTab}
               tabBarExtraContent={tab === 'run'
                   ? <Button type='primary' icon={<UploadOutlined/>} onClick={() => setDialog({ type: 'upload' })}
-                            disabled={!loaded}>上传升级包</Button>
+                            disabled={!loaded}>{t('上传升级包', 'Upload package')}</Button>
                   : undefined}
               items={[
                 {
                   key: 'run',
-                  label: '执行升级',
+                  label: t('执行升级', 'Run upgrade'),
                   children:
                       <Space direction="vertical" size="large" style={{ width: '100%' }}>
                         {loaded && mappingSettings && !mappingSettings.ready
                             && <Alert type="warning" showIcon
-                                      message="文件映射配置未就绪"
-                                      description={mappingSettings.message || '升级时将无法发布前端文件，请检查服务器目标根目录配置。'}
+                                      message={t('文件映射配置未就绪', 'File mappings are not ready')}
+                                      description={mappingSettings.message || t('升级时将无法发布前端文件，请检查服务器目标根目录配置。', 'The upgrade cannot publish frontend assets. Check the server target directories.')}
                                       action={<Button size="small"
-                                                      onClick={() => openConfig('mappings')}>去配置</Button>}/>}
+                                                      onClick={() => openConfig('mappings')}>{t('去配置', 'Configure')}</Button>}/>}
                         <div>
                           <UpgradePackageTable
                               packages={packages}
@@ -232,11 +239,11 @@ export default function SystemUpgrade() {
                 },
                 {
                   key: 'history',
-                  label: '升级记录',
+                  label: t('升级记录', 'Upgrade history'),
                   children: <UpgradeHistoryTable
                       records={records}
                       loading={refreshing}
-                      onRefresh={() => refresh().catch(() => message.error('刷新记录失败'))}
+                      onRefresh={() => refresh().catch(() => message.error(t('刷新记录失败', 'Could not refresh upgrade history')))}
                       onSelect={selectRecord}/>,
                 },
               ]}/>

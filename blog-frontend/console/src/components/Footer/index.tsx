@@ -1,13 +1,15 @@
 import { useOptions } from "@/components/hooks";
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 export default () => {
+  const t = useSiteTranslation();
   // @ts-ignore
   const [options] = useOptions()
   return (
       <footer className="ant-layout-footer" style={{ padding: 0, textAlign: 'center' }}>
         <div className="ant-pro-global-footer">
           <div className="ant-pro-global-footer-links">
-            <a title="Harry Yang" target="_blank" href="https://taketoday.cn" rel="noreferrer">由 Harry Yang 提供技术支持</a>
+            <a title="Harry Yang" target="_blank" href="https://taketoday.cn" rel="noreferrer">{t('由 Harry Yang 提供技术支持', 'Powered by Harry Yang')}</a>
           </div>
           <div className="ant-pro-global-footer-copyright">
             {options['site.copyright']}

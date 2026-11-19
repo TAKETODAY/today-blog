@@ -2,8 +2,10 @@ import React from 'react';
 import ProTable from '@ant-design/pro-table';
 import { Button, Empty, Space, Tag } from 'antd';
 import { ArrowUpOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { format } from '@/utils/site-format';
 import type { UpgradePackage } from './types';
-import { bytes, statusLabels } from './utils';
+import { bytes, statusLabel } from './utils';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 interface Props {
   packages: UpgradePackage[];
@@ -14,6 +16,7 @@ interface Props {
 }
 
 export default function UpgradePackageTable({ packages, busy, onStart, onEdit, onRemove }: Props) {
+  const t = useSiteTranslation();
   return <>
     <ProTable<UpgradePackage>
         className="upgrade-table"
@@ -24,35 +27,36 @@ export default function UpgradePackageTable({ packages, busy, onStart, onEdit, o
         pagination={false}
         scroll={{ x: 900 }}
         locale={{
-          emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无升级包，请先上传"/>
+          emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('暂无升级包，请先上传', 'Upload a release package to get started')}/>
         }} columns={[
       {
-        title: '升级包',
+        title: t('升级包', 'Packages'),
         key: 'name',
         render: (_, item) => <Space direction="vertical" size={0}>
           <span>{item.displayName || item.originalName}</span>
           <span className="upgrade-secondary">{item.originalName}</span>
         </Space>
       },
-      { title: '版本 / 构建', key: 'version', render: (_, item) => `${item.version} / ${item.build}` },
+      { title: t('版本 / 构建', 'Version / build'), key: 'version', render: (_, item) => `${item.version} / ${item.build}` },
       {
-        title: '状态',
+        title: t('状态', 'Status'),
         dataIndex: 'status',
-        render: (_, item) => <Tag color={item.status === 'READY' ? 'success' : 'default'}>{statusLabels[item.status] || item.status}</Tag>
+        render: (_, item) => <Tag color={item.status === 'READY' ? 'success' : 'default'}>{statusLabel(item.status)}</Tag>
       },
-      { title: '大小', dataIndex: 'fileSize', render: value => bytes(Number(value)) },
-      { title: '上传时间', dataIndex: 'createdAt' },
+      { title: t('大小', 'Size'), dataIndex: 'fileSize', render: value => bytes(Number(value)) },
+      { title: t('上传时间', 'Uploaded'), dataIndex: 'createdAt', render: (_, item) => format(item.createdAt) },
       {
-        title: '操作',
+        title: t('操作', 'Actions'),
         key: 'action',
         render: (_, item) => <Space size={0}>
           <Button type="link" disabled={item.status !== 'READY' || busy}
-                  onClick={() => onStart(item)} icon={<ArrowUpOutlined/>}>升级</Button>
-          <Button type="link" onClick={() => onEdit(item)} icon={<EditOutlined/>}>编辑</Button>
-          <Button type="link" danger onClick={() => onRemove(item)} disabled={busy} icon={<DeleteOutlined/>}>删除</Button>
+                  onClick={() => onStart(item)} icon={<ArrowUpOutlined/>}>{t('升级', 'Upgrade')}</Button>
+          <Button type="link" onClick={() => onEdit(item)} icon={<EditOutlined/>}>{t('编辑', 'Edit')}</Button>
+          <Button type="link" danger onClick={() => onRemove(item)} disabled={busy} icon={<DeleteOutlined/>}>{t('删除', 'Delete')}</Button>
         </Space>
       },
     ]}/>
-    <span className="upgrade-secondary">选择待升级的发行包；已使用的包保留历史快照，可继续查看或删除。</span>
+    <span className="upgrade-secondary">{t('选择待升级的发行包；已使用的包保留历史快照，可继续查看或删除。',
+      'Choose a release package to upgrade. You can still view or delete used packages; upgrade history retains a snapshot.')}</span>
   </>;
 }

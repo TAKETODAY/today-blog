@@ -4,6 +4,7 @@ export * from './http'
 export * from './common'
 export * from './storage'
 export * from './object'
+export { formatDate, translate } from './visitor-preferences'
 
 // module.exports = Object.assign({},
 //   require('./dom'),

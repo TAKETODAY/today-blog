@@ -26,8 +26,10 @@ import styles from './Center.less';
 import Settings from "@/pages/system/account/settings"
 import { useUserSession } from "@/components/hooks"
 import Image from "@/components/Image";
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 const Center = () => {
+  const t = useSiteTranslation();
   const [userSession, setUserSession] = useUserSession()
   const [modalVisible, setUpdateModalVisible] = useState(false)
 
@@ -55,12 +57,12 @@ const Center = () => {
       <Row gutter={24}>
         <Col lg={7} md={24}>
           <Card bordered={false} style={{ marginBottom: 24 }} extra={
-            <Button onClick={showModal}>更改信息</Button>
+            <Button onClick={showModal}>{t('更改信息', 'Edit profile')}</Button>
           }>
             {userSession && (
               <div>
                 <div className={styles.avatarHolder}>
-                  <Image alt="头像" src={userSession.avatar}/>
+                  <Image alt={t('头像', 'Avatar')} src={userSession.avatar}/>
                   <div className={styles.name}>{userSession.name}</div>
                   <div>{userSession?.introduce}</div>
                 </div>
@@ -71,8 +73,8 @@ const Center = () => {
         </Col>
       </Row>
 
-      <Modal width={600} title="更改账号信息" onCancel={closeModal} maskClosable={false}
-             open={modalVisible} footer={<Button onClick={closeModal}>关闭</Button>}>
+      <Modal width={600} title={t('更改账号信息', 'Edit account')} onCancel={closeModal} maskClosable={false}
+             open={modalVisible} footer={<Button onClick={closeModal}>{t('关闭', 'Close')}</Button>}>
         <Settings/>
       </Modal>
     </GridContent>

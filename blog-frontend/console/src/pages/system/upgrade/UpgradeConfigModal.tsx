@@ -3,6 +3,7 @@ import { Modal, Tabs } from 'antd';
 import type { UpgradeSettingsController } from './useUpgradeSettings';
 import UpgradeSettingsPanel from './UpgradeSettingsPanel';
 import ReleaseMappingPanel from './ReleaseMappingPanel';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 interface Props {
   open: boolean;
@@ -17,14 +18,15 @@ interface Props {
 export default function UpgradeConfigModal({
   open, activeTab, loaded, updaterReady, settings, onTabChange, onClose,
 }: Props) {
-  return <Modal className="upgrade-config-modal" title="升级配置" open={open} forceRender footer={null}
+  const t = useSiteTranslation();
+  return <Modal className="upgrade-config-modal" title={t('升级配置', 'Upgrade configuration')} open={open} forceRender footer={null}
                 width={760} style={{ maxWidth: 'calc(100vw - 32px)', top: 40 }}
                 bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
                 onCancel={onClose}>
     <Tabs activeKey={activeTab} onChange={onTabChange} items={[
       {
         key: 'settings',
-        label: '升级设置',
+        label: t('升级设置', 'Upgrade settings'),
         forceRender: true,
         children: <UpgradeSettingsPanel
             form={settings.settingsForm}
@@ -35,7 +37,7 @@ export default function UpgradeConfigModal({
       },
       {
         key: 'mappings',
-        label: '文件映射',
+        label: t('文件映射', 'File mappings'),
         forceRender: true,
         children: <ReleaseMappingPanel
             form={settings.mappingForm}

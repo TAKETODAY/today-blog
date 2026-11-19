@@ -20,7 +20,6 @@
 
 import React from 'react';
 import ListGroup from '../components/ListGroup';
-import { arrayNotEquals } from 'core';
 import { Link } from "react-router-dom";
 
 
@@ -38,16 +37,12 @@ const popularItemFunc = (article, idx) => {
 
 export default class PopularListGroup extends React.Component {
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return arrayNotEquals(this.props.items, nextProps.items)
-  }
-
   render() {
     return (
         <ListGroup
             { ...this.props }
             errorKey='popularArticles'
-            title="最受欢迎的文章"
+            title={['最受欢迎的文章', 'Popular articles']}
             itemFunc={ popularItemFunc }
         />
     )

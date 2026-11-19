@@ -28,7 +28,12 @@ import {
   updateUserSession
 } from "./redux/actions";
 import { articleService } from "./services";
-import { applySEO, setDefaultSEODescription, setDefaultSEOKeywords } from "core";
+import {
+  applySEO,
+  setDefaultSEODescription,
+  setDefaultSEOKeywords,
+} from "core";
+import { setDefaultSiteSettings } from '../../common/visitor-preferences';
 
 
 function getError(err) {
@@ -66,6 +71,7 @@ const initStore = (store) => {
     const options = res.data
     consoleLog(options)
 
+    setDefaultSiteSettings(options)
     store.dispatch(updateOptions(options))
     setDefaultSEOKeywords(options['site.keywords'])
     setDefaultSEODescription(options['site.description'])

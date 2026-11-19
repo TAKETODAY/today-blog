@@ -5,6 +5,8 @@ import { Alert, Button, Card, Descriptions, Drawer, Space, Tag, Tooltip } from '
 import { LockOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history } from '@umijs/max';
 import { http } from '@/utils/http';
+import { format } from '@/utils/site-format';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 import './index.less';
 
 interface Backup {
@@ -28,17 +30,6 @@ interface BackupDetail {
   location: string | null;
 }
 
-const statusNames: Record<string, string> = {
-  CREATING: '创建中', AVAILABLE: '可用', FAILED: '失败', DELETING: '删除中', DELETED: '已删除',
-  STARTING: '已提交', SUCCESS: '成功', RESTORING: '恢复中', MAINTENANCE_REQUIRED: '需人工处理',
-};
-
-function status(value: string) {
-  const color = ['AVAILABLE', 'SUCCESS'].includes(value) ? 'success'
-      : ['FAILED', 'MAINTENANCE_REQUIRED'].includes(value) ? 'error' : 'default';
-  return <Tag color={color}>{statusNames[value] || value}</Tag>;
-}
-
 function bytes(value: number) {
   const size = Number(value);
   if (!Number.isFinite(size) || size < 0) {
@@ -51,23 +42,36 @@ function bytes(value: number) {
 }
 
 export default function Backups() {
+  const t = useSiteTranslation();
+  const statusNames: Record<string, string> = {
+    CREATING: t('创建中', 'Creating'), AVAILABLE: t('可用', 'Available'), FAILED: t('失败', 'Failed'),
+    DELETING: t('删除中', 'Deleting'), DELETED: t('已删除', 'Deleted'), STARTING: t('已提交', 'Submitted'),
+    SUCCESS: t('成功', 'Succeeded'), RESTORING: t('恢复中', 'Restoring'), MAINTENANCE_REQUIRED: t('需人工处理', 'Manual action required'),
+  };
+  const status = (value: string) => {
+    const color = ['AVAILABLE', 'SUCCESS'].includes(value) ? 'success'
+        : ['FAILED', 'MAINTENANCE_REQUIRED'].includes(value) ? 'error' : 'default';
+    return <Tag color={color}>{statusNames[value] || value}</Tag>;
+  };
   const actionRef = useRef<ActionType>();
-  const [reason, setReason] = useState('正在检查备份执行环境');
+  const [capabilities, setCapabilities] = useState<{ reason?: string }>();
   const [error, setError] = useState(false);
   const [detail, setDetail] = useState<BackupDetail>();
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState(false);
   const [detailId, setDetailId] = useState<number>();
+  const reason = error ? t('无法确认备份执行环境，请刷新重试', 'Could not check backup readiness. Refresh and try again.')
+      : !capabilities ? t('正在检查备份执行环境', 'Checking backup readiness')
+      : capabilities.reason || t('备份执行能力尚不可用', 'Backup operations are not available');
 
   const loadCapabilities = useCallback(async () => {
     setError(false);
     try {
       const response = await http.get('/api/console/backups/capabilities');
-      setReason(response.data.reason || '备份执行能力尚不可用');
+      setCapabilities(response.data);
     }
     catch (failure) {
       setError(true);
-      setReason('无法确认备份执行环境，请刷新重试');
     }
   }, []);
 
@@ -112,7 +116,7 @@ export default function Backups() {
 
   const columns: ProColumns<Backup>[] = [
     {
-      title: '备份',
+      title: t('备份', 'Backup'),
       dataIndex: 'name',
       fixed: 'left',
       width: 260,
@@ -123,75 +127,78 @@ export default function Backups() {
       </Space>,
     },
     {
-      title: '状态',
+      title: t('状态', 'Status'),
       dataIndex: 'status',
       width: 120,
       valueEnum: Object.fromEntries(Object.entries(statusNames).map(([value, text]) => [value, { text }])),
       render: (_, item) => status(item.status),
     },
     {
-      title: '程序版本',
+      title: t('程序版本', 'Application version'),
       key: 'version',
       width: 150,
       hideInSearch: true,
       render: (_, item) => `${item.version || '—'} / ${item.build || '—'}`,
     },
     {
-      title: '版本',
+      title: t('版本', 'Version'),
       dataIndex: 'version',
       hideInTable: true,
     },
     {
-      title: '大小',
+      title: t('大小', 'Size'),
       dataIndex: 'totalBytes',
       width: 110,
       hideInSearch: true,
       render: (_, item) => bytes(item.totalBytes),
     },
     {
-      title: '保护',
+      title: t('保护', 'Protection'),
       dataIndex: 'protectedBackup',
       width: 110,
       valueType: 'select',
       valueEnum: {
-        true: { text: '已保护' },
-        false: { text: '未保护' },
+        true: { text: t('已保护', 'Protected') },
+        false: { text: t('未保护', 'Unprotected') },
       },
-      render: (_, item) => item.protectedBackup ? <Tag icon={<LockOutlined/>}>已保护</Tag> : '未保护',
+      render: (_, item) => item.protectedBackup ? <Tag icon={<LockOutlined/>}>{t('已保护', 'Protected')}</Tag> : t('未保护', 'Unprotected'),
     },
     {
-      title: '创建时间',
+      title: t('创建时间', 'Created'),
       dataIndex: 'createdAt',
       width: 210,
       valueType: 'dateTimeRange',
-      render: (_, item) => item.createdAt,
+      render: (_, item) => format(item.createdAt),
     },
     {
-      title: '操作',
+      title: t('操作', 'Actions'),
       key: 'actions',
       fixed: 'right',
       width: 260,
       valueType: 'option',
       render: (_, item) => <Space size={0}>
-        <Button type="link" onClick={() => setDetailId(item.id)}>详情</Button>
-        {unavailable(item.protectedBackup ? '取消保护' : '保护')}
-        {unavailable('恢复')}
-        {unavailable('删除', true)}
+        <Button type="link" onClick={() => setDetailId(item.id)}>{t('详情', 'Details')}</Button>
+        {unavailable(item.protectedBackup ? t('取消保护', 'Unprotect') : t('保护', 'Protect'))}
+        {unavailable(t('恢复', 'Restore'))}
+        {unavailable(t('删除', 'Delete'), true)}
       </Space>,
     },
   ];
 
-  return <PageContainer className="backups-page" title="系统备份" subTitle="管理恢复点，追踪程序与数据的匹配状态">
+  return <PageContainer className="backups-page" title={t('系统备份', 'System backups')}
+                        subTitle={t('管理恢复点，追踪程序与数据的匹配状态', 'Manage restore points and track matching application and data versions')}>
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Alert type="warning" showIcon message="恢复备份会回退业务数据"
-             description="恢复会将程序、数据库、附件及配置回到同一恢复点，此后新增或修改的数据可能丢失。恢复前必须先自动备份当前状态并保护该备份。"/>
-      <Alert type={error ? 'error' : 'info'} showIcon message={error ? '备份数据加载失败' : '备份执行能力未就绪'}
-             description={error ? '未能取得最新列表和环境状态，以下内容可能不是最新数据。请重试，勿重复提交操作。' : reason}
-             action={error ? <Button size="small" onClick={refresh}>重试</Button> : undefined}/>
+      <Alert type="warning" showIcon message={t('恢复备份会回退业务数据', 'Restoring a backup rolls back data')}
+             description={t('恢复会将程序、数据库、附件及配置回到同一恢复点，此后新增或修改的数据可能丢失。恢复前必须先自动备份当前状态并保护该备份。',
+               'A restore reverts the application, database, attachments and settings to the same point. Later changes may be lost. Back up and protect the current state automatically before restoring.')}/>
+      <Alert type={error ? 'error' : 'info'} showIcon message={error ? t('备份数据加载失败', 'Could not load backup information') : t('备份执行能力未就绪', 'Backup operations are not ready')}
+             description={error ? t('未能取得最新列表和环境状态，以下内容可能不是最新数据。请重试，勿重复提交操作。',
+               'The list and environment status may be outdated. Try again without resubmitting operations.') : reason}
+             action={error ? <Button size="small" onClick={refresh}>{t('重试', 'Retry')}</Button> : undefined}/>
       <ProTable<Backup>
           rowKey="id"
           actionRef={actionRef}
-          headerTitle="备份列表"
+          headerTitle={t('备份列表', 'Backups')}
           columns={columns}
           scroll={{ x: 1100 }}
           search={{ labelWidth: 'auto' }}
@@ -232,38 +239,40 @@ export default function Backups() {
             };
           }}
           toolBarRender={() => [
-            <Button key="refresh" icon={<ReloadOutlined/>} onClick={refresh}>刷新</Button>,
+            <Button key="refresh" icon={<ReloadOutlined/>} onClick={refresh}>{t('刷新', 'Refresh')}</Button>,
             <Tooltip key="create" title={reason}>
-              <span><Button type="primary" icon={<PlusOutlined/>} disabled>创建备份</Button></span>
+              <span><Button type="primary" icon={<PlusOutlined/>} disabled>{t('创建备份', 'Create backup')}</Button></span>
             </Tooltip>,
           ]}
       />
-      <span className="backup-secondary">最多展示最近 500 份备份。列表记录不代表备份已通过完整性校验或恢复演练。</span>
+      <span className="backup-secondary">{t('最多展示最近 500 份备份。列表记录不代表备份已通过完整性校验或恢复演练。',
+        'Shows up to 500 recent backups. Listing does not imply integrity verification or a successful restore test.')}</span>
     </Space>
-    <Drawer className="backup-detail-drawer" title="备份详情" open={detailId !== undefined} onClose={() => setDetailId(undefined)} width={640}
+    <Drawer className="backup-detail-drawer" title={t('备份详情', 'Backup details')} open={detailId !== undefined} onClose={() => setDetailId(undefined)} width={640}
             contentWrapperStyle={{ maxWidth: '100vw' }}>
-      {detailError && <Alert type="error" showIcon message="无法读取备份详情" description="备份可能已移除或连接中断，请关闭后重试。"/>}
+      {detailError && <Alert type="error" showIcon message={t('无法读取备份详情', 'Could not read the backup')}
+                            description={t('备份可能已移除或连接中断，请关闭后重试。', 'The backup may have been removed, or the connection was lost. Close and try again.')}/>}
       {detailLoading && <Card loading bordered={false}/>}
       {detail && <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Alert type="info" showIcon message="恢复前仍需重新校验"
-               description="元信息不能代替文件摘要检查。创建成功也不代表已经通过恢复演练。"/>
+        <Alert type="info" showIcon message={t('恢复前仍需重新校验', 'Verify before restoring')}
+               description={t('元信息不能代替文件摘要检查。创建成功也不代表已经通过恢复演练。', 'Metadata does not replace checksum verification. A successful backup does not imply a successful restore test.')}/>
         <Descriptions column={1} bordered size="small">
-          <Descriptions.Item label="名称">{detail.backup.name}</Descriptions.Item>
-          <Descriptions.Item label="备份 ID"><span className="backup-id">{detail.backup.id}</span></Descriptions.Item>
-          <Descriptions.Item label="状态">{status(detail.backup.status)}</Descriptions.Item>
-          <Descriptions.Item label="程序版本">{detail.backup.version || '—'} / {detail.backup.build || '—'}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">{detail.backup.createdAt}</Descriptions.Item>
-          <Descriptions.Item label="保护状态">{detail.backup.protectedBackup ? '已保护，禁止删除' : '未保护'}</Descriptions.Item>
-          <Descriptions.Item label="大小">{bytes(detail.backup.totalBytes)}</Descriptions.Item>
-          <Descriptions.Item label="文件路径"><span className="backup-id">{detail.location || '—'}</span></Descriptions.Item>
-          <Descriptions.Item label="覆盖范围">{detail.scope || '尚未记录，不可据此判断为完整备份'}</Descriptions.Item>
-          <Descriptions.Item label="清单摘要"><span
+          <Descriptions.Item label={t('名称', 'Name')}>{detail.backup.name}</Descriptions.Item>
+          <Descriptions.Item label={t('备份 ID', 'Backup ID')}><span className="backup-id">{detail.backup.id}</span></Descriptions.Item>
+          <Descriptions.Item label={t('状态', 'Status')}>{status(detail.backup.status)}</Descriptions.Item>
+          <Descriptions.Item label={t('程序版本', 'Application version')}>{detail.backup.version || '—'} / {detail.backup.build || '—'}</Descriptions.Item>
+          <Descriptions.Item label={t('创建时间', 'Created')}>{format(detail.backup.createdAt)}</Descriptions.Item>
+          <Descriptions.Item label={t('保护状态', 'Protection')}>{detail.backup.protectedBackup ? t('已保护，禁止删除', 'Protected from deletion') : t('未保护', 'Unprotected')}</Descriptions.Item>
+          <Descriptions.Item label={t('大小', 'Size')}>{bytes(detail.backup.totalBytes)}</Descriptions.Item>
+          <Descriptions.Item label={t('文件路径', 'File path')}><span className="backup-id">{detail.location || '—'}</span></Descriptions.Item>
+          <Descriptions.Item label={t('覆盖范围', 'Scope')}>{detail.scope || t('尚未记录，不可据此判断为完整备份', 'Not recorded; do not assume this is a full backup')}</Descriptions.Item>
+          <Descriptions.Item label={t('清单摘要', 'Manifest checksum')}><span
             className="backup-id">{detail.backup.manifestSha256 || '—'}</span></Descriptions.Item>
-          <Descriptions.Item label="恢复演练">{detail.restoreVerifiedAt || '尚无恢复验证记录'}</Descriptions.Item>
-          <Descriptions.Item label="来源任务"><span
-            className="backup-id">{detail.backup.sourceOperationId || '手动创建或未关联任务'}</span></Descriptions.Item>
+          <Descriptions.Item label={t('恢复演练', 'Restore test')}>{format(detail.restoreVerifiedAt) || t('尚无恢复验证记录', 'No verified restore on record')}</Descriptions.Item>
+          <Descriptions.Item label={t('来源任务', 'Source task')}><span
+            className="backup-id">{detail.backup.sourceOperationId || t('手动创建或未关联任务', 'Manual or no linked task')}</span></Descriptions.Item>
         </Descriptions>
-        <Button onClick={() => history.push('/system/upgrade')}>前往系统升级</Button>
+        <Button onClick={() => history.push('/system/upgrade')}>{t('前往系统升级', 'Go to system upgrade')}</Button>
       </Space>}
     </Drawer>
   </PageContainer>;

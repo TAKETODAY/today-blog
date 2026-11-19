@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Form, message, Modal } from 'antd';
 import type { FormInstance } from 'antd';
 import { http } from '@/utils/http';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 import type { MaintenanceStatus } from './types';
 
 interface MaintenanceFormValues {
@@ -23,6 +24,7 @@ export interface MaintenanceController {
 }
 
 export function useMaintenance(): MaintenanceController {
+  const t = useSiteTranslation();
   const [status, setStatusState] = useState<MaintenanceStatus>();
   const [saving, setSaving] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -33,7 +35,7 @@ export function useMaintenance(): MaintenanceController {
   }, []);
 
   function open() {
-    form.setFieldsValue({ message: '系统维护中，请稍后重试', retryAfter: 120 });
+    form.setFieldsValue({ message: t('系统维护中，请稍后重试', 'Maintenance in progress. Try again later.'), retryAfter: 120 });
     setVisible(true);
   }
 
@@ -50,7 +52,7 @@ export function useMaintenance(): MaintenanceController {
       });
       setStatusState(response.data);
       setVisible(false);
-      message.success('维护状态已开启，业务请求将返回 503');
+      message.success(t('维护状态已开启，业务请求将返回 503', 'Maintenance is active. Site requests will return 503.'));
     }
     finally {
       setSaving(false);
@@ -59,15 +61,16 @@ export function useMaintenance(): MaintenanceController {
 
   function disable() {
     Modal.confirm({
-      title: '关闭维护状态？',
-      content: '关闭后业务请求将立即恢复。若升级仍在进行，请勿关闭。',
-      okText: '关闭维护',
+      title: t('关闭维护状态？', 'End maintenance?'),
+      content: t('关闭后业务请求将立即恢复。若升级仍在进行，请勿关闭。', 'Site requests will resume immediately. Do not end maintenance while an upgrade is running.'),
+      okText: t('关闭维护', 'End maintenance'),
+      cancelText: t('取消', 'Cancel'),
       async onOk() {
         setSaving(true);
         try {
           const response = await http.put('/api/console/maintenance', { enabled: false });
           setStatusState(response.data);
-          message.success('维护状态已关闭');
+          message.success(t('维护状态已关闭', 'Maintenance ended'));
         }
         finally {
           setSaving(false);
@@ -76,7 +79,8 @@ export function useMaintenance(): MaintenanceController {
     });
   }
 
-  const sourceLabel = status?.source === 'manual' ? '手动开启，升级后不会自动关闭' : '升级流程自动开启，完成后自动关闭';
+  const sourceLabel = status?.source === 'manual' ? t('手动开启，升级后不会自动关闭', 'Started manually; will not end automatically')
+    : t('升级流程自动开启，完成后自动关闭', 'Started by the upgrade; ends automatically when it finishes');
 
   return { status, saving, visible, form, sourceLabel, setStatus, open, close, enable, disable };
 }

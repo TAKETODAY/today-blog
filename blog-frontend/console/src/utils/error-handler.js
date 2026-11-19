@@ -22,12 +22,13 @@ import { message, Modal, notification } from "antd";
 import { getPath, goToLogin, isNotLoginPage, isNull } from "@/utils";
 import React from "react"
 import { Iterable } from "immutable"
+import { siteText as t } from './site-format';
 
 const errorMessage = (err, message) => {
   err.message = (err && err.response && err.response.data)
     ? err.response.data.detail || err.response.data.message || message : message
   notification.warn({
-    message: '提示',
+    message: t('提示', 'Notice'),
     description: err.message
   })
 }
@@ -52,12 +53,12 @@ export function showLoginDialog(loginCallback, onCancel) {
   if (hideLoginDialogPath.indexOf(path) < 0) {
     console.log("不在登录页面,可以展示提示框")
     Modal.confirm({
-      title: "该操作需要登录",
-      content: <span style={{ color: "red" }}>系统检测到: 您尚未登陆,或者在线时间超时<br/>
-              <strong>如果有数据未保存请在新窗口打开系统登录</strong>
+      title: t('该操作需要登录', 'Sign-in required'),
+      content: <span style={{ color: 'red' }}>{t('您尚未登录，或会话已过期。', 'You are signed out, or your session has expired.')}<br/>
+              <strong>{t('如果有未保存的内容，请在新窗口登录。', 'If you have unsaved changes, sign in in a new window.')}</strong>
             </span>,
-      cancelText: '取消',
-      okText: '去登录',
+      cancelText: t('取消', 'Cancel'),
+      okText: t('去登录', 'Sign in'),
       onOk: () => {
         loginDialogOpened = false
         const isNotLogin = isNotLoginPage()
@@ -81,25 +82,25 @@ export function showLoginDialog(loginCallback, onCancel) {
 }
 
 const handleNotFound = (err) => {
-  errorMessage(err, '资源不存在')
+  errorMessage(err, t('资源不存在', 'Resource not found'))
 }
 
 const handleBadRequest = (err) => {
-  errorMessage(err, '请求错误')
+  errorMessage(err, t('请求错误', 'Bad request'))
 }
 
 const handleUnauthorized = (err) => {
   if (!showLoginDialog()) {
-    errorMessage(err, '登录超时')
+    errorMessage(err, t('登录超时', 'Session expired'))
   }
 }
 
 const handleAccessForbidden = (err) => {
-  errorMessage(err, '没有权限')
+  errorMessage(err, t('没有权限', 'Access denied'))
 }
 
 const handleInternalServerError = (err) => {
-  errorMessage(err, '服务器内部错误')
+  errorMessage(err, t('服务器内部错误', 'Internal server error'))
 }
 
 const errorHandlers = {
@@ -115,14 +116,14 @@ export const handleHttpError = err => {
     err.status = err.response.status
     const errorHandler = errorHandlers[err.status]
     if (isNull(errorHandler)) {
-      errorMessage(err, '后台服务不可用')
+      errorMessage(err, t('后台服务不可用', 'The service is unavailable'))
     }
     else {
       errorHandler(err)
     }
   }
   else {
-    errorMessage(err, '错误未知')
+    errorMessage(err, t('无法连接到服务器', 'Could not reach the server'))
     err.status = -1
   }
 }

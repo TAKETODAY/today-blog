@@ -15,14 +15,17 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState, useSyncExternalStore } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import Footer from './components/Footer';
 import Header from './components/Header';
 import RouteLoading from './components/RouteLoading';
 import { http } from 'core';
-import { Layout } from 'antd';
+import { ConfigProvider, Layout } from 'antd';
+import zhCN from 'antd/es/locale/zh_CN';
+import enUS from 'antd/es/locale/en_US';
+import { getCurrentLocale, preferencesSnapshot, subscribePreferences } from '../../common/visitor-preferences';
 import 'antd/es/layout/style';
 import { ArticleLayout, SearchLayout } from './layouts';
 import './App.css';
@@ -32,9 +35,15 @@ import { useUserSession } from "./components/hooks";
 const { Content } = Layout;
 
 export default () => {
+  useSyncExternalStore(subscribePreferences, preferencesSnapshot);
+  const locale = getCurrentLocale();
   const location = useLocation();
   const [userSession] = useUserSession();
   const [previousLocation, setPreviousLocation] = useState(null);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   useEffect(() => {
     // 在 effect 中更新 previousLocation
@@ -59,7 +68,7 @@ export default () => {
   }, [location])
 
   return (
-    <>
+    <ConfigProvider locale={locale === 'en-US' ? enUS : zhCN}>
       <Layout>
         <Header/>
         <Content>
@@ -97,6 +106,6 @@ export default () => {
         </Content>
         <Footer/>
       </Layout>
-    </>
+    </ConfigProvider>
   );
 }

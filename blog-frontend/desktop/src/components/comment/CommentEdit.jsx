@@ -28,13 +28,15 @@ import { commentService } from 'src/services';
 import Image from '../Image';
 import { updateUserSession } from "src/redux/actions";
 import { userSessionOptionsMapStateToProps } from "src/redux/action-types";
-import { getGravatarURL, getStorage, isEmpty, saveStorage } from "core";
+import { getGravatarURL, getStorage, isEmpty, saveStorage, translate } from "core";
 import './CommentEdit.css';
+import { useDisplayPreferences } from '../hooks/useDisplayPreferences';
 
 
 const Editor = React.lazy(() => import('../Editor'));
 
 const CommentEdit = props => {
+  useDisplayPreferences();
   const [editor, setEditor] = useState(null)
   const [form] = Form.useForm();
 
@@ -49,18 +51,16 @@ const CommentEdit = props => {
 
     const content = editor.markdown()
     if (isEmpty(content)) {
-      return message.warning("请输入评论内容")
+      return message.warning(translate('请输入评论内容', 'Enter your comment.'))
     }
     else {
       const { commentId, articleId } = props
       return commentService.createComment({ commentId, articleId, content, ...commenter })
           .then(_ => {
             editor.value("")
-            return message.success("评论成功")
+            return message.success(translate('评论成功', 'Comment posted.'))
           })
-          .catch(err => {
-            return message.error(err.response.data?.message)
-          })
+          .catch(err => message.error(err.message || translate('评论提交失败', 'Could not post the comment.')))
     }
   }
 
@@ -82,7 +82,7 @@ const CommentEdit = props => {
         <div className='user_description'>{comment.commenterDesc || comment.user.introduce}</div>
       </div>
       <div style={{ float: 'right', marginRight: '-10px' }}>
-        <Button onClick={cancelReply} type="primary"> 取消评论</Button>
+        <Button onClick={cancelReply} type="primary">{translate('取消回复', 'Cancel reply')}</Button>
       </div>
     </>)
   }
@@ -105,29 +105,29 @@ const CommentEdit = props => {
     <div className="data-list-title" style={{ border: 'none' }}>
       {replying
           ? renderReply(replying)
-          : <><EditOutlined aria-hidden="true"/> 发表评论</>
+          : <><EditOutlined aria-hidden="true"/> {translate('发表评论', 'Leave a comment')}</>
       }
     </div>
 
-    <Suspense fallback={<div>编辑器加载中...</div>}>
+    <Suspense fallback={<div>{translate('编辑器加载中…', 'Loading editor…')}</div>}>
       <Editor placeholder={options['comment.placeholder']}
               setEditor={setEditor} options={{ autofocus: false }}/>
     </Suspense>
 
     <div className="comment-edit-footer">
       <Form layout="inline" form={form} initialValues={commenterInfo()} onFinish={createComment}>
-        <Form.Item name="email" rules={[{ required: true, message: '请输入邮箱' }]}>
-          <Input prefix={<MailOutlined/>} placeholder="邮箱"/>
+        <Form.Item name="email" rules={[{ required: true, message: translate('请输入邮箱', 'Enter your email address.') }]}>
+          <Input prefix={<MailOutlined/>} placeholder={translate('邮箱', 'Email')}/>
         </Form.Item>
-        <Form.Item name="commenter" rules={[{ required: true, message: '请输入昵称' }]}>
-          <Input prefix={<UserOutlined/>} placeholder="昵称"/>
+        <Form.Item name="commenter" rules={[{ required: true, message: translate('请输入昵称', 'Enter a display name.') }]}>
+          <Input prefix={<UserOutlined/>} placeholder={translate('昵称', 'Display name')}/>
         </Form.Item>
         <Form.Item name="commenterSite">
-          <Input prefix={<GlobalOutlined/>} placeholder="个人网站"/>
+          <Input prefix={<GlobalOutlined/>} placeholder={translate('个人网站', 'Website')}/>
         </Form.Item>
         <Form.Item className="comment-edit-submit" shouldUpdate>
           {() => (
-              <Button type="primary" htmlType="submit">提交评论</Button>
+              <Button type="primary" htmlType="submit" disabled={!editor}>{translate('提交评论', 'Post comment')}</Button>
           )}
         </Form.Item>
       </Form>

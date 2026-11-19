@@ -20,7 +20,8 @@
 
 import React, { ReactNode, useEffect, useState } from 'react';
 import { Button, Card, Input, List, Select } from 'antd';
-import moment from "moment";
+import { format } from '@/utils/site-format';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 import styles from './style.less';
 import { Attachment, FileType } from "./data";
 import { IMAGE } from "@/utils";
@@ -57,6 +58,7 @@ const defaultAttachment = {
 }
 
 export default ({ itemClicked, fileType, children }: AttachmentProps) => {
+  const t = useSiteTranslation();
 
   const [params, setParams] = useState({ ...defaultParams, fileType })
   const [loading, setLoading] = useState(true)
@@ -101,22 +103,22 @@ export default ({ itemClicked, fileType, children }: AttachmentProps) => {
       <>
         <Select defaultValue={fileType || ''}
                 style={{ width: 120, marginBottom: 10 }}
-                placeholder="附件分类" onChange={handleFileTypeChange}>
-          <Option value="">全部</Option>
-          <Option value="IMAGE">图片</Option>
-          <Option value="VIDEO">视频</Option>
-          <Option value="AUDIO">音频</Option>
-          <Option value="TEXT">文本</Option>
-          <Option value="OTHER">其他</Option>
+                placeholder={t('附件分类', 'File type')} onChange={handleFileTypeChange}>
+          <Option value="">{t('全部', 'All')}</Option>
+          <Option value="IMAGE">{t('图片', 'Image')}</Option>
+          <Option value="VIDEO">{t('视频', 'Video')}</Option>
+          <Option value="AUDIO">{t('音频', 'Audio')}</Option>
+          <Option value="TEXT">{t('文本', 'Text')}</Option>
+          <Option value="OTHER">{t('其他', 'Other')}</Option>
         </Select>
 
-        <Search placeholder="文件名"
+        <Search placeholder={t('文件名', 'Filename')}
                 allowClear
                 onSearch={onSearch}
                 style={{ width: 200, margin: '0 10px' }}
         />
         <Button type="primary" icon={<UploadOutlined/>}
-                onClick={() => setUploadModalVisible(true)}>上传附件</Button>
+                onClick={() => setUploadModalVisible(true)}>{t('上传附件', 'Upload attachment')}</Button>
 
         <List
             grid={grid}
@@ -134,7 +136,7 @@ export default ({ itemClicked, fileType, children }: AttachmentProps) => {
                   <Card className={styles.card} hoverable cover={renderImage(item)}>
                     <div className={styles.cardItemContent}>
                       <span>{item.name || ''} </span>
-                      <b>{moment(item.createAt).fromNow()}</b>
+                      <b>{format(item.createAt, 'short')}</b>
                     </div>
                   </Card>
                 </List.Item>
@@ -158,4 +160,3 @@ export default ({ itemClicked, fileType, children }: AttachmentProps) => {
       </>
   )
 }
-

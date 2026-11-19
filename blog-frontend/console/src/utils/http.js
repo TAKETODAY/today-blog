@@ -22,6 +22,7 @@ import http from 'axios';
 import NProgress from 'nprogress';
 import { handleHttpError } from './error-handler';
 import { currentTimeMillis } from "@/utils/common";
+import { siteText } from './site-format';
 
 // export default
 NProgress.configure({
@@ -76,8 +77,9 @@ http.defaults.paramsSerializer = {
 http.interceptors.request.use(function (config) {
   // Do something before request is sent
   startNProgress()
+  config.headers['X-Blog-Locale'] = 'site';
   if (!config.timeoutErrorMessage) {
-    config.timeoutErrorMessage = "请求服务器超时"
+    config.timeoutErrorMessage = siteText('请求服务器超时', 'The request timed out');
   }
   return config;
 }, function (error) {
@@ -144,4 +146,3 @@ export async function uploadFile(url, file, onUploadProgress) {
 }
 
 export { http, getQuery };
-

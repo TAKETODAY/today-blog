@@ -22,14 +22,16 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Locale;
 
-import infra.util.StringUtils;
+import cn.taketoday.blog.service.OptionService;
+import infra.beans.factory.annotation.Autowired;
 import infra.http.HttpHeaders;
 import infra.stereotype.Component;
+import infra.util.StringUtils;
 import infra.web.HttpContext;
 import infra.web.LocaleResolver;
 
 /**
- * 按请求的语言偏好选择博客支持的语言，无匹配或请求头无效时使用简体中文。
+ * 优先使用访客明确选择的语言，其次按 Accept-Language 协商，最后回退到站点默认语言。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/18
@@ -37,15 +39,31 @@ import infra.web.LocaleResolver;
 @Component(LocaleResolver.BEAN_NAME)
 public final class BlogLocaleResolver implements LocaleResolver {
 
+  public static final String LOCALE_HEADER = "X-Blog-Locale";
+
   private static final Locale DEFAULT_LOCALE = Locale.SIMPLIFIED_CHINESE;
 
-  private static final List<Locale> SUPPORTED_LOCALES = List.of(DEFAULT_LOCALE, Locale.ENGLISH);
+  private @Nullable OptionService optionService;
+
+  @Autowired(required = false)
+  public void setOptionService(OptionService optionService) {
+    this.optionService = optionService;
+  }
 
   @Override
   public Locale resolveLocale(HttpContext request) {
+    String selected = request.getHeader(LOCALE_HEADER);
+    if ("site".equalsIgnoreCase(selected)) {
+      return defaultLocale();
+    }
+    Locale selectedLocale = supportedLocale(selected);
+    if (selectedLocale != null) {
+      return selectedLocale;
+    }
+
     String header = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
     if (StringUtils.isBlank(header)) {
-      return DEFAULT_LOCALE;
+      return defaultLocale();
     }
 
     List<Locale.LanguageRange> ranges;
@@ -53,14 +71,41 @@ public final class BlogLocaleResolver implements LocaleResolver {
       ranges = Locale.LanguageRange.parse(header);
     }
     catch (IllegalArgumentException ex) {
-      return DEFAULT_LOCALE;
+      return defaultLocale();
     }
-    Locale match = Locale.lookup(ranges, SUPPORTED_LOCALES);
-    return match != null ? match : DEFAULT_LOCALE;
+    for (Locale.LanguageRange range : ranges) {
+      if (range.getWeight() > 0) {
+        Locale match = switch (Locale.forLanguageTag(range.getRange()).getLanguage()) {
+          case "en" -> Locale.ENGLISH;
+          case "zh" -> DEFAULT_LOCALE;
+          default -> null;
+        };
+        if (match != null) {
+          return match;
+        }
+      }
+    }
+    return defaultLocale();
   }
 
   @Override
   public void setLocale(HttpContext request, @Nullable Locale locale) {
-    throw new UnsupportedOperationException("Locale is resolved from Accept-Language");
+    throw new UnsupportedOperationException("Locale is resolved from request headers and site options");
+  }
+
+  private Locale defaultLocale() {
+    Locale locale = optionService == null ? null
+            : supportedLocale(optionService.getOptionValue(OptionService.SITE_LOCALE));
+    return locale != null ? locale : DEFAULT_LOCALE;
+  }
+
+  private static @Nullable Locale supportedLocale(@Nullable String value) {
+    if ("en-US".equalsIgnoreCase(value) || "en".equalsIgnoreCase(value)) {
+      return Locale.ENGLISH;
+    }
+    if ("zh-CN".equalsIgnoreCase(value) || "zh".equalsIgnoreCase(value)) {
+      return DEFAULT_LOCALE;
+    }
+    return null;
   }
 }

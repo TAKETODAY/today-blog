@@ -4,7 +4,7 @@ import Backups from '@/pages/system/backups';
 import { http } from '@/utils/http';
 
 jest.mock('@/utils/http', () => ({ http: { get: jest.fn(), post: jest.fn() } }));
-jest.mock('@umijs/max', () => ({ history: { push: jest.fn() } }));
+jest.mock('@umijs/max', () => ({ history: { push: jest.fn() }, useIntl: () => ({ locale: 'zh-CN' }) }));
 jest.mock('@ant-design/pro-layout', () => ({ PageContainer: ({ children }) => <div>{children}</div> }));
 
 describe('Backups', () => {
@@ -49,6 +49,7 @@ describe('Backups', () => {
 
   it('loads records and prevents unavailable destructive actions', async () => {
     await act(async () => root.render(<Backups />));
+    await flushTableRequest();
     expect(container.textContent).toContain('更新前恢复点');
     expect(container.textContent).toContain('已保护');
     expect(container.textContent).not.toContain('快照');
@@ -69,7 +70,15 @@ describe('Backups', () => {
     expect(container.textContent).toContain('备份数据加载失败');
     const retry = Array.from(container.querySelectorAll('button')).find(item => item.textContent?.replace(/\s/g, '') === '重试');
     await act(async () => retry?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    await flushTableRequest();
     expect(container.textContent).toContain('更新前恢复点');
     expect(container.textContent).not.toContain('备份数据加载失败');
   });
 });
+
+// ProTable debounces both the initial request and subsequent reloads.
+async function flushTableRequest() {
+  await act(async () => new Promise(resolve => {
+    setTimeout(resolve, 100);
+  }));
+}

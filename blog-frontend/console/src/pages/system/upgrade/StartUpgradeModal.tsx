@@ -5,6 +5,7 @@ import { http } from '@/utils/http';
 import type { Environment, Options, UpgradePackage, UpgradeRecord, VersionInfo } from './types';
 import { requestOptions } from './utils';
 import OptionFields from './OptionFields';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 interface Props {
   item?: UpgradePackage;
@@ -19,6 +20,7 @@ interface Props {
 export default function StartUpgradeModal({
   item, version, environment, loaded, options, onClose, onStarted,
 }: Props) {
+  const t = useSiteTranslation();
   const [form] = Form.useForm<Options>();
   const [starting, setStarting] = useState(false);
   const [deletePackageAfter, setDeletePackageAfter] = useState(false);
@@ -53,11 +55,11 @@ export default function StartUpgradeModal({
   }
 
   return <Modal
-      title={item ? `升级到 ${item.version} / ${item.build}` : '开始升级'}
+      title={item ? t(`升级到 ${item.version} / ${item.build}`, `Upgrade to ${item.version} / ${item.build}`) : t('开始升级', 'Start upgrade')}
       open={Boolean(item)}
       forceRender
       confirmLoading={starting}
-      okText="开始升级"
+      okText={t('开始升级', 'Start upgrade')}
       okButtonProps={{ disabled: !environmentReady, icon: <ArrowUpOutlined/> }}
       onOk={start}
       onCancel={onClose}
@@ -65,14 +67,15 @@ export default function StartUpgradeModal({
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
       <Alert type="info" showIcon
              message={item?.displayName || item?.originalName}
-             description={`当前版本 ${version.version} / ${version.build || '—'}；提交后立即进入维护状态。`}/>
+             description={t(`当前版本 ${version.version} / ${version.build || '—'}；提交后立即进入维护状态。`,
+               `Current version: ${version.version} / ${version.build || '—'}. Maintenance starts immediately after submission.`)}/>
       <Form form={form} layout="vertical" disabled={starting || !loaded}>
         <OptionFields/>
-        <Form.Item name="note" label="本次升级备注"><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
+        <Form.Item name="note" label={t('本次升级备注', 'Upgrade notes')}><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
       </Form>
       <Checkbox checked={deletePackageAfter} disabled={starting}
                 onChange={event => setDeletePackageAfter(event.target.checked)}>
-        升级成功后删除升级包
+        {t('升级成功后删除升级包', 'Delete the package after a successful upgrade')}
       </Checkbox>
     </Space>
   </Modal>;

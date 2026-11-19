@@ -21,6 +21,8 @@
 import React from 'react'
 import { message, Modal, Upload } from 'antd'
 import { InboxOutlined } from '@ant-design/icons';
+import { useSiteTranslation } from '@/utils/use-site-translation';
+import { siteText } from '@/utils/site-format';
 
 const { Dragger } = Upload;
 
@@ -28,23 +30,25 @@ const draggerProps = {
   name: 'file',
   multiple: true,
   action: '/api/console/attachments',
+  headers: { 'X-Blog-Locale': 'site' },
   onChange(info) {
     const { status } = info.file;
     if (status === 'done') {
-      message.success(`'${info.file.name}' 上传成功.`);
+      message.success(siteText(`「${info.file.name}」上传成功`, `Uploaded “${info.file.name}”`));
     }
     else if (status === 'error') {
-      message.error(`'${info.file.name}' 上传失败.`);
+      message.error(siteText(`「${info.file.name}」上传失败`, `Could not upload “${info.file.name}”`));
     }
   },
 };
 
 const UploadForm = props => {
+  const t = useSiteTranslation();
   const { onCancel: hideUpdateModal, open, onRefresh } = props
 
   return (
     <Modal
-      title="上传附件"
+      title={t('上传附件', 'Upload attachments')}
       width={800}
       destroyOnClose
       onOk={() => {
@@ -61,8 +65,8 @@ const UploadForm = props => {
         <p className="ant-upload-drag-icon">
           <InboxOutlined/>
         </p>
-        <p className="ant-upload-text">单击或拖动文件到该区域以上传</p>
-        <p className="ant-upload-hint">支持单次或批量上传</p>
+        <p className="ant-upload-text">{t('单击或拖动文件到该区域以上传', 'Click or drag files here to upload')}</p>
+        <p className="ant-upload-hint">{t('支持单次或批量上传', 'Upload one or more files')}</p>
       </Dragger>
     </Modal>
   )

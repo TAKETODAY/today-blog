@@ -1,6 +1,7 @@
 import { unauthorized } from "./storage"
 import { isNull } from "./object";
 import { message, notification } from "antd";
+import { translate } from './visitor-preferences';
 
 const errorMessage = (err, message) => {
   err.message = (err && err.response && err.response.data)
@@ -8,28 +9,28 @@ const errorMessage = (err, message) => {
 }
 
 const handleNotFound = (err) => {
-  errorMessage(err, '资源不存在')
+  errorMessage(err, translate('资源不存在', 'Resource not found'))
 }
 
 const handleBadRequest = (err) => {
-  errorMessage(err, '请求错误')
+  errorMessage(err, translate('请求错误', 'Bad request'))
 }
 
 const handleUnauthorized = (err) => {
-  errorMessage(err, '登录超时')
+  errorMessage(err, translate('请登录后重试', 'Sign in and try again'))
   unauthorized()
 }
 
 const handleAccessForbidden = (err) => {
-  errorMessage(err, '没有权限')
+  errorMessage(err, translate('没有权限', 'Access denied'))
 }
 
 const handleTooManyRequests = (err) => {
-  errorMessage(err, '操作频繁')
+  errorMessage(err, translate('操作频繁', 'Too many requests'))
 }
 
 const handleInternalServerError = (err) => {
-  errorMessage(err, '服务器内部错误')
+  errorMessage(err, translate('服务器内部错误', 'Internal server error'))
 }
 
 const errorHandlers = {
@@ -47,9 +48,9 @@ export const handleHttpError = (err) => {
     err.status = err.response.status
     const errorHandler = errorHandlers[err.response.status]
     if (isNull(errorHandler)) {
-      errorMessage(err, '后台服务不可用')
+      errorMessage(err, translate('后台服务不可用', 'The service is unavailable'))
       notification.error({
-        message: '错误',
+        message: translate('错误', 'Error'),
         description: err.message
       })
     }
@@ -58,7 +59,7 @@ export const handleHttpError = (err) => {
     }
   }
   else {
-    errorMessage(err, '错误未知')
+    errorMessage(err, translate('无法连接到服务器', 'Could not reach the server'))
     err.status = -1
   }
 }

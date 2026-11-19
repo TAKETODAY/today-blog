@@ -26,19 +26,12 @@ import 'antd/es/message/style';
 import 'antd/es/popconfirm/style';
 import React from 'react';
 import { userService } from '../services';
-import { getStorage, removeStorage, saveStorage } from 'core';
+import { getStorage, removeStorage, saveStorage, translate } from 'core';
 import Image from './Image'
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
 import { connect } from "react-redux";
-
-const emailRules = [
-  { required: true, message: '请输入您的邮箱!' },
-  { type: 'email', message: '请您输入正确格式的邮箱!' }
-]
-const passwordRules = [
-  { required: true, message: '请输入密码!' }
-]
+import { useDisplayPreferences } from './hooks/useDisplayPreferences';
 
 function getInitialValue() {
   return {
@@ -67,10 +60,10 @@ class Login extends React.PureComponent {
 
   loginOther = () => {
     userService.logout().then(res => {
-      message.info('登出成功!')
+      message.info(translate('登出成功！', 'Signed out.'))
       this.props.updateUserSession(null)
     }).catch(resp => {
-      message.error('登出失败!')
+      message.error(translate('登出失败！', 'Could not sign out.'))
     })
   }
 
@@ -80,32 +73,35 @@ class Login extends React.PureComponent {
       {userSession ?
         <>
           <div className="login_avatar">
-            <h2>已登录</h2>
-            <Image alt="头像" className="img-responsive info_avatar" src={userSession.avatar}/>
+            <h2>{translate('已登录', 'Signed in')}</h2>
+            <Image alt={translate('头像', 'Avatar')} className="img-responsive info_avatar" src={userSession.avatar}/>
           </div>
-          <Popconfirm title="确认先退出再登录其他账号吗？" onConfirm={this.loginOther}>
-            <Button type="primary" title="登录其他账号" block>登录其他账号</Button>
+          <Popconfirm title={translate('确认先退出再登录其他账号吗？', 'Sign out to use another account?')} onConfirm={this.loginOther}>
+            <Button type="primary" block>{translate('登录其他账号', 'Use another account')}</Button>
           </Popconfirm>
         </> :
         <>
-          <h2 style={{ margin: '10px 10px 25px 10px', textAlign: 'center' }}>欢迎登录</h2>
+          <h2 style={{ margin: '10px 10px 25px 10px', textAlign: 'center' }}>{translate('欢迎登录', 'Sign in')}</h2>
           {message && <Alert message={message} showIcon type="error" style={{ marginBottom: 10 }}/>}
           <Form name="login" initialValues={getInitialValue()} onFinish={this.login}>
-            <Form.Item name="email" rules={emailRules}>
-              <Input size="large" placeholder="邮箱" name="email" prefix={<UserOutlined/>}/>
+            <Form.Item name="email" rules={[
+              { required: true, message: translate('请输入您的邮箱！', 'Enter your email address.') },
+              { type: 'email', message: translate('请输入正确格式的邮箱！', 'Enter a valid email address.') },
+            ]}>
+              <Input size="large" placeholder={translate('邮箱', 'Email')} name="email" prefix={<UserOutlined/>}/>
             </Form.Item>
-            <Form.Item name="password" rules={passwordRules}>
-              <Input.Password size="large" placeholder="密码" name="passwd" prefix={<LockOutlined/>}/>
+            <Form.Item name="password" rules={[{ required: true, message: translate('请输入密码！', 'Enter your password.') }]}>
+              <Input.Password size="large" placeholder={translate('密码', 'Password')} name="passwd" prefix={<LockOutlined/>}/>
             </Form.Item>
             <Form.Item>
               <Form.Item name="remember" valuePropName="checked" noStyle>
-                <Checkbox>记住邮箱</Checkbox>
+                <Checkbox>{translate('记住邮箱', 'Remember email')}</Checkbox>
               </Form.Item>
-              <Popconfirm title="还不支持该功能">
-                <a style={{ float: 'right' }}>忘记密码</a>
+              <Popconfirm title={translate('还不支持该功能', 'Password reset is not available yet.')}>
+                <a style={{ float: 'right' }}>{translate('忘记密码', 'Forgot password?')}</a>
               </Popconfirm>
             </Form.Item>
-            <Button type="primary" htmlType="submit" title="点击登录" block>登录</Button>
+            <Button type="primary" htmlType="submit" block>{translate('登录', 'Sign in')}</Button>
           </Form>
         </>
       }
@@ -114,6 +110,11 @@ class Login extends React.PureComponent {
 
 }
 
-export default connect(userSessionMapStateToProps, {
+const ConnectedLogin = connect(userSessionMapStateToProps, {
   updateUserSession
 })(Login)
+
+export default function LocalizedLogin(props) {
+  const displayPreferences = useDisplayPreferences();
+  return <ConnectedLogin {...props} displayPreferences={displayPreferences}/>;
+}

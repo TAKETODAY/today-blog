@@ -19,7 +19,7 @@ import { LockOutlined, UserOutlined, } from '@ant-design/icons';
 import { Alert, message, Popconfirm } from 'antd';
 import React, { useState } from 'react';
 import { LoginForm, ProFormCheckbox, ProFormText } from '@ant-design/pro-form';
-import { FormattedMessage, history, SelectLang, useIntl, useModel } from '@umijs/max';
+import { FormattedMessage, history, useIntl, useModel } from '@umijs/max';
 import Footer from '@/components/Footer';
 import { login } from '@/services/ant-design-pro/login';
 
@@ -58,6 +58,7 @@ const Login: React.FC = () => {
   const { initialState, setInitialState } = useModel('@@initialState');
 
   const intl = useIntl();
+  const t = (zh: string, en: string) => intl.locale === 'en-US' ? en : zh;
 
   const setUserInfo = (userInfo: API.CurrentUser) => {
     if (userInfo) {
@@ -77,7 +78,7 @@ const Login: React.FC = () => {
       login({ ...values }).then(res => {
         const user = res.data;
         if (user?.blogger) {
-          message.success('登录成功！');
+          message.success(t('登录成功！', 'Signed in.'));
           setUserInfo(user)
 
           if (remember) { // 记住邮箱
@@ -100,7 +101,7 @@ const Login: React.FC = () => {
     }
     catch (error) {
       mergeValidationError(error)
-      setUserLoginState({ success: false, message: error.message ? error.message : "未知错误" });
+      setUserLoginState({ success: false, message: error.message || t('未知错误', 'Unknown error') });
     }
     finally {
       setSubmitting(false)
@@ -110,12 +111,11 @@ const Login: React.FC = () => {
 
   return (
       <div className={styles.container}>
-        <div className={styles.lang}>{SelectLang && <SelectLang/>}</div>
         <div className={styles.content}>
 
           <LoginForm
               logo={logo}
-              title="TODAY BLOG 后台管理"
+              title={t('TODAY BLOG 后台管理', 'TODAY BLOG Admin')}
               subTitle={intl.formatMessage({ id: 'pages.layouts.userLayout.title' })}
               initialValues={getInitialValue()}
               onFinish={async (values) => {
@@ -178,7 +178,7 @@ const Login: React.FC = () => {
               <ProFormCheckbox noStyle name="remember">
                 <FormattedMessage id="pages.login.rememberMe" defaultMessage="记住邮箱"/>
               </ProFormCheckbox>
-              <Popconfirm title="还不支持">
+              <Popconfirm title={t('暂不支持重置密码', 'Password reset is not available yet')}>
                 <a style={{ float: 'right' }}>
                   <FormattedMessage id="pages.login.forgotPassword" defaultMessage="忘记密码"/>
                 </a>

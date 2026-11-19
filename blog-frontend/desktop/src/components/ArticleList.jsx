@@ -22,22 +22,27 @@ import { Empty, Skeleton } from 'antd';
 import { PushpinFilled } from '@ant-design/icons';
 import 'antd/es/empty/style';
 import 'antd/es/skeleton/style';
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { Link } from "react-router-dom";
 
-import { arrayNotEquals, getRandLabel, isNotEmpty } from 'core';
+import { arrayNotEquals, formatDate, getRandLabel, isNotEmpty, translate } from 'core';
 import Image from './Image';
 import { connect } from "react-redux";
 import { withRouter } from "../utils/withRouter";
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
 import HttpError from "./http/HttpError";
+import { preferencesSnapshot, subscribePreferences } from '../../../common/visitor-preferences';
 
 class ArticleList extends React.Component {
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return arrayNotEquals(this.props.articles, nextProps.articles)
       || this.props.showPinned !== nextProps.showPinned
+      || this.props.error !== nextProps.error
+      || this.props.title !== nextProps.title
+      || this.props.errorTitle !== nextProps.errorTitle
+      || this.props.preferences !== nextProps.preferences
   }
 
   render() {
@@ -46,10 +51,10 @@ class ArticleList extends React.Component {
 
       if (!errorTitle) {
         if (title) {
-          errorTitle = title + "加载失败"
+          errorTitle = translate(`${title}加载失败`, `Could not load ${title}`)
         }
         else {
-          errorTitle = "文章列表加载失败"
+          errorTitle = translate('文章列表加载失败', 'Could not load articles')
         }
       }
       return <HttpError {...error} title={errorTitle}/>
@@ -59,7 +64,7 @@ class ArticleList extends React.Component {
       return <Skeleton active/>
     }
     if (articles.length === 0) {
-      return <Empty style={{ marginTop: '10px' }} description="暂无文章"/>
+      return <Empty style={{ marginTop: '10px' }} description={translate('暂无文章', 'No articles')}/>
     }
     return (<>
       {
@@ -69,7 +74,7 @@ class ArticleList extends React.Component {
               <h2>
                 {this.props.showPinned && article.pinnedAt != null &&
                   <span className="article-pinned-badge">
-                    <PushpinFilled aria-hidden="true"/>置顶
+                     <PushpinFilled aria-hidden="true"/>{translate('置顶', 'Pinned')}
                   </span>
                 }
                 <Link to={`/articles/${article.uri}`} dangerouslySetInnerHTML={{ __html: article.title }}/>
@@ -89,7 +94,7 @@ class ArticleList extends React.Component {
                 </span>
               }
               <span className="info">
-                  {new Date(article.createAt).toLocaleString()} | <span className="read-num"> 阅读数 <span
+                  {formatDate(article.createAt)} | <span className="read-num"> {translate('阅读数', 'Views')} <span
                 className="num">{article.pv}</span></span>
                 </span>
               <hr/>
@@ -101,6 +106,11 @@ class ArticleList extends React.Component {
   }
 }
 
-export default connect(
+const ConnectedArticleList = connect(
   userSessionMapStateToProps, { updateUserSession }
 )(withRouter(ArticleList))
+
+export default function LocalizedArticleList(props) {
+  const preferences = useSyncExternalStore(subscribePreferences, preferencesSnapshot);
+  return <ConnectedArticleList {...props} preferences={preferences}/>;
+}

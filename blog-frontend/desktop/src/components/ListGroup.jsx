@@ -2,7 +2,7 @@ import { Result, Skeleton } from 'antd';
 import 'antd/es/result/style';
 import 'antd/es/skeleton/style';
 import React from 'react';
-import { arrayNotEquals, isEmpty } from 'core';
+import { isEmpty, translate } from 'core';
 import { connect } from "react-redux";
 import { updateHttpErrorMessage } from "../redux/actions";
 import HttpError from "./http/HttpError";
@@ -10,18 +10,13 @@ import HttpError from "./http/HttpError";
 
 class ListGroup extends React.Component {
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return arrayNotEquals(this.props.items, nextProps.items)
-        || this.props.title !== nextProps.title
-        || this.props.itemFunc !== nextProps.itemFunc
-  }
-
   render() {
     const { items, itemFunc, title, errors, errorKey, errorTitle } = this.props;
+    const heading = Array.isArray(title) ? translate(...title) : title;
     // popularArticles
     const error = errors && errors[errorKey];
     if (error) {
-      return <HttpError { ...error } title={ errorTitle ? errorTitle : title + "加载失败" }/>
+      return <HttpError {...error} title={errorTitle || translate(`${heading}加载失败`, `Could not load ${heading}`)}/>
     }
 
     if (isEmpty(items)) {
@@ -29,7 +24,7 @@ class ListGroup extends React.Component {
     }
     return (
         <div className='list-group with-title'>
-          <div className="list-group-title">{ title }</div>
+          <div className="list-group-title">{heading}</div>
           { itemFunc &&
           items.map((item, idx) => itemFunc(item, idx))
           }

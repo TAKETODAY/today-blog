@@ -1,6 +1,3 @@
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/es/locale/zh_CN';
-import moment from 'moment';
 import 'moment/locale/zh-cn';
 import 'nprogress/nprogress.css';
 import React from 'react';
@@ -17,17 +14,13 @@ initApplication.forEach(init => {
   init(store)
 })
 
-moment.locale('zh-cn');
-
 createRoot(document.getElementById('app')).render((
   <BrowserRouter future={{
     v7_startTransition: true,
     v7_relativeSplatPath: true
   }}>
-    <ConfigProvider locale={zhCN}>
-      <Provider store={store}>
-        <App/>
-      </Provider>
-    </ConfigProvider>
+    <Provider store={store}>
+      <App/>
+    </Provider>
   </BrowserRouter>
 ));

@@ -1,9 +1,11 @@
 import React from 'react';
+import { translate } from 'core';
 import './RouteLoading.css';
 
 export default function RouteLoading() {
+  const label = translate('页面加载中', 'Loading page');
   return (
-    <div className="route-loading" role="status" aria-live="polite" aria-label="页面加载中">
+    <div className="route-loading" role="status" aria-live="polite" aria-label={label}>
       <div className="route-loading__content">
         <div className="route-loading__brand" aria-hidden="true">
           <span className="route-loading__brand-mark">T</span>
@@ -16,7 +18,7 @@ export default function RouteLoading() {
           <span />
           <span />
         </div>
-        <span className="route-loading__label">页面加载中</span>
+        <span className="route-loading__label">{label}</span>
       </div>
     </div>
   );

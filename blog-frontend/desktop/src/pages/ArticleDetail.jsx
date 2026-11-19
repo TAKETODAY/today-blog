@@ -36,10 +36,7 @@ import lazyload from "core/lazyload";
 import { useRequest, useSessionStorageState } from "ahooks";
 
 import { useBreadcrumb, useQueryParams, useUserSession } from "../components/hooks";
-
-const passwordRules = [
-  { required: true, message: '请输入访问密码!' }
-]
+import { formatDate, translate } from 'core';
 
 function buildOptions(article) {
   const host = store.getState().options["site.host"];
@@ -85,7 +82,7 @@ export default () => {
       setSEO(article)
 
       setNav([
-        { name: '全部博客', url: '/' },
+        { label: ['全部博客', 'All articles'], url: '/' },
         { name: article.category, url: `/categories/${article.category}` },
         { name: article.title, url: `/articles/${article.uri}` }
       ])
@@ -112,7 +109,6 @@ export default () => {
 
       const error = {
         status: err.response ? err.response.status : 500,
-        title: "文章加载失败",
         subTitle: err.message,
         needPassword: status === 403 && (!err.response.data?.code
           || err.response.data.code === 'article.password_required'
@@ -148,15 +144,16 @@ export default () => {
       return (<>
         <div className="shadow-box">
           <Form name="requirePassword" onFinish={requirePassword}>
-            <Form.Item name="key" rules={passwordRules} validateStatus="validating">
-              <Input autoFocus size="large" placeholder="请输入访问密码" prefix={<LockOutlined/>}/>
+            <Form.Item name="key" rules={[{ required: true, message: translate('请输入访问密码', 'Enter the article password') }]}
+                       validateStatus="validating">
+              <Input autoFocus size="large" placeholder={translate('请输入访问密码', 'Enter the article password')} prefix={<LockOutlined/>}/>
             </Form.Item>
           </Form>
         </div>
       </>)
     }
 
-    return <HttpError {...error}/>
+    return <HttpError {...error} title={translate('文章加载失败', 'Could not load this article')}/>
   }
 
   if (loading) { // loading
@@ -168,20 +165,21 @@ export default () => {
       <article className="article-content">
         <h1 className="title">{article.title}</h1>
         <div className="property">
-          <span>发布于 {new Date(article.createAt).toLocaleString()}</span> |
-          <span> 更新 {new Date(article.updateAt).toLocaleString()}</span> |
-          <span> 浏览 {article.pv} </span> |
+          <span>{translate('发布于', 'Published')} {formatDate(article.createAt)}</span> |
+          <span> {translate('更新', 'Updated')} {formatDate(article.updateAt)}</span> |
+          <span> {translate('浏览', 'Views')} {article.pv} </span> |
           <span> <Link to={`/categories/${article.category}`}
-                       title={`点击查看分类 ${article.category}`}>{article.category}</Link></span> |
+                       title={translate(`查看分类 ${article.category}`, `Browse ${article.category}`)}>{article.category}</Link></span> |
           {userSession?.blogger && <>
             <span>
                 <AdminLink href={`/articles/${article.id}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
                            target='_blank'>
-                  &nbsp;编辑
+                  &nbsp;{translate('编辑', 'Edit')}
                 </AdminLink>
             </span> |
             <span style={{ cursor: "pointer" }}>
-              <img onClick={shareZone} className="share" title="分享到QQ空间" src={zone} width="18" alt="分享到QQ空间"/>
+              <img onClick={shareZone} className="share" title={translate('分享到 QQ 空间', 'Share on Qzone')}
+                   src={zone} width="18" alt={translate('分享到 QQ 空间', 'Share on Qzone')}/>
             </span>
           </>}
         </div>
@@ -195,7 +193,8 @@ export default () => {
           </div>
       }
       <div className="article-copyright">
-        {article.copyright || '本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。'}
+        {article.copyright || translate('本文为作者原创文章，转载时请注明出处并链接到此页面。',
+          'This is an original article. Please credit the author and link to this page when republishing.')}
       </div>
     </div>
     <ArticleComment articleId={article.id}/>

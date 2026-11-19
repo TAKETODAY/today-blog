@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TreeSet;
 
+import cn.taketoday.blog.config.BlogLocaleResolver;
 import infra.context.support.ResourceBundleMessageSource;
 import infra.core.io.PatternResourceLoader;
 import infra.http.HttpHeaders;
@@ -170,6 +171,7 @@ public final class ProblemResponses {
     request.setContentType(MediaType.APPLICATION_PROBLEM_JSON);
     request.setHeader(HttpHeaders.CONTENT_LANGUAGE, getLocale(request).toLanguageTag());
     request.addHeader(HttpHeaders.VARY, HttpHeaders.ACCEPT_LANGUAGE);
+    request.addHeader(HttpHeaders.VARY, BlogLocaleResolver.LOCALE_HEADER);
   }
 
 }

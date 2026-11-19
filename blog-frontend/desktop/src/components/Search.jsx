@@ -31,7 +31,7 @@ import { Link } from "react-router-dom";
 import debounce from 'lodash/debounce';
 
 import { articleService } from 'src/services';
-import { extractData, isEmpty } from 'core';
+import { extractData, isEmpty, translate } from 'core';
 
 class SearchComponent extends React.Component {
 
@@ -79,7 +79,7 @@ class SearchComponent extends React.Component {
           key: 'loading',
           label: (
             <Menu.Item className='textCenter'>
-              <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin/>} tip="搜索中..."/>
+              <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin/>} tip={translate('搜索中…', 'Searching…')}/>
             </Menu.Item>
           )
         }
@@ -95,7 +95,7 @@ class SearchComponent extends React.Component {
           label: (
             <Menu.Item>
               <Empty style={{ margin: '0px' }} image={Empty.PRESENTED_IMAGE_SIMPLE}
-                     description={`暂无关于 ${this.lastQuery} 的文章`}/>
+                     description={translate(`暂无关于 ${this.lastQuery} 的文章`, `No articles found for ${this.lastQuery}`)}/>
             </Menu.Item>
           )
         },
@@ -129,7 +129,7 @@ class SearchComponent extends React.Component {
         <Input
           suffix={<SearchOutlined/>}
           style={style}
-          placeholder="搜索文章"
+          placeholder={translate('搜索文章', 'Search articles')}
           onChange={event => {
             const input = event.target.value;
             this.setState({ input })
