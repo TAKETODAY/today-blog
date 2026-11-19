@@ -45,7 +45,6 @@ import infra.web.annotation.RequestHeader;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RequestParam;
 import infra.web.annotation.RestController;
-import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 
 import static cn.taketoday.blog.util.BlogUtils.stripAllXss;
@@ -56,7 +55,6 @@ import static cn.taketoday.blog.util.BlogUtils.stripAllXss;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 2018-10-21 17:33
  */
-@CustomLog
 @RestController
 @RequiredArgsConstructor
 @Interceptor(ArticleFilterInterceptor.class)
