@@ -7,7 +7,7 @@ import { showLoginDialog } from '@/utils/error-handler';
 
 jest.mock('@umijs/max', () => ({
   useAccess: jest.fn(),
-  useIntl: () => ({ locale: 'en-US' }),
+  useIntl: () => require('../../site-intl').getTestIntl('en-US'),
   Outlet: () => <div>protected content</div>,
 }));
 jest.mock('@/utils/error-handler', () => ({ showLoginDialog: jest.fn() }));

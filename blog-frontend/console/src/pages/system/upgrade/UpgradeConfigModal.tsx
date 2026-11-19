@@ -19,14 +19,14 @@ export default function UpgradeConfigModal({
   open, activeTab, loaded, updaterReady, settings, onTabChange, onClose,
 }: Props) {
   const t = useSiteTranslation();
-  return <Modal className="upgrade-config-modal" title={t('升级配置', 'Upgrade configuration')} open={open} forceRender footer={null}
+  return <Modal className="upgrade-config-modal" title={t('upgrade.upgradeConfiguration')} open={open} forceRender footer={null}
                 width={760} style={{ maxWidth: 'calc(100vw - 32px)', top: 40 }}
                 bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
                 onCancel={onClose}>
     <Tabs activeKey={activeTab} onChange={onTabChange} items={[
       {
         key: 'settings',
-        label: t('升级设置', 'Upgrade settings'),
+        label: t('upgrade.upgradeSettings'),
         forceRender: true,
         children: <UpgradeSettingsPanel
             form={settings.settingsForm}
@@ -37,7 +37,7 @@ export default function UpgradeConfigModal({
       },
       {
         key: 'mappings',
-        label: t('文件映射', 'File mappings'),
+        label: t('upgrade.fileMappings'),
         forceRender: true,
         children: <ReleaseMappingPanel
             form={settings.mappingForm}

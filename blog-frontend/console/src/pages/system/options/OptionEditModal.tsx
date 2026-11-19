@@ -62,14 +62,14 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({ visible, option, onSu
 
       const { valid, converted } = convertAndValidate(rawValue, valueType);
       if (!valid) {
-        message.error(t('请输入有效的数字', 'Enter a valid number'));
+        message.error(t('options.enterAValidNumber'));
         return;
       }
 
       setSaving(true);
       const updated = { ...option, name, value: converted, description, open: isSiteSetting || open, valueType };
       await updateOption(updated);
-      message.success(t('保存成功', 'Saved'));
+      message.success(t('options.saved'));
       onSuccess?.(updated);
     }
     catch (error) {
@@ -89,14 +89,14 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({ visible, option, onSu
     }
     if (option.valueType === 'bool') {
       return (
-          <Switch defaultChecked={option.value == 'true'} checkedChildren={t('开启', 'On')} unCheckedChildren={t('关闭', 'Off')}
+          <Switch defaultChecked={option.value == 'true'} checkedChildren={t('options.on')} unCheckedChildren={t('options.off')}
                   onChange={checked => form.setFieldsValue({ value: checked ? 'true' : 'false' })}/>
       );
     }
     if (option.valueType === 'number') {
-      return <InputNumber style={{ width: '100%' }} placeholder={t('请输入数字', 'Enter a number')}/>;
+      return <InputNumber style={{ width: '100%' }} placeholder={t('options.enterANumber')}/>;
     }
-    return <Input placeholder={t('请输入配置值', 'Enter a value')}/>;
+    return <Input placeholder={t('options.enterAValue')}/>;
   };
 
   if (!option) {
@@ -105,7 +105,7 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({ visible, option, onSu
 
   return (
       <Modal
-          title={t('编辑配置', 'Edit setting')}
+          title={t('options.editSetting')}
           visible={visible}
           onCancel={onCancel}
           width={600}
@@ -113,23 +113,23 @@ const OptionEditModal: React.FC<OptionEditModalProps> = ({ visible, option, onSu
           confirmLoading={saving}
       >
         <Form form={form} layout="vertical">
-          <Form.Item label={t('配置项名称', 'Setting name')}>
+          <Form.Item label={t('options.settingName')}>
             <Input value={option.name} disabled/>
           </Form.Item>
-          <Form.Item label={t('配置值', 'Value')} name="value" rules={[
-            { required: true, message: t('请输入配置值', 'Enter a value') },
+          <Form.Item label={t('options.value')} name="value" rules={[
+            { required: true, message: t('options.enterAValue') },
             ...(option.name === SITE_TIME_ZONE ? [{
               validator: (_, value) => !value || isTimeZone(value) ? Promise.resolve()
-                : Promise.reject(new Error(t('请输入有效的 IANA 时区，例如 Asia/Shanghai', 'Enter a valid IANA time zone, e.g. Asia/Shanghai'))),
+                : Promise.reject(new Error(t('options.enterAValidIANATime'))),
             }] : []),
           ]}>
             {renderValueInput(option)}
           </Form.Item>
-          <Form.Item label={t('描述', 'Description')} name="description">
-            <Input.TextArea rows={3} placeholder={t('请输入描述', 'Enter a description')} allowClear/>
+          <Form.Item label={t('options.description')} name="description">
+            <Input.TextArea rows={3} placeholder={t('options.enterADescription')} allowClear/>
           </Form.Item>
-          <Form.Item label={t('公开状态', 'Visibility')} name="open" valuePropName="checked">
-            <Switch disabled={isSiteSetting} checkedChildren={t('公开', 'Public')} unCheckedChildren={t('仅内部使用', 'Internal')}/>
+          <Form.Item label={t('options.visibility')} name="open" valuePropName="checked">
+            <Switch disabled={isSiteSetting} checkedChildren={t('options.public')} unCheckedChildren={t('options.internal')}/>
           </Form.Item>
         </Form>
       </Modal>

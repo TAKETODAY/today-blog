@@ -4,7 +4,10 @@ import Backups from '@/pages/system/backups';
 import { http } from '@/utils/http';
 
 jest.mock('@/utils/http', () => ({ http: { get: jest.fn(), post: jest.fn() } }));
-jest.mock('@umijs/max', () => ({ history: { push: jest.fn() }, useIntl: () => ({ locale: 'zh-CN' }) }));
+jest.mock('@umijs/max', () => ({
+  history: { push: jest.fn() },
+  useIntl: require('../../site-intl').getTestIntl,
+}));
 jest.mock('@ant-design/pro-layout', () => ({ PageContainer: ({ children }) => <div>{children}</div> }));
 
 describe('Backups', () => {

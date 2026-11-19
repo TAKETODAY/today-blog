@@ -36,7 +36,8 @@ import lazyload from "core/lazyload";
 import { useRequest, useSessionStorageState } from "ahooks";
 
 import { useBreadcrumb, useQueryParams, useUserSession } from "../components/hooks";
-import { formatDate, translate } from 'core';
+import { formatDate } from 'core';
+import { translate } from '../locales';
 
 function buildOptions(article) {
   const host = store.getState().options["site.host"];
@@ -82,7 +83,7 @@ export default () => {
       setSEO(article)
 
       setNav([
-        { label: ['全部博客', 'All articles'], url: '/' },
+        { labelKey: 'navigation.allArticles', url: '/' },
         { name: article.category, url: `/categories/${article.category}` },
         { name: article.title, url: `/articles/${article.uri}` }
       ])
@@ -144,16 +145,16 @@ export default () => {
       return (<>
         <div className="shadow-box">
           <Form name="requirePassword" onFinish={requirePassword}>
-            <Form.Item name="key" rules={[{ required: true, message: translate('请输入访问密码', 'Enter the article password') }]}
+            <Form.Item name="key" rules={[{ required: true, message: translate('articles.enterTheArticlePassword') }]}
                        validateStatus="validating">
-              <Input autoFocus size="large" placeholder={translate('请输入访问密码', 'Enter the article password')} prefix={<LockOutlined/>}/>
+              <Input autoFocus size="large" placeholder={translate('articles.enterTheArticlePassword')} prefix={<LockOutlined/>}/>
             </Form.Item>
           </Form>
         </div>
       </>)
     }
 
-    return <HttpError {...error} title={translate('文章加载失败', 'Could not load this article')}/>
+    return <HttpError {...error} title={translate('articles.couldNotLoadThisArticle')}/>
   }
 
   if (loading) { // loading
@@ -165,21 +166,21 @@ export default () => {
       <article className="article-content">
         <h1 className="title">{article.title}</h1>
         <div className="property">
-          <span>{translate('发布于', 'Published')} {formatDate(article.createAt)}</span> |
-          <span> {translate('更新', 'Updated')} {formatDate(article.updateAt)}</span> |
-          <span> {translate('浏览', 'Views')} {article.pv} </span> |
+          <span>{translate('articles.published')} {formatDate(article.createAt)}</span> |
+          <span> {translate('articles.updated')} {formatDate(article.updateAt)}</span> |
+          <span> {translate('articles.views')} {article.pv} </span> |
           <span> <Link to={`/categories/${article.category}`}
-                       title={translate(`查看分类 ${article.category}`, `Browse ${article.category}`)}>{article.category}</Link></span> |
+                       title={translate('articles.browseCategory', { category: article.category })}>{article.category}</Link></span> |
           {userSession?.blogger && <>
             <span>
                 <AdminLink href={`/articles/${article.id}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
                            target='_blank'>
-                  &nbsp;{translate('编辑', 'Edit')}
+                  &nbsp;{translate('articles.edit')}
                 </AdminLink>
             </span> |
             <span style={{ cursor: "pointer" }}>
-              <img onClick={shareZone} className="share" title={translate('分享到 QQ 空间', 'Share on Qzone')}
-                   src={zone} width="18" alt={translate('分享到 QQ 空间', 'Share on Qzone')}/>
+              <img onClick={shareZone} className="share" title={translate('articles.shareOnQzone')}
+                   src={zone} width="18" alt={translate('articles.shareOnQzone')}/>
             </span>
           </>}
         </div>
@@ -193,8 +194,7 @@ export default () => {
           </div>
       }
       <div className="article-copyright">
-        {article.copyright || translate('本文为作者原创文章，转载时请注明出处并链接到此页面。',
-          'This is an original article. Please credit the author and link to this page when republishing.')}
+        {article.copyright || translate('articles.thisIsAnOriginalArticle')}
       </div>
     </div>
     <ArticleComment articleId={article.id}/>

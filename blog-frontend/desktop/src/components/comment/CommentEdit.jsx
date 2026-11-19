@@ -28,7 +28,8 @@ import { commentService } from 'src/services';
 import Image from '../Image';
 import { updateUserSession } from "src/redux/actions";
 import { userSessionOptionsMapStateToProps } from "src/redux/action-types";
-import { getGravatarURL, getStorage, isEmpty, saveStorage, translate } from "core";
+import { getGravatarURL, getStorage, isEmpty, saveStorage } from 'core';
+import { translate } from '../../locales';
 import './CommentEdit.css';
 import { useDisplayPreferences } from '../hooks/useDisplayPreferences';
 
@@ -51,16 +52,16 @@ const CommentEdit = props => {
 
     const content = editor.markdown()
     if (isEmpty(content)) {
-      return message.warning(translate('请输入评论内容', 'Enter your comment.'))
+      return message.warning(translate('comments.enterYourComment'))
     }
     else {
       const { commentId, articleId } = props
       return commentService.createComment({ commentId, articleId, content, ...commenter })
           .then(_ => {
             editor.value("")
-            return message.success(translate('评论成功', 'Comment posted.'))
+            return message.success(translate('comments.commentPosted'))
           })
-          .catch(err => message.error(err.message || translate('评论提交失败', 'Could not post the comment.')))
+          .catch(err => message.error(err.message || translate('comments.couldNotPostTheComment')))
     }
   }
 
@@ -82,7 +83,7 @@ const CommentEdit = props => {
         <div className='user_description'>{comment.commenterDesc || comment.user.introduce}</div>
       </div>
       <div style={{ float: 'right', marginRight: '-10px' }}>
-        <Button onClick={cancelReply} type="primary">{translate('取消回复', 'Cancel reply')}</Button>
+        <Button onClick={cancelReply} type="primary">{translate('comments.cancelReply')}</Button>
       </div>
     </>)
   }
@@ -105,29 +106,29 @@ const CommentEdit = props => {
     <div className="data-list-title" style={{ border: 'none' }}>
       {replying
           ? renderReply(replying)
-          : <><EditOutlined aria-hidden="true"/> {translate('发表评论', 'Leave a comment')}</>
+          : <><EditOutlined aria-hidden="true"/> {translate('comments.leaveAComment')}</>
       }
     </div>
 
-    <Suspense fallback={<div>{translate('编辑器加载中…', 'Loading editor…')}</div>}>
+    <Suspense fallback={<div>{translate('comments.loadingEditor')}</div>}>
       <Editor placeholder={options['comment.placeholder']}
               setEditor={setEditor} options={{ autofocus: false }}/>
     </Suspense>
 
     <div className="comment-edit-footer">
       <Form layout="inline" form={form} initialValues={commenterInfo()} onFinish={createComment}>
-        <Form.Item name="email" rules={[{ required: true, message: translate('请输入邮箱', 'Enter your email address.') }]}>
-          <Input prefix={<MailOutlined/>} placeholder={translate('邮箱', 'Email')}/>
+        <Form.Item name="email" rules={[{ required: true, message: translate('comments.enterYourEmailAddress') }]}>
+          <Input prefix={<MailOutlined/>} placeholder={translate('comments.email')}/>
         </Form.Item>
-        <Form.Item name="commenter" rules={[{ required: true, message: translate('请输入昵称', 'Enter a display name.') }]}>
-          <Input prefix={<UserOutlined/>} placeholder={translate('昵称', 'Display name')}/>
+        <Form.Item name="commenter" rules={[{ required: true, message: translate('comments.enterADisplayName') }]}>
+          <Input prefix={<UserOutlined/>} placeholder={translate('comments.displayName')}/>
         </Form.Item>
         <Form.Item name="commenterSite">
-          <Input prefix={<GlobalOutlined/>} placeholder={translate('个人网站', 'Website')}/>
+          <Input prefix={<GlobalOutlined/>} placeholder={translate('comments.website')}/>
         </Form.Item>
         <Form.Item className="comment-edit-submit" shouldUpdate>
           {() => (
-              <Button type="primary" htmlType="submit" disabled={!editor}>{translate('提交评论', 'Post comment')}</Button>
+              <Button type="primary" htmlType="submit" disabled={!editor}>{translate('comments.postComment')}</Button>
           )}
         </Form.Item>
       </Form>

@@ -39,7 +39,7 @@ const ConfigManagement: React.FC = () => {
   const columns: ProColumns<OptionItem>[] = [
     {
       fixed: 'left',
-      title: t('名称', 'Name'),
+      title: t('options.name'),
       key: 'name',
       width: 280,
       ellipsis: true,
@@ -50,7 +50,7 @@ const ConfigManagement: React.FC = () => {
       ),
     },
     {
-      title: t('配置值', 'Value'),
+      title: t('options.value'),
       key: 'value',
       width: 280,
       hideInSearch: true,
@@ -59,51 +59,51 @@ const ConfigManagement: React.FC = () => {
       },
     },
     {
-      title: t('描述', 'Description'),
+      title: t('options.description'),
       dataIndex: 'description',
       key: 'description',
       width: 280,
       hideInSearch: true,
       render: (_, record) => {
-        const description = record.name === SITE_LOCALE ? t('站点默认语言（zh-CN 或 en-US）', 'Default site language (zh-CN or en-US)')
-          : record.name === SITE_TIME_ZONE ? t('站点默认时区（IANA 标识）', 'Default display time zone (IANA identifier)')
+        const description = record.name === SITE_LOCALE ? t('options.defaultSiteLanguageZhCN')
+          : record.name === SITE_TIME_ZONE ? t('options.defaultDisplayTimeZoneIANA')
           : record.description;
         return description || <Tag>N/A</Tag>;
       },
     },
     {
-      title: t('公开状态', 'Visibility'),
+      title: t('options.visibility'),
       width: 100,
       align: 'center',
       hideInSearch: true,
-      render: (_, record) => (record.open ? <Tag color="success">{t('公开', 'Public')}</Tag> : <Tag>{t('仅内部使用', 'Internal')}</Tag>)
+      render: (_, record) => (record.open ? <Tag color="success">{t('options.public')}</Tag> : <Tag>{t('options.internal')}</Tag>)
     },
     {
-      title: t('更新时间', 'Updated'),
+      title: t('options.updated'),
       width: 180,
       hideInSearch: true,
       render: (_, record: OptionItem) => (record.updateAt ? format(record.updateAt)
           : <Tag>N/A</Tag>)
     },
     {
-      title: t('操作', 'Actions'),
+      title: t('options.actions'),
       key: 'action',
       width: 150,
       align: 'center',
       hideInSearch: true,
       render: (_, record) => (
           <Space size="small">
-            <a onClick={() => handleEdit(record)}><EditOutlined/>{t('编辑', 'Edit')}</a>
+            <a onClick={() => handleEdit(record)}><EditOutlined/>{t('options.edit')}</a>
           </Space>
       ),
     },
   ];
 
   return (
-      <PageContainer header={{ title: t('系统配置管理', 'System settings') }}>
+      <PageContainer header={{ title: t('options.systemSettings') }}>
         <ProTable<OptionItem>
             rowKey="name"
-            headerTitle={t('系统配置列表', 'Site options')}
+            headerTitle={t('options.siteOptions')}
             actionRef={actionRef}
             request={query}
             columns={columns}

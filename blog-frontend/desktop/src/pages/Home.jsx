@@ -28,7 +28,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { updateNavigations } from "../redux/actions";
 import { articleService } from '../services';
 import { setTitle } from "../utils/common"
-import { translate } from '../../../common/visitor-preferences';
+import { translate } from '../locales';
+import LocalizedCount from '../locales/LocalizedCount';
 
 function positiveInteger(value, fallback) {
   const number = Number(value);
@@ -44,7 +45,7 @@ export default function Home() {
   const size = positiveInteger(params.get('size'), 10);
   const [articles, setArticles] = useState({ total: 0, current: page, size, data: [] });
   const [error, setError] = useState();
-  const latestArticles = translate('最新文章', 'Latest articles');
+  const latestArticles = translate('articles.latestArticles');
 
   useEffect(() => {
     setTitle("代码是我心中的一首诗");
@@ -118,7 +119,7 @@ export default function Home() {
           itemRender={renderPageItem}
           pageSize={size}
           current={page}
-          showTotal={n => <><b className='red'>{n}</b>{translate('篇文章', n === 1 ? ' article' : ' articles')}</>}
+          showTotal={n => <LocalizedCount count={n} messageKey="articles.resultCount"/>}
         />
       </div>
     </div>

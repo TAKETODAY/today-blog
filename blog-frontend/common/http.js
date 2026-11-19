@@ -2,7 +2,8 @@ import http from 'axios';
 import NProgress from 'nprogress';
 import { handleHttpError } from './error-handler';
 import { currentTimeMillis } from './common';
-import { getVisitorLocale, translate } from './visitor-preferences';
+import { getVisitorLocale } from './visitor-preferences';
+import { translate } from './locales';
 
 // export default
 NProgress.configure({
@@ -53,7 +54,7 @@ http.defaults.timeout = 5000
 http.interceptors.request.use(function (config) {
   // Do something before request is sent
   startNProgress()
-  config.timeoutErrorMessage = translate('请求服务器超时', 'The request timed out');
+  config.timeoutErrorMessage = translate('http.theRequestTimedOut');
   const locale = getVisitorLocale();
   if (locale) {
     config.headers['X-Blog-Locale'] = locale;

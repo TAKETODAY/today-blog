@@ -29,7 +29,7 @@ import UserUpdateForm from "./UserUpdateForm";
 import { UserItem } from "./data.d";
 import { deleteUser, queryUsers, toggleStatus, update } from "./service";
 import Image from "@/components/Image";
-import { siteText } from '@/utils/site-format';
+import { siteText } from '@/utils/site-i18n';
 import { useSiteTranslation } from '@/utils/use-site-translation';
 
 /**
@@ -37,16 +37,16 @@ import { useSiteTranslation } from '@/utils/use-site-translation';
  * @param user
  */
 const handleUpdate = async (user: UserItem) => {
-  const hide = message.loading(siteText(`正在更新: ${user.name}`, `Updating: ${user.name}`))
+  const hide = message.loading(siteText('users.updating', { name: user.name }))
   try {
     await update(user)
     hide()
-    message.success(siteText('更新信息成功', 'User updated'), 1)
+    message.success(siteText('users.userUpdated'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error(siteText('更新信息失败请重试！', 'Could not update the user. Try again.'))
+    message.error(siteText('users.couldNotUpdateTheUser'))
     return false
   }
 }
@@ -56,69 +56,69 @@ const handleUpdate = async (user: UserItem) => {
  * @param user
  */
 const handleRemove = async (user: UserItem) => {
-  const hide = message.loading(siteText(`正在删除: ${user.name}`, `Deleting: ${user.name}`))
+  const hide = message.loading(siteText('users.deleting', { name: user.name }))
   try {
     await deleteUser(user)
     hide()
-    message.success(siteText('删除成功，即将刷新', 'User deleted'), 1)
+    message.success(siteText('users.userDeleted'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error(siteText('删除失败，请重试', 'Could not delete the user. Try again.'))
+    message.error(siteText('users.couldNotDeleteTheUser'))
     return false
   }
 }
 
 
-const renderStatusMenu = (user: UserItem, reload: Function, t: (zh: string, en: string) => string) => {
+const renderStatusMenu = (user: UserItem, reload: Function, t: ReturnType<typeof useSiteTranslation>) => {
   const userStatus = async (status: string) => {
-    const hide = message.loading(t(`正在切换状态: ${user.name}`, `Changing status: ${user.name}`))
+    const hide = message.loading(t('users.changingStatus', { name: user.name }))
     try {
       await toggleStatus(user.id, status)
       hide()
-      message.success(t('切换状态成功，即将刷新', 'User status changed'), 1)
+      message.success(t('users.userStatusChanged'), 1)
       reload()
       return true
     }
     catch (error) {
       hide()
-      message.error(t('切换状态失败，请重试', 'Could not change the status. Try again.'))
+      message.error(t('users.couldNotChangeTheStatus'))
       return false
     }
   }
 
   const renderNormal = () => {
     return (<>
-      <Popconfirm title={t('您确定要锁定该用户吗', 'Lock this user?')} placement="topLeft" onConfirm={() => userStatus('LOCKED')}>
-        <a href="#">{t('锁定', 'Lock')}</a>
+      <Popconfirm title={t('users.lockThisUser')} placement="topLeft" onConfirm={() => userStatus('LOCKED')}>
+        <a href="#">{t('users.lock')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title={t('您确定要冻结该用户吗', 'Suspend this user?')} placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
-        <a href="#">{t('冻结', 'Suspend')}</a>
+      <Popconfirm title={t('users.suspendThisUser')} placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
+        <a href="#">{t('users.suspend')}</a>
       </Popconfirm>
     </>)
   }
 
   const renderInactive = () => {
     return (<>
-      <Popconfirm title={t('您确定要激活该用户吗', 'Activate this user?')} placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
-        <a href="#">{t('激活', 'Activate')}</a>
+      <Popconfirm title={t('users.activateThisUser')} placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
+        <a href="#">{t('users.activate')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title={t('您确定要冻结该用户吗', 'Suspend this user?')} placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
-        <a href="#">{t('冻结', 'Suspend')}</a>
+      <Popconfirm title={t('users.suspendThisUser')} placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
+        <a href="#">{t('users.suspend')}</a>
       </Popconfirm>
     </>)
   }
   const renderLocked = () => {
     return (<>
-      <Popconfirm title={t('您确定要该用户恢复正常吗', 'Restore this user to active status?')} placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
-        <a href="#">{t('恢复正常', 'Restore')}</a>
+      <Popconfirm title={t('users.restoreThisUserToActive')} placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
+        <a href="#">{t('users.restore')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title={t('您确定要冻结该用户吗', 'Suspend this user?')} placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
-        <a href="#">{t('冻结', 'Suspend')}</a>
+      <Popconfirm title={t('users.suspendThisUser')} placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
+        <a href="#">{t('users.suspend')}</a>
       </Popconfirm>
     </>)
   }
@@ -134,12 +134,12 @@ const renderStatusMenu = (user: UserItem, reload: Function, t: (zh: string, en: 
 
   return (
       <>
-        <Popconfirm title={t('您确定要该用户恢复正常吗', 'Restore this user to active status?')} placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
-          <a href="#">{t('恢复正常', 'Restore')}</a>
+        <Popconfirm title={t('users.restoreThisUserToActive')} placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
+          <a href="#">{t('users.restore')}</a>
         </Popconfirm>
         <Divider type="vertical"/>
-        <Popconfirm title={t('您确定要锁定该用户吗', 'Lock this user?')} placement="topLeft" onConfirm={() => userStatus('LOCKED')}>
-          <a href="#">{t('锁定', 'Lock')}</a>
+        <Popconfirm title={t('users.lockThisUser')} placement="topLeft" onConfirm={() => userStatus('LOCKED')}>
+          <a href="#">{t('users.lock')}</a>
         </Popconfirm>
       </>
   )
@@ -163,13 +163,13 @@ export default () => {
 
   const columns: ProColumns<UserItem>[] = [
     {
-      title: t('姓名', 'Name'),
+      title: t('users.name'),
       dataIndex: 'name',
       width: 120,
       fixed: 'left',
     },
     {
-      title: t('头像', 'Avatar'),
+      title: t('users.avatar'),
       hideInSearch: true,
       width: 80,
       render: (_, user) => (
@@ -177,7 +177,7 @@ export default () => {
       ),
     },
     {
-      title: t('背景', 'Background'),
+      title: t('users.background'),
       dataIndex: 'background',
       hideInSearch: true,
       width: 180,
@@ -186,49 +186,49 @@ export default () => {
       ),
     },
     {
-      title: t('邮箱', 'Email'),
+      title: t('users.email'),
       dataIndex: 'email',
     },
     {
-      title: t('介绍', 'Bio'),
+      title: t('users.bio'),
       dataIndex: 'introduce',
       hideInSearch: true,
     },
     {
-      title: t('个人站点', 'Website'),
+      title: t('users.personalSite'),
       dataIndex: 'site',
       hideInSearch: true,
       width: 150,
       render: (_, user) => <a href={user.site} target='_blank'>{user.site}</a>,
     },
     {
-      title: t('注册类型', 'Registration type'),
+      title: t('users.registrationType'),
       dataIndex: 'type',
       hideInSearch: true,
       width: 80,
     },
     {
-      title: t('是否提醒', 'Notifications'),
+      title: t('users.notifications'),
       dataIndex: 'notification',
       hideInSearch: true,
       width: 80,
-      render: (_, user) => <span>{user.notification ? t('已设置', 'Enabled') : t('未设置', 'Disabled')}</span>,
+      render: (_, user) => <span>{user.notification ? t('users.enabled') : t('users.disabled')}</span>,
     },
     {
-      title: t('默认密码', 'Default password'),
+      title: t('users.defaultPassword'),
       dataIndex: 'defaultPassword',
       hideInSearch: true,
       width: 80,
-      render: (_, user) => <span>{user.defaultPassword ? t('还未更换', 'Unchanged') : t('已经更换', 'Changed')}</span>,
+      render: (_, user) => <span>{user.defaultPassword ? t('users.unchanged') : t('users.changed')}</span>,
     },
     {
-      title: t('状态', 'Status'),
+      title: t('users.status'),
       hideInSearch: true,
       width: 80,
       render: (_, user) => <span>{getUserStatusDesc(user.status)}</span>,
     },
     {
-      title: t('操作', 'Actions'),
+      title: t('users.actions'),
       valueType: 'option',
       fixed: 'right',
       width: 180,
@@ -238,10 +238,10 @@ export default () => {
               setUpdateUser(record)
               setUpdateModalVisible(true)
             }}
-            >{t('编辑', 'Edit')}</a>
+            >{t('users.edit')}</a>
             <Divider type="vertical"/>
-            <Popconfirm title={t('您确定要删除该用户吗', 'Delete this user?')} placement="topLeft" onConfirm={() => remove(record)}>
-              <a href="#">{t('删除', 'Delete')}</a>
+            <Popconfirm title={t('users.deleteThisUser')} placement="topLeft" onConfirm={() => remove(record)}>
+              <a href="#">{t('users.delete')}</a>
             </Popconfirm>
             <Divider type="vertical"/>
             {
@@ -256,7 +256,7 @@ export default () => {
       <PageContainer>
         <ProTable<UserItem>
             rowKey="id"
-            headerTitle={t('用户列表', 'Users')}
+            headerTitle={t('users.users')}
             columns={columns}
             request={queryUsers}
             actionRef={actionRef}

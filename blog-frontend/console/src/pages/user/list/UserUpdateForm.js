@@ -52,14 +52,14 @@ const UserUpdateForm = props => {
   const renderFooter = () => {
     return (
         <>
-          <Button onClick={ hideUpdateModal }>{t('取消', 'Cancel')}</Button>
-          <Button type="primary" onClick={ update }>{t('更新', 'Save')}</Button>
+          <Button onClick={ hideUpdateModal }>{t('users.cancel')}</Button>
+          <Button type="primary" onClick={ update }>{t('users.save')}</Button>
         </>
     )
   }
   return (
       <Modal
-          title={t('用户信息设置', 'Edit user')}
+          title={t('users.editUser')}
           width={ 800 }
           destroyOnClose={ true }
           footer={ renderFooter() }
@@ -68,14 +68,14 @@ const UserUpdateForm = props => {
           bodyStyle={ { padding: '32px 40px 48px' } }
       >
         <Form { ...formLayout } form={ form }>
-          <FormItem name="name" label={t('昵称', 'Nickname')} rules={[{ required: true, message: t('请输入昵称', 'Enter a nickname') }]}>
-            <Input placeholder={t('请输入昵称', 'Enter a nickname')}/>
+          <FormItem name="name" label={t('users.nickname')} rules={[{ required: true, message: t('users.enterANickname') }]}>
+            <Input placeholder={t('users.enterANickname')}/>
           </FormItem>
-          <FormItem name="introduce" label={t('介绍', 'Bio')} rules={[{ required: true, message: t('请输入介绍', 'Enter a bio') }]}>
-            <TextArea placeholder={t('请输入介绍', 'Enter a bio')} rows={ 3 }/>
+          <FormItem name="introduce" label={t('users.bio')} rules={[{ required: true, message: t('users.enterABio') }]}>
+            <TextArea placeholder={t('users.enterABio')} rows={ 3 }/>
           </FormItem>
-          <FormItem name="site" label={t('个人网站', 'Website')} rules={[{ required: true, message: t('请输入个人网站', 'Enter a website') }]}>
-            <Input placeholder={t('请输入个人网站', 'Enter a website')}/>
+          <FormItem name="site" label={t('users.website')} rules={[{ required: true, message: t('users.enterAWebsite') }]}>
+            <Input placeholder={t('users.enterAWebsite')}/>
           </FormItem>
         </Form>
       </Modal>

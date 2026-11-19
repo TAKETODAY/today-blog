@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
 import { useIntl } from '@umijs/max';
+import type { MessageValues } from './site-i18n';
 
 export function useSiteTranslation() {
-  const { locale } = useIntl();
-  return useCallback((zh: string, en: string) => locale === 'en-US' ? en : zh, [locale]);
+  const intl = useIntl();
+  return useCallback((id: string, values?: MessageValues) => intl.formatMessage({ id }, values), [intl]);
 }

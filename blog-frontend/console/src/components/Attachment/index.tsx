@@ -103,22 +103,22 @@ export default ({ itemClicked, fileType, children }: AttachmentProps) => {
       <>
         <Select defaultValue={fileType || ''}
                 style={{ width: 120, marginBottom: 10 }}
-                placeholder={t('附件分类', 'File type')} onChange={handleFileTypeChange}>
-          <Option value="">{t('全部', 'All')}</Option>
-          <Option value="IMAGE">{t('图片', 'Image')}</Option>
-          <Option value="VIDEO">{t('视频', 'Video')}</Option>
-          <Option value="AUDIO">{t('音频', 'Audio')}</Option>
-          <Option value="TEXT">{t('文本', 'Text')}</Option>
-          <Option value="OTHER">{t('其他', 'Other')}</Option>
+                placeholder={t('attachment.fileCategory')} onChange={handleFileTypeChange}>
+          <Option value="">{t('attachment.all')}</Option>
+          <Option value="IMAGE">{t('attachment.image')}</Option>
+          <Option value="VIDEO">{t('attachment.video')}</Option>
+          <Option value="AUDIO">{t('attachment.audio')}</Option>
+          <Option value="TEXT">{t('attachment.text')}</Option>
+          <Option value="OTHER">{t('attachment.other')}</Option>
         </Select>
 
-        <Search placeholder={t('文件名', 'Filename')}
+        <Search placeholder={t('attachment.filename')}
                 allowClear
                 onSearch={onSearch}
                 style={{ width: 200, margin: '0 10px' }}
         />
         <Button type="primary" icon={<UploadOutlined/>}
-                onClick={() => setUploadModalVisible(true)}>{t('上传附件', 'Upload attachment')}</Button>
+                onClick={() => setUploadModalVisible(true)}>{t('attachment.uploadAttachment')}</Button>
 
         <List
             grid={grid}

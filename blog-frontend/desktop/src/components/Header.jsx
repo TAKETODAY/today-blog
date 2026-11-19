@@ -34,7 +34,7 @@ import AdminLink from './AdminLink';
 import ApiLink from './ApiLink';
 import Image from './Image';
 import Search from './Search';
-import { translate } from 'core';
+import { translate } from '../locales';
 import { getCurrentTimeZone, getVisitorLocale, getVisitorTimeZone, setVisitorPreference } from '../../../common/visitor-preferences';
 import { localeOptions } from '../../../common/site-settings';
 import { useDisplayPreferences } from './hooks/useDisplayPreferences';
@@ -57,21 +57,21 @@ export default function NavHeader() {
     try {
       await userService.logout()
       dispatch(updateUserSession(null))
-      message.success(translate('已退出登录', 'Signed out'))
+      message.success(translate('navigation.signedOut'))
     }
     catch (error) {
-      message.error(translate('退出失败，请稍后重试', 'Could not sign out. Please try again.'))
+      message.error(translate('navigation.couldNotSignOutPlease'))
       throw error
     }
   }
 
   function showLogoutConfirm() {
     Modal.confirm({
-      title: translate('安全退出', 'Sign out'),
+      title: translate('navigation.signOut'),
       icon: <ExclamationCircleOutlined/>,
-      content: translate('您确认要安全退出系统吗？', 'Do you want to sign out?'),
-      okText: translate('确认', 'Confirm'),
-      cancelText: translate('取消', 'Cancel'),
+      content: translate('navigation.doYouWantToSign'),
+      okText: translate('navigation.confirm'),
+      cancelText: translate('navigation.cancel'),
       onOk: logout,
     })
   }
@@ -81,11 +81,11 @@ export default function NavHeader() {
       {
         key: 'write',
         style: { width: '200px' },
-        label: <AdminLink href="/articles/write" target="_blank">{translate('写文章', 'Write')}</AdminLink>,
+        label: <AdminLink href="/articles/write" target="_blank">{translate('navigation.write')}</AdminLink>,
       },
       {
         key: 'admin',
-        label: <AdminLink to="/" target="_blank">{translate('后台管理', 'Admin')}</AdminLink>,
+        label: <AdminLink to="/" target="_blank">{translate('navigation.admin')}</AdminLink>,
       },
     ] : []
   }
@@ -99,7 +99,7 @@ export default function NavHeader() {
         {
           key: 'logout',
           onClick: showLogoutConfirm,
-          label: <span title={translate('安全退出', 'Sign out')}>{translate('安全退出', 'Sign out')} <LogoutOutlined/></span>,
+          label: <span title={translate('navigation.signOut')}>{translate('navigation.signOut')} <LogoutOutlined/></span>,
         },
       ],
     }
@@ -108,16 +108,16 @@ export default function NavHeader() {
   const items = [
     {
       key: 'home',
-      label: <Link to='/' title={translate('首页', 'Home')}><HomeFilled aria-hidden="true"/> {translate('首页', 'Home')}</Link>,
+      label: <Link to='/' title={translate('navigation.home')}><HomeFilled aria-hidden="true"/> {translate('navigation.home')}</Link>,
     },
     {
       key: 'categories',
       icon: <FolderFilled aria-hidden="true"/>,
-      label: translate('分类', 'Categories'),
+      label: translate('navigation.categories'),
       children: [{
         type: 'group',
         key: 'all-categories',
-        label: translate('全部分类', 'All categories'),
+        label: translate('navigation.allCategories'),
         children: (categories || []).map((category, idx) => ({
           key: `${category.name}-${idx}`,
           label: <Link to={`/categories/${category.name}`} title={category.description}>
@@ -129,11 +129,11 @@ export default function NavHeader() {
     {
       key: 'tags',
       icon: <TagFilled aria-hidden="true"/>,
-      label: translate('标签', 'Tags'),
+      label: translate('navigation.tags'),
       children: [{
         type: 'group',
         key: 'all-tags',
-        label: translate('全部标签', 'All tags'),
+        label: translate('navigation.allTags'),
         children: (labels || []).map((tag, idx) => ({
           key: `${tag.name}-${idx}`,
           label: <Link to={`/tags/${tag.name}`} title={tag.name}>{tag.name}</Link>,
@@ -142,19 +142,19 @@ export default function NavHeader() {
     },
     {
       key: 'atom',
-      label: <ApiLink target='_blank' href='/feed.atom' title={translate('订阅', 'Subscribe')}><RssIcon/> {translate('订阅', 'Subscribe')}</ApiLink>,
+      label: <ApiLink target='_blank' href='/feed.atom' title={translate('navigation.subscribe')}><RssIcon/> {translate('navigation.subscribe')}</ApiLink>,
     },
     { key: 'search', label: <Search/> },
     {
       key: 'locale',
       label: <Select
         size="small"
-        aria-label={translate('显示语言', 'Display language')}
+        aria-label={translate('navigation.displayLanguage')}
         value={getVisitorLocale() || 'browser'}
         onChange={value => setVisitorPreference('locale', value === 'browser' ? null : value)}
         options={[
-          { value: 'browser', label: translate('跟随浏览器', 'Browser language') },
-          { value: 'site', label: translate('站点默认语言', 'Site language') },
+          { value: 'browser', label: translate('navigation.browserLanguage') },
+          { value: 'site', label: translate('navigation.siteLanguage') },
           ...localeOptions,
         ]}
       />,
@@ -163,13 +163,13 @@ export default function NavHeader() {
       key: 'timezone',
       label: <Select
         size="small"
-        aria-label={translate('显示时区', 'Display time zone')}
+        aria-label={translate('navigation.displayTimeZone')}
         showSearch
         optionFilterProp="label"
         value={getVisitorTimeZone() || 'site'}
         onChange={value => setVisitorPreference('timeZone', value === 'site' ? null : value)}
         options={[
-          { value: 'site', label: translate('站点默认时区', 'Site time zone') },
+          { value: 'site', label: translate('navigation.siteTimeZone') },
           ...timeZones.map(value => ({ value, label: value })),
         ]}
       />,
@@ -182,14 +182,14 @@ export default function NavHeader() {
             <Image original width="30" src={userSession.avatar} className="avatar"/>
           </span>
         </Dropdown>
-        : <Link to='/login' title={translate('登录', 'Sign in')}><LoginOutlined aria-hidden="true"/> {translate('登录', 'Sign in')}</Link>,
+        : <Link to='/login' title={translate('navigation.signIn')}><LoginOutlined aria-hidden="true"/> {translate('navigation.signIn')}</Link>,
     },
   ]
 
   return (<>
     <Header className='navbar'>
       <div className="navbar-brand">
-        <a href='/' title={translate('首页', 'Home')}>
+        <a href='/' title={translate('navigation.home')}>
           <img width="69" height="40" alt="Logo" src="/logo.svg" style={{ margin: "-6px" }}/>
         </a>
       </div>

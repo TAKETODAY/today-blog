@@ -25,7 +25,7 @@ import { useSiteTranslation } from '@/utils/use-site-translation';
 export default (props: any) => {
   const { onCancel, visible, onSelect, type, modal, width, ...rest } = props
   const t = useSiteTranslation();
-  const title = t('选择图片文件', 'Select an image');
+  const title = t('imageChooser.selectAnImage');
 
   if (modal) {
     return (<>

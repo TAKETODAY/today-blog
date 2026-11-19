@@ -22,13 +22,13 @@ import { message, Modal, notification } from "antd";
 import { getPath, goToLogin, isNotLoginPage, isNull } from "@/utils";
 import React from "react"
 import { Iterable } from "immutable"
-import { siteText as t } from './site-format';
+import { siteText as t } from './site-i18n';
 
 const errorMessage = (err, message) => {
   err.message = (err && err.response && err.response.data)
     ? err.response.data.detail || err.response.data.message || message : message
   notification.warn({
-    message: t('提示', 'Notice'),
+    message: t('errors.notice'),
     description: err.message
   })
 }
@@ -53,12 +53,12 @@ export function showLoginDialog(loginCallback, onCancel) {
   if (hideLoginDialogPath.indexOf(path) < 0) {
     console.log("不在登录页面,可以展示提示框")
     Modal.confirm({
-      title: t('该操作需要登录', 'Sign-in required'),
-      content: <span style={{ color: 'red' }}>{t('您尚未登录，或会话已过期。', 'You are signed out, or your session has expired.')}<br/>
-              <strong>{t('如果有未保存的内容，请在新窗口登录。', 'If you have unsaved changes, sign in in a new window.')}</strong>
+      title: t('errors.signInRequired'),
+      content: <span style={{ color: 'red' }}>{t('errors.youAreSignedOutOr')}<br/>
+              <strong>{t('errors.ifYouHaveUnsavedChanges')}</strong>
             </span>,
-      cancelText: t('取消', 'Cancel'),
-      okText: t('去登录', 'Sign in'),
+      cancelText: t('errors.cancel'),
+      okText: t('errors.signIn'),
       onOk: () => {
         loginDialogOpened = false
         const isNotLogin = isNotLoginPage()
@@ -82,25 +82,25 @@ export function showLoginDialog(loginCallback, onCancel) {
 }
 
 const handleNotFound = (err) => {
-  errorMessage(err, t('资源不存在', 'Resource not found'))
+  errorMessage(err, t('errors.resourceNotFound'))
 }
 
 const handleBadRequest = (err) => {
-  errorMessage(err, t('请求错误', 'Bad request'))
+  errorMessage(err, t('errors.badRequest'))
 }
 
 const handleUnauthorized = (err) => {
   if (!showLoginDialog()) {
-    errorMessage(err, t('登录超时', 'Session expired'))
+    errorMessage(err, t('errors.sessionExpired'))
   }
 }
 
 const handleAccessForbidden = (err) => {
-  errorMessage(err, t('没有权限', 'Access denied'))
+  errorMessage(err, t('errors.accessDenied'))
 }
 
 const handleInternalServerError = (err) => {
-  errorMessage(err, t('服务器内部错误', 'Internal server error'))
+  errorMessage(err, t('errors.internalServerError'))
 }
 
 const errorHandlers = {
@@ -116,14 +116,14 @@ export const handleHttpError = err => {
     err.status = err.response.status
     const errorHandler = errorHandlers[err.status]
     if (isNull(errorHandler)) {
-      errorMessage(err, t('后台服务不可用', 'The service is unavailable'))
+      errorMessage(err, t('errors.theServiceIsUnavailable'))
     }
     else {
       errorHandler(err)
     }
   }
   else {
-    errorMessage(err, t('无法连接到服务器', 'Could not reach the server'))
+    errorMessage(err, t('errors.couldNotReachTheServer'))
     err.status = -1
   }
 }

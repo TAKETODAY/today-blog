@@ -1,9 +1,9 @@
 import React from 'react';
-import { translate } from 'core';
+import { translate } from '../locales';
 import './RouteLoading.css';
 
 export default function RouteLoading() {
-  const label = translate('页面加载中', 'Loading page');
+  const label = translate('interface.loadingPage');
   return (
     <div className="route-loading" role="status" aria-live="polite" aria-label={label}>
       <div className="route-loading__content">

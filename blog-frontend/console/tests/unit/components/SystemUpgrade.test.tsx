@@ -4,7 +4,10 @@ import SystemUpgrade from '@/pages/system/upgrade';
 import { http } from '@/utils/http';
 
 jest.mock('@/utils/http', () => ({ http: { get: jest.fn(), put: jest.fn(), post: jest.fn() } }));
-jest.mock('@umijs/max', () => ({ useIntl: () => ({ locale: 'zh-CN' }) }));
+jest.mock('@umijs/max', () => ({
+  getIntl: require('../../site-intl').getTestIntl,
+  useIntl: require('../../site-intl').getTestIntl,
+}));
 jest.mock('@ant-design/pro-layout', () => ({
   PageContainer: ({ children, extra }) => <div>{extra}{children}</div>,
 }));

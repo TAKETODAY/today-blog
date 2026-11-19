@@ -21,7 +21,7 @@ import { format, getSizeString, isNotEmpty } from "@/utils"
 import { deleteAttach } from "./service";
 import { useCDN } from "@/components/hooks";
 import { useSiteTranslation } from '@/utils/use-site-translation';
-import { siteText } from '@/utils/site-format';
+import { siteText } from '@/utils/site-i18n';
 
 const FormItem = Form.Item
 
@@ -31,16 +31,16 @@ const formLayout = {
 }
 
 const handleDelete = async (attach) => {
-  const hide = message.loading(siteText(`正在删除: ${attach.name}`, `Deleting: ${attach.name}`))
+  const hide = message.loading(siteText('attachment.deleting', { name: attach.name }))
   try {
     await deleteAttach(attach)
     hide()
-    message.success(siteText('附件已删除', 'Attachment deleted'), 1)
+    message.success(siteText('attachment.attachmentDeleted'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error(siteText('删除附件失败，请重试', 'Could not delete the attachment. Try again.'))
+    message.error(siteText('attachment.couldNotDeleteTheAttachment'))
     return false
   }
 }
@@ -61,22 +61,22 @@ const AttachmentForm = props => {
   const renderContent = attachment => {
     return (
         <>
-          <FormItem name="name" label={t('附件名称', 'Attachment name')} rules={[{ required: true, message: t('请输入附件名称！', 'Enter an attachment name') }]}>
-            <Input placeholder={t('请输入附件名称', 'Enter an attachment name')}/>
+          <FormItem name="name" label={t('attachment.attachmentName')} rules={[{ required: true, message: t('attachment.attachmentNameRequired') }]}>
+            <Input placeholder={t('attachment.enterAnAttachmentName')}/>
           </FormItem>
           <FormItem label="CDN">
             <Input disabled value={`${cdn}${attachment.uri}`}/>
           </FormItem>
-          <FormItem name="url" label={t('附件路径', 'Attachment path')}>
-            <Input placeholder={t('请输入附件路径', 'Enter a path')}/>
+          <FormItem name="url" label={t('attachment.attachmentPath')}>
+            <Input placeholder={t('attachment.enterAPath')}/>
           </FormItem>
-          <FormItem name="fileType" label={t('附件类型', 'File type')}>
+          <FormItem name="fileType" label={t('attachment.fileType')}>
             <Input disabled/>
           </FormItem>
-          <FormItem label={t('上传时间', 'Uploaded')}>
+          <FormItem label={t('attachment.uploadedAt')}>
             <Input disabled value={format(attachment.createAt)}/>
           </FormItem>
-          <FormItem label={t('附件大小', 'File size')}>
+          <FormItem label={t('attachment.fileSize')}>
             <Input disabled value={`${getSizeString(attachment.size)}`}/>
           </FormItem>
         </>
@@ -90,38 +90,38 @@ const AttachmentForm = props => {
 
   const setClipboard = () => {
     navigator.clipboard.writeText(buildUrl()).then(function () {
-      message.info(t('复制成功', 'Link copied'))
+      message.info(t('attachment.linkCopied'))
     }, function () {
-      message.info(t('复制失败', 'Could not copy the link'))
+      message.info(t('attachment.couldNotCopyTheLink'))
     });
   }
 
   const renderFooter = () => {
     return (
         <>
-          <Button type="dashed" target='_blank' href={buildUrl()} style={{ marginRight: 10 }}>{t('预览', 'Preview')}</Button>
+          <Button type="dashed" target='_blank' href={buildUrl()} style={{ marginRight: 10 }}>{t('attachment.preview')}</Button>
 
-          <Button onClick={hideUpdateModal}>{t('取消', 'Cancel')}</Button>
+          <Button onClick={hideUpdateModal}>{t('attachment.cancel')}</Button>
           <Popconfirm
-              title={t('您确定要删除此附件吗?', 'Delete this attachment?')}
+              title={t('attachment.deleteThisAttachment')}
               onConfirm={async () => {
                 await handleDelete(values)
                 hideUpdateModal()
                 onRefresh && onRefresh()
               }}
-              okText={t('确定', 'Confirm')}
-              cancelText={t('取消', 'Cancel')}
+              okText={t('attachment.confirm')}
+              cancelText={t('attachment.cancel')}
           >
-            <Button danger>{t('删除', 'Delete')}</Button>
+            <Button danger>{t('attachment.delete')}</Button>
           </Popconfirm>
-          <Button type="dashed" onClick={setClipboard}>{t('复制地址', 'Copy link')}</Button>
-          <Button type="primary" onClick={update}>{t('完成', 'Done')}</Button>
+          <Button type="dashed" onClick={setClipboard}>{t('attachment.copyLink')}</Button>
+          <Button type="primary" onClick={update}>{t('attachment.done')}</Button>
         </>
     )
   }
 
   return (
-      <Modal title={t('附件配置', 'Edit attachment')}
+      <Modal title={t('attachment.editAttachment')}
              width={800}
              destroyOnClose
              footer={renderFooter()}

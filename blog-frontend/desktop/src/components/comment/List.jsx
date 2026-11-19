@@ -20,7 +20,8 @@ import 'antd/es/tooltip/style';
 import React from 'react';
 import { RollbackOutlined } from '@ant-design/icons';
 
-import { formatDate, fromNow, getGravatarURL, isEmpty, scrollTo, translate } from 'core';
+import { formatDate, fromNow, getGravatarURL, isEmpty, scrollTo } from 'core';
+import { translate } from '../../locales';
 import { Image } from '../index';
 
 
@@ -49,7 +50,7 @@ export default class CommentList extends React.Component {
                   <div className='user_info'>
                     <a href={reply.commenterSite} target='_blank'>
                       <span className='user_name'>{reply.commenter}</span>
-                    </a>{translate('回复', ' replying to ')}
+                    </a>{translate('comments.replyingTo')}
                     <a href={reply.commenterSite} target='_blank'>
                       <span className='user_name'>{parent.commenter}</span>
                     </a>
@@ -64,11 +65,11 @@ export default class CommentList extends React.Component {
                 <div className='sub_comment_content'>
                   <div className='content' dangerouslySetInnerHTML={{ __html: reply.content }}/>
                   <div className='replyOper'>
-                    <a className='replyBtn' title={translate(`回复 ${reply.commenter}`, `Reply to ${reply.commenter}`)}
+                    <a className='replyBtn' title={translate('comments.replyTo', { name: reply.commenter })}
                        onClick={() => {
                          this.onReply(reply)
                        }}>
-                      <RollbackOutlined aria-hidden="true"/><span> {translate('回复', 'Reply')} </span>
+                      <RollbackOutlined aria-hidden="true"/><span> {translate('comments.reply')} </span>
                     </a>
                   </div>
                 </div>
@@ -108,9 +109,9 @@ export default class CommentList extends React.Component {
             <div className='comment_content'>
               <div className='content' dangerouslySetInnerHTML={{ __html: comment.content }}></div>
               <div className='replyOper'>
-                <a className='replyBtn' title={translate(`回复 ${comment.commenter}`, `Reply to ${comment.commenter}`)}
+                <a className='replyBtn' title={translate('comments.replyTo', { name: comment.commenter })}
                    onClick={() => this.onReply(comment)}>
-                  <RollbackOutlined aria-hidden="true"/><span> {translate('回复', 'Reply')} </span>
+                  <RollbackOutlined aria-hidden="true"/><span> {translate('comments.reply')} </span>
                 </a>
               </div>
             </div>

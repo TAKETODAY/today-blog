@@ -22,7 +22,7 @@ import http from 'axios';
 import NProgress from 'nprogress';
 import { handleHttpError } from './error-handler';
 import { currentTimeMillis } from "@/utils/common";
-import { siteText } from './site-format';
+import { siteText } from './site-i18n';
 
 // export default
 NProgress.configure({
@@ -79,7 +79,7 @@ http.interceptors.request.use(function (config) {
   startNProgress()
   config.headers['X-Blog-Locale'] = 'site';
   if (!config.timeoutErrorMessage) {
-    config.timeoutErrorMessage = siteText('请求服务器超时', 'The request timed out');
+    config.timeoutErrorMessage = siteText('errors.theRequestTimedOut');
   }
   return config;
 }, function (error) {

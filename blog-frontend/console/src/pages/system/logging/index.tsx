@@ -34,16 +34,16 @@ import { deleteById, queryLogging, } from "./service";
  * @param logging
  */
 const handleRemove = async (logging: LoggingItem, t: ReturnType<typeof useSiteTranslation>) => {
-  const hide = message.loading(t(`正在删除：${logging.title}`, `Deleting: ${logging.title}`))
+  const hide = message.loading(t('logs.deleting', { title: logging.title }))
   try {
     await doRemove(logging.id)
     hide()
-    message.success(t('删除成功，即将刷新', 'Deleted'), 1)
+    message.success(t('logs.deleted'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error(t('删除失败，请重试', 'Could not delete. Please try again.'))
+    message.error(t('logs.couldNotDeletePleaseTry'))
     return false
   }
 }
@@ -82,7 +82,7 @@ export default () => {
 
   const columns: ProColumns<LoggingItem>[] = [
     {
-      title: t('类型', 'Type'),
+      title: t('logs.type'),
       width: 60,
       dataIndex: 'type',
       hideInSearch: true,
@@ -91,13 +91,13 @@ export default () => {
       ),
     },
     {
-      title: t('标题', 'Title'),
+      title: t('logs.title'),
       dataIndex: 'title',
       width: 100,
       hideInSearch: true
     },
     {
-      title: t('内容', 'Details'),
+      title: t('logs.details'),
       hideInSearch: true,
       render: (_, record) => (
           <span dangerouslySetInnerHTML={{ __html: record.content }}/>
@@ -105,7 +105,7 @@ export default () => {
       width: 400,
     },
     {
-      title: t('用户', 'User'),
+      title: t('logs.user'),
       dataIndex: 'user',
       hideInSearch: true,
       width: 100,
@@ -120,7 +120,7 @@ export default () => {
       </>),
     },
     {
-      title: t('产生日期', 'Timestamp'),
+      title: t('logs.timestamp'),
       dataIndex: 'invokeAt',
       sorter: true,
       valueType: 'dateTimeRange',
@@ -132,14 +132,14 @@ export default () => {
       ),
     },
     {
-      title: t('操作', 'Actions'),
+      title: t('logs.actions'),
       valueType: 'option',
       width: 50,
       fixed: 'right',
       render: (_, record) => (
           <>
-            <Popconfirm title={t('您确定要删除该条日志吗？', 'Delete this log entry?')} placement="topLeft" onConfirm={() => remove(record)}>
-              <a href="#">{t('删除', 'Delete')}</a>
+            <Popconfirm title={t('logs.deleteThisLogEntry')} placement="topLeft" onConfirm={() => remove(record)}>
+              <a href="#">{t('logs.delete')}</a>
             </Popconfirm>
           </>
       ),
@@ -148,13 +148,13 @@ export default () => {
 
   async function removeSelected(selected: (number | string)[]) {
     if (isNotEmpty(selected)) {
-      const hide = message.loading(t('正在批量删除', 'Deleting selected log entries'))
+      const hide = message.loading(t('logs.deletingSelectedLogEntries'))
       try {
         await selected.forEach(doRemove)
-        message.success(t('删除成功，即将刷新', 'Deleted'), 1)
+        message.success(t('logs.deleted'), 1)
       }
       catch (error) {
-        message.error(t('删除失败，请重试', 'Could not delete. Please try again.'))
+        message.error(t('logs.couldNotDeletePleaseTry'))
       }
       finally {
         hide()
@@ -168,20 +168,20 @@ export default () => {
         <ProTable<LoggingItem>
             rowKey="id"
             scroll={{ x: 2000 }}
-            headerTitle={t('系统日志列表', 'System logs')}
+            headerTitle={t('logs.systemLogs')}
             actionRef={actionRef}
             request={queryLogging}
             columns={columns}
             rowSelection={{}}
             tableAlertRender={({ selectedRowKeys, selectedRows, onCleanSelected }) => (
                 <Space size={24}>
-                  <span>{t(`已选 ${selectedRowKeys.length} 项`, `${selectedRowKeys.length} selected`)}
+                  <span>{t('logs.selectionCount', { count: selectedRowKeys.length })}
                     <a style={{ marginLeft: 8 }} onClick={onCleanSelected}>
-                      {t('取消选择', 'Clear selection')}
+                      {t('logs.clearSelection')}
                     </a>
                   </span>
-                  <Popconfirm title={t('确定要批量删除这些日志吗？', 'Delete the selected log entries?')} onConfirm={() => removeSelected(selectedRowKeys)}>
-                    <a>{t('批量删除', 'Delete selected')}</a>
+                  <Popconfirm title={t('logs.deleteTheSelectedLogEntries')} onConfirm={() => removeSelected(selectedRowKeys)}>
+                    <a>{t('logs.deleteSelected')}</a>
                   </Popconfirm>
                 </Space>
             )}

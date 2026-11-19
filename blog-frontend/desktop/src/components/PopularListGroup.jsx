@@ -42,7 +42,7 @@ export default class PopularListGroup extends React.Component {
         <ListGroup
             { ...this.props }
             errorKey='popularArticles'
-            title={['最受欢迎的文章', 'Popular articles']}
+            titleKey='navigation.popularArticles'
             itemFunc={ popularItemFunc }
         />
     )

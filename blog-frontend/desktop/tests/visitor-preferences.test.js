@@ -2,6 +2,10 @@ import {
   formatDate, getCurrentLocale, getCurrentTimeZone, getVisitorLocale,
   setDefaultSiteSettings, setVisitorPreference,
 } from '../../common/visitor-preferences';
+import { translate as httpMessage } from '../../common/locales';
+import { countMessage, translate } from '../src/locales';
+import en from '../src/locales/en-US';
+import zh from '../src/locales/zh-CN';
 
 afterEach(() => {
   localStorage.clear();
@@ -53,4 +57,19 @@ test('displays daylight saving time without changing the instant', () => {
   expect(winter.toISOString()).toBe('2026-01-15T12:00:00.000Z');
   expect(formatDate(null)).toBe('');
   expect(formatDate('invalid')).toBe('');
+});
+
+test('ships matching message keys and resolves text, placeholders and counts using the visitor language', () => {
+  expect(Object.keys(en).sort()).toEqual(Object.keys(zh).sort());
+  vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-GB']);
+  setDefaultSiteSettings({ 'site.locale': 'zh-CN' });
+  expect(translate('search.resultsTitle', { query: 'A {B}' })).toBe('Search results for “A {B}”');
+  expect(countMessage('articles.resultCount', 1)).toBe('{count} article');
+  expect(countMessage('articles.resultCount', 2)).toBe('{count} articles');
+  expect(httpMessage('http.theRequestTimedOut')).toBe('The request timed out');
+
+  setVisitorPreference('locale', 'site');
+  expect(translate('search.resultsTitle', { query: 'A {B}' })).toBe('关于「A {B}」的搜索结果');
+  expect(countMessage('articles.resultCount', 1)).toBe('{count}篇文章');
+  expect(httpMessage('http.theRequestTimedOut')).toBe('请求服务器超时');
 });

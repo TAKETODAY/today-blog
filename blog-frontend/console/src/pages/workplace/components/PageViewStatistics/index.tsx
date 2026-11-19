@@ -25,8 +25,8 @@ import { useSiteTranslation } from '@/utils/use-site-translation';
 
 export default () => {
   const t = useSiteTranslation();
-  const date = t('日期', 'Date');
-  const count = t('数量', 'Count');
+  const date = t('workplace.date');
+  const count = t('workplace.count');
   return <>
     <Statistics date={date} count={count}/>
   </>;

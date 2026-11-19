@@ -3,7 +3,7 @@ import { Button, message } from 'antd';
 import Cropper from 'cropperjs';
 import React from 'react';
 import Image from '@/components/Image';
-import { siteText as t } from '@/utils/site-format';
+import { siteText as t } from '@/utils/site-i18n';
 import './index.css';
 
 export default class ImageCropper extends React.Component {
@@ -35,7 +35,7 @@ export default class ImageCropper extends React.Component {
         this.cropper.replace(blobURL)
       }
       else {
-        message.warning(t('请选择一张图片', 'Choose an image'));
+        message.warning(t('account.chooseAnImage'));
       }
     }
   }
@@ -72,13 +72,13 @@ export default class ImageCropper extends React.Component {
       <div className="img-container">
         <Image { ...rest } onCreate={ this.onCreate } />
       </div>
-      <h3 className="page-header">{t('预览', 'Preview')}</h3>
+      <h3 className="page-header">{t('account.preview')}</h3>
       <div className="docs-preview clearfix">
         { children }
       </div>
       <div className="page-footer">
         <Button style={ { textAlign: 'center' } }>
-          <UploadOutlined /> {t('上传图片', 'Upload image')}
+          <UploadOutlined /> {t('account.uploadImage')}
           <input onChange={ this.inputChange } type="file" accept="image/*" />
         </Button>
 
@@ -86,7 +86,7 @@ export default class ImageCropper extends React.Component {
           type="primary"
           loading={ updating }
           style={ { marginLeft: '10px' } }
-          onClick={ this.saveImage }>{t('确认保存', 'Save')}</Button>
+          onClick={ this.saveImage }>{t('account.save')}</Button>
 
       </div>
     </>)

@@ -33,7 +33,7 @@ const Forbidden: React.FC = () => {
     <Result
         status="403"
         title="403"
-        subTitle={t('对不起，你没有所访问页面的权限', 'You do not have permission to view this page')}
+        subTitle={t('errors.youDoNotHavePermission')}
     />
   );
 };

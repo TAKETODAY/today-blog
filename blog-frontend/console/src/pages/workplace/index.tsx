@@ -35,36 +35,36 @@ type Translate = ReturnType<typeof useSiteTranslation>;
 
 const links = (t: Translate): EditableLink[] => [
   {
-    title: t('写文章', 'Write an article'),
+    title: t('workplace.writeAnArticle'),
     href: '/articles/write',
     target: '_blank'
   },
   {
-    title: t('全部文章', 'All articles'),
+    title: t('workplace.allArticles'),
     href: '/blog/articles',
   },
   {
-    title: t('文章分类', 'Categories'),
+    title: t('workplace.categories'),
     href: '/blog/categories',
   },
   {
-    title: t('文章标签', 'Tags'),
+    title: t('workplace.tags'),
     href: '/blog/labels',
   },
   {
-    title: t('文章评论', 'Comments'),
+    title: t('workplace.comments'),
     href: '/blog/comments',
   },
   {
-    title: t('用户管理', 'Users'),
+    title: t('workplace.users'),
     href: '/user/list',
   },
   {
-    title: t('附件管理', 'Attachments'),
+    title: t('workplace.attachments'),
     href: '/attachment/list',
   },
   {
-    title: t('变量管理', 'Site options'),
+    title: t('workplace.siteOptions'),
     href: '/system/options',
   },
 ];
@@ -84,11 +84,11 @@ const PageHeaderContent: React.FC<{}> = () => {
   return (
       <div className={styles.pageHeaderContent}>
         <div className={styles.avatar}>
-          <Avatar size="large" icon={<Image alt={t('头像', 'Avatar')} src={currentUser.avatar}/>}/>
+          <Avatar size="large" icon={<Image alt={t('workplace.avatar')} src={currentUser.avatar}/>}/>
         </div>
         <div className={styles.content}>
           <div className={styles.contentTitle}>
-            {t(`您好，${currentUser.name}`, `Hello, ${currentUser.name}`)}
+            {t('workplace.greeting', { name: currentUser.name })}
           </div>
           <div>
             {currentUser.email} | {currentUser.introduce}
@@ -106,16 +106,16 @@ const ExtraContent: React.FC<{ statistics: DashboardStatistics }> = ({ statistic
   return (
       <div className={styles.extraContent}>
         <div className={styles.statItem}>
-          <Statistic title={t('文章数', 'Articles')} value={statistics.articleCount}/>
+          <Statistic title={t('workplace.articles')} value={statistics.articleCount}/>
         </div>
         <div className={styles.statItem}>
-          <Statistic title={t('评论数', 'Comments')} value={statistics.commentCount}/>
+          <Statistic title={t('workplace.commentCount')} value={statistics.commentCount}/>
         </div>
         <div className={styles.statItem}>
-          <Statistic title={t('附件数', 'Attachments')} value={statistics.attachmentCount}/>
+          <Statistic title={t('workplace.attachmentCount')} value={statistics.attachmentCount}/>
         </div>
         <div className={styles.statItem}>
-          <Statistic title={t('上次启动时间', 'Last startup')} value={format(statistics.lastStartup)}/>
+          <Statistic title={t('workplace.lastStartup')} value={format(statistics.lastStartup)}/>
         </div>
       </div>
   )
@@ -123,7 +123,7 @@ const ExtraContent: React.FC<{ statistics: DashboardStatistics }> = ({ statistic
 
 const loggingColumns = (t: Translate) => [
   {
-    title: t('事件', 'Event'),
+    title: t('workplace.event'),
     key: 'title',
     width: 120,
     render: (log: DashboardLog) => {
@@ -131,19 +131,19 @@ const loggingColumns = (t: Translate) => [
     }
   },
   {
-    title: t('内容', 'Details'),
+    title: t('workplace.details'),
     dataIndex: 'content',
     key: 'content',
     width: 260,
   },
   {
-    title: t('IP 地址', 'IP address'),
+    title: t('workplace.ipAddress'),
     dataIndex: 'ip',
     key: 'ip',
     width: 120,
   },
   {
-    title: t('时间', 'Time'),
+    title: t('workplace.time'),
     dataType: 'datetime',
     width: 160,
     render: (log: DashboardLog) => {
@@ -154,13 +154,13 @@ const loggingColumns = (t: Translate) => [
 
 const commentColumns = (t: Translate) => [
   {
-    title: t('评论内容', 'Comment'),
+    title: t('workplace.comment'),
     render: (comment: DashboardComment) => {
       return <div dangerouslySetInnerHTML={{ __html: comment.content }}/>
     }
   },
   {
-    title: t('状态', 'Status'),
+    title: t('workplace.status'),
     width: 80,
     render: (comment: DashboardComment) => {
       const statusDesc = getCommentStatusDesc(comment.status)
@@ -168,7 +168,7 @@ const commentColumns = (t: Translate) => [
     }
   },
   {
-    title: t('时间', 'Time'),
+    title: t('workplace.time'),
     width: 240,
     render: (comment: DashboardComment) => {
       return format(comment.createAt)
@@ -201,9 +201,9 @@ const Workplace = (props: WorkplaceProps) => {
           <Col xl={16} lg={24} md={24} sm={24} xs={24}>
             <Card className={styles.projectList}
                   style={{ marginBottom: 24 }}
-                  title={t('最新文章', 'Latest articles')}
+                  title={t('workplace.latestArticles')}
                   bordered={false}
-                  extra={<Link to="/blog/articles">{t('全部文章', 'All articles')}</Link>}
+                  extra={<Link to="/blog/articles">{t('workplace.allArticles')}</Link>}
                   loading={loading}
                   bodyStyle={{ padding: 0 }}
             >
@@ -220,7 +220,7 @@ const Workplace = (props: WorkplaceProps) => {
                           description={article.summary}
                       />
                       <div className={styles.projectItemContent}>
-                        <ArticleLink target='_blank' article={article}>{t('浏览', 'View')}</ArticleLink>
+                        <ArticleLink target='_blank' article={article}>{t('workplace.view')}</ArticleLink>
                         <span className={styles.datetime} title={format(article.updateAt)}>
                             {fromNow(article.updateAt)}
                           </span>
@@ -232,7 +232,7 @@ const Workplace = (props: WorkplaceProps) => {
             <Card bodyStyle={{ padding: 0 }}
                   bordered={false}
                   className={styles.activeCard}
-                  title={t('最近日志', 'Recent logs')}
+                  title={t('workplace.recentLogs')}
                   loading={loading}
             >
               <Table scroll={{ x: 600, y: 600 }}
@@ -241,7 +241,7 @@ const Workplace = (props: WorkplaceProps) => {
           </Col>
           <Col xl={8} lg={24} md={24} sm={24} xs={24}>
             <Card style={{ marginBottom: 24 }}
-                  title={t('快速开始 / 便捷导航', 'Quick links')}
+                  title={t('workplace.quickLinks')}
                   bordered={false}
                   bodyStyle={{ padding: 0 }}
             >
@@ -249,7 +249,7 @@ const Workplace = (props: WorkplaceProps) => {
             </Card>
             <Card bodyStyle={{ padding: 0 }}
                   bordered={false}
-                  title={t('最近评论', 'Recent comments')}
+                  title={t('workplace.recentComments')}
                   loading={loading}
             >
               <div className={styles.members}>
@@ -263,7 +263,7 @@ const Workplace = (props: WorkplaceProps) => {
         <Row gutter={24} style={{ marginTop: 24 }}>
           <Col xl={16} lg={24} md={24} sm={24} xs={24}>
             <Card style={{ marginBottom: 24 }}
-                  title={t('统计分析', 'Analytics')}
+                  title={t('workplace.analytics')}
                   bordered={false}
                   loading={loading}
                   bodyStyle={{ padding: 0 }}

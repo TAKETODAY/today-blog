@@ -15,6 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
+import { useSiteTranslation } from '@/utils/use-site-translation';
 import { LockOutlined, UserOutlined, } from '@ant-design/icons';
 import { Alert, message, Popconfirm } from 'antd';
 import React, { useState } from 'react';
@@ -58,7 +59,7 @@ const Login: React.FC = () => {
   const { initialState, setInitialState } = useModel('@@initialState');
 
   const intl = useIntl();
-  const t = (zh: string, en: string) => intl.locale === 'en-US' ? en : zh;
+  const t = useSiteTranslation();
 
   const setUserInfo = (userInfo: API.CurrentUser) => {
     if (userInfo) {
@@ -78,7 +79,7 @@ const Login: React.FC = () => {
       login({ ...values }).then(res => {
         const user = res.data;
         if (user?.blogger) {
-          message.success(t('登录成功！', 'Signed in.'));
+          message.success(t('login.signedIn'));
           setUserInfo(user)
 
           if (remember) { // 记住邮箱
@@ -101,7 +102,7 @@ const Login: React.FC = () => {
     }
     catch (error) {
       mergeValidationError(error)
-      setUserLoginState({ success: false, message: error.message || t('未知错误', 'Unknown error') });
+      setUserLoginState({ success: false, message: error.message || t('login.unknownError') });
     }
     finally {
       setSubmitting(false)
@@ -115,7 +116,7 @@ const Login: React.FC = () => {
 
           <LoginForm
               logo={logo}
-              title={t('TODAY BLOG 后台管理', 'TODAY BLOG Admin')}
+              title={t('login.todayBLOGAdmin')}
               subTitle={intl.formatMessage({ id: 'pages.layouts.userLayout.title' })}
               initialValues={getInitialValue()}
               onFinish={async (values) => {
@@ -178,7 +179,7 @@ const Login: React.FC = () => {
               <ProFormCheckbox noStyle name="remember">
                 <FormattedMessage id="pages.login.rememberMe" defaultMessage="记住邮箱"/>
               </ProFormCheckbox>
-              <Popconfirm title={t('暂不支持重置密码', 'Password reset is not available yet')}>
+              <Popconfirm title={t('login.passwordResetIsNotAvailable')}>
                 <a style={{ float: 'right' }}>
                   <FormattedMessage id="pages.login.forgotPassword" defaultMessage="忘记密码"/>
                 </a>

@@ -25,7 +25,8 @@ import 'antd/es/skeleton/style';
 import React, { useSyncExternalStore } from 'react';
 import { Link } from "react-router-dom";
 
-import { arrayNotEquals, formatDate, getRandLabel, isNotEmpty, translate } from 'core';
+import { arrayNotEquals, formatDate, getRandLabel, isNotEmpty } from 'core';
+import { translate } from '../locales';
 import Image from './Image';
 import { connect } from "react-redux";
 import { withRouter } from "../utils/withRouter";
@@ -51,10 +52,10 @@ class ArticleList extends React.Component {
 
       if (!errorTitle) {
         if (title) {
-          errorTitle = translate(`${title}加载失败`, `Could not load ${title}`)
+          errorTitle = translate('articles.loadNamedListFailed', { title })
         }
         else {
-          errorTitle = translate('文章列表加载失败', 'Could not load articles')
+          errorTitle = translate('articles.couldNotLoadArticles')
         }
       }
       return <HttpError {...error} title={errorTitle}/>
@@ -64,7 +65,7 @@ class ArticleList extends React.Component {
       return <Skeleton active/>
     }
     if (articles.length === 0) {
-      return <Empty style={{ marginTop: '10px' }} description={translate('暂无文章', 'No articles')}/>
+      return <Empty style={{ marginTop: '10px' }} description={translate('articles.noArticles')}/>
     }
     return (<>
       {
@@ -74,7 +75,7 @@ class ArticleList extends React.Component {
               <h2>
                 {this.props.showPinned && article.pinnedAt != null &&
                   <span className="article-pinned-badge">
-                     <PushpinFilled aria-hidden="true"/>{translate('置顶', 'Pinned')}
+                     <PushpinFilled aria-hidden="true"/>{translate('articles.pinned')}
                   </span>
                 }
                 <Link to={`/articles/${article.uri}`} dangerouslySetInnerHTML={{ __html: article.title }}/>
@@ -94,7 +95,7 @@ class ArticleList extends React.Component {
                 </span>
               }
               <span className="info">
-                  {formatDate(article.createAt)} | <span className="read-num"> {translate('阅读数', 'Views')} <span
+                  {formatDate(article.createAt)} | <span className="read-num"> {translate('articles.viewCount')} <span
                 className="num">{article.pv}</span></span>
                 </span>
               <hr/>

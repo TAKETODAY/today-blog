@@ -23,7 +23,9 @@ import 'antd/es/input/style';
 import 'antd/es/pagination/style';
 import React, { useEffect, useState } from 'react';
 import ArticleList from '../components/ArticleList';
-import { extractData, getQuery, scrollTop, translate } from 'core';
+import { extractData, getQuery, scrollTop } from 'core';
+import { translate } from '../locales';
+import LocalizedCount from '../locales/LocalizedCount';
 import { articleService } from "../services";
 import { connect } from "react-redux";
 import { navigationsMapStateToProps } from "../redux/action-types";
@@ -48,12 +50,12 @@ export default connect(
 
   const updateNavigations = () => {
     const navigations = [
-      { label: ['搜索', 'Search'], url: '/search' }
+      { labelKey: 'navigation.search', url: '/search' }
     ]
     query && navigations.push({ name: query, url: `/search?q=${query}` })
     props.updateNavigations(navigations)
   }
-  const title = query ? translate(`关于「${query}」的搜索结果`, `Search results for “${query}”`) : translate('搜索', 'Search');
+  const title = query ? translate('search.resultsTitle', { query }) : translate('navigation.search');
   setTitle(title)
 
   const updateArticles = (page = 1, size = 10) => {
@@ -97,7 +99,7 @@ export default connect(
           allowClear
           defaultValue={query}
           loading={loading}
-          placeholder={translate('搜索文章', 'Search articles')}
+          placeholder={translate('search.searchArticles')}
           onSearch={setQuery}
           onChange={(event) => {
             setValue(event.target.value)
@@ -130,7 +132,7 @@ export default connect(
             onChange={updateArticles}
             onShowSizeChange={updateArticles}
             current={articles.current}
-            showTotal={n => <><b className='red'>{n}</b>{translate('篇文章', n === 1 ? ' article' : ' articles')}</>}
+            showTotal={n => <LocalizedCount count={n} messageKey="articles.resultCount"/>}
         />
       </div>
     </div>

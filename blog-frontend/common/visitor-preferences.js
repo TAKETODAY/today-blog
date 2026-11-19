@@ -102,7 +102,3 @@ export function preferencesSnapshot() {
 export function formatDate(time) {
   return formatSiteDate(time, { locale: getCurrentLocale(), timeZone: getCurrentTimeZone() });
 }
-
-export function translate(chinese, english) {
-  return getCurrentLocale() === 'en-US' ? english : chinese;
-}

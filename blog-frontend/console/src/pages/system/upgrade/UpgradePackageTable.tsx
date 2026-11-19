@@ -27,36 +27,35 @@ export default function UpgradePackageTable({ packages, busy, onStart, onEdit, o
         pagination={false}
         scroll={{ x: 900 }}
         locale={{
-          emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('暂无升级包，请先上传', 'Upload a release package to get started')}/>
+          emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('upgrade.uploadAReleasePackageTo')}/>
         }} columns={[
       {
-        title: t('升级包', 'Packages'),
+        title: t('upgrade.packages'),
         key: 'name',
         render: (_, item) => <Space direction="vertical" size={0}>
           <span>{item.displayName || item.originalName}</span>
           <span className="upgrade-secondary">{item.originalName}</span>
         </Space>
       },
-      { title: t('版本 / 构建', 'Version / build'), key: 'version', render: (_, item) => `${item.version} / ${item.build}` },
+      { title: t('upgrade.versionBuild'), key: 'version', render: (_, item) => `${item.version} / ${item.build}` },
       {
-        title: t('状态', 'Status'),
+        title: t('upgrade.status'),
         dataIndex: 'status',
         render: (_, item) => <Tag color={item.status === 'READY' ? 'success' : 'default'}>{statusLabel(item.status)}</Tag>
       },
-      { title: t('大小', 'Size'), dataIndex: 'fileSize', render: value => bytes(Number(value)) },
-      { title: t('上传时间', 'Uploaded'), dataIndex: 'createdAt', render: (_, item) => format(item.createdAt) },
+      { title: t('upgrade.size'), dataIndex: 'fileSize', render: value => bytes(Number(value)) },
+      { title: t('upgrade.uploaded'), dataIndex: 'createdAt', render: (_, item) => format(item.createdAt) },
       {
-        title: t('操作', 'Actions'),
+        title: t('upgrade.actions'),
         key: 'action',
         render: (_, item) => <Space size={0}>
           <Button type="link" disabled={item.status !== 'READY' || busy}
-                  onClick={() => onStart(item)} icon={<ArrowUpOutlined/>}>{t('升级', 'Upgrade')}</Button>
-          <Button type="link" onClick={() => onEdit(item)} icon={<EditOutlined/>}>{t('编辑', 'Edit')}</Button>
-          <Button type="link" danger onClick={() => onRemove(item)} disabled={busy} icon={<DeleteOutlined/>}>{t('删除', 'Delete')}</Button>
+                  onClick={() => onStart(item)} icon={<ArrowUpOutlined/>}>{t('upgrade.upgrade')}</Button>
+          <Button type="link" onClick={() => onEdit(item)} icon={<EditOutlined/>}>{t('upgrade.edit')}</Button>
+          <Button type="link" danger onClick={() => onRemove(item)} disabled={busy} icon={<DeleteOutlined/>}>{t('upgrade.delete')}</Button>
         </Space>
       },
     ]}/>
-    <span className="upgrade-secondary">{t('选择待升级的发行包；已使用的包保留历史快照，可继续查看或删除。',
-      'Choose a release package to upgrade. You can still view or delete used packages; upgrade history retains a snapshot.')}</span>
+    <span className="upgrade-secondary">{t('upgrade.chooseAReleasePackageTo')}</span>
   </>;
 }

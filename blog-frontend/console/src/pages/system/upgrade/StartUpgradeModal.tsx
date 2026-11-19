@@ -55,11 +55,11 @@ export default function StartUpgradeModal({
   }
 
   return <Modal
-      title={item ? t(`升级到 ${item.version} / ${item.build}`, `Upgrade to ${item.version} / ${item.build}`) : t('开始升级', 'Start upgrade')}
+      title={item ? t('upgrade.confirmTarget', { version: item.version, build: item.build }) : t('upgrade.startUpgrade')}
       open={Boolean(item)}
       forceRender
       confirmLoading={starting}
-      okText={t('开始升级', 'Start upgrade')}
+      okText={t('upgrade.startUpgrade')}
       okButtonProps={{ disabled: !environmentReady, icon: <ArrowUpOutlined/> }}
       onOk={start}
       onCancel={onClose}
@@ -67,15 +67,14 @@ export default function StartUpgradeModal({
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
       <Alert type="info" showIcon
              message={item?.displayName || item?.originalName}
-             description={t(`当前版本 ${version.version} / ${version.build || '—'}；提交后立即进入维护状态。`,
-               `Current version: ${version.version} / ${version.build || '—'}. Maintenance starts immediately after submission.`)}/>
+             description={t('upgrade.confirmCurrentVersion', { version: version.version, build: version.build || '—' })}/>
       <Form form={form} layout="vertical" disabled={starting || !loaded}>
         <OptionFields/>
-        <Form.Item name="note" label={t('本次升级备注', 'Upgrade notes')}><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
+        <Form.Item name="note" label={t('upgrade.upgradeNotes')}><Input.TextArea maxLength={500} showCount rows={2}/></Form.Item>
       </Form>
       <Checkbox checked={deletePackageAfter} disabled={starting}
                 onChange={event => setDeletePackageAfter(event.target.checked)}>
-        {t('升级成功后删除升级包', 'Delete the package after a successful upgrade')}
+        {t('upgrade.deleteThePackageAfterA')}
       </Checkbox>
     </Space>
   </Modal>;

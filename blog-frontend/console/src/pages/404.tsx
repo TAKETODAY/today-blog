@@ -29,10 +29,10 @@ const NoFoundPage: React.FC = () => {
     <Result
       status="404"
       title="404"
-      subTitle={t('对不起，你所访问的页面不存在', 'This page does not exist')}
+      subTitle={t('errors.thisPageDoesNotExist')}
       extra={
         <Button type="primary" onClick={() => history.push('/')}>
-          {t('返回首页', 'Back to home')}
+          {t('errors.backToHome')}
         </Button>
       }
     />

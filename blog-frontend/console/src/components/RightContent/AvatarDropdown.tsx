@@ -41,14 +41,14 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
    */
   const loginOut = async () => {
     Modal.confirm({
-      title: t('确定退出登录吗', 'Sign out?'),
+      title: t('interface.confirmSignOut'),
       content: (
           <span style={{ color: "red" }}>
-          <strong>{t('如果有数据未保存请保存后退出', 'Save any unsaved changes before signing out')}</strong>
+          <strong>{t('interface.saveAnyUnsavedChangesBefore')}</strong>
         </span>
       ),
-      cancelText: t('取消', 'Cancel'),
-      okText: t('确认退出', 'Sign out'),
+      cancelText: t('interface.cancel'),
+      okText: t('interface.signOutConfirmButton'),
       onOk: async () => {
         await outLogin();
         if (isNotLoginPage(history.location)) {
@@ -86,12 +86,12 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     {
       key: 'account',
       icon: <SettingOutlined/>,
-      label: <Link to="/system/account">{t('账户设置', 'Account settings')}</Link>,
+      label: <Link to="/system/account">{t('interface.accountSettings')}</Link>,
     },
     {
       key: 'logout',
       icon: <LogoutOutlined/>,
-      label: <a href="javascript:void(0)" onClick={loginOut}>{t('退出登录', 'Sign out')}</a>,
+      label: <a href="javascript:void(0)" onClick={loginOut}>{t('interface.signOut')}</a>,
     }
   ]
 
@@ -102,7 +102,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   return (
       <HeaderDropdown overlay={menuHeaderDropdown}>
         <span className={`${styles.action} ${styles.account}`}>
-          <Avatar size="small" className={styles.avatar} icon={<Image alt={t('头像', 'Avatar')} src={userSession.avatar}/>}/>
+          <Avatar size="small" className={styles.avatar} icon={<Image alt={t('interface.avatar')} src={userSession.avatar}/>}/>
           <span className={`${styles.name} anticon`}>{userSession.name}</span>
         </span>
       </HeaderDropdown>

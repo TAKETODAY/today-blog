@@ -26,7 +26,8 @@ import 'antd/es/message/style';
 import 'antd/es/popconfirm/style';
 import React from 'react';
 import { userService } from '../services';
-import { getStorage, removeStorage, saveStorage, translate } from 'core';
+import { getStorage, removeStorage, saveStorage } from 'core';
+import { translate } from '../locales';
 import Image from './Image'
 import { userSessionMapStateToProps } from "../redux/action-types";
 import { updateUserSession } from "../redux/actions";
@@ -60,10 +61,10 @@ class Login extends React.PureComponent {
 
   loginOther = () => {
     userService.logout().then(res => {
-      message.info(translate('登出成功！', 'Signed out.'))
+      message.info(translate('auth.signedOut'))
       this.props.updateUserSession(null)
     }).catch(resp => {
-      message.error(translate('登出失败！', 'Could not sign out.'))
+      message.error(translate('auth.couldNotSignOut'))
     })
   }
 
@@ -73,35 +74,35 @@ class Login extends React.PureComponent {
       {userSession ?
         <>
           <div className="login_avatar">
-            <h2>{translate('已登录', 'Signed in')}</h2>
-            <Image alt={translate('头像', 'Avatar')} className="img-responsive info_avatar" src={userSession.avatar}/>
+            <h2>{translate('auth.signedIn')}</h2>
+            <Image alt={translate('auth.avatar')} className="img-responsive info_avatar" src={userSession.avatar}/>
           </div>
-          <Popconfirm title={translate('确认先退出再登录其他账号吗？', 'Sign out to use another account?')} onConfirm={this.loginOther}>
-            <Button type="primary" block>{translate('登录其他账号', 'Use another account')}</Button>
+          <Popconfirm title={translate('auth.signOutToUseAnother')} onConfirm={this.loginOther}>
+            <Button type="primary" block>{translate('auth.useAnotherAccount')}</Button>
           </Popconfirm>
         </> :
         <>
-          <h2 style={{ margin: '10px 10px 25px 10px', textAlign: 'center' }}>{translate('欢迎登录', 'Sign in')}</h2>
+          <h2 style={{ margin: '10px 10px 25px 10px', textAlign: 'center' }}>{translate('auth.signInTitle')}</h2>
           {message && <Alert message={message} showIcon type="error" style={{ marginBottom: 10 }}/>}
           <Form name="login" initialValues={getInitialValue()} onFinish={this.login}>
             <Form.Item name="email" rules={[
-              { required: true, message: translate('请输入您的邮箱！', 'Enter your email address.') },
-              { type: 'email', message: translate('请输入正确格式的邮箱！', 'Enter a valid email address.') },
+              { required: true, message: translate('auth.enterYourEmailAddress') },
+              { type: 'email', message: translate('auth.enterAValidEmailAddress') },
             ]}>
-              <Input size="large" placeholder={translate('邮箱', 'Email')} name="email" prefix={<UserOutlined/>}/>
+              <Input size="large" placeholder={translate('auth.email')} name="email" prefix={<UserOutlined/>}/>
             </Form.Item>
-            <Form.Item name="password" rules={[{ required: true, message: translate('请输入密码！', 'Enter your password.') }]}>
-              <Input.Password size="large" placeholder={translate('密码', 'Password')} name="passwd" prefix={<LockOutlined/>}/>
+            <Form.Item name="password" rules={[{ required: true, message: translate('auth.enterYourPassword') }]}>
+              <Input.Password size="large" placeholder={translate('auth.password')} name="passwd" prefix={<LockOutlined/>}/>
             </Form.Item>
             <Form.Item>
               <Form.Item name="remember" valuePropName="checked" noStyle>
-                <Checkbox>{translate('记住邮箱', 'Remember email')}</Checkbox>
+                <Checkbox>{translate('auth.rememberEmail')}</Checkbox>
               </Form.Item>
-              <Popconfirm title={translate('还不支持该功能', 'Password reset is not available yet.')}>
-                <a style={{ float: 'right' }}>{translate('忘记密码', 'Forgot password?')}</a>
+              <Popconfirm title={translate('auth.passwordResetIsNotAvailable')}>
+                <a style={{ float: 'right' }}>{translate('auth.forgotPassword')}</a>
               </Popconfirm>
             </Form.Item>
-            <Button type="primary" htmlType="submit" block>{translate('登录', 'Sign in')}</Button>
+            <Button type="primary" htmlType="submit" block>{translate('auth.signIn')}</Button>
           </Form>
         </>
       }

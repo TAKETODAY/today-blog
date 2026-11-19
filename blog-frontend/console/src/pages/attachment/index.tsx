@@ -25,7 +25,7 @@ import { update } from "./service";
 import AttachmentForm from "@/pages/attachment/AttachmentForm";
 import AttachmentList from "@/components/Attachment";
 import { Attachment } from "@/components/Attachment/data";
-import { siteText as t } from '@/utils/site-format';
+import { siteText as t } from '@/utils/site-i18n';
 
 
 /**
@@ -33,16 +33,16 @@ import { siteText as t } from '@/utils/site-format';
  * @param attach
  */
 const handleUpdate = async (attach: Attachment) => {
-  const hide = message.loading(t(`正在更新: ${attach.name}`, `Updating: ${attach.name}`))
+  const hide = message.loading(t('attachment.updating', { name: attach.name }))
   try {
     await update(attach)
     hide()
-    message.success(t('更新信息成功', 'Attachment updated'), 1)
+    message.success(t('attachment.attachmentUpdated'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error(t('更新信息失败请重试！', 'Could not update the attachment. Try again.'))
+    message.error(t('attachment.couldNotUpdateTheAttachment'))
     return false
   }
 }

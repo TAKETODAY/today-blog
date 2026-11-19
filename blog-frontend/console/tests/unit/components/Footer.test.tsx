@@ -2,7 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.node';
 import Footer from '@/components/Footer';
 
-jest.mock('@umijs/max', () => ({ useIntl: () => ({ locale: 'zh-CN' }) }));
+jest.mock('@umijs/max', () => ({ useIntl: require('../../site-intl').getTestIntl }));
 
 jest.mock('@/components/hooks', () => ({
   useOptions: () => [{ 'site.copyright': 'Copyright © TODAY & 2017 - 2026 All Rights Reserved.' }],

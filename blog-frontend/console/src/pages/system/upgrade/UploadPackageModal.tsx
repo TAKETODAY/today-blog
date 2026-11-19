@@ -22,7 +22,7 @@ export default function UploadPackageModal({ open, onClose, onUploaded }: Props)
 
   async function upload() {
     if (!file) {
-      message.warning(t('请选择升级包', 'Choose a package'));
+      message.warning(t('upgrade.chooseAPackage'));
       return;
     }
     setUploading(true);
@@ -32,23 +32,23 @@ export default function UploadPackageModal({ open, onClose, onUploaded }: Props)
       await http.post('/api/console/maintenance/upgrade/packages', data, { timeout: 300000 });
       close();
       await onUploaded();
-      message.success(t('升级包完整性校验通过，请确认来源可信', 'Package integrity verified. Make sure you trust its source.'));
+      message.success(t('upgrade.packageIntegrityVerifiedMakeSure'));
     }
     finally {
       setUploading(false);
     }
   }
 
-  return <Modal title={t('上传升级包', 'Upload package')} open={open} confirmLoading={uploading} okText={t('上传', 'Upload')}
+  return <Modal title={t('upgrade.uploadPackage')} open={open} confirmLoading={uploading} okText={t('upgrade.upload')}
                 onOk={upload} onCancel={close}>
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-      <Alert type="info" showIcon message={t('仅支持完整发行 ZIP，最大 512 MiB', 'Full release ZIP only, up to 512 MiB')}
-             description={t('摘要只校验完整性，请仅上传自己构建并通过可信渠道传输的升级包。', 'Checksums verify integrity only. Upload only packages you built and transferred through a trusted channel.')}/>
+      <Alert type="info" showIcon message={t('upgrade.fullReleaseZIPOnlyUp')}
+             description={t('upgrade.checksumsVerifyIntegrityOnlyUpload')}/>
       <Upload accept=".zip" showUploadList={false} maxCount={1}
               beforeUpload={next => { setFile(next); return false; }}>
-        <Button icon={<UploadOutlined/>}>{t('选择 ZIP 文件', 'Choose ZIP file')}</Button>
+        <Button icon={<UploadOutlined/>}>{t('upgrade.chooseZIPFile')}</Button>
       </Upload>
-      <span>{file ? file.name : t('尚未选择文件', 'No file selected')}</span>
+      <span>{file ? file.name : t('upgrade.noFileSelected')}</span>
     </Space>
   </Modal>;
 }

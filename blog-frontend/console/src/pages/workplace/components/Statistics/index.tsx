@@ -29,24 +29,24 @@ type StatisticsProps = {}
 const statisticsMap = [
   {
     api: '/api/statistics/os',
-    label: ['操作系统种类', 'Operating system'] as const,
+    label: 'workplace.operatingSystem',
     data: {}
   },
   {
     api: '/api/statistics/user',
-    label: ['用户', 'User'] as const,
+    label: 'workplace.user',
     data: {}
   },
   {
     api: '/api/statistics/browser',
-    label: ['浏览器种类', 'Browser'] as const,
+    label: 'workplace.browser',
     data: {}
   },
 ]
 
 const Statistics: React.FC<StatisticsProps> = (props) => {
   const t = useSiteTranslation();
-  const count = t('数量', 'Count');
+  const count = t('workplace.count');
   const [statistics, setStatistics] = useState<typeof statisticsMap>([])
   useEffect(() => {
     statisticsMap.forEach((stat) => {
@@ -61,7 +61,7 @@ const Statistics: React.FC<StatisticsProps> = (props) => {
   return <>
     {
       statistics.map((stat) => {
-        return <FieldStatistics key={stat.api} name={{ x: t(stat.label[0], stat.label[1]), y: count, series: count }} data={stat.data}/>
+        return <FieldStatistics key={stat.api} name={{ x: t(stat.label), y: count, series: count }} data={stat.data}/>
       })
     }
 

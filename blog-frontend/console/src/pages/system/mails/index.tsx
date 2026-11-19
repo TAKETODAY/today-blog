@@ -27,37 +27,37 @@ export default () => {
   const retry = async (record: MailItem) => {
     try {
       await request(`/api/console/mails/${record.id}/retry`, { method: 'POST' });
-      message.success(t('已加入发送队列', 'Queued for sending'));
+      message.success(t('mail.queuedForSending'));
       actionRef.current?.reload();
     } catch {
-      message.error(t('重发失败，请刷新后重试', 'Could not resend. Refresh and try again.'));
+      message.error(t('mail.couldNotResendRefreshAnd'));
     }
   };
 
   const columns: ProColumns<MailItem>[] = [
-    { title: t('收件人', 'Recipient'), dataIndex: 'to', width: 220 },
-    { title: t('主题', 'Subject'), dataIndex: 'subject', width: 300 },
+    { title: t('mail.recipient'), dataIndex: 'to', width: 220 },
+    { title: t('mail.subject'), dataIndex: 'subject', width: 300 },
     {
-      title: t('状态', 'Status'), dataIndex: 'status', width: 100,
+      title: t('mail.status'), dataIndex: 'status', width: 100,
       valueEnum: {
-        PENDING: { text: t('待发送', 'Pending'), status: 'Default' },
-        SENDING: { text: t('发送中', 'Sending'), status: 'Processing' },
-        SENT: { text: t('已发送', 'Sent'), status: 'Success' },
-        FAILED: { text: t('发送失败', 'Failed'), status: 'Error' },
+        PENDING: { text: t('mail.pending'), status: 'Default' },
+        SENDING: { text: t('mail.sending'), status: 'Processing' },
+        SENT: { text: t('mail.sent'), status: 'Success' },
+        FAILED: { text: t('mail.failed'), status: 'Error' },
       },
     },
-    { title: t('尝试次数', 'Attempts'), dataIndex: 'attempts', hideInSearch: true, width: 100 },
-    { title: t('失败原因', 'Failure reason'), dataIndex: 'lastError', hideInSearch: true, width: 300, ellipsis: true },
-    { title: t('创建时间', 'Created'), dataIndex: 'createAt', render: (_, item) => format(item.createAt), hideInSearch: true, width: 180 },
-    { title: t('最近尝试', 'Last attempt'), dataIndex: 'lastAttemptAt', render: (_, item) => format(item.lastAttemptAt), hideInSearch: true, width: 180 },
-    { title: t('发送成功时间', 'Sent at'), dataIndex: 'sentAt', render: (_, item) => format(item.sentAt), hideInSearch: true, width: 180 },
+    { title: t('mail.attempts'), dataIndex: 'attempts', hideInSearch: true, width: 100 },
+    { title: t('mail.failureReason'), dataIndex: 'lastError', hideInSearch: true, width: 300, ellipsis: true },
+    { title: t('mail.created'), dataIndex: 'createAt', render: (_, item) => format(item.createAt), hideInSearch: true, width: 180 },
+    { title: t('mail.lastAttempt'), dataIndex: 'lastAttemptAt', render: (_, item) => format(item.lastAttemptAt), hideInSearch: true, width: 180 },
+    { title: t('mail.sentAt'), dataIndex: 'sentAt', render: (_, item) => format(item.sentAt), hideInSearch: true, width: 180 },
     {
-      title: t('操作', 'Actions'), valueType: 'option', width: 140, fixed: 'right',
+      title: t('mail.actions'), valueType: 'option', width: 140, fixed: 'right',
       render: (_, record) => [
-        <a key="detail" onClick={() => setSelected(record)}>{t('查看', 'View')}</a>,
+        <a key="detail" onClick={() => setSelected(record)}>{t('mail.view')}</a>,
         record.status === 'FAILED' && (
-          <Popconfirm key="retry" title={t('确定重新发送这封邮件吗？', 'Resend this email?')} onConfirm={() => retry(record)}>
-            <a>{t('重发', 'Resend')}</a>
+          <Popconfirm key="retry" title={t('mail.resendThisEmail')} onConfirm={() => retry(record)}>
+            <a>{t('mail.resend')}</a>
           </Popconfirm>
         ),
       ],
@@ -68,7 +68,7 @@ export default () => {
     <PageContainer>
       <ProTable<MailItem>
         rowKey="id"
-        headerTitle={t('邮件发送记录', 'Email delivery history')}
+        headerTitle={t('mail.emailDeliveryHistory')}
         actionRef={actionRef}
         columns={columns}
         scroll={{ x: 1800 }}
@@ -81,8 +81,8 @@ export default () => {
       />
       <Modal title={selected?.subject} visible={!!selected} footer={null} width={800}
         onCancel={() => setSelected(undefined)}>
-        {selected?.lastError && <p style={{ whiteSpace: 'pre-wrap' }}>{t('失败原因：', 'Failure reason: ')}{selected.lastError}</p>}
-        <iframe title={t('邮件内容', 'Email content')} sandbox="" srcDoc={selected?.content}
+        {selected?.lastError && <p style={{ whiteSpace: 'pre-wrap' }}>{t('mail.failureReasonPrefix')}{selected.lastError}</p>}
+        <iframe title={t('mail.emailContent')} sandbox="" srcDoc={selected?.content}
           style={{ width: '100%', height: 450, border: 0 }} />
       </Modal>
     </PageContainer>

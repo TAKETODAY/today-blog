@@ -29,7 +29,7 @@ export default function EditPackageModal({ item, onClose, onSaved }: Props) {
       return;
     }
     if (!name.trim()) {
-      message.warning(t('请输入升级包名称', 'Enter a package name'));
+      message.warning(t('upgrade.enterAPackageName'));
       return;
     }
     setSaving(true);
@@ -39,20 +39,20 @@ export default function EditPackageModal({ item, onClose, onSaved }: Props) {
       });
       onClose();
       await onSaved();
-      message.success(t('升级包已更新', 'Package updated'));
+      message.success(t('upgrade.packageUpdated'));
     }
     finally {
       setSaving(false);
     }
   }
 
-  return <Modal title={t('编辑升级包', 'Edit package')} open={Boolean(item)} confirmLoading={saving} okText={t('保存', 'Save')}
+  return <Modal title={t('upgrade.editPackage')} open={Boolean(item)} confirmLoading={saving} okText={t('upgrade.save')}
                 onOk={save} onCancel={onClose}>
     <Form layout="vertical">
-      <Form.Item label={t('展示名称', 'Display name')} required>
+      <Form.Item label={t('upgrade.displayName')} required>
         <Input value={name} maxLength={255} onChange={event => setName(event.target.value)}/>
       </Form.Item>
-      <Form.Item label={t('备注', 'Notes')}>
+      <Form.Item label={t('upgrade.notes')}>
         <Input.TextArea value={note} maxLength={500} showCount rows={3}
                         onChange={event => setNote(event.target.value)}/>
       </Form.Item>

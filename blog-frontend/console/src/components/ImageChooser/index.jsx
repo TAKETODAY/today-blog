@@ -36,7 +36,7 @@ export default props => {
 
   // props
   const { onChange, value, placeholder, ...rest } = props
-  const chooseImage = placeholder ? t(`点击选择${placeholder}`, `Select: ${placeholder}`) : t('选择图片', 'Select image');
+  const chooseImage = placeholder ? t('imageChooser.selectWithLabel', { label: placeholder }) : t('imageChooser.selectImage');
 
   useEffect(() => {
     setSelected(value)
@@ -70,7 +70,7 @@ export default props => {
                    onError={
                      e => {
                        onDeleteImage()
-                       message.warn(t('输入的图片有误', 'Could not load the image'))
+                       message.warn(t('imageChooser.couldNotLoadTheImage'))
                      }
                    }
           /> :
@@ -82,19 +82,19 @@ export default props => {
       <div className="linkInput">
         <Popconfirm
           icon=""
-          title={<Input placeholder={t('填入链接地址', 'Enter an image URL')}
+          title={<Input placeholder={t('imageChooser.enterAnImageURL')}
                         value={inputCoverUrl}
                         onInput={
                           e => setInputCoverUrl(e.target.value)
                         }
           />}
           onConfirm={setInputImage}>
-          <Button type="dashed" title={t('手动输入外部或内部链接', 'Enter an internal or external URL')}>{t('链接', 'Link')}</Button>
+          <Button type="dashed" title={t('imageChooser.enterAnInternalOrExternal')}>{t('imageChooser.link')}</Button>
         </Popconfirm>
       </div>
 
       <div className="deleteImage">
-        <Button danger disabled={imageToShow == null} type="primary" onClick={onDeleteImage}>{t('删除', 'Remove')}</Button>
+        <Button danger disabled={imageToShow == null} type="primary" onClick={onDeleteImage}>{t('imageChooser.remove')}</Button>
       </div>
 
       <ImageChooserModal

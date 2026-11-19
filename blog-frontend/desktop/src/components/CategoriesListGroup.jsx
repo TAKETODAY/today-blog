@@ -16,7 +16,7 @@ export default class CategoriesListGroup extends React.Component {
     return (
         <ListGroup
             { ...this.props }
-            title={['分类', 'Categories']}
+            titleKey='navigation.categories'
             errorKey='categories'
             itemFunc={ categoriesItemFunc }
         />

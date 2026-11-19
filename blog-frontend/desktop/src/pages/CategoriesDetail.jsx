@@ -26,7 +26,8 @@ import ArticleList from '../components/ArticleList';
 import { articleService } from "src/services";
 import { updateNavigations } from "src/redux/actions";
 import { navigationsMapStateToProps } from "src/redux/action-types";
-import { applySEO, extractData, isNotEmpty, scrollTop, translate } from 'core';
+import { applySEO, extractData, isNotEmpty, scrollTop } from 'core';
+import { translate } from '../locales';
 import { setTitle } from "../utils/common"
 import { withRouter } from "../utils/withRouter"
 
@@ -55,7 +56,7 @@ class CategoriesDetail extends React.Component {
   }
 
   updateNavigations(navigation) {
-    const navigations = [{ label: ['全部分类', 'All categories'] }]
+    const navigations = [{ labelKey: 'navigation.allCategories' }]
     if (navigation) {
       navigations.push(navigation)
     }
@@ -85,7 +86,7 @@ class CategoriesDetail extends React.Component {
         .then(extractData)
         .then(articles => {
           super.setState({ articles });
-          const title = translate(`分类「${categoryId}」下的文章`, `Articles in “${categoryId}”`);
+          const title = translate('articles.categoryTitle', { category: categoryId });
           setTitle(title)
           applySEO(undefined, title)
         })
@@ -96,7 +97,7 @@ class CategoriesDetail extends React.Component {
     const { categoryId } = this.props.match.params;
     return (<>
       <div className="shadow-box" id="test1">
-        <div className="data-list-title">{translate(`分类「${categoryId}」下的文章`, `Articles in “${categoryId}”`)}</div>
+        <div className="data-list-title">{translate('articles.categoryTitle', { category: categoryId })}</div>
         <div className="datas">
           <ArticleList articles={articles.data}/>
         </div>
