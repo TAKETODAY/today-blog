@@ -17,13 +17,12 @@
 
 import React from 'react';
 import { Link } from "react-router-dom";
-import { Dropdown, Layout, Menu, message, Modal, Select } from 'antd';
+import { Dropdown, Layout, Menu, message, Modal } from 'antd';
 import 'antd/es/dropdown/style';
 import 'antd/es/layout/style';
 import 'antd/es/menu/style';
 import 'antd/es/message/style';
 import 'antd/es/modal/style';
-import 'antd/es/select/style';
 import { ExclamationCircleOutlined, FolderFilled, HomeFilled, LoginOutlined, LogoutOutlined, TagFilled } from '@ant-design/icons';
 import RssIcon from './RssIcon';
 import { useDispatch, useSelector } from "react-redux";
@@ -34,9 +33,8 @@ import AdminLink from './AdminLink';
 import ApiLink from './ApiLink';
 import Image from './Image';
 import Search from './Search';
+import DisplaySettings from './DisplaySettings';
 import { translate } from '../locales';
-import { getCurrentTimeZone, getVisitorLocale, getVisitorTimeZone, setVisitorPreference } from '../../../common/visitor-preferences';
-import { localeOptions } from '../../../common/site-settings';
 import { useDisplayPreferences } from './hooks/useDisplayPreferences';
 
 
@@ -48,10 +46,6 @@ export default function NavHeader() {
   const userSession = useSelector(state => state.user.session)
   const categories = useSelector(state => state.article.categories)
   const labels = useSelector(state => state.article.labels)
-  const timeZones = [...new Set([
-    'UTC', 'Asia/Shanghai', 'America/New_York', 'Europe/London', getCurrentTimeZone(),
-    ...(Intl.supportedValuesOf?.('timeZone') || []),
-  ])];
 
   async function logout() {
     try {
@@ -146,35 +140,6 @@ export default function NavHeader() {
     },
     { key: 'search', label: <Search/> },
     {
-      key: 'locale',
-      label: <Select
-        size="small"
-        aria-label={translate('navigation.displayLanguage')}
-        value={getVisitorLocale() || 'browser'}
-        onChange={value => setVisitorPreference('locale', value === 'browser' ? null : value)}
-        options={[
-          { value: 'browser', label: translate('navigation.browserLanguage') },
-          { value: 'site', label: translate('navigation.siteLanguage') },
-          ...localeOptions,
-        ]}
-      />,
-    },
-    {
-      key: 'timezone',
-      label: <Select
-        size="small"
-        aria-label={translate('navigation.displayTimeZone')}
-        showSearch
-        optionFilterProp="label"
-        value={getVisitorTimeZone() || 'site'}
-        onChange={value => setVisitorPreference('timeZone', value === 'site' ? null : value)}
-        options={[
-          { value: 'site', label: translate('navigation.siteTimeZone') },
-          ...timeZones.map(value => ({ value, label: value })),
-        ]}
-      />,
-    },
-    {
       key: 'userSession',
       label: userSession ?
         <Dropdown menu={renderUserMenu()} placement="bottomLeft" trigger={['click']}>
@@ -197,6 +162,7 @@ export default function NavHeader() {
         <Menu style={{ borderBottom: 'none', marginTop: 4 }}
               mode="horizontal" defaultSelectedKeys={['home']} items={items}/>
       </div>
+      <DisplaySettings/>
     </Header>
   </>)
 }
