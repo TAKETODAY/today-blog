@@ -8,7 +8,9 @@ API 使用 systemd，升级器位于独立 Gradle 模块 `blog-updater`，生产
 
 ## 构建
 
-构建机需要 JDK 17+、pnpm 10。服务器建议 JDK 25。当前版本不使用密钥、证书或数字签名。
+构建机需要 JDK 17+、Node.js 和 pnpm（本次验收使用 JDK 21、Node.js 24、pnpm 12）。
+Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yaml` 安装依赖。
+服务器建议 JDK 25。当前版本不使用密钥、证书或数字签名。
 
 ```bash
 ./gradlew release
