@@ -22,7 +22,7 @@ configure(project) {
 }
 
 dependencies {
-  implementation project(':blog-updater')
+  implementation project(':blog-upgrade-protocol')
   implementation 'cn.taketoday:infra-starter-application'
   implementation 'cn.taketoday:infra-starter-netty-server'
   implementation 'cn.taketoday:infra-starter-webmvc'

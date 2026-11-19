@@ -17,10 +17,12 @@
 
 package cn.taketoday.blog.updater;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,7 +63,7 @@ public final class UpgradePackage {
     try (ZipFile zip = new ZipFile(archive.toFile())) {
       byte[] metadata = read(zip, MANIFEST, 4 * 1024 * 1024);
       Properties properties = new Properties();
-      properties.load(new java.io.ByteArrayInputStream(metadata));
+      properties.load(new ByteArrayInputStream(metadata));
       if (!"today-blog".equals(properties.getProperty("product"))
               || !"1".equals(properties.getProperty("format"))) {
         throw new IOException("不支持的升级包产品或格式");
@@ -91,27 +93,32 @@ public final class UpgradePackage {
       }
       Set<String> entries = new HashSet<>();
       Set<String> checked = new HashSet<>();
+
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
       long total = 0;
       var enumeration = zip.entries();
       while (enumeration.hasMoreElements()) {
         ZipEntry entry = enumeration.nextElement();
         String name = entry.getName();
-        if (!entries.add(name) || entries.size() > MAX_ENTRIES)
+        if (!entries.add(name) || entries.size() > MAX_ENTRIES) {
           throw new IOException("重复文件或文件数量超限");
-        if (!name.startsWith(PREFIX) || name.contains("\\") || name.contains("..") || name.startsWith("/")) {
+        }
+        if (!name.startsWith(PREFIX)
+                || name.contains("\\")
+                || name.contains("..")
+                || name.startsWith("/")) {
           throw new IOException("升级包包含非法路径");
         }
-        if (entry.isDirectory())
+        if (entry.isDirectory() || name.equals(MANIFEST)) {
           continue;
-        if (name.equals(MANIFEST))
-          continue;
+        }
         String path = name.substring(PREFIX.length());
         checkPath(path);
-        if (!hashes.containsKey(path))
+        if (!hashes.containsKey(path)) {
           throw new IOException("存在未列入清单的文件: " + path);
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        }
         long size = 0;
-        try (InputStream input = zip.getInputStream(entry)) {
+        try (InputStream input = new DigestInputStream(zip.getInputStream(entry), digest)) {
           byte[] buffer = new byte[65536];
           int count;
           while ((count = input.read(buffer)) != -1) {
@@ -119,13 +126,14 @@ public final class UpgradePackage {
             total += count;
             if (size > MAX_PACKAGE_BYTES || total > MAX_EXPANDED_BYTES)
               throw new IOException("解压大小超限");
-            digest.update(buffer, 0, count);
           }
         }
+
         if (!hashes.get(path).equals(HexFormat.of().formatHex(digest.digest()))) {
           throw new IOException("文件摘要不匹配: " + path);
         }
         checked.add(path);
+        digest.reset();
       }
       if (!checked.equals(hashes.keySet()))
         throw new IOException("清单中存在缺失文件");
@@ -156,8 +164,9 @@ public final class UpgradePackage {
 
   private static byte[] read(ZipFile zip, String name, int max) throws IOException {
     ZipEntry entry = zip.getEntry(name);
-    if (entry == null || entry.isDirectory())
+    if (entry == null || entry.isDirectory()) {
       throw new IOException("缺少清单文件");
+    }
     try (InputStream input = zip.getInputStream(entry)) {
       byte[] result = input.readNBytes(max + 1);
       if (result.length > max)

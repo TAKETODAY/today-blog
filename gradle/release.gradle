@@ -125,7 +125,7 @@ def releaseZip = tasks.named('releaseDistZip', Zip).flatMap {
 def verifyRelease = tasks.register('verifyRelease', JavaExec) {
   group = 'verification'
   inputs.file(releaseZip)
-  classpath = files(project(':blog-updater').tasks.named('jar'))
+  classpath = files(project(':blog-upgrade-protocol').tasks.named('jar'))
   mainClass = 'cn.taketoday.blog.updater.UpgradePackage'
   args releaseZip.get().asFile.absolutePath
 }

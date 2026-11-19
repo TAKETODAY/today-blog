@@ -10,6 +10,7 @@ tasks.withType(JavaCompile).configureEach {
 
 // 生产代码依赖 JDK 与 MySQL 驱动，用于直接读写升级任务状态。
 dependencies {
+  api project(':blog-upgrade-protocol')
   implementation 'com.mysql:mysql-connector-j:26.10.0'
   testImplementation platform('org.junit:junit-bom:5.14.2')
   testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -20,7 +21,8 @@ dependencies {
 jar {
   archiveFileName = 'today-blog-updater.jar'
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-  // 升级器通过 java -jar 独立运行，需要把 JDBC 驱动打进固定 updater.jar。
+  // 升级器通过 java -jar 独立运行，需要把协议模块和 JDBC 驱动打进固定 updater.jar。
+  dependsOn configurations.runtimeClasspath
   from {
     configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
   }

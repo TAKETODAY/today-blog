@@ -1,8 +1,10 @@
 # 打包、部署和后台升级
 
 API 使用 systemd，升级器位于独立 Gradle 模块 `blog-updater`，生产代码仅依赖 JDK。
-`blog-api` 依赖该模块复用升级包校验；升级器通过 JDBC 直接读取任务和写回状态，不依赖 API 或 Web 框架。
-可单独运行 `./gradlew :blog-updater:build` 构建并测试，产物为
+升级包校验、发行文件映射和磁盘协议位于纯 JDK 模块 `blog-upgrade-protocol`，
+由 `blog-api` 和 `blog-updater` 共同依赖；`blog-api` 不依赖升级器实现。
+升级器通过 JDBC 直接读取任务和写回状态，不依赖 API 或 Web 框架。
+可单独运行 `./gradlew :blog-upgrade-protocol:build :blog-updater:build` 构建并测试，产物为
 `blog-updater/build/libs/today-blog-updater.jar`，通过 `java -jar` 启动。
 通过独立的 `today-blog-updater@<id>.service` 执行，不随 API 重启终止。
 
@@ -27,7 +29,7 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 任一文件缺失、路径不合规或摘要不匹配都会中止构建。正式打包请使用干净的工作目录，
 避免本地旧编译产物（例如已删除的 Flyway 迁移）进入发行包。
 产物为 `build/today-blog-<version>-<build>.zip` 和 `dist/today-blog-updater.jar`。
-`release` 不自动执行测试，发布前可运行 `./gradlew :blog-updater:test :blog-api:test`。
+`release` 不自动执行测试，发布前可运行 `./gradlew :blog-upgrade-protocol:test :blog-updater:test :blog-api:test`。
 
 可指定构建编号：
 

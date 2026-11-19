@@ -26,6 +26,7 @@ import java.time.Instant;
  * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
  * @since 4.0
  */
-public record DatabaseBackupResult(String id, Path location, long bytes, String sha256, Instant completedAt) {
+public record DatabaseBackupResult(String id, Path location,
+        long bytes, String sha256, Instant completedAt) {
 
 }
