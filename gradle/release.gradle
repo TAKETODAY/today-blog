@@ -1,9 +1,6 @@
 import cn.taketoday.blog.release.ReleaseManifest
 
-import java.nio.file.Files
 import java.util.regex.Pattern
-
-apply plugin: 'distribution-base'
 
 def projectVersion = version.toString()
 def releaseBuild = providers.gradleProperty('buildNumber')
@@ -95,22 +92,24 @@ def manifest = tasks.register('releaseManifest', ReleaseManifest) {
   buildNumber = releaseBuild
 }
 
-distributions.create("release") {
-  distributionBaseName = 'today-blog'
-  contents {
-    into 'today-blog'
-    from(stageRelease)
-    from(manifest) {
-      into 'META-INF'
-    }
-
-    exclude '__MACOSX/**'
-    exclude '.DS_Store'
+// 在线协议规定 ZIP 根目录固定为 today-blog，不能使用 distribution 插件的版本化外层目录。
+def releaseContents = copySpec {
+  into 'today-blog'
+  from(stageRelease)
+  from(manifest) {
+    into 'META-INF'
   }
 }
 
-['releaseDistZip', 'releaseDistTar'].each { taskName ->
-  tasks.named(taskName, AbstractArchiveTask) {
+tasks.register('installReleaseDist', Sync) {
+  into layout.buildDirectory.dir('install/today-blog')
+  with releaseContents
+}
+
+[releaseDistZip: Zip, releaseDistTar: Tar].each { taskName, archiveType ->
+  tasks.register(taskName, archiveType) {
+    group = 'distribution'
+    with releaseContents
     destinationDirectory = layout.buildDirectory
     archiveFileName = releaseBuild.zip(archiveExtension) { build, extension ->
       "today-blog-${projectVersion}-${build}.${extension}"
@@ -118,6 +117,17 @@ distributions.create("release") {
     preserveFileTimestamps = false
     reproducibleFileOrder = true
   }
+}
+
+def releaseZip = tasks.named('releaseDistZip', Zip).flatMap {
+  it.archiveFile
+}
+def verifyRelease = tasks.register('verifyRelease', JavaExec) {
+  group = 'verification'
+  inputs.file(releaseZip)
+  classpath = files(project(':blog-updater').tasks.named('jar'))
+  mainClass = 'cn.taketoday.blog.updater.UpgradePackage'
+  args releaseZip.get().asFile.absolutePath
 }
 
 def updater = tasks.register('releaseUpdater', Copy) {
@@ -129,5 +139,5 @@ def updater = tasks.register('releaseUpdater', Copy) {
 tasks.register('release') {
   group = 'distribution'
   description = '构建后端、Console、Desktop，生成无签名升级包和独立 updater。'
-  dependsOn tasks.named('releaseDistZip'), updater
+  dependsOn verifyRelease, updater
 }

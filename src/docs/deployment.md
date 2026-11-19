@@ -21,8 +21,11 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 
 任务定义位于 `gradle/release.gradle`，通过 Gradle 依赖依次完成前端依赖安装、Console/Desktop 构建、
 后端发行目录整理、SHA-256 清单和 ZIP 生成；不再依赖 Python 或嵌套调用 Gradle。
-发行内容使用 `distributions.create('release')` 定义，由 Distribution 插件生成
-`releaseDistZip`、`releaseDistTar` 和 `installReleaseDist` 任务。在线升级仅接受 ZIP。
+`releaseDistZip`、`releaseDistTar` 和 `installReleaseDist` 共用固定的 `today-blog/` 根目录。
+文件名带版本号和构建编号，但归档内清单必须位于 `today-blog/META-INF/upgrade.properties`。
+在线升级仅接受 ZIP。`release` 会运行 `verifyRelease`，用服务器升级器校验最终 ZIP；
+任一文件缺失、路径不合规或摘要不匹配都会中止构建。正式打包请使用干净的工作目录，
+避免本地旧编译产物（例如已删除的 Flyway 迁移）进入发行包。
 产物为 `build/today-blog-<version>-<build>.zip` 和 `dist/today-blog-updater.jar`。
 `release` 不自动执行测试，发布前可运行 `./gradlew :blog-updater:test :blog-api:test`。
 

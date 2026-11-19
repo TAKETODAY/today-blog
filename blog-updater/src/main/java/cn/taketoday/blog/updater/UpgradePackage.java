@@ -46,6 +46,14 @@ public final class UpgradePackage {
   public record Manifest(String version, long build, Map<String, String> hashes) {
   }
 
+  public static void main(String[] args) throws Exception {
+    if (args.length != 1) {
+      throw new IllegalArgumentException("需要一个发行 ZIP 路径");
+    }
+    Manifest manifest = verify(Path.of(args[0]));
+    System.out.println("发行包校验通过: " + manifest.version() + " build " + manifest.build());
+  }
+
   public static Manifest verify(Path archive) throws Exception {
     if (Files.size(archive) > MAX_PACKAGE_BYTES) {
       throw new IOException("升级包不得超过 512 MiB");
