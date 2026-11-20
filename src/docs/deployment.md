@@ -34,7 +34,7 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 `release` 不自动执行测试，发布前可运行 `./gradlew :blog-upgrade-protocol:test :blog-cli:test :blog-api:test`。
 
 在目标平台上安装 GraalVM JDK 25（含 `native-image`）和 C 工具链，将 `JAVA_HOME` 指向该 JDK 后运行
-`./gradlew -PnativeCli --no-configuration-cache :blog-cli:nativeSmokeTest`，构建
+`./gradlew -PnativeCli :blog-cli:nativeSmokeTest`，构建
 `blog-cli/build/native/nativeCompile/today-blog` 并运行 `--help`，验证原生应用能启动。
 默认安装仍使用 JAR。原生 CLI 无需 JVM，但须按目标系统和 CPU 架构构建；`blog-api` 仍需要 Java。
 绕过安装脚本的 `/usr/local/bin/today-blog` 包装入口直接运行原生二进制时，systemd 部署需显式设置

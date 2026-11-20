@@ -30,6 +30,17 @@ application {
 
 infraApplication {
   enableBuildInfo()
+  enableNativeImage()
+  enableAheadOfTimeProcessing()
+
+  graalvmNative {
+    binaries {
+      main {
+        imageName = 'today-blog'
+        quickBuild = true
+      }
+    }
+  }
 }
 
 tasks.named('infraJar') {
@@ -43,16 +54,6 @@ processResources {
 }
 
 if (providers.gradleProperty('nativeCli').isPresent()) {
-  // 当前 GraalVM 插件与仓库的 Gradle 配置缓存不兼容，保持普通 JAR 构建不变。
-  apply plugin: 'org.graalvm.buildtools.native'
-  graalvmNative {
-    binaries {
-      main {
-        imageName = 'today-blog'
-        quickBuild = true
-      }
-    }
-  }
   tasks.register('nativeSmokeTest', Exec) {
     group = 'verification'
     description = '启动原生 CLI，检查 infra AOT 上下文和命令分发。'
@@ -67,4 +68,9 @@ if (providers.gradleProperty('nativeCli').isPresent()) {
 
 test {
   useJUnitPlatform()
+}
+
+// CLI 测试是普通单元测试，不需要 infra 测试 AOT 处理器
+processTestAot {
+  enabled = false
 }
