@@ -27,6 +27,11 @@ public interface UpgradeTaskStore extends AutoCloseable {
 
   UpgradeTask load(long id) throws Exception;
 
+  default boolean begin(long id) throws Exception {
+    status(id, "VALIDATING", "校验升级包");
+    return true;
+  }
+
   void status(long id, String status, String message) throws Exception;
 
   void started(long id, String releasePath) throws Exception;

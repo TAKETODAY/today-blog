@@ -36,13 +36,19 @@ public final class JdbcUpgradeTaskStore implements UpgradeTaskStore {
 
   private final Connection connection;
 
-  private JdbcUpgradeTaskStore(Connection connection) {
-    this.connection = connection;
+  public JdbcUpgradeTaskStore(UpgradeDatabase database) throws Exception {
+    this.connection = DriverManager.getConnection(database.url(), database.user(), database.password());
   }
 
-  public static JdbcUpgradeTaskStore open(UpgradeDatabase database) throws Exception {
-    return new JdbcUpgradeTaskStore(
-            DriverManager.getConnection(database.url(), database.user(), database.password()));
+  @Override
+  public boolean begin(long id) throws Exception {
+    try (PreparedStatement statement = connection.prepareStatement("""
+            update t_upgrade_record set status = 'VALIDATING', message = '校验升级包'
+            where id = ? and status = 'STARTING'
+            """)) {
+      statement.setLong(1, id);
+      return statement.executeUpdate() == 1;
+    }
   }
 
   @Override

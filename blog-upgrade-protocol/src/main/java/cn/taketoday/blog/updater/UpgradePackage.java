@@ -42,21 +42,13 @@ public final class UpgradePackage {
   private static final String PREFIX = "today-blog/";
   private static final String MANIFEST = PREFIX + "META-INF/upgrade.properties";
 
-  private UpgradePackage() {
+  public UpgradePackage() {
   }
 
   public record Manifest(String version, long build, Map<String, String> hashes) {
   }
 
-  public static void main(String[] args) throws Exception {
-    if (args.length != 1) {
-      throw new IllegalArgumentException("需要一个发行 ZIP 路径");
-    }
-    Manifest manifest = verify(Path.of(args[0]));
-    System.out.println("发行包校验通过: " + manifest.version() + " build " + manifest.build());
-  }
-
-  public static Manifest verify(Path archive) throws Exception {
+  public Manifest verify(Path archive) throws Exception {
     if (Files.size(archive) > MAX_PACKAGE_BYTES) {
       throw new IOException("升级包不得超过 512 MiB");
     }
@@ -142,7 +134,7 @@ public final class UpgradePackage {
   }
 
   /** 只创建普通文件，不恢复 ZIP 权限、符号链接或特殊文件。调用方必须使用独占的空目录。 */
-  public static void extract(Path archive, Path destination, Manifest manifest) throws IOException {
+  public void extract(Path archive, Path destination, Manifest manifest) throws IOException {
     try (ZipFile zip = new ZipFile(archive.toFile())) {
       for (String path : manifest.hashes().keySet()) {
         Path target = destination.resolve(path);
@@ -154,7 +146,7 @@ public final class UpgradePackage {
     }
   }
 
-  private static void checkPath(String path) throws IOException {
+  private void checkPath(String path) throws IOException {
     if (!path.matches("[A-Za-z0-9_./@+,-]+") || path.contains("..") || path.contains("//")
             || path.startsWith("/") || !(path.startsWith("api/bin/") || path.startsWith("api/lib/")
             || path.startsWith("console/") || path.startsWith("desktop/"))) {
@@ -162,7 +154,7 @@ public final class UpgradePackage {
     }
   }
 
-  private static byte[] read(ZipFile zip, String name, int max) throws IOException {
+  private byte[] read(ZipFile zip, String name, int max) throws IOException {
     ZipEntry entry = zip.getEntry(name);
     if (entry == null || entry.isDirectory()) {
       throw new IOException("缺少清单文件");

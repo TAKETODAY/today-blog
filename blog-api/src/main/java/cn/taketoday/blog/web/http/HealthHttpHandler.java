@@ -32,12 +32,14 @@ import lombok.RequiredArgsConstructor;
 class HealthHttpHandler {
   private final DataSource dataSource;
 
+  private final UpgradeFiles files;
+
   @GET("/api/internal/health")
   public String health() throws Exception {
     try (var connection = dataSource.getConnection()) {
       if (!connection.isValid(2)) throw new IllegalStateException("数据库不可用");
     }
     String release = System.getenv("BLOG_RELEASE_PATH");
-    return "UP:" + (release == null ? "0" : UpgradeFiles.read(Path.of(release).resolve("release.properties")).getProperty("build"));
+    return "UP:" + (release == null ? "0" : files.read(Path.of(release).resolve("release.properties")).getProperty("build"));
   }
 }

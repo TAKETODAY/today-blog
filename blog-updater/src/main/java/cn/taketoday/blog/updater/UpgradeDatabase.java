@@ -33,12 +33,12 @@ import java.util.Properties;
  */
 public record UpgradeDatabase(String url, String user, String password) {
 
-  private static final Path CONFIG = Path.of(
+  public static final Path DEFAULT_CONFIG = Path.of(
           System.getenv().getOrDefault("BLOG_UPGRADE_CONFIG", "/etc/today-blog/upgrade.properties"));
 
-  public static UpgradeDatabase configured() throws IOException {
-    DatabaseBackup.trusted(CONFIG, false);
-    Properties config = UpgradeFiles.read(CONFIG);
+  static UpgradeDatabase read(Path configPath, UpgradeFiles files) throws IOException {
+    files.verifyTrusted(configPath, false);
+    Properties config = files.read(configPath);
     String database = config.getProperty("database");
     if (database == null || !database.matches("[A-Za-z0-9_]+")) {
       throw new IOException("升级器数据库名称无效");
@@ -49,7 +49,7 @@ public record UpgradeDatabase(String url, String user, String password) {
     String passwordFile = config.getProperty("jdbcPasswordFile");
     if (passwordFile != null) {
       Path secret = Path.of(passwordFile);
-      DatabaseBackup.trusted(secret, true);
+      files.verifyTrusted(secret, true);
       password = Files.readString(secret, StandardCharsets.UTF_8).trim();
     }
     if (configuredUrl != null) {
@@ -60,7 +60,7 @@ public record UpgradeDatabase(String url, String user, String password) {
     }
 
     Path defaultsFile = Path.of(config.getProperty("defaultsFile", "/etc/today-blog/backup.cnf"));
-    DatabaseBackup.trusted(defaultsFile, true);
+    files.verifyTrusted(defaultsFile, true);
     Map<String, String> client = readClient(defaultsFile);
     String host = client.getOrDefault("host", "127.0.0.1");
     String port = client.getOrDefault("port", "3306");

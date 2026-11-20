@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.maintenance.MaintenanceProblems;
@@ -48,6 +47,7 @@ import cn.taketoday.blog.maintenance.upgrade.UpgradeStatus;
 import cn.taketoday.blog.problem.CommonProblems;
 import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.updater.DatabaseBackup;
+import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.ReleaseMappings;
 import cn.taketoday.blog.updater.UpgradeFiles;
@@ -91,6 +91,9 @@ class MaintenanceHttpHandler {
   private final Path mappingPolicy = Path.of(System.getenv().getOrDefault(
           "BLOG_MAPPING_ROOTS", ReleaseMappings.POLICY.toString()));
 
+  private final Path updater = Path.of(System.getenv().getOrDefault(
+          "BLOG_UPDATER_COMMAND", "/usr/local/lib/today-blog/today-updater"));
+
   private final Path packageRoot;
 
   private final ServerStatus serverStatus;
@@ -105,15 +108,29 @@ class MaintenanceHttpHandler {
 
   private final ReleaseMappingService releaseMappings;
 
+  private final ReleaseMappings mappingOperations;
+
+  private final UpgradeFiles files;
+
+  private final UpgradePackage upgradePackage;
+
+  private final DatabaseBackupFactory backupFactory;
+
   MaintenanceHttpHandler(ServerStatus serverStatus, UpgradePackageService packages,
           UpgradeRecordService records, UpgradePathMappingService pathMappings,
-          UpgradeSettingService settings, ReleaseMappingService releaseMappings) {
+          UpgradeSettingService settings, ReleaseMappingService releaseMappings,
+          ReleaseMappings mappingOperations, UpgradeFiles files, UpgradePackage upgradePackage,
+          DatabaseBackupFactory backupFactory) {
     this.serverStatus = serverStatus;
     this.packages = packages;
     this.records = records;
     this.pathMappings = pathMappings;
     this.settings = settings;
     this.releaseMappings = releaseMappings;
+    this.mappingOperations = mappingOperations;
+    this.files = files;
+    this.upgradePackage = upgradePackage;
+    this.backupFactory = backupFactory;
     this.packageRoot = state.resolve("packages").toAbsolutePath().normalize();
   }
 
@@ -156,9 +173,9 @@ class MaintenanceHttpHandler {
   public ReleaseMappingSettings mappings() {
     List<ReleaseMapping> mappings = releaseMappings.findAll();
     try {
-      List<Path> roots = ReleaseMappings.roots(mappingPolicy);
-      ReleaseMappings.validate(mappings, roots);
-      ReleaseMappings.validateTargets(mappings, installRoot, state);
+      List<Path> roots = mappingOperations.roots(mappingPolicy);
+      mappingOperations.validate(mappings, roots);
+      mappingOperations.validateTargets(mappings, installRoot, state);
       return new ReleaseMappingSettings(mappings, roots.stream().map(Path::toString).toList(),
               true, "映射目标目录由服务器白名单限定");
     }
@@ -174,8 +191,8 @@ class MaintenanceHttpHandler {
     List<ReleaseMapping> mappings = request == null || request.mappings() == null
             ? List.of() : List.copyOf(request.mappings());
     try {
-      ReleaseMappings.validate(mappings, ReleaseMappings.roots(mappingPolicy));
-      ReleaseMappings.validateTargets(mappings, installRoot, state);
+      mappingOperations.validate(mappings, mappingOperations.roots(mappingPolicy));
+      mappingOperations.validateTargets(mappings, installRoot, state);
     }
     catch (Exception invalid) {
       upgradeLogger.warn("Invalid release mappings", invalid);
@@ -204,7 +221,7 @@ class MaintenanceHttpHandler {
     Path location = directory.resolve("package.zip");
     try {
       file.transferTo(temp);
-      var manifest = UpgradePackage.verify(temp);
+      var manifest = upgradePackage.verify(temp);
       Files.move(temp, location, StandardCopyOption.ATOMIC_MOVE);
       String originalName = file.getOriginalFilename();
       if (StringUtils.isBlank(originalName)) {
@@ -263,8 +280,8 @@ class MaintenanceHttpHandler {
     List<ReleaseMapping> mappings = releaseMappings.findAll();
     if (!mappings.isEmpty()) {
       try {
-        ReleaseMappings.validate(mappings, ReleaseMappings.roots(mappingPolicy));
-        ReleaseMappings.validateTargets(mappings, installRoot, state);
+        mappingOperations.validate(mappings, mappingOperations.roots(mappingPolicy));
+        mappingOperations.validateTargets(mappings, installRoot, state);
       }
       catch (Exception invalid) {
         upgradeLogger.warn("Invalid release mappings", invalid);
@@ -307,24 +324,44 @@ class MaintenanceHttpHandler {
     long recordId = record.getId();
     pathMappings.replace(recordId, mappings);
     packages.markConsumed(entity.getId());
+    MaintenanceStatus previousMaintenance = serverStatus.getMaintenanceStatus();
     enableMaintenance();
     try {
-      Process process = new ProcessBuilder("/usr/bin/sudo", "-n", "/usr/bin/systemctl", "start", "--no-block",
-              "today-blog-updater@" + recordId + ".service").redirectErrorStream(true)
-              .redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
-      if (!process.waitFor(10, TimeUnit.SECONDS) || process.exitValue() != 0) {
-        process.destroyForcibly();
-        throw new java.io.IOException("无法启动升级服务");
-      }
+      Process process = new ProcessBuilder(updater.toString(), Long.toString(recordId))
+              .redirectInput(Path.of("/dev/null").toFile())
+              .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+              .redirectError(ProcessBuilder.Redirect.DISCARD)
+              .start();
+      process.onExit().thenAcceptAsync(exited -> updaterExited(recordId, exited.exitValue(), previousMaintenance));
     }
     catch (Exception failure) {
-      serverStatus.setMaintenanceStatus(MaintenanceStatus.DISABLED);
+      serverStatus.setMaintenanceStatus(previousMaintenance);
       packages.markReady(entity.getId());
-      records.failed(recordId, "无法启动升级服务，请检查 sudoers 和 systemd 日志");
+      records.failed(recordId, "无法启动升级器，请检查升级器命令和日志");
       upgradeLogger.error("Cannot start upgrade service", failure);
       throw new ProblemException(MaintenanceProblems.START_FAILED);
     }
     return RecordView.from(records.find(recordId));
+  }
+
+  private synchronized void updaterExited(long recordId, int exitCode, MaintenanceStatus previousMaintenance) {
+    try {
+      var record = records.find(recordId);
+      if (record.getStatus() == UpgradeStatus.STARTING) {
+        records.failed(recordId, "升级器未接管任务，请检查启动权限和升级日志");
+        packages.markReady(record.getPackageId());
+      }
+      if (records.running() == null
+              && serverStatus.getMaintenanceStatus().source() == MaintenanceStatus.Source.UPGRADE) {
+        serverStatus.setMaintenanceStatus(previousMaintenance);
+      }
+      if (exitCode != 0) {
+        upgradeLogger.warn("Updater for task {} exited with code {}", recordId, exitCode);
+      }
+    }
+    catch (Exception failure) {
+      upgradeLogger.error("Cannot handle updater exit for task " + recordId, failure);
+    }
   }
 
   @GET("/upgrade/records")
@@ -342,15 +379,17 @@ class MaintenanceHttpHandler {
     boolean backupReady;
     long backupFreeBytes = 0;
     try {
-      backupFreeBytes = DatabaseBackup.configured().usableSpace();
+      backupFreeBytes = backupFactory.configured().usableSpace();
       backupReady = true;
     }
     catch (Exception unavailable) {
       backupReady = false;
     }
     boolean updaterReady = System.getenv("BLOG_RELEASE_PATH") != null
-            && Files.isRegularFile(Path.of("/usr/local/lib/today-blog/updater.jar"))
-            && Files.isRegularFile(Path.of("/etc/systemd/system/today-blog-updater@.service"));
+            && updater.isAbsolute()
+            && Files.isRegularFile(updater)
+            && Files.isExecutable(updater)
+            && Files.isWritable(packageRoot);
     return Map.of("updaterReady", updaterReady,
             "backupReady", backupReady,
             "backupFreeBytes", backupFreeBytes,
@@ -367,7 +406,7 @@ class MaintenanceHttpHandler {
     if (release == null) {
       return new CurrentRelease("开发环境（未启用在线升级）", null);
     }
-    Properties properties = UpgradeFiles.read(Path.of(release).resolve("release.properties"));
+    Properties properties = files.read(Path.of(release).resolve("release.properties"));
     return new CurrentRelease(properties.getProperty("version", ""), properties.getProperty("build"));
   }
 

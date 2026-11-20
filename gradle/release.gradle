@@ -126,13 +126,12 @@ def verifyRelease = tasks.register('verifyRelease', JavaExec) {
   group = 'verification'
   inputs.file(releaseZip)
   classpath = files(project(':blog-upgrade-protocol').tasks.named('jar'))
-  mainClass = 'cn.taketoday.blog.updater.UpgradePackage'
+  mainClass = 'cn.taketoday.blog.updater.VerifyReleasePackage'
   args releaseZip.get().asFile.absolutePath
 }
 
 def updater = tasks.register('releaseUpdater', Copy) {
-  dependsOn ':blog-updater:jar'
-  from project(':blog-updater').layout.buildDirectory.file('libs/today-blog-updater.jar')
+  from project(':blog-updater').tasks.named('infraJar')
   into layout.projectDirectory.dir('dist')
 }
 

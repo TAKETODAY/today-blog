@@ -1,5 +1,7 @@
 plugins {
-  id 'java-library'
+  id 'java'
+  id 'application'
+  id 'infra.application'
 }
 
 description = 'TODAY BLOG standalone updater'
@@ -8,9 +10,10 @@ tasks.withType(JavaCompile).configureEach {
   options.release = 17
 }
 
-// 生产代码依赖 JDK 与 MySQL 驱动，用于直接读写升级任务状态。
 dependencies {
-  api project(':blog-upgrade-protocol')
+  implementation project(':blog-upgrade-protocol')
+  implementation 'cn.taketoday:infra-starter-application'
+  implementation 'cn.taketoday:infra-starter-logback'
   implementation 'com.mysql:mysql-connector-j:26.10.0'
   testImplementation platform('org.junit:junit-bom:5.14.2')
   testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -18,18 +21,16 @@ dependencies {
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-jar {
+application {
+  mainClass = 'cn.taketoday.blog.updater.BlogUpdaterApplication'
+}
+
+infraApplication {
+  enableBuildInfo()
+}
+
+tasks.named('infraJar') {
   archiveFileName = 'today-blog-updater.jar'
-  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-  // 升级器通过 java -jar 独立运行，需要把协议模块和 JDBC 驱动打进固定 updater.jar。
-  dependsOn configurations.runtimeClasspath
-  from {
-    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-  }
-  exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'module-info.class'
-  manifest {
-    attributes 'Main-Class': 'cn.taketoday.blog.updater.BlogUpdaterApplication'
-  }
 }
 
 test {

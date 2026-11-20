@@ -29,6 +29,11 @@ import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.service.ArticleService;
 import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.service.OptionService;
+import cn.taketoday.blog.updater.DatabaseBackup;
+import cn.taketoday.blog.updater.DatabaseBackupFactory;
+import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.UpgradeFiles;
+import cn.taketoday.blog.updater.UpgradePackage;
 import cn.taketoday.blog.util.BCryptPasswordEncoder;
 import cn.taketoday.blog.util.BCryptPasswordEncoder.BCryptVersion;
 import cn.taketoday.blog.util.PasswordEncoder;
@@ -87,6 +92,27 @@ class AppConfig implements WebMvcConfigurer {
   @Component
   static PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder(BCryptVersion.$2A);
+  }
+
+  @Component
+  static UpgradeFiles upgradeFiles() {
+    return new UpgradeFiles();
+  }
+
+  @Component
+  static UpgradePackage upgradePackage() {
+    return new UpgradePackage();
+  }
+
+  @Component
+  static ReleaseMappings releaseMappings() {
+    return new ReleaseMappings();
+  }
+
+  @Component
+  static DatabaseBackupFactory databaseBackupFactory(UpgradeFiles files) {
+    return new DatabaseBackupFactory(files, java.nio.file.Path.of(System.getenv().getOrDefault(
+            "BLOG_UPGRADE_CONFIG", DatabaseBackup.CONFIG.toString())));
   }
 
   @Override
@@ -160,4 +186,3 @@ class AppConfig implements WebMvcConfigurer {
   }
 
 }
-

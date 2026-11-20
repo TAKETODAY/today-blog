@@ -20,8 +20,10 @@ package cn.taketoday.blog.updater;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Properties;
 
 /**
@@ -29,16 +31,16 @@ import java.util.Properties;
  */
 public final class UpgradeFiles {
 
-  private UpgradeFiles() {
+  public UpgradeFiles() {
   }
 
-  public static void checkId(String id) {
+  public void checkId(String id) {
     if (!id.matches("[1-9][0-9]{0,18}")) {
       throw new IllegalArgumentException("升级任务 ID 无效");
     }
   }
 
-  public static Properties read(Path path) throws IOException {
+  public Properties read(Path path) throws IOException {
     Properties properties = new Properties();
     // 按 UTF-8 解码：store() 生成的 Unicode 转义仍是 ASCII，不影响读取；
     // 手工写入的中文提示则不会变成乱码。
@@ -48,7 +50,7 @@ public final class UpgradeFiles {
     return properties;
   }
 
-  public static void write(Path path, Properties properties) throws IOException {
+  public void write(Path path, Properties properties) throws IOException {
     Files.createDirectories(path.getParent());
     Path temp = Files.createTempFile(path.getParent(), ".status-", ".tmp");
     try {
@@ -60,6 +62,28 @@ public final class UpgradeFiles {
     }
     finally {
       Files.deleteIfExists(temp);
+    }
+  }
+
+  public void verifyTrusted(Path path, boolean secret) throws IOException {
+    if (!path.isAbsolute() || !path.normalize().equals(path)
+            || !Files.exists(path, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(path)
+            || !Files.getOwner(path).getName().equals("root")) {
+      throw new IOException("备份配置、工具及目录必须由 root 管理");
+    }
+    var permissions = Files.getPosixFilePermissions(path);
+    var forbidden = PosixFilePermissions.fromString(secret ? "---rwxrwx" : "----w--w-");
+    if (permissions.stream().anyMatch(forbidden::contains)) {
+      throw new IOException("备份配置、工具或目录权限不安全");
+    }
+    Path parent = path.getParent();
+    while (parent != null) {
+      if (Files.isSymbolicLink(parent) || !Files.getOwner(parent).getName().equals("root")
+              || Files.getPosixFilePermissions(parent).stream().anyMatch(
+                      PosixFilePermissions.fromString("----w--w-")::contains)) {
+        throw new IOException("备份路径的父目录必须由 root 管理且不可由其他用户写入");
+      }
+      parent = parent.getParent();
     }
   }
 

@@ -43,7 +43,14 @@ public final class DatabaseBackup {
 
   private final String database;
 
+  private final UpgradeFiles files;
+
   public DatabaseBackup(Path executable, Path credentials, Path root, String database) {
+    this(executable, credentials, root, database, new UpgradeFiles());
+  }
+
+  public DatabaseBackup(Path executable, Path credentials, Path root, String database,
+          UpgradeFiles files) {
     if (!executable.isAbsolute() || !credentials.isAbsolute() || !root.isAbsolute()
             || database == null || !database.matches("[A-Za-z0-9_]+")) {
       throw new IllegalArgumentException("数据库备份服务器配置无效");
@@ -52,51 +59,27 @@ public final class DatabaseBackup {
     this.credentials = credentials;
     this.root = root;
     this.database = database;
-  }
-
-  public static DatabaseBackup configured() throws IOException {
-    trusted(CONFIG, false);
-    Properties config = UpgradeFiles.read(CONFIG);
-    DatabaseBackup backup = new DatabaseBackup(Path.of(config.getProperty("dumpExecutable", "/usr/bin/mysqldump")),
-            Path.of(config.getProperty("defaultsFile", "/etc/today-blog/backup.cnf")),
-            Path.of(config.getProperty("backupRoot", "/var/backups/today-blog")), config.getProperty("database"));
-    trusted(backup.credentials, true);
-    trusted(backup.executable.toRealPath(), false);
-    trusted(backup.root, false);
-    if (!Files.isExecutable(backup.executable) || !Files.isRegularFile(backup.credentials, LinkOption.NOFOLLOW_LINKS)
-            || !Files.isDirectory(backup.root, LinkOption.NOFOLLOW_LINKS)) {
-      throw new IOException("数据库备份环境未就绪");
-    }
-    return backup;
+    this.files = files;
   }
 
   public long usableSpace() throws IOException {
     return Files.getFileStore(root).getUsableSpace();
   }
 
-  static void trusted(Path path, boolean secret) throws IOException {
-    if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(path)
-            || !Files.getOwner(path).getName().equals("root")) {
-      throw new IOException("备份配置、工具及目录必须由 root 管理");
-    }
-    var permissions = Files.getPosixFilePermissions(path);
-    var forbidden = PosixFilePermissions.fromString(secret ? "---rwxrwx" : "----w--w-");
-    if (permissions.stream().anyMatch(forbidden::contains)) {
-      throw new IOException("备份配置、工具或目录权限不安全");
-    }
-    Path parent = path.getParent();
-    while (parent != null) {
-      if (!Files.getOwner(parent).getName().equals("root")
-              || Files.getPosixFilePermissions(parent).stream().anyMatch(
-                      PosixFilePermissions.fromString("----w--w-")::contains)) {
-        throw new IOException("备份路径的父目录必须由 root 管理且不可由其他用户写入");
-      }
-      parent = parent.getParent();
-    }
+  Path executablePath() {
+    return executable;
+  }
+
+  Path credentialsPath() {
+    return credentials;
+  }
+
+  Path rootPath() {
+    return root;
   }
 
   public DatabaseBackupResult create(String id, int timeoutSeconds) throws Exception {
-    UpgradeFiles.checkId(id);
+    files.checkId(id);
     if (timeoutSeconds <= 0 || timeoutSeconds > 3600) {
       throw new IllegalArgumentException("备份超时无效");
     }

@@ -41,8 +41,11 @@ public class ReleaseMappingService {
 
   private final EntityManager entityManager;
 
-  public ReleaseMappingService(EntityManager entityManager) {
+  private final ReleaseMappings releaseMappings;
+
+  public ReleaseMappingService(EntityManager entityManager, ReleaseMappings releaseMappings) {
     this.entityManager = entityManager;
+    this.releaseMappings = releaseMappings;
   }
 
   public List<ReleaseMapping> findAll() {
@@ -58,7 +61,7 @@ public class ReleaseMappingService {
   @Transactional
   public void replaceAll(List<ReleaseMapping> mappings) {
     // 先完成结构和实体校验，任何一条配置非法都不修改数据库。
-    ReleaseMappings.validateStructure(mappings);
+    releaseMappings.validateStructure(mappings);
     List<ReleaseMappingEntity> entities = new ArrayList<>(mappings.size());
     for (ReleaseMapping mapping : mappings) {
       entities.add(toEntity(mapping));

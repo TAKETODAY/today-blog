@@ -18,6 +18,8 @@
 package cn.taketoday.blog.updater;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
@@ -38,34 +40,42 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class UpgradeTests {
 
+  private final UpgradeFiles files = new UpgradeFiles();
+
+  private final UpgradePackage packages = new UpgradePackage();
+
+  private final ReleaseMappings mappings = new ReleaseMappings();
+
   @TempDir
   Path temp;
 
   @Test
+  @EnabledOnOs(OS.LINUX)
   void backupRunsBeforeSwitchAndIsRecorded() throws Exception {
     Scenario scenario = scenario(false);
     FakeStore store = new FakeStore();
     FakeService service = new FakeService(false, false);
-    BlogUpdaterApplication.run(scenario.root, scenario.task, service, store, (id, timeout) -> {
+    executor(scenario, service, store, (id, timeout) -> {
       assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("old");
       assertThat(service.restarts).isZero();
       assertThat(timeout).isEqualTo(600);
       return backup(scenario, "backup-id");
-    });
+    }).execute(scenario.task);
     assertThat(store.backup).isNotNull();
     assertThat(store.backup.id()).isEqualTo("backup-id");
     assertThat(store.statuses).contains("BACKING_UP", "SUCCESS");
   }
 
   @Test
+  @EnabledOnOs(OS.LINUX)
   void backupFailureNeverSwitchesOrRestarts() throws Exception {
     Scenario scenario = scenario(false);
     FakeStore store = new FakeStore();
     FakeService service = new FakeService(false, false);
-    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.task, service, store,
+    assertThatThrownBy(() -> executor(scenario, service, store,
             (id, timeout) -> {
               throw new java.io.IOException("sensitive detail");
-            })).hasMessageContaining("未切换版本").hasMessageNotContaining("sensitive");
+            }).execute(scenario.task)).hasMessageContaining("未切换版本").hasMessageNotContaining("sensitive");
     assertThat(service.restarts).isZero();
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("old");
     assertThat(store.statuses).contains("FAILED");
@@ -75,91 +85,96 @@ class UpgradeTests {
   @Test
   void acceptsPackageWithoutSignatureAndExtracts() throws Exception {
     Path archive = archive(null, false, false);
-    var manifest = UpgradePackage.verify(archive);
+    var manifest = packages.verify(archive);
     Path destination = Files.createDirectory(temp.resolve("extracted"));
-    UpgradePackage.extract(archive, destination, manifest);
+    packages.extract(archive, destination, manifest);
     assertThat(manifest.version()).isEqualTo("3.4");
     assertThat(Files.readString(destination.resolve("console/index.html"))).isEqualTo("console");
   }
 
   @Test
   void rejectsMissingManifest() throws Exception {
-    assertThatThrownBy(() -> UpgradePackage.verify(archive(null, true, false))).hasMessageContaining("缺少清单");
+    assertThatThrownBy(() -> packages.verify(archive(null, true, false))).hasMessageContaining("缺少清单");
   }
 
   @Test
   void rejectsTamperedFile() throws Exception {
-    assertThatThrownBy(() -> UpgradePackage.verify(archive(null, false, true))).hasMessageContaining("摘要不匹配");
+    assertThatThrownBy(() -> packages.verify(archive(null, false, true))).hasMessageContaining("摘要不匹配");
   }
 
   @Test
   void rejectsUnlistedFileAndTraversal() throws Exception {
-    assertThatThrownBy(() -> UpgradePackage.verify(archive("console/extra.js", false, false)))
+    assertThatThrownBy(() -> packages.verify(archive("console/extra.js", false, false)))
             .hasMessageContaining("未列入清单");
-    assertThatThrownBy(() -> UpgradePackage.verify(archive("../outside", false, false)))
+    assertThatThrownBy(() -> packages.verify(archive("../outside", false, false)))
             .hasMessageContaining("非法路径");
   }
 
   @Test
+  @EnabledOnOs(OS.LINUX)
   void installsAndVerifiesNewRelease() throws Exception {
     Scenario scenario = scenario(false);
     FakeStore store = new FakeStore();
     FakeService service = new FakeService(false, false);
-    BlogUpdaterApplication.run(scenario.root, scenario.task, service, store, (id, timeout) -> backup(scenario, id));
+    executor(scenario, service, store, (id, timeout) -> backup(scenario, id)).execute(scenario.task);
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("3.4-2");
     assertThat(store.statuses.get(store.statuses.size() - 1)).isEqualTo("SUCCESS");
     assertThat(service.restarts).isEqualTo(1);
-    assertThat(UpgradeFiles.read(scenario.root.resolve("highest-build.properties")).getProperty("build")).isEqualTo("2");
+    assertThat(files.read(scenario.root.resolve("highest-build.properties")).getProperty("build")).isEqualTo("2");
   }
 
   @Test
+  @EnabledOnOs(OS.LINUX)
   void failedHealthCheckRestoresOldRelease() throws Exception {
     Scenario scenario = scenario(false);
     FakeStore store = new FakeStore();
     FakeService service = new FakeService(true, false);
-    BlogUpdaterApplication.run(scenario.root, scenario.task, service, store, (id, timeout) -> backup(scenario, id));
+    executor(scenario, service, store, (id, timeout) -> backup(scenario, id)).execute(scenario.task);
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("old");
     assertThat(store.statuses).contains("ROLLED_BACK");
     assertThat(service.restarts).isEqualTo(2);
   }
 
   @Test
+  @EnabledOnOs(OS.LINUX)
   void failedRollbackIsReportedAsFailure() throws Exception {
     Scenario scenario = scenario(false);
     FakeStore store = new FakeStore();
-    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.task,
-            new FakeService(true, true), store, (id, timeout) -> backup(scenario, id)))
+    assertThatThrownBy(() -> executor(scenario, new FakeService(true, true), store,
+            (id, timeout) -> backup(scenario, id)).execute(scenario.task))
             .hasMessageContaining("健康检查失败");
     assertThat(store.statuses.get(store.statuses.size() - 1)).isEqualTo("FAILED");
   }
 
   @Test
+  @EnabledOnOs(OS.LINUX)
   void rejectsPreviouslySuccessfulBuildWithoutRestart() throws Exception {
     Scenario scenario = scenario(false);
     FakeStore store = new FakeStore();
     Properties highest = new Properties();
     highest.setProperty("build", "2");
-    UpgradeFiles.write(scenario.root.resolve("highest-build.properties"), highest);
+    files.write(scenario.root.resolve("highest-build.properties"), highest);
     FakeService service = new FakeService(false, false);
-    assertThatThrownBy(() -> BlogUpdaterApplication.run(scenario.root, scenario.task, service, store,
-            (id, timeout) -> backup(scenario, id))).hasMessageContaining("降级");
+    assertThatThrownBy(() -> executor(scenario, service, store,
+            (id, timeout) -> backup(scenario, id)).execute(scenario.task)).hasMessageContaining("降级");
     assertThat(service.restarts).isZero();
     assertThat(store.statuses).contains("FAILED");
   }
 
   @Test
+  @EnabledOnOs(OS.LINUX)
   void deletesPackageAfterSuccessWhenRequested() throws Exception {
     Scenario scenario = scenario(true);
     FakeStore store = new FakeStore();
-    BlogUpdaterApplication.run(scenario.root, scenario.task,
-            new FakeService(false, false), store, (id, timeout) -> backup(scenario, id));
+    executor(scenario, new FakeService(false, false), store,
+            (id, timeout) -> backup(scenario, id)).execute(scenario.task);
     assertThat(store.deletedPackage).isEqualTo(10L);
     assertThat(Files.exists(Path.of(scenario.task.packagePath()))).isFalse();
   }
 
   @Test
   void rejectsInvalidTaskId() {
-    assertThatThrownBy(() -> UpgradeFiles.checkId("../../etc/passwd")).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> files.checkId("../../etc/passwd")).isInstanceOf(IllegalArgumentException.class);
   }
 
   private Scenario scenario(boolean deletePackage) throws Exception {
@@ -169,9 +184,11 @@ class UpgradeTests {
     Properties metadata = new Properties();
     metadata.setProperty("version", "3.3");
     metadata.setProperty("build", "1");
-    UpgradeFiles.write(old.getParent().resolve("release.properties"), metadata);
+    files.write(old.getParent().resolve("release.properties"), metadata);
     Files.createSymbolicLink(root.resolve("current"), old.getParent());
-    UpgradeTask task = new UpgradeTask(1L, 10L, archive(null, false, false).toString(),
+    Path upload = Files.createDirectories(temp.resolve("state/packages/test-upload")).resolve("package.zip");
+    Files.move(archive(null, false, false), upload);
+    UpgradeTask task = new UpgradeTask(1L, 10L, upload.toString(),
             "3.4", 2, 1L, true, 600, 90, deletePackage, List.of());
     return new Scenario(root, task);
   }
@@ -212,6 +229,12 @@ class UpgradeTests {
   }
 
   private record Scenario(Path root, UpgradeTask task) {
+  }
+
+  private UpgradeExecutor executor(Scenario scenario, UpgradeExecutor.ServiceControl service,
+          UpgradeTaskStore store, UpgradeExecutor.BackupControl backup) {
+    return new UpgradeExecutor(scenario.root, temp.resolve("state"), temp.resolve("mapping-policy"),
+            files, packages, mappings, service, store, backup);
   }
 
   static class FakeStore implements UpgradeTaskStore {
@@ -257,7 +280,7 @@ class UpgradeTests {
     }
   }
 
-  private static class FakeService implements BlogUpdaterApplication.ServiceControl {
+  private static class FakeService implements UpgradeExecutor.ServiceControl {
     final boolean failNew;
     final boolean failOld;
     int restarts;
@@ -273,7 +296,7 @@ class UpgradeTests {
     }
 
     @Override
-    public boolean healthy(long build) {
+    public boolean healthy(long build, int timeoutSeconds) {
       return build == 2 ? !failNew : !failOld;
     }
   }

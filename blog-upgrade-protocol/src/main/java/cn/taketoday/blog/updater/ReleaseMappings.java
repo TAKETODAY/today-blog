@@ -58,16 +58,21 @@ public final class ReleaseMappings {
 
   private static final String COLUMNS = "# name\tmode\tsource\ttarget";
 
-  private static final boolean ROOT = "root".equals(System.getProperty("user.name"));
+  private final boolean rootUser;
 
-  private ReleaseMappings() {
+  public ReleaseMappings() {
+    this("root".equals(System.getProperty("user.name")));
   }
 
-  public static List<ReleaseMapping> readIfExists(Path file) throws IOException {
+  ReleaseMappings(boolean rootUser) {
+    this.rootUser = rootUser;
+  }
+
+  public List<ReleaseMapping> readIfExists(Path file) throws IOException {
     return Files.exists(file, LinkOption.NOFOLLOW_LINKS) ? read(file) : List.of();
   }
 
-  public static List<ReleaseMapping> read(Path file) throws IOException {
+  public List<ReleaseMapping> read(Path file) throws IOException {
     if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
       throw new IOException("映射配置不是普通文件");
     }
@@ -102,7 +107,7 @@ public final class ReleaseMappings {
     return List.copyOf(mappings);
   }
 
-  public static void write(Path file, List<ReleaseMapping> mappings) throws IOException {
+  public void write(Path file, List<ReleaseMapping> mappings) throws IOException {
     validateStructure(mappings);
     StringBuilder content = new StringBuilder(HEADER).append('\n').append(COLUMNS).append('\n');
     for (ReleaseMapping mapping : mappings) {
@@ -125,7 +130,7 @@ public final class ReleaseMappings {
   /**
    * 读取 root 管理的目标目录白名单。管理端只读，升级器用于再次校验。
    */
-  public static List<Path> roots(Path policy) throws IOException {
+  public List<Path> roots(Path policy) throws IOException {
     if (!Files.isRegularFile(policy, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(policy)) {
       throw new IOException("映射目标根目录配置未就绪");
     }
@@ -156,7 +161,7 @@ public final class ReleaseMappings {
   /**
    * 校验结构和管理端可见约束。升级器在发布前还会再次校验真实目录。
    */
-  public static void validate(List<ReleaseMapping> mappings, List<Path> roots) {
+  public void validate(List<ReleaseMapping> mappings, List<Path> roots) {
     validateStructure(mappings);
     for (ReleaseMapping mapping : mappings) {
       Path target = mapping.targetPath();
@@ -176,7 +181,7 @@ public final class ReleaseMappings {
   /**
    * 校验目标不与安装目录、升级状态目录重叠，避免向系统运行目录写入链接。
    */
-  public static void validateTargets(List<ReleaseMapping> mappings, Path installRoot, Path state) {
+  public void validateTargets(List<ReleaseMapping> mappings, Path installRoot, Path state) {
     Path root = installRoot.toAbsolutePath().normalize();
     Path statePath = state.toAbsolutePath().normalize();
     for (ReleaseMapping mapping : mappings) {
@@ -193,7 +198,7 @@ public final class ReleaseMappings {
    * 已存在且指向同一位置的链接视为成功；已存在的空目录会先删除再建立链接；
    * 其他已存在内容一律拒绝，避免覆盖人工维护的文件。失败时删除本次新建的链接。
    */
-  public static void publish(Path installRoot, Path state,
+  public void publish(Path installRoot, Path state,
           List<ReleaseMapping> mappings, List<Path> roots) throws IOException {
     if (mappings.isEmpty()) {
       return;
@@ -250,7 +255,7 @@ public final class ReleaseMappings {
     }
   }
 
-  private static void replaceLink(Path target, Path desired, String name) throws IOException {
+  private void replaceLink(Path target, Path desired, String name) throws IOException {
     Path parent = target.getParent();
     Path temporary = parent.resolve(".today-blog-" + name + "-" + UUID.randomUUID());
     try {
@@ -262,7 +267,7 @@ public final class ReleaseMappings {
     }
   }
 
-  private static Path matchingRoot(Path directory, List<Path> roots) throws IOException {
+  private Path matchingRoot(Path directory, List<Path> roots) throws IOException {
     for (Path root : roots) {
       if (Files.isDirectory(root) && directory.startsWith(root.toRealPath())) {
         return root.toRealPath();
@@ -271,13 +276,13 @@ public final class ReleaseMappings {
     return null;
   }
 
-  private static void verifyTrustedDirectory(Path directory, Path allowedRoot) throws IOException {
+  private void verifyTrustedDirectory(Path directory, Path allowedRoot) throws IOException {
     Path current = directory;
     while (current != null) {
       if (Files.isSymbolicLink(current) || !Files.isDirectory(current, LinkOption.NOFOLLOW_LINKS)) {
         throw new IOException("映射目标父目录必须是普通目录: " + current);
       }
-      if (ROOT && !Files.getOwner(current).getName().equals("root")) {
+      if (rootUser && !Files.getOwner(current).getName().equals("root")) {
         throw new IOException("映射目标父目录必须由 root 管理: " + current);
       }
       if (Files.getPosixFilePermissions(current).stream()
@@ -291,13 +296,13 @@ public final class ReleaseMappings {
     }
   }
 
-  private static boolean isEmpty(Path directory) throws IOException {
+  private boolean isEmpty(Path directory) throws IOException {
     try (DirectoryStream<Path> entries = Files.newDirectoryStream(directory)) {
       return !entries.iterator().hasNext();
     }
   }
 
-  private static void deleteQuietly(Path path) {
+  private void deleteQuietly(Path path) {
     try {
       Files.deleteIfExists(path);
     }
@@ -305,7 +310,7 @@ public final class ReleaseMappings {
     }
   }
 
-  public static void validateStructure(List<ReleaseMapping> mappings) {
+  public void validateStructure(List<ReleaseMapping> mappings) {
     if (mappings.size() > MAX_MAPPINGS) {
       throw new IllegalArgumentException("映射数量超过上限 " + MAX_MAPPINGS);
     }

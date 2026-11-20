@@ -1,12 +1,11 @@
 # 打包、部署和后台升级
 
-API 使用 systemd，升级器位于独立 Gradle 模块 `blog-updater`，生产代码仅依赖 JDK。
+API 和升级器均直接通过命令启动，不依赖 systemd。升级器位于独立 Gradle 模块 `blog-updater`，是执行完即退出的非 Web infra 应用。
 升级包校验、发行文件映射和磁盘协议位于纯 JDK 模块 `blog-upgrade-protocol`，
 由 `blog-api` 和 `blog-updater` 共同依赖；`blog-api` 不依赖升级器实现。
 升级器通过 JDBC 直接读取任务和写回状态，不依赖 API 或 Web 框架。
-可单独运行 `./gradlew :blog-upgrade-protocol:build :blog-updater:build` 构建并测试，产物为
-`blog-updater/build/libs/today-blog-updater.jar`，通过 `java -jar` 启动。
-通过独立的 `today-blog-updater@<id>.service` 执行，不随 API 重启终止。
+可单独运行 `./gradlew :blog-upgrade-protocol:test :blog-updater:test releaseUpdater` 构建并测试，产物为
+`dist/today-blog-updater.jar`。API 以任务 ID 调用独立升级进程；停止旧 API 不会终止升级器。
 
 ## 构建
 
@@ -52,16 +51,18 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 
 ## 首次部署
 
-Linux 服务器需要 systemd、JDK（含 jshell）、sudo >= 1.9.10、Bash、rsync。
-部署用户需要 SSH 和首次安装 sudo 权限。数据库需自行创建并备份。
+Linux 服务器需要 JDK、sudo >= 1.9.10、Bash、rsync 和 util-linux（提供 `setsid`、`setpriv`）。
+部署用户需要 SSH 和首次安装 sudo 权限。数据库需自行创建并备份。新建的空库先导入
+`blog-api/src/main/resources/db/migration/v1.0__init.sql`，再启动 API，由 Flyway 应用后续迁移。
 
 ```bash
 bash scripts/deploy.sh deploy@server build/today-blog-<version>-<build>.zip
 ```
 
-安装脚本不会启动服务。先创建 `/etc/today-blog/today-blog.env`（建议 root:root、0600），
+安装脚本不会启动服务。先创建 `/etc/today-blog/today-blog.env`（建议 `root:today`、`0640`），
 根据项目配置设置数据库、附件绝对路径和 multipart 限制（包最大 512 MiB，请求预留余量）。
-默认 prod profile，API 工作目录 `/var/lib/today-blog`，运行时数据不得写入 release。
+该文件采用 Bash 赋值语法，由 `today` 用户加载，含空格的值须加引号。默认 prod profile，
+API 工作目录 `/var/lib/today-blog`，运行时数据不得写入 release。
 Java 可通过 JAVA_HOME 配置 API；updater 默认使用 `/usr/bin/java`。
 配置文件不得存储在版本目录；需要时通过 `JAVA_OPTS` 指定外部配置。
 
@@ -74,11 +75,13 @@ Java 可通过 JAVA_HOME 配置 API；updater 默认使用 `/usr/bin/java`。
 - 上传请求大小、超时需与后端保持一致。
 
 ```bash
-sudo systemctl start today-blog.service
+sudo /usr/local/lib/today-blog/updater start-api
 curl --fail http://127.0.0.1:8080/api/internal/health
 ```
 
 正常返回 `UP:<build>`。确认 API 和两套静态页面正常后再使用在线升级。
+停止 API：`sudo /usr/local/lib/today-blog/updater stop-api`。手动重启请先停止再启动。
+启动命令不等待 API 就绪，请以健康接口和日志为准。直接命令模式不提供开机自启或崩溃自动重启。
 
 ## 前端文件映射（可选）
 
@@ -121,12 +124,7 @@ sudo chmod 644 /etc/today-blog/release-mapping-roots
 
 目标父目录必须由 root 管理且不可被组或其他用户写入；目标已存在时只接受空目录或指向
 同一位置的符号链接，其他内容会拒绝发布并阻止本次升级。新建链接使用临时名加原子重命名。
-升级 unit 默认只读文件系统，需要把映射根目录加入 `ReadWritePaths` 后 `daemon-reload`：
-
-```ini
-[Service]
-ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade /var/backups/today-blog /var/www/today-blog
-```
+使用自定义映射根目录时，须预先创建目录、设置权限并同步更新白名单。
 
 当前不提供复制模式；目标在同一挂载点且 nginx 可跟随符号链接时使用上述方案即可。
 新增映射前可先在测试环境确认 nginx、SELinux/AppArmor 和文件权限允许访问链接目标。
@@ -140,8 +138,8 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade /
 
 管理端提交升级（`POST /api/console/maintenance/upgrade/packages/{id}/start`）后立即进入维护状态，无需等待升级器
 执行到切换步骤。API 进程不退出，但对新的业务请求返回 `503 Service Unavailable` 和
-`Retry-After`；等待约 2 秒让已进入处理的请求完成后再重启 API。新版本通过健康检查
-（或回滚版本恢复健康）后重新对外提供服务。
+`Retry-After`，直至升级器准备完成并停止旧 API。升级器核对新 API 返回的构建号，
+健康检查失败时恢复旧版本并再次检查。反向代理在切换期间可能返回短暂的 502/503。
 
 维护期间仍可访问：
 
@@ -156,7 +154,7 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade /
 升级任务运行期间按钮禁用，避免中途关闭保护。手动维护不会随升级任务结束自动关闭，
 需要管理员主动恢复；维护期间登录状态探测和登录接口保持可用，页面刷新或会话过期后
 仍可重新登录并关闭维护。API 进程重启会清除内存中的手动维护状态，无法通过管理端登录时
-也可重启 `today-blog.service` 恢复服务。
+也可用 `stop-api`、`start-api` 恢复服务。
 
 维护状态保存在 API 进程内存中，不写入磁盘。API 重启后维护状态自动清除，因此升级器切换
 版本并重启 API 后，新版本或回滚后的旧版本会按正常状态提供服务。手动维护在进程重启后同样
@@ -165,8 +163,7 @@ ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade /
 
 ### 数据库备份配置
 
-默认启用升级前数据库备份。旧安装必须先通过 SSH 更新固定的 updater JAR、systemd unit，
-再使用新页面；在线发行 ZIP 不会更新这些受信任组件。
+默认启用升级前数据库备份。在线发行 ZIP 不会更新固定的 updater JAR 和启动脚本。
 
 安装与备份环境检查仅验证配置、工具和空间，数据库连接和权限在实际备份时验证。
 未配置备份时默认禁止升级；如明确关闭本次备份，页面会要求二次确认风险。
@@ -214,16 +211,8 @@ GRANT DELETE ON today.t_upgrade_package TO 'blog_backup'@'localhost';
 API 只读取非敏感配置和凭据文件元信息，不读取数据库密码或备份内容。
 若配置文件设为 0600，API 无法检查环境，会显示未就绪；密码必须单独保存在 0600 的 defaultsFile 中。
 
-现有服务器更新升级 unit 时，应同步设置：
-
-```ini
-[Service]
-TimeoutStartSec=5400
-ReadWritePaths=/opt/today-blog /var/lib/today-blog /var/lib/today-blog-upgrade /var/backups/today-blog /var/www/today-blog
-```
-
-修改 unit 后执行 `systemctl daemon-reload`。使用自定义备份目录或映射根目录时必须预先创建目录，
-并同步修改 `ReadWritePaths`；目录不可放在 release 下。
+使用自定义备份目录时须预先创建目录，不可放在 release 下。即使关闭升级前备份，仍需配置
+升级器的任务数据库连接；关闭备份只跳过导出，不跳过数据库状态读写。
 
 备份在解压准备完成后、切换 current 和启动新版本之前执行；失败或超时不会重启旧服务。
 导出先写私有临时 SQL，再压缩为 `database.sql.gz`，成功后才发布备份文件与元信息。
@@ -281,10 +270,15 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
   current -> releases/<version>-<build>
   releases/                            新旧版本并存
   highest-build.properties             成功发布的最高构建号
+  run/blog-api.pid                      PID 与进程启动时间，root 写
+  logs/blog-api.log                    API 标准输出与错误输出
 /usr/local/lib/today-blog/updater.jar    固定、root 所有，包含 JDBC 驱动
+/usr/local/lib/today-blog/{updater,today-updater,launch-api}
+                                        root 管理的命令及 API 降权启动脚本
 /etc/today-blog/upgrade.properties       升级器数据库和备份配置，root 所有
 /etc/today-blog/release-mapping-roots    root 所有，前端映射目标白名单
 /var/lib/today-blog-upgrade/
+  updater.log                           升级进程日志，root 写
   packages/<UUID>/package.zip           today 写，升级包文件
 /var/lib/today-blog/                     today 写，业务运行数据
 /var/backups/today-blog/                 root 写，数据库备份
@@ -299,19 +293,23 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
 ## 运维与边界
 
 ```bash
-journalctl -u today-blog.service
-journalctl -u today-blog-updater@<id>.service
+sudo tail -n 100 /opt/today-blog/logs/blog-api.log
+sudo tail -n 100 /var/lib/today-blog-upgrade/updater.log
 mysql -e "select id,status,message from today.t_upgrade_record order by created_at desc limit 5"
 ```
 
 自动回滚仅覆盖可捕获的安装、启动、健康检查失败。
 断电、SIGKILL、磁盘写满可能留下中间状态，当前不提供崩溃后自动恢复或后台手动回滚按钮。
-此时先确认升级 unit 已停止，再人工将 current 原子切回已知正常的 release，重启 API 并检查健康状态。
+此时先确认升级进程已退出，再用 `stop-api` 停止 API，将 current 原子切回已知正常的 release，
+然后用 `start-api` 启动并检查健康状态。
 不要将程序回滚误认为数据库恢复。不要删除正在运行或可能用于回滚的版本目录。
 上传包、失败版本和历史版本暂不自动清理，由管理员定期按保留策略清理。
-在线包不能修改 updater 或 systemd unit；这些受信任组件升级需 SSH 人工维护。
-从旧签名版本切换时，须先通过 SSH 更新固定的 `/usr/local/lib/today-blog/updater.jar`；
+在线包不能修改 updater 或启动脚本；这些受信任组件需通过 SSH 人工维护。
+从旧 systemd 部署切换时，先在维护窗口停止并禁用旧 API 服务，确认没有旧升级任务在跑，
+再运行 `sudo bash scripts/install-server.sh --runtime-only dist/today-blog-updater.jar` 安装新的 JAR、
+启动脚本和 sudoers 规则，并启动 API。该模式不替换 `current` 或现有版本。
+不要让两种启动方式同时管理同一进程。
 新校验器不接受含旧 `META-INF/upgrade.sig` 的包，请使用新脚本重新打包。
 
-发布前必须在独立 Linux/systemd 环境验收正常升级、启动失败回滚、权限、代理、附件保留。
+发布前必须在独立 Linux 环境验收正常升级、启动失败回滚、权限、代理、附件保留。
 本地 JVM 测试不能代替真实服务器验收。
