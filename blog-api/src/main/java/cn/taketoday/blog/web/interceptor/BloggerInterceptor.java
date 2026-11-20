@@ -20,12 +20,10 @@ package cn.taketoday.blog.web.interceptor;
 import org.jspecify.annotations.Nullable;
 
 import cn.taketoday.blog.config.UserSessionResolver;
-import cn.taketoday.blog.web.ErrorMessage;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
-import infra.http.HttpStatus;
-import infra.http.MediaType;
-import infra.http.ResponseEntity;
 import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.session.SessionRepository;
@@ -73,16 +71,12 @@ final class BloggerInterceptor implements HandlerInterceptor {
         }
         return chain.proceed(request);
       }
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-              .contentType(MediaType.APPLICATION_JSON)
-              .body(ErrorMessage.failed("Not Found"));
+      throw new ProblemException(CommonProblems.NOT_FOUND);
     }
     if (chain.unwrapHandler() instanceof ResourceHttpRequestHandler) {
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-              .body("Not Found");
+      throw new ProblemException(CommonProblems.NOT_FOUND);
     }
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(ErrorMessage.unauthorized);
+    throw new ProblemException(CommonProblems.AUTH_REQUIRED);
   }
 
 }

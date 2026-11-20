@@ -30,10 +30,10 @@ import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.util.FileUtils;
 import cn.taketoday.blog.util.OssOperations;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import infra.persistence.EntityManager;
@@ -230,7 +230,7 @@ public class AttachmentService {
       ossOperations.uploadFile(attachment.getLocation(), dest);
     }
     else {
-      throw ErrorMessageException.failed("已经同步过啦");
+      throw new ProblemException(ContentProblems.ATTACHMENT_ALREADY_SYNCED);
     }
   }
 
@@ -253,7 +253,7 @@ public class AttachmentService {
   private Attachment obtainById(long id) {
     Attachment attachment = getById(id);
     if (attachment == null) {
-      throw ErrorMessageException.failed("附件不存在");
+      throw new ProblemException(ContentProblems.ATTACHMENT_NOT_FOUND);
     }
     return attachment;
   }

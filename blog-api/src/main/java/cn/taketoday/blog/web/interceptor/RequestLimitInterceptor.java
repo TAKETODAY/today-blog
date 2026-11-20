@@ -30,12 +30,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import cn.taketoday.blog.config.UserSessionResolver;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.util.BlogUtils;
-import cn.taketoday.blog.web.ErrorMessage;
-import cn.taketoday.blog.web.ErrorMessageException;
-import infra.http.HttpStatus;
-import infra.http.MediaType;
-import infra.http.ResponseEntity;
 import infra.lang.Constant;
 import infra.stereotype.Component;
 import infra.util.Assert;
@@ -57,7 +54,7 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
 
   private int maxCacheSize = 1024;
 
-  private String defaultErrorMessage = "操作频繁";
+  private @Nullable String defaultErrorMessage;
 
   private Clock clock = Clock.systemUTC();
 
@@ -95,7 +92,7 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
       if (handlerMethod != null) {
         RequestLimit requestLimit = requestLimitConfigCache.get(handlerMethod);
         if (requestLimit != null && hasTooManyRequests(request, handlerMethod, requestLimit)) {
-          return writeTooManyRequests(requestLimit, handlerMethod);
+          throw tooManyRequests(requestLimit);
         }
         //不需要限流
       }
@@ -105,23 +102,21 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
     return chain.proceed(request);
   }
 
-  private ResponseEntity<ErrorMessage> writeTooManyRequests(RequestLimit requestLimit, HandlerMethod handler) {
+  private RuntimeException tooManyRequests(RequestLimit requestLimit) {
     String errorMessage = requestLimit.errorMessage();
     if (Constant.DEFAULT_NONE.equals(errorMessage)) {
       errorMessage = defaultErrorMessage;
     }
 
-    if (!handler.isResponseBody()) {
-      throw ErrorMessageException.failed(errorMessage, HttpStatus.TOO_MANY_REQUESTS);
+    if (errorMessage == null) {
+      return new ProblemException(CommonProblems.RATE_LIMIT_EXCEEDED);
     }
 
     // X-RateLimit-Limit: The maximum number of requests you're permitted to make per hour.
     // X-RateLimit-Remaining: The number of requests remaining in the current rate limit window.
     // X-RateLimit-Reset: the time at which the current rate limit window resets in UTC epoch seconds
 
-    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(ErrorMessage.failed(errorMessage));
+    return ProblemException.of(CommonProblems.RATE_LIMIT_EXCEEDED, errorMessage);
   }
 
   private void checkMaxCacheLimit() {

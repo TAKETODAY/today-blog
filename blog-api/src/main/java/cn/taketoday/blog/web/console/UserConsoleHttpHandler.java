@@ -24,9 +24,11 @@ import java.util.Objects;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.model.enums.UserStatus;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.service.AttachmentService;
+import cn.taketoday.blog.service.UserProblems;
 import cn.taketoday.blog.service.UserService;
-import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
@@ -90,7 +92,7 @@ class UserConsoleHttpHandler {
   @PUT("/{id}")
   public void update(@PathVariable long id, @Valid @RequestBody UserSettingsForm form) {
     User oldUser = userService.getById(id);
-    ErrorMessageException.notNull(oldUser, "用户不存在");
+    ProblemException.notNull(oldUser, UserProblems.NOT_FOUND);
 
     User user = new User();
     boolean change = false;
@@ -116,14 +118,14 @@ class UserConsoleHttpHandler {
       userService.updateById(user);
     }
     else {
-      throw ErrorMessageException.failed("资料未更改");
+      throw new ProblemException(CommonProblems.NO_CHANGES);
     }
   }
 
   @NullUnmarked
   public static class UserSettingsForm {
 
-    @NotEmpty(message = "请输入姓名或昵称")
+    @NotEmpty(message = "{validation.name.required}")
     public String name;
 
     public String site;

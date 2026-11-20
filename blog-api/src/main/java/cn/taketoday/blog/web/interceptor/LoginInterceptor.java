@@ -21,6 +21,8 @@ import java.io.IOException;
 
 import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.config.UserSessionResolver;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
 import infra.web.HandlerInterceptor;
@@ -54,9 +56,7 @@ final class LoginInterceptor implements HandlerInterceptor {
     }
 
     if (handler instanceof ResourceHttpRequestHandler) {
-      request.setStatus(404);
-      request.getWriter().write("Not Found");
-      return false;
+      throw new ProblemException(CommonProblems.NOT_FOUND);
     }
     throw new UnauthorizedException();
   }

@@ -20,13 +20,16 @@
 
 import { Drawer, Modal } from 'antd';
 import { AttachmentList } from "@/components";
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 export default (props: any) => {
   const { onCancel, visible, onSelect, type, modal, width, ...rest } = props
+  const t = useSiteTranslation();
+  const title = t('imageChooser.selectAnImage');
 
   if (modal) {
     return (<>
-      <Modal title="选择图片文件" width={width || 1300} open={visible} onCancel={onCancel} {...rest}>
+      <Modal title={title} width={width || 1300} open={visible} onCancel={onCancel} {...rest}>
         <AttachmentList itemClicked={onSelect} fileType="IMAGE"/>
       </Modal>
     </>)
@@ -34,12 +37,11 @@ export default (props: any) => {
 
   return (
       <>
-        <Drawer title="选择图片文件" width={width || 1300} open={visible} onClose={onCancel} {...rest}>
+        <Drawer title={title} width={width || 1300} open={visible} onClose={onCancel} {...rest}>
           <AttachmentList itemClicked={onSelect} fileType="IMAGE"/>
         </Drawer>
       </>
   )
 }
-
 
 

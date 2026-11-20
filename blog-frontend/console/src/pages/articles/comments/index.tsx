@@ -182,7 +182,7 @@ export default () => {
       title: t('time'),
       width: 180,
       hideInSearch: true,
-      render: (_, comment: CommentItem) => (format(comment.createAt, "lll"))
+      render: (_, comment: CommentItem) => format(comment.createAt)
     },
     {
       title: t('actions'),

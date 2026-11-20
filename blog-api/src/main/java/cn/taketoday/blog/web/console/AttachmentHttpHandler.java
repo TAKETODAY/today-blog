@@ -20,8 +20,9 @@ import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.form.AttachmentForm;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.service.AttachmentService;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.service.ContentProblems;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
@@ -91,7 +92,7 @@ class AttachmentHttpHandler {
   @GET("/{id}")
   public Attachment obtainById(@PathVariable long id) {
     Attachment attachment = attachmentService.getById(id);
-    ErrorMessageException.notNull(attachment, "附件不存在");
+    ProblemException.notNull(attachment, ContentProblems.ATTACHMENT_NOT_FOUND);
     return attachment;
   }
 

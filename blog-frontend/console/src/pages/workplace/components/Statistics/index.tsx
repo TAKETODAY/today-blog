@@ -22,29 +22,32 @@ import React, { useEffect, useState } from 'react';
 import FieldStatistics from "../FieldStatistics";
 import PageViewStatistics from "../PageViewStatistics";
 import { getCacheable } from "@/utils";
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 type StatisticsProps = {}
 
 const statisticsMap = [
   {
     api: '/api/statistics/os',
-    name: { x: '操作系统种类', y: '数量', series: '数量' },
+    label: 'workplace.operatingSystem',
     data: {}
   },
   {
     api: '/api/statistics/user',
-    name: { x: '用户', y: '数量', series: '数量' },
+    label: 'workplace.user',
     data: {}
   },
   {
     api: '/api/statistics/browser',
-    name: { x: '浏览器种类', y: '数量', series: '数量' },
+    label: 'workplace.browser',
     data: {}
   },
 ]
 
 const Statistics: React.FC<StatisticsProps> = (props) => {
-  const [statistics, setStatistics] = useState([])
+  const t = useSiteTranslation();
+  const count = t('workplace.count');
+  const [statistics, setStatistics] = useState<typeof statisticsMap>([])
   useEffect(() => {
     statisticsMap.forEach((stat) => {
       getCacheable(stat.api).then(res => {
@@ -58,7 +61,7 @@ const Statistics: React.FC<StatisticsProps> = (props) => {
   return <>
     {
       statistics.map((stat) => {
-        return <FieldStatistics key={stat.api} name={stat.name} data={stat.data}/>
+        return <FieldStatistics key={stat.api} name={{ x: t(stat.label), y: count, series: count }} data={stat.data}/>
       })
     }
 

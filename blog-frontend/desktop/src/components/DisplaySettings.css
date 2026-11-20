@@ -1,0 +1,63 @@
+.display-settings-trigger {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #4b5563;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.display-settings-trigger > .anticon {
+  font-size: 17px;
+}
+
+.display-settings-trigger:hover,
+.display-settings-trigger:focus-visible {
+  background: #edf4fa;
+  color: #337ab7;
+}
+
+.display-settings-trigger:focus-visible {
+  outline: 2px solid #337ab7;
+  outline-offset: -2px;
+}
+
+.display-settings-dialog .ant-modal-content {
+  border-radius: 10px;
+}
+
+.display-settings-dialog .ant-modal-header {
+  padding: 20px 24px 0;
+  border: 0;
+  border-radius: 10px 10px 0 0;
+}
+
+.display-settings-dialog .ant-modal-title {
+  padding-right: 30px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.display-settings-dialog .ant-modal-body {
+  padding-top: 8px;
+}
+
+.display-settings-hint {
+  margin: 0 0 12px;
+  color: #4b5563;
+  line-height: 1.55;
+}
+
+.display-settings-field .ant-select {
+  width: 100%;
+}

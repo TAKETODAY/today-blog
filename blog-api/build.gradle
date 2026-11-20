@@ -8,8 +8,6 @@ apply plugin: 'cn.taketoday.blog.optional-dependencies'
 
 configure(project) {
   if (it.hasProperty("includeAOT")) {
-    apply plugin: 'infra.application.aot'
-    apply plugin: 'org.graalvm.buildtools.native'
 
     processTestAot {
       enabled = false
@@ -24,6 +22,7 @@ configure(project) {
 }
 
 dependencies {
+  implementation project(':blog-upgrade-protocol')
   implementation 'cn.taketoday:infra-starter-application'
   implementation 'cn.taketoday:infra-starter-netty-server'
   implementation 'cn.taketoday:infra-starter-webmvc'
@@ -110,9 +109,9 @@ infraJar {
 }
 
 infraApplication {
-  buildInfo {
-
-  }
+  enableAheadOfTimeProcessing()
+  enableNativeImage()
+  enableBuildInfo()
 }
 
 

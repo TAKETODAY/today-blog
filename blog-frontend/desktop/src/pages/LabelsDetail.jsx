@@ -27,6 +27,7 @@ import ArticleList from '../components/ArticleList';
 import { updateNavigations } from "../redux/actions";
 import { navigationsMapStateToProps } from "../redux/action-types";
 import { applySEO, extractData, isNotEmpty, scrollTop } from 'core';
+import { translate } from '../locales';
 import { setTitle } from "../utils/common"
 import { withRouter } from "../utils/withRouter"
 
@@ -54,7 +55,7 @@ class LabelsDetail extends React.Component {
   }
 
   updateNavigations(navigation) {
-    const navigations = [{ name: '全部标签' }]
+    const navigations = [{ labelKey: 'navigation.allTags' }]
     if (navigation) {
       navigations.push(navigation)
     }
@@ -83,7 +84,7 @@ class LabelsDetail extends React.Component {
         .then(extractData)
         .then(articles => {
           super.setState({ articles });
-          const title = `关于标签 '${tag}' 的文章`
+          const title = translate('articles.tagTitle', { tag });
           setTitle(title)
           applySEO(undefined, title)
         })
@@ -94,7 +95,7 @@ class LabelsDetail extends React.Component {
     const { tagsId } = this.props.match.params
     return (<>
       <div className="shadow-box" id="test1">
-        <div className="data-list-title">关于 <b className='red'>{tagsId}</b> 的文章</div>
+        <div className="data-list-title">{translate('articles.tagTitle', { tag: tagsId })}</div>
         <div className="datas">
           <ArticleList articles={articles.data}/>
         </div>

@@ -20,6 +20,7 @@
 
 import React, { useState } from 'react'
 import { Button, Form, Input, Modal } from 'antd'
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 const { TextArea } = Input
 const FormItem = Form.Item
@@ -30,6 +31,7 @@ const formLayout = {
 }
 
 const UserUpdateForm = props => {
+  const t = useSiteTranslation();
   const { onSubmit: handleUpdate, onCancel: hideUpdateModal, updateModalVisible, values } = props
   const [form] = Form.useForm()
   const [user, setUser] = useState({ ...values })
@@ -50,14 +52,14 @@ const UserUpdateForm = props => {
   const renderFooter = () => {
     return (
         <>
-          <Button onClick={ hideUpdateModal }>取消</Button>
-          <Button type="primary" onClick={ update }>更新</Button>
+          <Button onClick={ hideUpdateModal }>{t('users.cancel')}</Button>
+          <Button type="primary" onClick={ update }>{t('users.save')}</Button>
         </>
     )
   }
   return (
       <Modal
-          title="用户信息设置"
+          title={t('users.editUser')}
           width={ 800 }
           destroyOnClose={ true }
           footer={ renderFooter() }
@@ -66,14 +68,14 @@ const UserUpdateForm = props => {
           bodyStyle={ { padding: '32px 40px 48px' } }
       >
         <Form { ...formLayout } form={ form }>
-          <FormItem name="name" label="昵称" rules={ [{ required: true, message: '请输入书名！' }] }>
-            <Input placeholder="请输入"/>
+          <FormItem name="name" label={t('users.nickname')} rules={[{ required: true, message: t('users.enterANickname') }]}>
+            <Input placeholder={t('users.enterANickname')}/>
           </FormItem>
-          <FormItem name="introduce" label="介绍" rules={ [{ required: true, message: '请输入作者名！' }] }>
-            <TextArea placeholder="请输入" rows={ 3 }/>
+          <FormItem name="introduce" label={t('users.bio')} rules={[{ required: true, message: t('users.enterABio') }]}>
+            <TextArea placeholder={t('users.enterABio')} rows={ 3 }/>
           </FormItem>
-          <FormItem name="site" label="个人网站" rules={ [{ required: true, message: '请输入出版社！' }] }>
-            <Input placeholder="请输入"/>
+          <FormItem name="site" label={t('users.website')} rules={[{ required: true, message: t('users.enterAWebsite') }]}>
+            <Input placeholder={t('users.enterAWebsite')}/>
           </FormItem>
         </Form>
       </Modal>

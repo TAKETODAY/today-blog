@@ -21,38 +21,17 @@ import ImageCropper from './cropper/ImageCropper';
 import UserService from "./service"
 import { extractData, handleValidationError, showHttpErrorMessageVoid } from "@/utils"
 import { useOptions, useUserSession } from "@/components/hooks";
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 const FormItem = Form.Item
 const { TabPane } = Tabs;
 
 const userService = new UserService()
 
-const emailRules = [
-  { required: true, message: '请输入新的邮箱!' },
-  { type: 'email', message: '请您输入正确格式的邮箱!' }
-]
-
-const mobilePhoneRules = [
-  { required: true, message: '请输入新的手机号!' },
-  {
-    message: '请您输入正确格式的手机号!',
-    pattern: /^1[3456789]\d{9}$/
-  }
-]
-
-const passwordRules = [
-  { required: true, message: '请输入密码!', max: 48 },
-]
-
-const newPasswordRules = [
-  { required: true, message: '请输入密码!', min: 2, max: 48 },
-]
-
-const nameRules = [
-  { required: true, message: '请输入姓名或昵称!' }
-]
+const passwordRules = (t, min) => [{ required: true, message: t('account.enterAPassword'), min, max: 48 }];
 
 const InfoSettings = ({ updating, userSession, setUpdating, setUserSession }) => {
+  const t = useSiteTranslation();
   const update = data => {
     if (updating) {
       return
@@ -60,25 +39,26 @@ const InfoSettings = ({ updating, userSession, setUpdating, setUserSession }) =>
     setUpdating(true)
     userService.updateInfo(data).then(extractData).then(user => {
       setUserSession(user)
-      message.success("修改成功")
+      message.success(t('account.changesSaved'))
     }).catch(showHttpErrorMessageVoid)
       .finally(() => setUpdating(false))
   }
 
   return (<>
     <Form name="infoForm" layout="vertical" initialValues={{ ...userSession }} onFinish={update}>
-      <FormItem name="name" label="姓名或昵称" rules={nameRules}>
-        <Input maxLength="24" placeholder="请输入姓名或昵称"/>
+      <FormItem name="name" label={t('account.nameOrNickname')} rules={[{ required: true, message: t('account.nameRequired') }]}>
+        <Input maxLength="24" placeholder={t('account.enterANameOrNickname')}/>
       </FormItem>
-      <FormItem name="introduce" label="自我描述">
-        <Input maxLength="64" placeholder="请输入自我描述"/>
+      <FormItem name="introduce" label={t('account.bio')}>
+        <Input maxLength="64" placeholder={t('account.enterAShortBio')}/>
       </FormItem>
-      <Button loading={updating} type="primary" htmlType="submit">保存修改</Button>
+      <Button loading={updating} type="primary" htmlType="submit">{t('account.saveChanges')}</Button>
     </Form>
   </>)
 }
 
 const EmailSettings = ({ updating, userSession, setUpdating, setUserSession }) => {
+  const t = useSiteTranslation();
   const update = data => {
     if (updating) {
       return
@@ -86,43 +66,50 @@ const EmailSettings = ({ updating, userSession, setUpdating, setUserSession }) =
     setUpdating(true)
     userService.updateEmailAndMobile(data).then(extractData).then(user => {
       setUserSession(user)
-      message.success("修改成功")
+      message.success(t('account.changesSaved'))
     }).catch(showHttpErrorMessageVoid)
       .finally(() => setUpdating(false))
   }
   return (
     <>
       <Form name="emailForm" layout="vertical" initialValues={{ ...userSession }} onFinish={update}>
-        <FormItem name="password" label="当前账号密码" rules={passwordRules}>
-          <Input.Password maxLength="24" placeholder="请输入当前账号密码"/>
+        <FormItem name="password" label={t('account.currentPassword')} rules={passwordRules(t)}>
+          <Input.Password maxLength="24" placeholder={t('account.enterYourCurrentPassword')}/>
         </FormItem>
 
-        <FormItem name="mobilePhone" label="新手机号" rules={mobilePhoneRules}>
-          <Input maxLength="11" placeholder="请输入新手机号"/>
+        <FormItem name="mobilePhone" label={t('account.newPhoneNumber')} rules={[
+          { required: true, message: t('account.newPhoneRequired') },
+          { pattern: /^1[3456789]\d{9}$/, message: t('account.enterAValidPhoneNumber') },
+        ]}>
+          <Input maxLength="11" placeholder={t('account.enterANewPhoneNumber')}/>
         </FormItem>
 
-        <FormItem name="email" label="新邮箱" rules={emailRules}>
-          <Input maxLength="48" placeholder="请输入新邮箱"/>
+        <FormItem name="email" label={t('account.newEmailAddress')} rules={[
+          { required: true, message: t('account.newEmailRequired') },
+          { type: 'email', message: t('account.enterAValidEmailAddress') },
+        ]}>
+          <Input maxLength="48" placeholder={t('account.enterANewEmailAddress')}/>
         </FormItem>
-        <Button loading={updating} type="primary" htmlType="submit" title="保存修改">保存修改</Button>
+        <Button loading={updating} type="primary" htmlType="submit">{t('account.saveChanges')}</Button>
       </Form>
     </>
   )
 }
 
 const PasswordSettings = ({ updating, setUpdating }) => {
+  const t = useSiteTranslation();
   const update = data => {
     const { oldPassword, newPassword, confirmNewPassword } = data
     if (oldPassword === newPassword) {
-      message.error("密码未更改")
+      message.error(t('account.chooseADifferentPassword'))
     }
     else if (newPassword !== confirmNewPassword) {
-      message.error("两次输入的新密码不一致")
+      message.error(t('account.theNewPasswordsDoNot'))
     }
     else {
       setUpdating(true)
       userService.updatePassword(data).then(res => {
-        message.success("修改成功")
+        message.success(t('account.passwordChanged'))
       }).catch(err => {
         handleValidationError(err, () => {
           showHttpErrorMessageVoid(err)
@@ -133,22 +120,23 @@ const PasswordSettings = ({ updating, setUpdating }) => {
   return (
     <>
       <Form name="passwordForm" layout="vertical" onFinish={update}>
-        <FormItem name="oldPassword" label="原密码" rules={passwordRules}>
-          <Input.Password maxLength="48" placeholder="请输入当前账号密码"/>
+        <FormItem name="oldPassword" label={t('account.oldPassword')} rules={passwordRules(t)}>
+          <Input.Password maxLength="48" placeholder={t('account.enterYourCurrentPassword')}/>
         </FormItem>
-        <FormItem name="newPassword" label="新密码" rules={newPasswordRules}>
-          <Input.Password maxLength="48" placeholder="请输入新密码"/>
+        <FormItem name="newPassword" label={t('account.newPassword')} rules={passwordRules(t, 2)}>
+          <Input.Password maxLength="48" placeholder={t('account.enterANewPassword')}/>
         </FormItem>
-        <FormItem name="confirmNewPassword" label="确认新密码" rules={newPasswordRules}>
-          <Input.Password maxLength="48" placeholder="请重复输入新密码"/>
+        <FormItem name="confirmNewPassword" label={t('account.confirmNewPassword')} rules={passwordRules(t, 2)}>
+          <Input.Password maxLength="48" placeholder={t('account.reEnterYourNewPassword')}/>
         </FormItem>
-        <Button loading={updating} type="primary" htmlType="submit">保存修改</Button>
+        <Button loading={updating} type="primary" htmlType="submit">{t('account.saveChanges')}</Button>
       </Form>
     </>
   )
 }
 
 const AvatarSettings = ({ updating, setUpdating, userSession, setUserSession }) => {
+  const t = useSiteTranslation();
   const [uploadFilename, setUploadFilename] = useState("avatar.png")
 
   const onFileSelected = file => {
@@ -165,14 +153,14 @@ const AvatarSettings = ({ updating, setUpdating, userSession, setUserSession }) 
     setUpdating(true)
     userService.updateAvatar(formData).then(extractData).then(user => {
       setUserSession(user)
-      message.success("更换成功")
+      message.success(t('account.avatarUpdated'))
     }).catch(showHttpErrorMessageVoid)
       .finally(() => setUpdating(false))
   }
 
   return (
     <>
-      <Alert message="禁止使用任何涉嫌非法或者敏感图片作为头像" type="warning" style={{ marginBottom: 15 }}/>
+      <Alert message={t('account.doNotUseUnlawfulOr')} type="warning" style={{ marginBottom: 15 }}/>
       <ImageCropper preview=".avatar"
                     updating={updating}
                     src={userSession.avatar}
@@ -189,6 +177,7 @@ const AvatarSettings = ({ updating, setUpdating, userSession, setUserSession }) 
 }
 
 export default props => {
+  const t = useSiteTranslation();
   const [options] = useOptions()
   const [userSession, setUserSession] = useUserSession()
   const [updating, setUpdating] = useState(false)
@@ -197,19 +186,19 @@ export default props => {
   return (<>
     <Spin spinning={updating}>
       <Tabs type="line">
-        <TabPane tab="资料修改" key="1">
+        <TabPane tab={t('account.profile')} key="1">
           <InfoSettings {...newProps} />
         </TabPane>
 
-        <TabPane tab="邮箱 / 手机号修改" key="2">
+        <TabPane tab={t('account.emailAndPhone')} key="2">
           <EmailSettings {...newProps} />
         </TabPane>
 
-        <TabPane tab="密码修改" key="3">
+        <TabPane tab={t('account.password')} key="3">
           <PasswordSettings {...newProps} />
         </TabPane>
 
-        <TabPane tab="头像修改" key="4">
+        <TabPane tab={t('account.editAvatar')} key="4">
           <AvatarSettings {...newProps} />
         </TabPane>
       </Tabs>

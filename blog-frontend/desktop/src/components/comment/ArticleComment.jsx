@@ -23,6 +23,8 @@ import React from 'react';
 import { CommentOutlined } from '@ant-design/icons';
 import { commentService } from '../../services';
 import { extractData, isEmpty, isNotEmpty, scrollTo } from 'core';
+import { translate } from '../../locales';
+import LocalizedCount from '../../locales/LocalizedCount';
 import { CommentEdit, CommentList } from '..';
 
 export default class ArticleComment extends React.Component {
@@ -79,7 +81,7 @@ export default class ArticleComment extends React.Component {
       })
       .catch(res => {
         console.log(res)
-        message.error("评论加载失败")
+        message.error(translate('comments.couldNotLoadComments'))
       })
   }
 
@@ -94,9 +96,9 @@ export default class ArticleComment extends React.Component {
       </div>
       <div className="shadow-box markdown" id="comments">
         <div className="data-list-title" style={{ border: 'none' }}>
-          <CommentOutlined aria-hidden="true"/> 评论
+          <CommentOutlined aria-hidden="true"/> {translate('comments.comments')}
           {commentsLoaded
-            ? isEmpty(comments) && <Empty description="暂无评论"/>
+            ? isEmpty(comments) && <Empty description={translate('comments.noCommentsYet')}/>
             : <Skeleton active/>
           }
         </div>
@@ -104,7 +106,7 @@ export default class ArticleComment extends React.Component {
           <CommentList data={comments} onReply={this.onReply}/>
           {isNotEmpty(comments) &&
             <div align='center' style={{ padding: '20px' }}>
-              总共 <b className='red'>{comments.length}</b> 条评论
+              <LocalizedCount count={comments.length} messageKey="comments.resultCount"/>
             </div>
           }</>
         }

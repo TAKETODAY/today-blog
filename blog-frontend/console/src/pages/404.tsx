@@ -21,18 +21,22 @@
 import { Button, Result } from 'antd';
 import React from 'react';
 import { history } from '@umijs/max';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
-const NoFoundPage: React.FC = () => (
+const NoFoundPage: React.FC = () => {
+  const t = useSiteTranslation();
+  return (
     <Result
-        status="404"
-        title="404"
-        subTitle="对不起，你所访问的的页面不存在"
-        extra={
-          <Button type="primary" onClick={() => history.push('/')}>
-            返回首页
-          </Button>
-        }
+      status="404"
+      title="404"
+      subTitle={t('errors.thisPageDoesNotExist')}
+      extra={
+        <Button type="primary" onClick={() => history.push('/')}>
+          {t('errors.backToHome')}
+        </Button>
+      }
     />
-);
+  );
+};
 
 export default NoFoundPage;

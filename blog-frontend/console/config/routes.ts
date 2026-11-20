@@ -154,6 +154,21 @@ export default [
         path: '/system/api-keys',
         component: './system/api-keys',
       },
+      {
+        name: '系统升级',
+        path: '/system/upgrade',
+        component: './system/upgrade',
+      },
+      {
+        name: '系统备份',
+        path: '/system/backups',
+        component: './system/backups',
+      },
+      {
+        path: '/system/snapshots',
+        redirect: '/system/backups',
+        hideInMenu: true,
+      },
     ],
   },
   {

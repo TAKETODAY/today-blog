@@ -24,9 +24,11 @@ import java.util.Set;
 
 import cn.taketoday.blog.log.Logging;
 import cn.taketoday.blog.model.Label;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
+import cn.taketoday.blog.service.ContentProblems;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
@@ -60,7 +62,7 @@ class LabelConsoleHttpHandler {
   public void post(@PathVariable String name) {
     Label byName = labelService.getByName(name);
     if (byName != null) {
-      throw ErrorMessageException.failed("标签重复");
+      throw new ProblemException(ContentProblems.LABEL_EXISTS);
     }
     labelService.persist(Label.forName(name));
   }
@@ -71,11 +73,11 @@ class LabelConsoleHttpHandler {
     Set<Label> labels = new HashSet<>(name.length);
     for (String label : name) {
       if (StringUtils.isEmpty(label)) {
-        throw ErrorMessageException.failed("标签名不能为空");
+        throw new ProblemException(ContentProblems.LABEL_REQUIRED);
       }
       Label byName = labelService.getByName(label);
       if (byName != null) {
-        throw ErrorMessageException.failed("标签重复");
+        throw new ProblemException(ContentProblems.LABEL_EXISTS);
       }
       labels.add(Label.forName(label));
     }
@@ -87,10 +89,10 @@ class LabelConsoleHttpHandler {
   @Logging(title = "标签更新", content = "update:[#{#id}] with name:[#{#name}]")
   public void put(@RequestParam String name, @PathVariable int id) {
     Label label = labelService.getById(id);
-    ErrorMessageException.notNull(label, "标签不存在");
+    ProblemException.notNull(label, ContentProblems.LABEL_NOT_FOUND);
 
     if (Objects.equals(label.getName(), name)) {
-      throw ErrorMessageException.failed("标签名未更改");
+      throw new ProblemException(CommonProblems.NO_CHANGES);
     }
     label.setName(name);
     labelService.updateById(label);
@@ -100,7 +102,7 @@ class LabelConsoleHttpHandler {
   @Logging(title = "删除标签", content = "delete id:[#{#id}]")
   public void delete(@PathVariable long id) {
     Label byName = labelService.getById(id);
-    ErrorMessageException.notNull(byName, "标签不存在");
+    ProblemException.notNull(byName, ContentProblems.LABEL_NOT_FOUND);
     labelService.deleteById(byName.getId());
   }
 

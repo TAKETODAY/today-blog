@@ -1,0 +1,142 @@
+import cn.taketoday.blog.release.ReleaseManifest
+
+import java.util.regex.Pattern
+
+def projectVersion = version.toString()
+def releaseBuild = providers.gradleProperty('buildNumber')
+    .orElse(providers.environmentVariable('BUILD_NUMBER'))
+    .orElse(providers.provider {
+      java.time.format.DateTimeFormatter.ofPattern('yyyyMMddHHmmss')
+          .withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.now())
+    })
+
+def frontend = layout.projectDirectory.dir('blog-frontend')
+def nodeOptions = providers.environmentVariable('NODE_OPTIONS').orElse('')
+def releasePath = providers.environmentVariable('PATH').orElse('').get()
+def pnpmCommand = providers.gradleProperty('pnpmExecutable')
+    .orElse(providers.environmentVariable('PNPM_EXECUTABLE')).getOrNull()
+if (pnpmCommand == null) {
+  def candidates = releasePath.split(Pattern.quote(File.pathSeparator))
+      .collect { directory ->
+        new File(directory, 'pnpm')
+      }
+  pnpmCommand = candidates.find { candidate ->
+    candidate.isFile() && candidate.canExecute()
+  }?.absolutePath ?: 'pnpm'
+}
+
+def pnpmDirectory = new File(pnpmCommand).absoluteFile.parent
+def frontendPath = pnpmDirectory + File.pathSeparator + releasePath
+
+def validateRelease = tasks.register('validateRelease') {
+  group = 'distribution'
+  description = '校验发行版本和构建编号。'
+  doLast {
+    if (!(projectVersion ==~ /[A-Za-z0-9][A-Za-z0-9._-]{0,99}/)
+        || !(releaseBuild.get() ==~ /[1-9][0-9]{0,17}/)) {
+      throw new GradleException('发行版本或构建编号格式错误')
+    }
+  }
+}
+
+def installFrontend = tasks.register('installReleaseFrontend')
+['common', 'console', 'desktop'].each { module ->
+  def installModule = tasks.register("installRelease${module.capitalize()}Dependencies", Exec) {
+    dependsOn validateRelease
+    workingDir frontend.dir(module)
+    environment 'PATH', frontendPath
+    commandLine pnpmCommand, 'install', '--frozen-lockfile'
+  }
+  installFrontend.configure {
+    dependsOn installModule
+  }
+}
+
+def buildConsole = tasks.register('buildReleaseConsole', Exec) {
+  dependsOn installFrontend
+  workingDir frontend.dir('console')
+  environment 'NODE_OPTIONS', nodeOptions.get() + ' --openssl-legacy-provider'
+  environment 'PATH', frontendPath
+  commandLine pnpmCommand, 'build'
+}
+
+def buildDesktop = tasks.register('buildReleaseDesktop', Exec) {
+  dependsOn installFrontend
+  workingDir frontend.dir('desktop')
+  environment 'NODE_OPTIONS', nodeOptions.get() + ' --openssl-legacy-provider'
+  environment 'PATH', frontendPath
+  commandLine pnpmCommand, 'build'
+}
+
+def stageRelease = tasks.register('stageRelease', Sync) {
+  dependsOn validateRelease, ':blog-api:installDist', buildConsole, buildDesktop
+  into layout.buildDirectory.dir('release/payload')
+  from(project(':blog-api').layout.buildDirectory.dir('install/blog-api')) {
+    include 'bin/**', 'lib/**'
+    into 'api'
+  }
+  from(frontend.dir('console/dist')) {
+    into 'console'
+  }
+  from(frontend.dir('desktop/build')) {
+    into 'desktop'
+  }
+  exclude '**/.DS_Store', '**/__MACOSX/**'
+}
+
+def manifest = tasks.register('releaseManifest', ReleaseManifest) {
+  dependsOn stageRelease
+  payloadDirectory = layout.buildDirectory.dir('release/payload')
+  manifestFile = layout.buildDirectory.file('release/metadata/upgrade.properties')
+  productVersion = projectVersion
+  buildNumber = releaseBuild
+}
+
+// 在线协议规定 ZIP 根目录固定为 today-blog，不能使用 distribution 插件的版本化外层目录。
+def releaseContents = copySpec {
+  into 'today-blog'
+  from(stageRelease)
+  from(manifest) {
+    into 'META-INF'
+  }
+}
+
+tasks.register('installReleaseDist', Sync) {
+  into layout.buildDirectory.dir('install/today-blog')
+  with releaseContents
+}
+
+[releaseDistZip: Zip, releaseDistTar: Tar].each { taskName, archiveType ->
+  tasks.register(taskName, archiveType) {
+    group = 'distribution'
+    with releaseContents
+    destinationDirectory = layout.buildDirectory
+    archiveFileName = releaseBuild.zip(archiveExtension) { build, extension ->
+      "today-blog-${projectVersion}-${build}.${extension}"
+    }.get()
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+  }
+}
+
+def releaseZip = tasks.named('releaseDistZip', Zip).flatMap {
+  it.archiveFile
+}
+def verifyRelease = tasks.register('verifyRelease', JavaExec) {
+  group = 'verification'
+  inputs.file(releaseZip)
+  classpath = files(project(':blog-upgrade-protocol').tasks.named('jar'))
+  mainClass = 'cn.taketoday.blog.updater.VerifyReleasePackage'
+  args releaseZip.get().asFile.absolutePath
+}
+
+def cli = tasks.register('releaseCli', Copy) {
+  from project(':blog-cli').tasks.named('infraJar')
+  into layout.projectDirectory.dir('dist')
+}
+
+tasks.register('release') {
+  group = 'distribution'
+  description = '构建后端、Console、Desktop，生成无签名升级包和独立运维 CLI。'
+  dependsOn verifyRelease, cli
+}

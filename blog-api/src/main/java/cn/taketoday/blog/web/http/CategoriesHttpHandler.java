@@ -20,8 +20,9 @@ package cn.taketoday.blog.web.http;
 import java.util.List;
 
 import cn.taketoday.blog.model.Category;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.service.CategoryService;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.service.ContentProblems;
 import infra.stereotype.Controller;
 import infra.web.annotation.GET;
 import infra.web.annotation.PathVariable;
@@ -58,7 +59,7 @@ class CategoriesHttpHandler {
   @GET("/{name}")
   public Category name(@PathVariable String name) {
     Category category = categoryService.findCategory(name);
-    ErrorMessageException.notNull(category, "分类不存在");
+    ProblemException.notNull(category, ContentProblems.CATEGORY_NOT_FOUND);
     return category;
   }
 

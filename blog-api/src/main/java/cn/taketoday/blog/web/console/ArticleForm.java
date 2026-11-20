@@ -25,6 +25,8 @@ import java.util.Set;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.model.enums.PostStatus;
+import cn.taketoday.blog.problem.ProblemException;
+import cn.taketoday.blog.service.ArticleProblems;
 import cn.taketoday.blog.service.LabelService;
 import cn.taketoday.blog.util.BlogUtils;
 import cn.taketoday.blog.util.DateFormatter;
@@ -63,11 +65,11 @@ public class ArticleForm {
 
   public static Article forArticle(ArticleForm form, LabelService labelService) {
     if (StringUtils.isBlank(form.title)) {
-      throw new IllegalArgumentException("Article title is required");
+      throw new ProblemException(ArticleProblems.TITLE_REQUIRED);
     }
 
     if (StringUtils.isBlank(form.uri)) {
-      throw new IllegalArgumentException("Article URI is required");
+      throw new ProblemException(ArticleProblems.URI_REQUIRED);
     }
 
     Set<Label> labels = getLabels(form, labelService);

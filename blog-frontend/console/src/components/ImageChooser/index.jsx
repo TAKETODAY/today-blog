@@ -23,10 +23,12 @@ import { Button, Input, message, Popconfirm } from "antd"
 import React, { useEffect, useState } from "react"
 import { Image, ImageChooserModal } from "@/components"
 import { PlusOutlined } from "@ant-design/icons"
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 import "./style.less"
 
 export default props => {
+  const t = useSiteTranslation();
   // hooks
   const [imageToShow, setSelected] = useState()
   const [inputCoverUrl, setInputCoverUrl] = useState()
@@ -34,6 +36,7 @@ export default props => {
 
   // props
   const { onChange, value, placeholder, ...rest } = props
+  const chooseImage = placeholder ? t('imageChooser.selectWithLabel', { label: placeholder }) : t('imageChooser.selectImage');
 
   useEffect(() => {
     setSelected(value)
@@ -67,31 +70,31 @@ export default props => {
                    onError={
                      e => {
                        onDeleteImage()
-                       message.warn("输入的图片有误")
+                       message.warn(t('imageChooser.couldNotLoadTheImage'))
                      }
                    }
           /> :
-          <div className="select-wrapper" onClick={showSelector} title={`点击选择${placeholder}`}>
-            <PlusOutlined/> 点击选择{placeholder}
+          <div className="select-wrapper" onClick={showSelector} title={chooseImage}>
+            <PlusOutlined/> {chooseImage}
           </div>
         }
       </div>
       <div className="linkInput">
         <Popconfirm
           icon=""
-          title={<Input placeholder="填入链接地址"
+          title={<Input placeholder={t('imageChooser.enterAnImageURL')}
                         value={inputCoverUrl}
                         onInput={
                           e => setInputCoverUrl(e.target.value)
                         }
           />}
           onConfirm={setInputImage}>
-          <Button type="dashed" title="手动输入外部或内部链接">链接</Button>
+          <Button type="dashed" title={t('imageChooser.enterAnInternalOrExternal')}>{t('imageChooser.link')}</Button>
         </Popconfirm>
       </div>
 
       <div className="deleteImage">
-        <Button danger disabled={imageToShow == null} type="primary" onClick={onDeleteImage}>删除</Button>
+        <Button danger disabled={imageToShow == null} type="primary" onClick={onDeleteImage}>{t('imageChooser.remove')}</Button>
       </div>
 
       <ImageChooserModal

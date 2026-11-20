@@ -29,22 +29,24 @@ import UserUpdateForm from "./UserUpdateForm";
 import { UserItem } from "./data.d";
 import { deleteUser, queryUsers, toggleStatus, update } from "./service";
 import Image from "@/components/Image";
+import { siteText } from '@/utils/site-i18n';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 /**
  * 更新节点
  * @param user
  */
 const handleUpdate = async (user: UserItem) => {
-  const hide = message.loading(`正在更新: ${user.name}`)
+  const hide = message.loading(siteText('users.updating', { name: user.name }))
   try {
     await update(user)
     hide()
-    message.success('更新信息成功', 1)
+    message.success(siteText('users.userUpdated'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error('更新信息失败请重试！')
+    message.error(siteText('users.couldNotUpdateTheUser'))
     return false
   }
 }
@@ -54,69 +56,69 @@ const handleUpdate = async (user: UserItem) => {
  * @param user
  */
 const handleRemove = async (user: UserItem) => {
-  const hide = message.loading(`正在删除: ${user.name}`)
+  const hide = message.loading(siteText('users.deleting', { name: user.name }))
   try {
     await deleteUser(user)
     hide()
-    message.success('删除成功，即将刷新', 1)
+    message.success(siteText('users.userDeleted'), 1)
     return true
   }
   catch (error) {
     hide()
-    message.error('删除失败，请重试')
+    message.error(siteText('users.couldNotDeleteTheUser'))
     return false
   }
 }
 
 
-const renderStatusMenu = (user: UserItem, reload: Function) => {
+const renderStatusMenu = (user: UserItem, reload: Function, t: ReturnType<typeof useSiteTranslation>) => {
   const userStatus = async (status: string) => {
-    const hide = message.loading(`正在切换状态: ${user.name}`)
+    const hide = message.loading(t('users.changingStatus', { name: user.name }))
     try {
       await toggleStatus(user.id, status)
       hide()
-      message.success('切换状态成功，即将刷新', 1)
+      message.success(t('users.userStatusChanged'), 1)
       reload()
       return true
     }
     catch (error) {
       hide()
-      message.error('切换状态失败，请重试')
+      message.error(t('users.couldNotChangeTheStatus'))
       return false
     }
   }
 
   const renderNormal = () => {
     return (<>
-      <Popconfirm title="您确定要锁定该用户吗" placement="topLeft" onConfirm={() => userStatus('LOCKED')}>
-        <a href="#">锁定</a>
+      <Popconfirm title={t('users.lockThisUser')} placement="topLeft" onConfirm={() => userStatus('LOCKED')}>
+        <a href="#">{t('users.lock')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title="您确定要冻结该用户吗" placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
-        <a href="#">冻结</a>
+      <Popconfirm title={t('users.suspendThisUser')} placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
+        <a href="#">{t('users.suspend')}</a>
       </Popconfirm>
     </>)
   }
 
   const renderInactive = () => {
     return (<>
-      <Popconfirm title="您确定要激活该用户吗" placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
-        <a href="#">激活</a>
+      <Popconfirm title={t('users.activateThisUser')} placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
+        <a href="#">{t('users.activate')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title="您确定要冻结该用户吗" placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
-        <a href="#">冻结</a>
+      <Popconfirm title={t('users.suspendThisUser')} placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
+        <a href="#">{t('users.suspend')}</a>
       </Popconfirm>
     </>)
   }
   const renderLocked = () => {
     return (<>
-      <Popconfirm title="您确定要该用户恢复正常吗" placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
-        <a href="#">恢复正常</a>
+      <Popconfirm title={t('users.restoreThisUserToActive')} placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
+        <a href="#">{t('users.restore')}</a>
       </Popconfirm>
       <Divider type="vertical"/>
-      <Popconfirm title="您确定要冻结该用户吗" placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
-        <a href="#">冻结</a>
+      <Popconfirm title={t('users.suspendThisUser')} placement="topLeft" onConfirm={() => userStatus('RECYCLE')}>
+        <a href="#">{t('users.suspend')}</a>
       </Popconfirm>
     </>)
   }
@@ -132,18 +134,19 @@ const renderStatusMenu = (user: UserItem, reload: Function) => {
 
   return (
       <>
-        <Popconfirm title="您确定要该用户恢复正常吗" placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
-          <a href="#">恢复正常</a>
+        <Popconfirm title={t('users.restoreThisUserToActive')} placement="topLeft" onConfirm={() => userStatus('NORMAL')}>
+          <a href="#">{t('users.restore')}</a>
         </Popconfirm>
         <Divider type="vertical"/>
-        <Popconfirm title="您确定要锁定该用户吗" placement="topLeft" onConfirm={() => userStatus('LOCKED')}>
-          <a href="#">锁定</a>
+        <Popconfirm title={t('users.lockThisUser')} placement="topLeft" onConfirm={() => userStatus('LOCKED')}>
+          <a href="#">{t('users.lock')}</a>
         </Popconfirm>
       </>
   )
 }
 
 export default () => {
+  const t = useSiteTranslation();
   const actionRef = useRef<ActionType>()
   const [updateUser, setUpdateUser] = useState({})
   const [updateModalVisible, setUpdateModalVisible] = useState<boolean>(false)
@@ -160,13 +163,13 @@ export default () => {
 
   const columns: ProColumns<UserItem>[] = [
     {
-      title: '姓名',
+      title: t('users.name'),
       dataIndex: 'name',
       width: 120,
       fixed: 'left',
     },
     {
-      title: '头像',
+      title: t('users.avatar'),
       hideInSearch: true,
       width: 80,
       render: (_, user) => (
@@ -174,7 +177,7 @@ export default () => {
       ),
     },
     {
-      title: '背景',
+      title: t('users.background'),
       dataIndex: 'background',
       hideInSearch: true,
       width: 180,
@@ -183,49 +186,49 @@ export default () => {
       ),
     },
     {
-      title: '邮箱',
+      title: t('users.email'),
       dataIndex: 'email',
     },
     {
-      title: '介绍',
+      title: t('users.bio'),
       dataIndex: 'introduce',
       hideInSearch: true,
     },
     {
-      title: '个人站点',
+      title: t('users.personalSite'),
       dataIndex: 'site',
       hideInSearch: true,
       width: 150,
       render: (_, user) => <a href={user.site} target='_blank'>{user.site}</a>,
     },
     {
-      title: '注册类型',
+      title: t('users.registrationType'),
       dataIndex: 'type',
       hideInSearch: true,
       width: 80,
     },
     {
-      title: '是否提醒',
+      title: t('users.notifications'),
       dataIndex: 'notification',
       hideInSearch: true,
       width: 80,
-      render: (_, user) => <span>{user.notification ? '已设置' : '未设置'}</span>,
+      render: (_, user) => <span>{user.notification ? t('users.enabled') : t('users.disabled')}</span>,
     },
     {
-      title: '默认密码',
+      title: t('users.defaultPassword'),
       dataIndex: 'defaultPassword',
       hideInSearch: true,
       width: 80,
-      render: (_, user) => <span>{user.defaultPassword ? '还未更换' : '已经更换'}</span>,
+      render: (_, user) => <span>{user.defaultPassword ? t('users.unchanged') : t('users.changed')}</span>,
     },
     {
-      title: '状态',
+      title: t('users.status'),
       hideInSearch: true,
       width: 80,
       render: (_, user) => <span>{getUserStatusDesc(user.status)}</span>,
     },
     {
-      title: '操作',
+      title: t('users.actions'),
       valueType: 'option',
       fixed: 'right',
       width: 180,
@@ -235,14 +238,14 @@ export default () => {
               setUpdateUser(record)
               setUpdateModalVisible(true)
             }}
-            > 编辑</a>
+            >{t('users.edit')}</a>
             <Divider type="vertical"/>
-            <Popconfirm title="您确定要删除该用户吗" placement="topLeft" onConfirm={() => remove(record)}>
-              <a href="#">删除</a>
+            <Popconfirm title={t('users.deleteThisUser')} placement="topLeft" onConfirm={() => remove(record)}>
+              <a href="#">{t('users.delete')}</a>
             </Popconfirm>
             <Divider type="vertical"/>
             {
-              renderStatusMenu(record, reload)
+              renderStatusMenu(record, reload, t)
             }
           </>
       ),
@@ -253,7 +256,7 @@ export default () => {
       <PageContainer>
         <ProTable<UserItem>
             rowKey="id"
-            headerTitle="博客文章列表"
+            headerTitle={t('users.users')}
             columns={columns}
             request={queryUsers}
             actionRef={actionRef}

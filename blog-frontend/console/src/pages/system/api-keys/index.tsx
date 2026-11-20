@@ -4,9 +4,11 @@ import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Alert, Button, Form, Input, message, Modal, Popconfirm, Space, Tag, Typography } from 'antd';
 import { format } from '@/utils';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 import { ApiKeyItem, CreatedApiKey, createApiKey, deleteApiKey, listApiKeys, revokeApiKey } from './service';
 
 const ApiKeyManagement: React.FC = () => {
+  const t = useSiteTranslation();
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm<{ name: string }>();
   const [createVisible, setCreateVisible] = useState(false);
@@ -26,7 +28,7 @@ const ApiKeyManagement: React.FC = () => {
       form.resetFields();
       actionRef.current?.reload();
     } catch {
-      message.error('创建失败，请重试');
+      message.error(t('apiKeys.couldNotCreateTheKey'));
     } finally {
       setCreating(false);
     }
@@ -36,10 +38,10 @@ const ApiKeyManagement: React.FC = () => {
     setDeleting(id);
     try {
       await deleteApiKey(id);
-      message.success('API Key 已删除');
+      message.success(t('apiKeys.apiKeyDeleted'));
       actionRef.current?.reload();
     } catch {
-      message.error('删除失败，请重试');
+      message.error(t('apiKeys.couldNotDeleteTheKey'));
     } finally {
       setDeleting(null);
     }
@@ -49,79 +51,79 @@ const ApiKeyManagement: React.FC = () => {
     setRevoking(id);
     try {
       await revokeApiKey(id);
-      message.success('API Key 已撤销');
+      message.success(t('apiKeys.apiKeyRevoked'));
       actionRef.current?.reload();
     } catch {
-      message.error('撤销失败，请重试');
+      message.error(t('apiKeys.couldNotRevokeTheKey'));
     } finally {
       setRevoking(null);
     }
   };
 
   const columns: ProColumns<ApiKeyItem>[] = [
-    { title: '名称', dataIndex: 'name', ellipsis: true },
-    { title: '状态', width: 100, render: (_, item) => item.revokedAt ? <Tag>已撤销</Tag> : <Tag color="success">有效</Tag> },
-    { title: '创建时间', width: 260, render: (_, item) => format(item.createdAt) },
-    { title: '最近使用', width: 260, render: (_, item) => item.lastUsedAt ? format(item.lastUsedAt) : '尚未使用' },
-    { title: '撤销时间', width: 260, render: (_, item) => item.revokedAt ? format(item.revokedAt) : 'N/A' },
+    { title: t('apiKeys.name'), dataIndex: 'name', ellipsis: true },
+    { title: t('apiKeys.status'), width: 100, render: (_, item) => item.revokedAt ? <Tag>{t('apiKeys.revoked')}</Tag> : <Tag color="success">{t('apiKeys.active')}</Tag> },
+    { title: t('apiKeys.created'), width: 260, render: (_, item) => format(item.createdAt) },
+    { title: t('apiKeys.lastUsed'), width: 260, render: (_, item) => item.lastUsedAt ? format(item.lastUsedAt) : t('apiKeys.neverUsed') },
+    { title: t('apiKeys.revokedAt'), width: 260, render: (_, item) => item.revokedAt ? format(item.revokedAt) : 'N/A' },
     {
-      title: '操作', valueType: 'option', width: 100,
+      title: t('apiKeys.actions'), valueType: 'option', width: 100,
       render: (_, item) => item.revokedAt ? (
-        <Popconfirm title={`删除「${item.name}」？删除后无法恢复。`}
-          okText="删除" cancelText="取消" onConfirm={() => handleDelete(item.id)}
+        <Popconfirm title={t('apiKeys.confirmDelete', { name: item.name })}
+          okText={t('apiKeys.delete')} cancelText={t('apiKeys.cancel')} onConfirm={() => handleDelete(item.id)}
           disabled={deleting !== null}>
           <Button type="link" danger icon={<DeleteOutlined />} loading={deleting === item.id}
-            disabled={deleting !== null && deleting !== item.id}>删除</Button>
+            disabled={deleting !== null && deleting !== item.id}>{t('apiKeys.delete')}</Button>
         </Popconfirm>
       ) : (
-        <Popconfirm title={`撤销「${item.name}」？使用此密钥的接口调用将失效。`}
-          okText="撤销" cancelText="取消" onConfirm={() => handleRevoke(item.id)}
+        <Popconfirm title={t('apiKeys.confirmRevoke', { name: item.name })}
+          okText={t('apiKeys.revoke')} cancelText={t('apiKeys.cancel')} onConfirm={() => handleRevoke(item.id)}
           disabled={revoking !== null || deleting !== null}>
           <Button type="link" danger loading={revoking === item.id}
-            disabled={revoking !== null && revoking !== item.id || deleting !== null}>撤销</Button>
+            disabled={revoking !== null && revoking !== item.id || deleting !== null}>{t('apiKeys.revoke')}</Button>
         </Popconfirm>
       ),
     },
   ];
 
   return (
-    <PageContainer header={{ title: 'API Key 管理' }}>
+    <PageContainer header={{ title: t('apiKeys.apiKeys') }}>
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <Alert type="info" showIcon message="用于脚本和工具调用博客接口"
-          description="密钥具有所属账号的权限；博主密钥具有完整管理权限。密钥原文仅在创建时显示，请为不同工具分别创建密钥。" />
-        <ProTable<ApiKeyItem> rowKey="id" headerTitle="我的 API Key" actionRef={actionRef}
+        <Alert type="info" showIcon message={t('apiKeys.useAPIKeysWithScripts')}
+          description={t('apiKeys.aKeyInheritsTheAccount')} />
+        <ProTable<ApiKeyItem> rowKey="id" headerTitle={t('apiKeys.myAPIKeys')} actionRef={actionRef}
           columns={columns} search={false} pagination={false} scroll={{ x: 1000 }}
           request={async () => {
             const data = await listApiKeys();
             return { data, success: true, total: data.length };
           }}
           toolBarRender={() => [
-            <Button key="create" type="primary" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>创建 API Key</Button>,
+            <Button key="create" type="primary" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>{t('apiKeys.createAPIKey')}</Button>,
           ]} />
       </Space>
 
-      <Modal title="创建 API Key" visible={createVisible} onOk={handleCreate} confirmLoading={creating}
-        okText="创建" cancelText="取消" closable={!creating} maskClosable={!creating}
+      <Modal title={t('apiKeys.createAPIKey')} visible={createVisible} onOk={handleCreate} confirmLoading={creating}
+        okText={t('apiKeys.create')} cancelText={t('apiKeys.cancel')} closable={!creating} maskClosable={!creating}
         cancelButtonProps={{ disabled: creating }} onCancel={() => { if (!creating) setCreateVisible(false); }}>
         <Form form={form} layout="vertical">
-          <Form.Item label="名称" name="name" extra="例如：本地发布脚本、文章备份工具"
-            rules={[{ required: true, whitespace: true, message: '请输入密钥名称' }, { max: 100, message: '名称最多 100 个字符' }]}>
-            <Input maxLength={100} placeholder="为使用此密钥的工具起一个名字" disabled={creating} />
+          <Form.Item label={t('apiKeys.name')} name="name" extra={t('apiKeys.forExamplePublishingScriptOr')}
+            rules={[{ required: true, whitespace: true, message: t('apiKeys.enterAKeyName') }, { max: 100, message: t('apiKeys.useAtMost100Characters') }]}>
+            <Input maxLength={100} placeholder={t('apiKeys.nameTheToolThatWill')} disabled={creating} />
           </Form.Item>
         </Form>
       </Modal>
 
-      <Modal title="API Key 已创建" visible={created !== null} closable={false} maskClosable={false}
-        footer={<Button type="primary" onClick={() => setCreated(null)}>我已保存，关闭</Button>}>
+      <Modal title={t('apiKeys.apiKeyCreated')} visible={created !== null} closable={false} maskClosable={false}
+        footer={<Button type="primary" onClick={() => setCreated(null)}>{t('apiKeys.iSavedTheKey')}</Button>}>
         {created && (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Alert type="warning" showIcon message="请立即复制并保存"
-              description="关闭后无法再次查看密钥原文。遗失后请撤销并创建新的密钥。" />
+            <Alert type="warning" showIcon message={t('apiKeys.copyAndSaveThisKey')}
+              description={t('apiKeys.youCannotViewThisKey')} />
             <Typography.Text strong>{created.apiKey.name}</Typography.Text>
             <Typography.Paragraph copyable={{ text: created.value }} style={{ wordBreak: 'break-all' }}>
               <Typography.Text code>{created.value}</Typography.Text>
             </Typography.Paragraph>
-            <Typography.Text type="secondary">调用时添加请求头：</Typography.Text>
+            <Typography.Text type="secondary">{t('apiKeys.includeThisRequestHeader')}</Typography.Text>
             <Typography.Text code>Authorization: Bearer &lt;API Key&gt;</Typography.Text>
           </Space>
         )}

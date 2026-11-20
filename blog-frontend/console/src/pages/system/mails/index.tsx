@@ -3,6 +3,8 @@ import { message, Modal, Popconfirm } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
 import { request } from '@umijs/max';
+import { format } from '@/utils';
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
 type MailItem = {
   id: number;
@@ -18,43 +20,44 @@ type MailItem = {
 };
 
 export default () => {
+  const t = useSiteTranslation();
   const actionRef = useRef<ActionType>();
   const [selected, setSelected] = useState<MailItem>();
 
   const retry = async (record: MailItem) => {
     try {
       await request(`/api/console/mails/${record.id}/retry`, { method: 'POST' });
-      message.success('已加入发送队列');
+      message.success(t('mail.queuedForSending'));
       actionRef.current?.reload();
     } catch {
-      message.error('重发失败，请刷新后重试');
+      message.error(t('mail.couldNotResendRefreshAnd'));
     }
   };
 
   const columns: ProColumns<MailItem>[] = [
-    { title: '收件人', dataIndex: 'to', width: 220 },
-    { title: '主题', dataIndex: 'subject', width: 300 },
+    { title: t('mail.recipient'), dataIndex: 'to', width: 220 },
+    { title: t('mail.subject'), dataIndex: 'subject', width: 300 },
     {
-      title: '状态', dataIndex: 'status', width: 100,
+      title: t('mail.status'), dataIndex: 'status', width: 100,
       valueEnum: {
-        PENDING: { text: '待发送', status: 'Default' },
-        SENDING: { text: '发送中', status: 'Processing' },
-        SENT: { text: '已发送', status: 'Success' },
-        FAILED: { text: '发送失败', status: 'Error' },
+        PENDING: { text: t('mail.pending'), status: 'Default' },
+        SENDING: { text: t('mail.sending'), status: 'Processing' },
+        SENT: { text: t('mail.sent'), status: 'Success' },
+        FAILED: { text: t('mail.failed'), status: 'Error' },
       },
     },
-    { title: '尝试次数', dataIndex: 'attempts', hideInSearch: true, width: 100 },
-    { title: '失败原因', dataIndex: 'lastError', hideInSearch: true, width: 300, ellipsis: true },
-    { title: '创建时间', dataIndex: 'createAt', valueType: 'dateTime', hideInSearch: true, width: 180 },
-    { title: '最近尝试', dataIndex: 'lastAttemptAt', valueType: 'dateTime', hideInSearch: true, width: 180 },
-    { title: '发送成功时间', dataIndex: 'sentAt', valueType: 'dateTime', hideInSearch: true, width: 180 },
+    { title: t('mail.attempts'), dataIndex: 'attempts', hideInSearch: true, width: 100 },
+    { title: t('mail.failureReason'), dataIndex: 'lastError', hideInSearch: true, width: 300, ellipsis: true },
+    { title: t('mail.created'), dataIndex: 'createAt', render: (_, item) => format(item.createAt), hideInSearch: true, width: 180 },
+    { title: t('mail.lastAttempt'), dataIndex: 'lastAttemptAt', render: (_, item) => format(item.lastAttemptAt), hideInSearch: true, width: 180 },
+    { title: t('mail.sentAt'), dataIndex: 'sentAt', render: (_, item) => format(item.sentAt), hideInSearch: true, width: 180 },
     {
-      title: '操作', valueType: 'option', width: 140, fixed: 'right',
+      title: t('mail.actions'), valueType: 'option', width: 140, fixed: 'right',
       render: (_, record) => [
-        <a key="detail" onClick={() => setSelected(record)}>查看</a>,
+        <a key="detail" onClick={() => setSelected(record)}>{t('mail.view')}</a>,
         record.status === 'FAILED' && (
-          <Popconfirm key="retry" title="确定重新发送这封邮件吗？" onConfirm={() => retry(record)}>
-            <a>重发</a>
+          <Popconfirm key="retry" title={t('mail.resendThisEmail')} onConfirm={() => retry(record)}>
+            <a>{t('mail.resend')}</a>
           </Popconfirm>
         ),
       ],
@@ -65,7 +68,7 @@ export default () => {
     <PageContainer>
       <ProTable<MailItem>
         rowKey="id"
-        headerTitle="邮件发送记录"
+        headerTitle={t('mail.emailDeliveryHistory')}
         actionRef={actionRef}
         columns={columns}
         scroll={{ x: 1800 }}
@@ -78,8 +81,8 @@ export default () => {
       />
       <Modal title={selected?.subject} visible={!!selected} footer={null} width={800}
         onCancel={() => setSelected(undefined)}>
-        {selected?.lastError && <p style={{ whiteSpace: 'pre-wrap' }}>失败原因：{selected.lastError}</p>}
-        <iframe title="邮件内容" sandbox="" srcDoc={selected?.content}
+        {selected?.lastError && <p style={{ whiteSpace: 'pre-wrap' }}>{t('mail.failureReasonPrefix')}{selected.lastError}</p>}
+        <iframe title={t('mail.emailContent')} sandbox="" srcDoc={selected?.content}
           style={{ width: '100%', height: 450, border: 0 }} />
       </Modal>
     </PageContainer>

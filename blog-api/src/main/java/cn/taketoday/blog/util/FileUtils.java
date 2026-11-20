@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 - 2025 the original author or authors.
+ * Copyright 2017 - 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,22 +21,32 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
+import infra.logging.Logger;
+import infra.logging.LoggerFactory;
 import infra.util.ObjectUtils;
+import infra.util.StringUtils;
 import infra.web.server.InternalServerException;
 
 /**
- *
+ * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
  */
 public abstract class FileUtils {
+
+  private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
 
   public static String getUploadFilePath(String name) {
     LocalDateTime now = LocalDateTime.now();
@@ -258,6 +268,76 @@ public abstract class FileUtils {
 
   public static boolean isImage(final Attachment attachment) {
     return attachment.getFileType() == AttachmentType.IMAGE;
+  }
+
+  public static void zip(Path file, Path destination) throws IOException {
+    try (InputStream input = Files.newInputStream(file);
+            ZipOutputStream archive = new ZipOutputStream(Files.newOutputStream(destination))) {
+      archive.setMethod(ZipEntry.DEFLATED);
+      archive.setLevel(Deflater.BEST_COMPRESSION);
+
+      archive.putNextEntry(new ZipEntry(file.getFileName().toString()));
+      infra.util.StreamUtils.copy(input, archive);
+
+      archive.closeEntry();
+    }
+  }
+
+  public static void unzip(Path srcPath, Path saveDir) throws IOException {
+    try (InputStream in = Files.newInputStream(srcPath)) {
+      unzip(in, saveDir);
+    }
+  }
+
+  public static void unzip(InputStream in, Path saveDir) throws IOException {
+    try (ZipInputStream zais = new ZipInputStream(in)) {
+      ZipEntry zipEntry;
+      while ((zipEntry = zais.getNextEntry()) != null) {
+        String entryFileName = zipEntry.getName();
+        var entryFilePath = saveDir.resolve(entryFileName).normalize();
+        if (zipEntry.isDirectory()) {
+          Files.createDirectories(entryFilePath);
+        }
+        else {
+          Path parent = entryFilePath.getParent();
+          if (Files.notExists(parent)) {
+            Files.createDirectories(parent);
+          }
+          try (OutputStream os = Files.newOutputStream(entryFilePath)) {
+            infra.util.StreamUtils.copy(zais, os);
+          }
+        }
+      }
+    }
+  }
+
+  public static void copyDirectory(Path sourceDir, Path targetDir) throws IOException {
+    // 确保目标文件夹存在
+    Files.createDirectories(targetDir);
+    // 遍历源文件夹中的文件和目录
+    try (var stream = Files.list(sourceDir)) {
+      for (Path path : stream.toList()) {
+        Path newPath = targetDir.resolve(path.getFileName());
+        if (Files.isDirectory(path)) {
+          // 如果是目录，则递归调用
+          copyDirectory(path, newPath);
+        }
+        else {
+          // 如果是文件，则复制文件
+          Files.copy(path, newPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+      }
+    }
+  }
+
+  public static void moveDirectory(Path sourceDir, Path targetDir) throws IOException {
+    Files.createDirectories(targetDir);
+    Files.move(sourceDir, targetDir, StandardCopyOption.REPLACE_EXISTING);
+  }
+
+  public static String getFilename(String location) {
+    location = location.replace('\\', '/');
+    return StringUtils.getFilename(location);
   }
 
 }

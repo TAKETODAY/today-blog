@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 import ListGroup from '../components/ListGroup';
-import { arrayNotEquals } from 'core';
 
 const categoriesItemFunc = (category, idx) => {
   return (
@@ -13,15 +12,11 @@ const categoriesItemFunc = (category, idx) => {
 
 export default class CategoriesListGroup extends React.Component {
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return arrayNotEquals(this.props.items, nextProps.items)
-  }
-
   render() {
     return (
         <ListGroup
             { ...this.props }
-            title="分类"
+            titleKey='navigation.categories'
             errorKey='categories'
             itemFunc={ categoriesItemFunc }
         />

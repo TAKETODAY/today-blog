@@ -20,49 +20,51 @@ import React, { useEffect } from 'react';
 
 import { connect, Dispatch, Link } from '@umijs/max';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
-import moment from 'moment';
 import { ModalState } from './model';
 import EditableLinkGroup, { EditableLink } from './components/EditableLinkGroup';
 import styles from './style.less';
 import { DashboardComment, DashboardLog, DashboardStatistics } from './data.d';
-import { getCommentStatusDesc, isEmpty } from "@/utils";
+import { format, fromNow, getCommentStatusDesc, isEmpty } from "@/utils";
 import Statistics from "@/pages/workplace/components/Statistics";
 import Image from "@/components/Image";
 import { useUserSession } from "@/components/hooks";
 import { ArticleLink } from "@/components/Article";
+import { useSiteTranslation } from '@/utils/use-site-translation';
 
-const links: EditableLink[] = [
+type Translate = ReturnType<typeof useSiteTranslation>;
+
+const links = (t: Translate): EditableLink[] => [
   {
-    title: '写文章',
+    title: t('workplace.writeAnArticle'),
     href: '/articles/write',
     target: '_blank'
   },
   {
-    title: '全部文章',
+    title: t('workplace.allArticles'),
     href: '/blog/articles',
   },
   {
-    title: '文章分类',
+    title: t('workplace.categories'),
     href: '/blog/categories',
   },
   {
-    title: '文章标签',
+    title: t('workplace.tags'),
     href: '/blog/labels',
   },
   {
-    title: '文章评论',
+    title: t('workplace.comments'),
     href: '/blog/comments',
   },
   {
-    title: '用户管理',
+    title: t('workplace.users'),
     href: '/user/list',
   },
   {
-    title: '附件管理',
+    title: t('workplace.attachments'),
     href: '/attachment/list',
   },
   {
-    title: '变量管理',
+    title: t('workplace.siteOptions'),
     href: '/system/options',
   },
 ];
@@ -74,6 +76,7 @@ interface WorkplaceProps {
 }
 
 const PageHeaderContent: React.FC<{}> = () => {
+  const t = useSiteTranslation();
   const [currentUser] = useUserSession()
   if (isEmpty(currentUser)) {
     return <Skeleton avatar paragraph={{ rows: 1 }} active/>;
@@ -81,11 +84,11 @@ const PageHeaderContent: React.FC<{}> = () => {
   return (
       <div className={styles.pageHeaderContent}>
         <div className={styles.avatar}>
-          <Avatar size="large" icon={<Image alt="头像" src={currentUser.avatar}/>}/>
+          <Avatar size="large" icon={<Image alt={t('workplace.avatar')} src={currentUser.avatar}/>}/>
         </div>
         <div className={styles.content}>
           <div className={styles.contentTitle}>
-            您好，{currentUser.name}
+            {t('workplace.greeting', { name: currentUser.name })}
           </div>
           <div>
             {currentUser.email} | {currentUser.introduce}
@@ -96,30 +99,31 @@ const PageHeaderContent: React.FC<{}> = () => {
 };
 
 const ExtraContent: React.FC<{ statistics: DashboardStatistics }> = ({ statistics }) => {
+  const t = useSiteTranslation();
   if (isEmpty(statistics)) {
     return <Skeleton paragraph={{ rows: 1 }} active/>;
   }
   return (
       <div className={styles.extraContent}>
         <div className={styles.statItem}>
-          <Statistic title="文章数" value={statistics.articleCount}/>
+          <Statistic title={t('workplace.articles')} value={statistics.articleCount}/>
         </div>
         <div className={styles.statItem}>
-          <Statistic title="评论数" value={statistics.commentCount}/>
+          <Statistic title={t('workplace.commentCount')} value={statistics.commentCount}/>
         </div>
         <div className={styles.statItem}>
-          <Statistic title="附件数" value={statistics.attachmentCount}/>
+          <Statistic title={t('workplace.attachmentCount')} value={statistics.attachmentCount}/>
         </div>
         <div className={styles.statItem}>
-          <Statistic title="上次启动时间" value={moment(statistics.lastStartup).format("lll")}/>
+          <Statistic title={t('workplace.lastStartup')} value={format(statistics.lastStartup)}/>
         </div>
       </div>
   )
 }
 
-const loggingColumns = [
+const loggingColumns = (t: Translate) => [
   {
-    title: '事件',
+    title: t('workplace.event'),
     key: 'title',
     width: 120,
     render: (log: DashboardLog) => {
@@ -127,36 +131,36 @@ const loggingColumns = [
     }
   },
   {
-    title: '内容',
+    title: t('workplace.details'),
     dataIndex: 'content',
     key: 'content',
     width: 260,
   },
   {
-    title: 'IP地址',
+    title: t('workplace.ipAddress'),
     dataIndex: 'ip',
     key: 'ip',
     width: 120,
   },
   {
-    title: '时间',
+    title: t('workplace.time'),
     dataType: 'datetime',
     width: 160,
     render: (log: DashboardLog) => {
-      return moment(log.createAt).format("lll")
+      return format(log.createAt)
     }
   },
 ]
 
-const commentColumns = [
+const commentColumns = (t: Translate) => [
   {
-    title: '评论内容',
+    title: t('workplace.comment'),
     render: (comment: DashboardComment) => {
       return <div dangerouslySetInnerHTML={{ __html: comment.content }}/>
     }
   },
   {
-    title: '状态',
+    title: t('workplace.status'),
     width: 80,
     render: (comment: DashboardComment) => {
       const statusDesc = getCommentStatusDesc(comment.status)
@@ -164,16 +168,17 @@ const commentColumns = [
     }
   },
   {
-    title: '时间',
+    title: t('workplace.time'),
     width: 240,
     render: (comment: DashboardComment) => {
-      return moment(comment.createAt).format("llll")
+      return format(comment.createAt)
     }
   },
 ]
 
 
 const Workplace = (props: WorkplaceProps) => {
+  const t = useSiteTranslation();
   const { loading, statistics } = props
 
   useEffect(() => {
@@ -196,9 +201,9 @@ const Workplace = (props: WorkplaceProps) => {
           <Col xl={16} lg={24} md={24} sm={24} xs={24}>
             <Card className={styles.projectList}
                   style={{ marginBottom: 24 }}
-                  title="最新文章"
+                  title={t('workplace.latestArticles')}
                   bordered={false}
-                  extra={<Link to="/blog/articles">全部文章</Link>}
+                  extra={<Link to="/blog/articles">{t('workplace.allArticles')}</Link>}
                   loading={loading}
                   bodyStyle={{ padding: 0 }}
             >
@@ -215,9 +220,9 @@ const Workplace = (props: WorkplaceProps) => {
                           description={article.summary}
                       />
                       <div className={styles.projectItemContent}>
-                        <ArticleLink target='_blank' article={article}>浏览</ArticleLink>
-                        <span className={styles.datetime} title={moment(article.updateAt).format("lll")}>
-                            {moment(article.updateAt).fromNow()}
+                        <ArticleLink target='_blank' article={article}>{t('workplace.view')}</ArticleLink>
+                        <span className={styles.datetime} title={format(article.updateAt)}>
+                            {fromNow(article.updateAt)}
                           </span>
                       </div>
                     </Card>
@@ -227,28 +232,28 @@ const Workplace = (props: WorkplaceProps) => {
             <Card bodyStyle={{ padding: 0 }}
                   bordered={false}
                   className={styles.activeCard}
-                  title="最近日志"
+                  title={t('workplace.recentLogs')}
                   loading={loading}
             >
               <Table scroll={{ x: 600, y: 600 }}
-                     columns={loggingColumns} rowKey='id' dataSource={statistics?.logs} pagination={false}/>
+                     columns={loggingColumns(t)} rowKey='id' dataSource={statistics?.logs} pagination={false}/>
             </Card>
           </Col>
           <Col xl={8} lg={24} md={24} sm={24} xs={24}>
             <Card style={{ marginBottom: 24 }}
-                  title="快速开始 / 便捷导航"
+                  title={t('workplace.quickLinks')}
                   bordered={false}
                   bodyStyle={{ padding: 0 }}
             >
-              <EditableLinkGroup links={links} linkElement={Link}/>
+              <EditableLinkGroup links={links(t)} linkElement={Link}/>
             </Card>
             <Card bodyStyle={{ padding: 0 }}
                   bordered={false}
-                  title="最近评论"
+                  title={t('workplace.recentComments')}
                   loading={loading}
             >
               <div className={styles.members}>
-                <Table scroll={{ x: 600, y: 600 }} columns={commentColumns} rowKey='id'
+                <Table scroll={{ x: 600, y: 600 }} columns={commentColumns(t)} rowKey='id'
                        dataSource={statistics?.comments} pagination={false}/>
               </div>
             </Card>
@@ -258,7 +263,7 @@ const Workplace = (props: WorkplaceProps) => {
         <Row gutter={24} style={{ marginTop: 24 }}>
           <Col xl={16} lg={24} md={24} sm={24} xs={24}>
             <Card style={{ marginBottom: 24 }}
-                  title="统计分析"
+                  title={t('workplace.analytics')}
                   bordered={false}
                   loading={loading}
                   bodyStyle={{ padding: 0 }}

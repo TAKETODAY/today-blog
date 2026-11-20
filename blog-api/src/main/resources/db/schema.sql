@@ -42,8 +42,8 @@ create table article
 (
     `id`        bigint unsigned auto_increment primary key,
     `title`     varchar(255)                           not null comment '标题',
-    `content`   longtext                               not null comment '文章内容',
-    `summary`   text                                   not null comment '摘要',
+    `content`   longtext     default null comment '文章内容',
+    `summary`   text         default null comment '摘要',
     `cover`     text                                   null comment '文章封面',
     `category`  varchar(255) default '未分类' comment '分类名',
     `uri`       varchar(255)                           not null comment '文章URI访问地址',
@@ -55,11 +55,11 @@ create table article
 
     `create_at` datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
     `update_at` datetime     default CURRENT_TIMESTAMP not null comment '更新时间',
+    pinned_at   datetime(6)                            null comment '首页置顶时间，NULL 表示未置顶',
 
     constraint uri_idx unique (uri),
-    constraint Article_Category
-        foreign key (category) references category (name)
-            on update cascade on delete set null
+    fulltext index idx_article_content (content),
+    index idx_article_home (status, pinned_at, create_at, id)
 );
 
 create table label
@@ -97,7 +97,7 @@ create table logging
 
 create table t_option
 (
-    name        varchar(255) default not null primary key,
+    name        varchar(255)                  not null primary key,
     value       text         default null,
     value_type  varchar(255) default 'string' not null comment '值类型',
     description text         default null comment 'description',
@@ -172,18 +172,131 @@ create table t_comment
 
 create table t_mail
 (
-    id        bigint unsigned not null auto_increment primary key,
+    id              bigint unsigned not null auto_increment primary key,
 
-    content   text            not null comment '邮件内容',
+    content         mediumtext      not null comment '邮件内容',
 
-    `to`      varchar(255)    not null comment '发送给',
-    subject   varchar(255)    not null comment '主题',
+    recipient       varchar(255)    not null comment '收件人',
+    subject         varchar(255)    not null comment '主题',
 
 
-    sent_at   datetime        not null comment '发送时间',
+    sent_at         datetime        null comment '发送成功时间',
 
-    create_at datetime default CURRENT_TIMESTAMP comment '创建时间',
-    update_at datetime on update CURRENT_TIMESTAMP comment '更新时间'
+    create_at       datetime                 default CURRENT_TIMESTAMP comment '创建时间',
+    update_at       datetime on update CURRENT_TIMESTAMP comment '更新时间',
+    status          varchar(16)     not null default 'PENDING' comment 'PENDING/SENDING/SENT/FAILED',
+    attempts        int             not null default 0 comment '发送尝试次数',
+    last_attempt_at datetime        null comment '最近发送尝试时间',
+    last_error      text            null comment '最近失败原因',
+    attachment      varchar(1024)   null comment '附件路径',
+    index idx_mail_status_id (status, id)
 );
 
+create table t_api_key
+(
+    id           bigint unsigned auto_increment primary key,
+    user_id      bigint unsigned not null,
+    name         varchar(100)    not null,
+    key_hash     char(64)        not null,
+    created_at   datetime        not null default CURRENT_TIMESTAMP,
+    last_used_at datetime        null,
+    revoked_at   datetime        null,
+    constraint t_api_key_hash_idx unique (key_hash),
+    constraint api_key_user_fk foreign key (user_id) references user (id)
+        on delete cascade
+);
 
+create table t_backup
+(
+    id                  bigint unsigned not null auto_increment primary key,
+    name                varchar(200)  not null,
+    status              varchar(32)   not null,
+    version             varchar(100)  null,
+    build               varchar(32)   null,
+    created_at          datetime      not null,
+    protected_backup    boolean       not null default false,
+    manifest_sha256     char(64)      null,
+    total_bytes         bigint        not null default 0,
+    source_operation_id bigint unsigned null,
+    location            varchar(1024) null,
+    scope               varchar(500)  null,
+    restore_verified_at datetime      null
+);
+
+create table t_release_mapping
+(
+    id         bigint unsigned not null auto_increment primary key,
+    name       varchar(32)  not null,
+    mode       varchar(16)  not null,
+    source     varchar(255) not null,
+    target     varchar(512) not null,
+    created_at datetime     not null,
+    updated_at datetime     not null
+);
+
+create table t_upgrade_package
+(
+    id            bigint unsigned not null auto_increment primary key,
+    original_name varchar(255)  not null,
+    display_name  varchar(255)  null,
+    note          varchar(500)  null,
+    status        varchar(32)   not null,
+    version       varchar(100)  not null,
+    build         bigint        not null,
+    file_size     bigint        not null,
+    sha256        char(64)      not null,
+    entry_count   int           not null default 0,
+    location      varchar(1024) not null,
+    created_at    datetime      not null,
+    consumed_at   datetime      null
+);
+
+create table t_upgrade_record
+(
+    id                           bigint unsigned not null auto_increment primary key,
+    package_id                   bigint unsigned not null,
+    package_name                 varchar(255)  not null,
+    package_version              varchar(100)  not null,
+    package_build                bigint        not null,
+    package_sha256               char(64)      not null,
+    package_path                 varchar(1024) not null,
+    old_version                  varchar(100)  null,
+    old_build                    bigint        null,
+    status                       varchar(32)   not null,
+    backup_enabled               boolean       not null default true,
+    backup_timeout_seconds       int           not null default 600,
+    health_timeout_seconds       int           not null default 90,
+    note                         varchar(500)  null,
+    delete_package_after_upgrade boolean       not null default false,
+    release_path                 varchar(1024) null,
+    backup_path                  varchar(1024) null,
+    backup_bytes                 bigint        null,
+    backup_sha256                char(64)      null,
+    backup_completed_at          datetime      null,
+    message                      varchar(1000) null,
+    created_at                   datetime      not null,
+    started_at                   datetime      null,
+    finished_at                  datetime      null
+);
+
+create table t_upgrade_path_mapping
+(
+    id        bigint unsigned not null auto_increment primary key,
+    record_id bigint unsigned not null,
+    name      varchar(32)  not null,
+    mode      varchar(16)  not null,
+    source    varchar(255) not null,
+    target    varchar(512) not null
+);
+
+create table t_upgrade_setting
+(
+    id                     tinyint      not null primary key,
+    backup_enabled         boolean      not null,
+    backup_timeout_seconds int          not null,
+    health_timeout_seconds int          not null,
+    note                   varchar(500) not null
+);
+
+insert into t_upgrade_setting (id, backup_enabled, backup_timeout_seconds, health_timeout_seconds, note)
+values (1, true, 600, 90, '');

@@ -21,9 +21,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
+import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.model.Blogger;
 import cn.taketoday.blog.model.User;
-import cn.taketoday.blog.UnauthorizedException;
 import cn.taketoday.blog.service.ApiKeyService;
 import cn.taketoday.blog.service.BloggerService;
 import cn.taketoday.blog.web.LoginInfo;
@@ -72,7 +72,7 @@ public class UserSessionResolver {
       String value = ApiKeyService.extractValue(request.getHeader("Authorization"), request.getHeader("X-API-Key"));
       User user = apiKeyService.authenticate(value);
       if (user == null) {
-        throw new UnauthorizedException("API Key 无效或已撤销");
+        throw new UnauthorizedException("auth.invalid_api_key");
       }
       info.setLoginUser(user);
       Blogger blogger = bloggerService.getBlogger();

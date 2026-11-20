@@ -38,14 +38,13 @@ import cn.taketoday.blog.model.feed.Entry;
 import cn.taketoday.blog.model.feed.Item;
 import cn.taketoday.blog.model.feed.Rss;
 import cn.taketoday.blog.model.form.ArticleConditionForm;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.web.Pageable;
 import cn.taketoday.blog.web.Pagination;
 import infra.beans.factory.InitializingBean;
 import infra.cache.annotation.CacheConfig;
 import infra.cache.annotation.CacheEvict;
 import infra.cache.annotation.Cacheable;
-import infra.http.HttpStatus;
 import infra.jdbc.JdbcConnection;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
@@ -197,7 +196,7 @@ public class ArticleService implements InitializingBean {
   public Article obtainById(long id) {
     Article byId = getById(id);
     if (byId == null) {
-      throw ErrorMessageException.failed("该文章不存在或已删除不能操作");
+      throw new ProblemException(ArticleProblems.NOT_FOUND);
     }
     return byId;
   }
@@ -425,7 +424,7 @@ public class ArticleService implements InitializingBean {
   public void setPinned(long id, boolean pinned) {
     Article article = lockArticle(id);
     if (pinned && article.getStatus() != PostStatus.PUBLISHED) {
-      throw ErrorMessageException.failed("仅已发布文章可以置顶", HttpStatus.CONFLICT);
+      throw new ProblemException(ArticleProblems.PIN_REQUIRES_PUBLISHED);
     }
     if (pinned) {
       try (var query = repository.createQuery("update article set pinned_at = CURRENT_TIMESTAMP(6) where id = ? and pinned_at is null")) {
@@ -441,9 +440,8 @@ public class ArticleService implements InitializingBean {
   private Article lockArticle(long id) {
     try (var query = repository.createQuery("select * from article where id = ? for update")) {
       query.addParameter(id);
-      List<Article> articles = query.fetch(Article.class);
-      Article article = articles.isEmpty() ? null : articles.get(0);
-      ErrorMessageException.notNull(article, "该文章不存在或已删除不能操作");
+      Article article = CollectionUtils.firstElement(query.fetch(Article.class));
+      ProblemException.notNull(article, ArticleProblems.NOT_FOUND);
       return article;
     }
   }

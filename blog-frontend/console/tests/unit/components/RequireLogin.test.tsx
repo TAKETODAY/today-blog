@@ -7,6 +7,7 @@ import { showLoginDialog } from '@/utils/error-handler';
 
 jest.mock('@umijs/max', () => ({
   useAccess: jest.fn(),
+  useIntl: () => require('../../site-intl').getTestIntl('en-US'),
   Outlet: () => <div>protected content</div>,
 }));
 jest.mock('@/utils/error-handler', () => ({ showLoginDialog: jest.fn() }));
@@ -39,6 +40,7 @@ describe('RequireLogin', () => {
       act(() => root.render(<Forbidden />));
       expect(showLoginDialog).toHaveBeenCalledTimes(1);
       expect(container.textContent).toContain('403');
+      expect(container.textContent).toContain('You do not have permission to view this page');
     } finally {
       act(() => root.unmount());
     }

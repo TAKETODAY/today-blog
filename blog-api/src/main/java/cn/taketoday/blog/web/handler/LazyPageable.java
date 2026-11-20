@@ -26,8 +26,9 @@ import java.util.Objects;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.model.Blogger;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.util.StringUtils;
-import cn.taketoday.blog.web.ErrorMessageException;
 import cn.taketoday.blog.web.Pageable;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
@@ -75,7 +76,7 @@ final class LazyPageable implements Pageable, Serializable {
         current = 1;
       }
       else if ((current = parseInt(parameter)) <= 0) {
-        throw ErrorMessageException.failed("分页页数必须大于0");
+        throw new ProblemException(CommonProblems.PAGE_INVALID);
       }
     }
     return current;
@@ -92,14 +93,14 @@ final class LazyPageable implements Pageable, Serializable {
       else {
         size = parseInt(parameter);
         if (size <= 0) {
-          throw ErrorMessageException.failed("每页大小必须大于0");
+          throw new ProblemException(CommonProblems.PAGE_SIZE_INVALID);
         }
 
         if (size > blogConfig.maxPageSize) {
           // 针对非博主的进行限制
           Blogger loggedInBlogger = sessionResolver.getLoggedInBlogger(request);
           if (loggedInBlogger == null) {
-            throw ErrorMessageException.failed("分页大小超出限制");
+            throw new ProblemException(CommonProblems.PAGE_SIZE_EXCEEDED, blogConfig.maxPageSize);
           }
         }
       }
@@ -113,7 +114,7 @@ final class LazyPageable implements Pageable, Serializable {
       return Integer.valueOf(parameter);
     }
     catch (NumberFormatException e) {
-      throw ErrorMessageException.failed("分页参数错误");
+      throw new ProblemException(CommonProblems.INVALID_REQUEST);
     }
   }
 

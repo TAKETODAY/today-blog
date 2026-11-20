@@ -1,13 +1,23 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { createStore } from 'redux';
 import ArticleList from '../src/components/ArticleList';
+import { setVisitorPreference } from '../../common/visitor-preferences';
 
 vi.mock('../src/components/Image', () => ({
   default: ({ original, ...props }) => <img {...props} />,
 }));
+
+beforeEach(() => {
+  vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['zh-CN']);
+});
+
+afterEach(() => {
+  localStorage.clear();
+  vi.restoreAllMocks();
+});
 
 test('keeps the first cover eager and defers subsequent covers', () => {
   const store = createStore((state = { user: { session: null } }) => state);
@@ -50,4 +60,10 @@ test('shows pinned labels only on the home list without reordering articles', ()
   expect(screen.getByText('置顶', { exact: true })).toBeInTheDocument();
   expect(screen.getAllByRole('heading').map(heading => heading.textContent))
     .toEqual(['普通文章', '置顶置顶文章']);
+  act(() => {
+    setVisitorPreference('locale', 'en-US');
+    setVisitorPreference('timeZone', 'America/New_York');
+  });
+  expect(screen.getByText('Pinned', { exact: true })).toBeInTheDocument();
+  expect(screen.getAllByText(/Dec 31, 1969/)).toHaveLength(2);
 });

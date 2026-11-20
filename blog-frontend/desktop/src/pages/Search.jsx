@@ -24,6 +24,8 @@ import 'antd/es/pagination/style';
 import React, { useEffect, useState } from 'react';
 import ArticleList from '../components/ArticleList';
 import { extractData, getQuery, scrollTop } from 'core';
+import { translate } from '../locales';
+import LocalizedCount from '../locales/LocalizedCount';
 import { articleService } from "../services";
 import { connect } from "react-redux";
 import { navigationsMapStateToProps } from "../redux/action-types";
@@ -48,12 +50,13 @@ export default connect(
 
   const updateNavigations = () => {
     const navigations = [
-      { name: '搜索', url: '/search' }
+      { labelKey: 'navigation.search', url: '/search' }
     ]
     query && navigations.push({ name: query, url: `/search?q=${query}` })
     props.updateNavigations(navigations)
   }
-  setTitle()
+  const title = query ? translate('search.resultsTitle', { query }) : translate('navigation.search');
+  setTitle(title)
 
   const updateArticles = (page = 1, size = 10) => {
     scrollTop()
@@ -63,9 +66,6 @@ export default connect(
       articleService.searchPageable(query, page, size)
           .then(extractData)
           .then(setArticles)
-          .then(() => {
-            setTitle(`搜索 '${query}' 的文章`)
-          })
           .catch(err => {
             setError({
               status: err.response ? err.response.status : 500,
@@ -99,7 +99,7 @@ export default connect(
           allowClear
           defaultValue={query}
           loading={loading}
-          placeholder="Search TODAY"
+          placeholder={translate('search.searchArticles')}
           onSearch={setQuery}
           onChange={(event) => {
             setValue(event.target.value)
@@ -120,9 +120,9 @@ export default connect(
       <div style={{ marginBottom: "10px" }}>
         {renderSearch()}
       </div>
-      <div className="data-list-title">关于 <em>{query}</em> 的搜索结果</div>
+      <div className="data-list-title">{title}</div>
       <div className="datas">
-        <ArticleList articles={articles.data} error={error} title={`关于 '${query}' 的搜索结果`}/>
+        <ArticleList articles={articles.data} error={error} title={title}/>
       </div>
       <div align='center' style={{ padding: '20px' }}>
         <Pagination
@@ -132,7 +132,7 @@ export default connect(
             onChange={updateArticles}
             onShowSizeChange={updateArticles}
             current={articles.current}
-            showTotal={n => <><b className='red'>{n}</b>篇文章</>}
+            showTotal={n => <LocalizedCount count={n} messageKey="articles.resultCount"/>}
         />
       </div>
     </div>

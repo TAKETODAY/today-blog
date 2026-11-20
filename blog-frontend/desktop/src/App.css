@@ -273,6 +273,7 @@ img.share {
 }
 
 .navbar {
+  display: flex;
   position: fixed;
   transition: all .3s ease-in-out;
   min-height: 57px;
@@ -285,7 +286,7 @@ img.share {
 }
 
 .navbar-brand {
-  float: left;
+  flex: 0 0 auto;
   height: 50px;
   padding: 15px;
   font-size: 18px;
@@ -297,8 +298,13 @@ img.share {
 }
 
 .navbar-right {
-  /*float: right;*/
+  flex: 1;
+  min-width: 0;
   font-size: 15px !important;
+}
+
+.navbar > .display-settings-trigger {
+  margin-inline-end: 8px;
 }
 
 .container {

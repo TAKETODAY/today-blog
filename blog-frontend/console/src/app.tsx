@@ -24,7 +24,8 @@ import type { Settings as LayoutSettings } from '@ant-design/pro-layout';
 
 import Footer from '@/components/Footer';
 import RightContent from '@/components/RightContent';
-import { extractData, getCacheable } from "@/utils";
+import { extractData, http } from "@/utils";
+import { applySiteOptions, getSiteLocale } from '@/utils/site-display';
 import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
 import Forbidden from "@/pages/403";
 import defaultSettings from '../config/defaultSettings';
@@ -33,6 +34,8 @@ import { loadLayoutSettings } from '@/utils/layout-settings';
 /**
  * @see https://umijs.org/zh-CN/plugins/plugin-initial-state
  */
+export const locale = { getLocale: getSiteLocale };
+
 export async function getInitialState(): Promise<{
   options?: { [key: string]: any }
   settings?: Partial<LayoutSettings>
@@ -43,11 +46,12 @@ export async function getInitialState(): Promise<{
     return queryCurrentUser().then(extractData);
   }
 
-  const options = await getCacheable("/api/options").then(extractData).catch(() => ({
+  const options = await http.get("/api/options").then(extractData).catch(() => ({
     'site.icp': '',
     'site.copyright': 'TODAY & 2017 - 2024 All Rights Reserved.',
     'site.otherFooter': ''
   }))
+  applySiteOptions(options);
   // 如果是登录页面，不执行
   if (history.location.pathname !== '/user/login') {
     const currentUser = await fetchUserInfo();
@@ -79,4 +83,6 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
   }
 }
 
-export const request: RequestConfig = {}
+export const request: RequestConfig = {
+  headers: { 'X-Blog-Locale': 'site' },
+};

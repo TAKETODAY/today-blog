@@ -33,8 +33,8 @@ import infra.web.annotation.Interceptor;
 /**
  * 默认值：一秒钟请求一次
  * <p>
- * 单位时间内可以请求的次数, 超出部分将 {@link #errorMessage()} 返回给客户端,
- * 默认错误消息：{@link RequestLimitInterceptor#defaultErrorMessage}
+ * 单位时间内可以请求的次数，超出部分将 {@link #errorMessage()} 作为消息键按请求语言解析后返回给客户端；
+ * 找不到消息键时保留传入原文。默认错误消息：{@link RequestLimitInterceptor#defaultErrorMessage}
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @see RequestLimitInterceptor#setDefaultErrorMessage(String)

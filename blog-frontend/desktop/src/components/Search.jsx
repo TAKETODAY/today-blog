@@ -32,6 +32,7 @@ import debounce from 'lodash/debounce';
 
 import { articleService } from 'src/services';
 import { extractData, isEmpty } from 'core';
+import { translate } from '../locales';
 
 class SearchComponent extends React.Component {
 
@@ -65,7 +66,7 @@ class SearchComponent extends React.Component {
       })
       .catch(err => {
         if (err.response) {
-          message.error(err.response.data.message)
+          message.error(err.response.data?.detail || err.response.data?.message || err.message)
           this.setState({ data: null, loading: false })
         }
       })
@@ -79,7 +80,7 @@ class SearchComponent extends React.Component {
           key: 'loading',
           label: (
             <Menu.Item className='textCenter'>
-              <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin/>} tip="搜索中..."/>
+              <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin/>} tip={translate('search.searching')}/>
             </Menu.Item>
           )
         }
@@ -95,7 +96,7 @@ class SearchComponent extends React.Component {
           label: (
             <Menu.Item>
               <Empty style={{ margin: '0px' }} image={Empty.PRESENTED_IMAGE_SIMPLE}
-                     description={`暂无关于 ${this.lastQuery} 的文章`}/>
+                     description={translate('search.noResultsForQuery', { query: this.lastQuery })}/>
             </Menu.Item>
           )
         },
@@ -129,7 +130,7 @@ class SearchComponent extends React.Component {
         <Input
           suffix={<SearchOutlined/>}
           style={style}
-          placeholder="搜索文章"
+          placeholder={translate('search.searchArticles')}
           onChange={event => {
             const input = event.target.value;
             this.setState({ input })

@@ -21,8 +21,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.Instant;
 
-import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.Column;
+import infra.persistence.annotation.GeneratedId;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;

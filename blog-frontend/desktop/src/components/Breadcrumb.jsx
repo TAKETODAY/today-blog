@@ -3,19 +3,22 @@ import { HomeFilled } from '@ant-design/icons';
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import { navigationsMapStateToProps } from "../redux/action-types";
+import { translate } from '../locales';
+import { useDisplayPreferences } from './hooks/useDisplayPreferences';
 
 
 export default connect(navigationsMapStateToProps)(({ navigations }) => {
-  //const [navigations] = useBreadcrumb()
-  //console.log(navigations)
+  useDisplayPreferences();
+  const home = translate('navigation.home');
   return (
       <div className="row">
         <ul className="breadcrumb">
           <li>
-            <Link title="首页" aria-label="首页" to="/"> <HomeFilled aria-hidden="true"/></Link>
+            <Link title={home} aria-label={home} to="/"> <HomeFilled aria-hidden="true"/></Link>
           </li>
           {navigations && navigations.map((nav, idx) => {
-            return <li key={idx}><Link title={nav.name} to={nav.url || '/'}>{nav.name} </Link></li>
+            const name = nav.labelKey ? translate(nav.labelKey) : nav.name;
+            return <li key={idx}><Link title={name} to={nav.url || '/'}>{name}</Link></li>
           })}
         </ul>
       </div>

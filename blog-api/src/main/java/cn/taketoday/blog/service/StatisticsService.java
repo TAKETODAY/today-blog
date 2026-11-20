@@ -27,7 +27,8 @@ import java.util.Map;
 
 import cn.taketoday.blog.model.enums.StatisticsField;
 import cn.taketoday.blog.model.form.PageViewStatistics;
-import cn.taketoday.blog.web.ErrorMessageException;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
 import infra.jdbc.core.JdbcOperations;
 import infra.jdbc.core.PreparedStatementCallback;
 import infra.stereotype.Service;
@@ -115,7 +116,7 @@ public class StatisticsService {
     if (from != null && to != null) {
       //检查时间是否合法
       if (to.isBefore(from)) {
-        throw ErrorMessageException.failed("起始日期应该小于终止日期");
+        throw new ProblemException(CommonProblems.DATE_RANGE_INVALID);
       }
       else {
         return true;
@@ -127,4 +128,3 @@ public class StatisticsService {
   }
 
 }
-

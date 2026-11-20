@@ -36,10 +36,8 @@ import lazyload from "core/lazyload";
 import { useRequest, useSessionStorageState } from "ahooks";
 
 import { useBreadcrumb, useQueryParams, useUserSession } from "../components/hooks";
-
-const passwordRules = [
-  { required: true, message: '请输入访问密码!' }
-]
+import { formatDate } from 'core';
+import { translate } from '../locales';
 
 function buildOptions(article) {
   const host = store.getState().options["site.host"];
@@ -85,7 +83,7 @@ export default () => {
       setSEO(article)
 
       setNav([
-        { name: '全部博客', url: '/' },
+        { labelKey: 'navigation.allArticles', url: '/' },
         { name: article.category, url: `/categories/${article.category}` },
         { name: article.title, url: `/articles/${article.uri}` }
       ])
@@ -112,9 +110,10 @@ export default () => {
 
       const error = {
         status: err.response ? err.response.status : 500,
-        title: "文章加载失败",
         subTitle: err.message,
-        needPassword: status === 403
+        needPassword: status === 403 && (!err.response.data?.code
+          || err.response.data.code === 'article.password_required'
+          || err.response.data.code === 'article.password_invalid')
       }
 
       if (status === 404) {
@@ -122,7 +121,7 @@ export default () => {
       }
 
       if (err.response) {
-        message.error(err.response.data.message)
+        message.error(err.response.data?.detail || err.response.data?.message || err.message)
       }
 
       throw error
@@ -146,15 +145,16 @@ export default () => {
       return (<>
         <div className="shadow-box">
           <Form name="requirePassword" onFinish={requirePassword}>
-            <Form.Item name="key" rules={passwordRules} validateStatus="validating">
-              <Input autoFocus size="large" placeholder="请输入访问密码" prefix={<LockOutlined/>}/>
+            <Form.Item name="key" rules={[{ required: true, message: translate('articles.enterTheArticlePassword') }]}
+                       validateStatus="validating">
+              <Input autoFocus size="large" placeholder={translate('articles.enterTheArticlePassword')} prefix={<LockOutlined/>}/>
             </Form.Item>
           </Form>
         </div>
       </>)
     }
 
-    return <HttpError {...error}/>
+    return <HttpError {...error} title={translate('articles.couldNotLoadThisArticle')}/>
   }
 
   if (loading) { // loading
@@ -166,20 +166,21 @@ export default () => {
       <article className="article-content">
         <h1 className="title">{article.title}</h1>
         <div className="property">
-          <span>发布于 {new Date(article.createAt).toLocaleString()}</span> |
-          <span> 更新 {new Date(article.updateAt).toLocaleString()}</span> |
-          <span> 浏览 {article.pv} </span> |
+          <span>{translate('articles.published')} {formatDate(article.createAt)}</span> |
+          <span> {translate('articles.updated')} {formatDate(article.updateAt)}</span> |
+          <span> {translate('articles.views')} {article.pv} </span> |
           <span> <Link to={`/categories/${article.category}`}
-                       title={`点击查看分类 ${article.category}`}>{article.category}</Link></span> |
+                       title={translate('articles.browseCategory', { category: article.category })}>{article.category}</Link></span> |
           {userSession?.blogger && <>
             <span>
                 <AdminLink href={`/articles/${article.id}/${isNotEmpty(article.markdown) ? "modify" : "modify-rich-text"}`}
                            target='_blank'>
-                  &nbsp;编辑
+                  &nbsp;{translate('articles.edit')}
                 </AdminLink>
             </span> |
             <span style={{ cursor: "pointer" }}>
-              <img onClick={shareZone} className="share" title="分享到QQ空间" src={zone} width="18" alt="分享到QQ空间"/>
+              <img onClick={shareZone} className="share" title={translate('articles.shareOnQzone')}
+                   src={zone} width="18" alt={translate('articles.shareOnQzone')}/>
             </span>
           </>}
         </div>
@@ -193,7 +194,7 @@ export default () => {
           </div>
       }
       <div className="article-copyright">
-        {article.copyright || '本文为作者原创文章，转载时请务必声明出处并添加指向此页面的链接。'}
+        {article.copyright || translate('articles.thisIsAnOriginalArticle')}
       </div>
     </div>
     <ArticleComment articleId={article.id}/>

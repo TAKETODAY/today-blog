@@ -1,6 +1,6 @@
 import { Space, Tag } from 'antd';
 import React from 'react';
-import { SelectLang, useModel } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import Avatar from './AvatarDropdown';
 import LayoutSettings from '@/components/LayoutSettings';
 import styles from './index.less';
@@ -33,7 +33,6 @@ const GlobalHeaderRight: React.FC = () => {
           <Tag color={ENVTagColor[REACT_APP_ENV]}>{REACT_APP_ENV}</Tag>
         </span>
         )}
-        <SelectLang className={styles.action}/>
       </Space>
   );
 };

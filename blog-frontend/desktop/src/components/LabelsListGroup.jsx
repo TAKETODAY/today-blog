@@ -22,6 +22,7 @@ import { Skeleton } from 'antd';
 import 'antd/es/skeleton/style';
 import React from 'react';
 import { getRandLabel, isEmpty } from 'core';
+import { translate } from '../locales';
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import { updateHttpErrorMessage } from "../redux/actions";
@@ -36,7 +37,7 @@ class Labels extends React.Component {
   render() {
     const { labels, error } = this.props;
     if (error) {
-      return <HttpError { ...error } title="标签加载失败"/>
+      return <HttpError {...error} title={translate('articles.couldNotLoadTags')}/>
     }
 
     if (isEmpty(labels)) {
@@ -44,7 +45,7 @@ class Labels extends React.Component {
     }
     return (
         <div className="shadow-box" id="tagcloud">
-          <div className="data-list-title">标签云</div>
+          <div className="data-list-title">{translate('articles.tagCloud')}</div>
           <div style={ { paddingTop: 10 } }>
             {
               labels.map((label, idx) => {

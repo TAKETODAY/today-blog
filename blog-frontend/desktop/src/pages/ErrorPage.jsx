@@ -22,33 +22,32 @@ import React from 'react';
 import head from '../assets/images/404/head.png';
 import { Button } from "antd";
 import 'antd/es/button/style';
+import { translate } from '../locales';
 
 const errors = {
-  '400': { msg: '400 Bad Request !', desc: '错误请求 !' },
-  '403': { msg: '403 Access Forbidden !', desc: '服务器拒绝处理您的请求！您可能没有访问此操作的权限 !' },
-  '404': { msg: '404 NOT Found !', desc: '您请求的页面,我找遍了整个服务器都没找到 !' },
-  '405': { msg: '405 Method Not Allowed !', desc: '您请求的方式不正确 !' },
-  '500': { msg: '500 Internal Server Error !', desc: '服务器出错啦 !' },
+  '400': ['errors.400.title', 'errors.400.detail'],
+  '403': ['errors.403.title', 'errors.403.detail'],
+  '404': ['errors.404.title', 'errors.404.detail'],
+  '405': ['errors.405.title', 'errors.405.detail'],
+  '500': ['errors.500.title', 'errors.500.detail'],
 }
 
 export default props => {
-  let error = errors[`${props.status}`]
-  if (!error) {
-    error = errors['500']
-  }
-  document.title = error.msg
+  const status = Object.hasOwn(errors, props.status) ? props.status : '500';
+  const [titleKey, detailKey] = errors[status];
+  const title = `${status} ${translate(titleKey)}`;
+  document.title = title;
   return (<>
     <div className="container" style={{ marginTop: '100px' }} align="center">
       <div className="img">
-        <img src={head} alt={error.msg}/>
+        <img src={head} alt=""/>
       </div>
-      <h1 style={{ fontSize: '48px' }}>{error.msg}</h1>
-      <div id="msg" style={{ fontSize: '15px', marginBottom: 20 }}>{error.desc}</div>
+      <h1 style={{ fontSize: '48px' }}>{title}</h1>
+      <div id="msg" style={{ fontSize: '15px', marginBottom: 20 }}>{translate(detailKey)}</div>
 
-      <Button onClick={() => window.location.replace('/')} style={{ marginRight: 10 }}>首页</Button>
+      <Button onClick={() => window.location.replace('/')} style={{ marginRight: 10 }}>{translate('navigation.home')}</Button>
 
-      <Button type="primary" onClick={() => window.history.back()}>返回</Button>
+      <Button type="primary" onClick={() => window.history.back()}>{translate('errors.back')}</Button>
     </div>
   </>)
 }
-

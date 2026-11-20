@@ -18,6 +18,7 @@
 import { isEmpty, isNotEmpty, isZero } from "./object";
 import moment from 'moment';
 import sha256 from 'js-sha256';
+import { getCurrentLocale } from './visitor-preferences';
 
 export function currentTimeMillis() {
   return new Date().getTime()
@@ -188,7 +189,7 @@ export function format(time, format = "llll") {
 }
 
 export function fromNow(time) {
-  return toLocalTime(time).fromNow()
+  return toLocalTime(time).locale(getCurrentLocale() === 'en-US' ? 'en' : 'zh-cn').fromNow()
 }
 
 export function toLocalTime(time) {
