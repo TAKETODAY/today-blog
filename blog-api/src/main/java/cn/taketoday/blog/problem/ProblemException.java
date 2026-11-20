@@ -19,8 +19,11 @@ package cn.taketoday.blog.problem;
 
 import org.jspecify.annotations.Nullable;
 
+import java.io.Serial;
+
 import infra.core.NoStackTraceRuntimeException;
 import infra.http.HttpStatusCode;
+import infra.lang.Constant;
 import infra.web.HttpStatusProvider;
 
 /**
@@ -30,6 +33,9 @@ import infra.web.HttpStatusProvider;
  * @since 4.0 2026/11/16
  */
 public class ProblemException extends NoStackTraceRuntimeException implements HttpStatusProvider {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   private final Problem problem;
 
@@ -41,11 +47,11 @@ public class ProblemException extends NoStackTraceRuntimeException implements Ht
     this(problem, null, arguments);
   }
 
-  private ProblemException(Problem problem, @Nullable String detail, Object[] arguments) {
+  protected ProblemException(Problem problem, @Nullable String detail, Object @Nullable [] arguments) {
     super(problem.code(), null);
     this.problem = problem;
     this.detail = detail;
-    this.arguments = arguments.clone();
+    this.arguments = arguments == null ? Constant.EMPTY_OBJECTS : arguments.clone();
   }
 
   /**

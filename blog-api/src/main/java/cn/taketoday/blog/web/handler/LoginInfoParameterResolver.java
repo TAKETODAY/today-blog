@@ -27,8 +27,8 @@ import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.stereotype.Component;
 import infra.web.HttpContext;
-import infra.web.bind.resolver.ParameterResolvingStrategy;
 import infra.web.handler.method.HandlerParameter;
+import infra.web.handler.method.ParameterResolvingStrategy;
 
 /**
  * 登录信息参数解析
@@ -66,7 +66,7 @@ class LoginInfoParameterResolver implements ParameterResolvingStrategy {
   }
 
   @Override
-  public @Nullable Object resolveArgument(HttpContext context, HandlerParameter parameter) throws Exception {
+  public @Nullable Object resolveArgument(HttpContext context, HandlerParameter parameter) {
     LoginInfo identity = identities.resolve(context);
     if (parameter.is(LoginInfo.class)) {
       if (parameter.hasParameterAnnotation(RequiresUser.class) && !identity.isLoggedIn()) {
