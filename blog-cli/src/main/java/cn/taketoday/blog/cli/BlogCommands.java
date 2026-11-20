@@ -46,6 +46,7 @@ final class BlogCommands implements ApplicationRunner {
             start                       启动 API
             stop                        停止 API
             restart                     重启 API 并等待当前构建健康
+            install --wizard            启动首次安装浏览器向导
             upgrade --task-id <ID>      执行已提交的升级任务
             --help                      显示帮助
           """;
@@ -60,9 +61,11 @@ final class BlogCommands implements ApplicationRunner {
   private final DatabaseBackupFactory backups;
   private final ApiServiceControl service;
 
+  private final InstallWizard wizard;
+
   BlogCommands(Path root, Path state, Path policy, UpgradeFiles files, UpgradePackage packages,
           ReleaseMappings mappings, ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups,
-          ApiServiceControl service) {
+          ApiServiceControl service, InstallWizard wizard) {
     this.root = root;
     this.state = state;
     this.policy = policy;
@@ -72,6 +75,7 @@ final class BlogCommands implements ApplicationRunner {
     this.stores = stores;
     this.backups = backups;
     this.service = service;
+    this.wizard = wizard;
   }
 
   @Override
@@ -91,6 +95,9 @@ final class BlogCommands implements ApplicationRunner {
     }
     else if (args.length == 3 && args[0].equals("prepare-release")) {
       prepareRelease(Path.of(args[1]), Path.of(args[2]));
+    }
+    else if (args.length == 2 && args[0].equals("install") && args[1].equals("--wizard")) {
+      wizard.run();
     }
     else {
       throw new IllegalArgumentException(USAGE);

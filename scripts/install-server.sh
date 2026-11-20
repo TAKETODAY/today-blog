@@ -130,7 +130,11 @@ set -euo pipefail
 exec /usr/bin/sudo -n -- /usr/local/lib/today-blog/updater "$1"
 EOF
 chmod 755 /usr/local/lib/today-blog/{launch-api,start-api,updater,today-updater} /usr/local/bin/today-blog
-if [[ "$MODE" == systemd ]]; then
+SYSTEMD_AVAILABLE=0
+if /usr/bin/systemctl --system show --property=Version --value >/dev/null 2>&1; then
+  SYSTEMD_AVAILABLE=1
+fi
+if [[ "$MODE" == systemd || ( "$MODE" == direct && "$SYSTEMD_AVAILABLE" == 1 ) ]]; then
   cat > /etc/systemd/system/today-blog.service <<'EOF'
 [Unit]
 Description=TODAY Blog API
@@ -178,4 +182,5 @@ install -m 440 "$SUDOERS" /etc/sudoers.d/today-blog-upgrade
 if [[ "$MODE" == systemd ]]; then
   echo 'systemd 模式：API 日志使用 journalctl -u today-blog.service；如需开机自启，配置完成后执行 systemctl enable today-blog.service'
 fi
-echo '安装完成。配置 /etc/today-blog/today-blog.env、数据库和反向代理后，执行 sudo today-blog start'
+echo '安装完成。配置 /etc/today-blog/today-blog.env、数据库和反向代理后，执行 sudo today-blog install --wizard'
+echo '向导完成后执行 sudo today-blog start；也可以直接编辑配置文件后跳过向导。'

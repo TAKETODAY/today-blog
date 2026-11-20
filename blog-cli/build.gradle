@@ -16,6 +16,7 @@ dependencies {
   implementation 'cn.taketoday:infra-starter-logback'
   implementation 'cn.taketoday:infra-persistence'
   implementation 'com.mysql:mysql-connector-j:26.10.0'
+  implementation 'org.mindrot:jbcrypt:0.4'
   testImplementation platform('org.junit:junit-bom:5.14.2')
   testImplementation 'org.junit.jupiter:junit-jupiter'
   testImplementation 'org.assertj:assertj-core:3.27.7'
@@ -33,6 +34,12 @@ infraApplication {
 
 tasks.named('infraJar') {
   archiveFileName = 'today-blog-cli.jar'
+}
+
+processResources {
+  from(project(':blog-api').file('src/main/resources/db/migration/v1.0__init.sql')) {
+    into 'db/migration'
+  }
 }
 
 if (providers.gradleProperty('nativeCli').isPresent()) {

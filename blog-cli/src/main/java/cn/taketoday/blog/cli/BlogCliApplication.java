@@ -68,6 +68,11 @@ public class BlogCliApplication {
   }
 
   @Bean
+  InstallWizard installWizard(UpgradeFiles files) {
+    return new InstallWizard(installRoot(), files);
+  }
+
+  @Bean
   DatabaseBackupFactory databaseBackupFactory(UpgradeFiles files) {
     return new DatabaseBackupFactory(files, Path.of(System.getenv().getOrDefault(
             "BLOG_UPGRADE_CONFIG", DatabaseBackup.CONFIG.toString())));
@@ -90,9 +95,10 @@ public class BlogCliApplication {
 
   @Bean
   ApplicationRunner commandRunner(UpgradeFiles files, UpgradePackage packages, ReleaseMappings mappings,
-          ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups, ApiServiceControl service) {
+          ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups, ApiServiceControl service,
+          InstallWizard wizard) {
     Path policy = Path.of(System.getenv().getOrDefault("BLOG_MAPPING_ROOTS", ReleaseMappings.POLICY.toString()));
-    return new BlogCommands(installRoot(), state(), policy, files, packages, mappings, stores, backups, service);
+    return new BlogCommands(installRoot(), state(), policy, files, packages, mappings, stores, backups, service, wizard);
   }
 
   private Path installRoot() {

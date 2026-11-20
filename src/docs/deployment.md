@@ -63,8 +63,8 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 
 Linux 服务器需要 JDK、sudo >= 1.9.10、Bash 和 rsync。直接进程模式还需要 util-linux（`setsid`、`setpriv`）；
 systemd 模式要求服务器运行 systemd（支持 `Type=exec` 和 `ExecCondition`）。
-部署用户需要 SSH 和首次安装 sudo 权限。数据库需自行创建并备份。新建的空库先导入
-`blog-api/src/main/resources/db/migration/v1.0__init.sql`，再启动 API，由 Flyway 应用后续迁移。
+部署用户需要 SSH 和首次安装 sudo 权限。数据库需自行创建并备份。安装向导只连接已经创建的空库，
+自动导入发行包内的初始化脚本；已有博客不要导入初始化脚本。
 
 ```bash
 bash scripts/deploy.sh deploy@server build/today-blog-<version>-<build>.zip
@@ -72,18 +72,23 @@ bash scripts/deploy.sh deploy@server build/today-blog-<version>-<build>.zip
 bash scripts/deploy.sh --systemd deploy@server build/today-blog-<version>-<build>.zip
 ```
 
-安装脚本不会启动服务。先创建 `/etc/today-blog/today-blog.env`（建议 `root:today`、`0640`），
-根据项目配置设置数据库、附件绝对路径和 multipart 限制（包最大 512 MiB，请求预留余量）。
-该文件采用 Bash 赋值语法，由 `today` 用户加载，含空格的值须加引号。默认 prod profile，
+安装脚本不会启动服务。安装完成后可以直接创建 `/etc/today-blog/today-blog.env`（建议 `root:today`、`0640`），
+也可以执行 `sudo today-blog install --wizard` 打开一次性的本机浏览器向导。向导会让管理员选择
+`direct` 或 `systemd`、测试数据库连接、初始化空库、创建博主账号，并生成应用配置和 NGINX 示例；
+它不会覆盖非空数据库、自动启动 API、启用 systemd 或修改 NGINX。远程服务器通过 SSH 本地端口转发访问向导。
+向导完成后配置文件位于 `/etc/today-blog/`，数据库密码不出现在命令行；已有博客不要使用向导，直接配置并走升级流程。
+`today-blog.env` 采用 Bash 赋值语法，由 `today` 用户加载，含空格的值须加引号。默认 prod profile，
 API 工作目录 `/var/lib/today-blog`，运行时数据不得写入 release。
 API 可通过 `JAVA_HOME` 选择 Java；默认部署的 CLI JAR 使用 `/usr/bin/java`。
-配置文件不得存储在版本目录；需要时通过 `JAVA_OPTS` 指定外部配置。
+配置文件不得存储在版本目录；需要时通过 `JAVA_OPTS` 的
+`-Dapp.config.additional-location=file:<path>` 追加外部覆盖文件，向导生成的 `today-blog.env` 即采用这种方式。
 
 反向代理静态目录：
 
 - Console：`/opt/today-blog/current/console`
 - Desktop：`/opt/today-blog/current/desktop`
 - API：代理到 `127.0.0.1:8080`
+- 向导生成的 NGINX 草案：`/etc/today-blog/nginx.conf.example`；审核后复制，先执行 `nginx -t` 再 reload。
 - 必须拒绝外部访问 `/api/internal/health`；绑定本机 API 或用防火墙阻止公网直连端口。
 - 上传请求大小、超时需与后端保持一致。
 
