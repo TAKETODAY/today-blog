@@ -74,17 +74,23 @@ public class BlogCliApplication {
   }
 
   @Bean
-  ProcessServiceControl serviceControl(UpgradeFiles files) {
+  ApiServiceControl serviceControl(UpgradeFiles files) {
     URI health = URI.create(System.getenv().getOrDefault("BLOG_HEALTH_URL",
             "http://127.0.0.1:8080/api/internal/health"));
-    Path work = Path.of(System.getenv().getOrDefault("BLOG_API_WORK_PATH", "/var/lib/today-blog"));
-    String launcher = System.getenv().getOrDefault("BLOG_API_LAUNCHER", "/usr/local/lib/today-blog/launch-api");
-    return new ProcessServiceControl(installRoot(), state(), work, health, List.of(launcher), files);
+    return switch (System.getenv().getOrDefault("BLOG_SERVICE_MANAGER", "direct")) {
+      case "direct" -> {
+        Path work = Path.of(System.getenv().getOrDefault("BLOG_API_WORK_PATH", "/var/lib/today-blog"));
+        String launcher = System.getenv().getOrDefault("BLOG_API_LAUNCHER", "/usr/local/lib/today-blog/launch-api");
+        yield new ProcessServiceControl(installRoot(), state(), work, health, List.of(launcher), files);
+      }
+      case "systemd" -> new SystemdServiceControl(installRoot(), health, files);
+      default -> throw new IllegalArgumentException("BLOG_SERVICE_MANAGER 必须为 direct 或 systemd");
+    };
   }
 
   @Bean
   ApplicationRunner commandRunner(UpgradeFiles files, UpgradePackage packages, ReleaseMappings mappings,
-          ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups, ProcessServiceControl service) {
+          ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups, ApiServiceControl service) {
     Path policy = Path.of(System.getenv().getOrDefault("BLOG_MAPPING_ROOTS", ReleaseMappings.POLICY.toString()));
     return new BlogCommands(installRoot(), state(), policy, files, packages, mappings, stores, backups, service);
   }

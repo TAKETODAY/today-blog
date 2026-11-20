@@ -19,17 +19,12 @@ package cn.taketoday.blog.cli;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -41,13 +36,7 @@ import cn.taketoday.blog.updater.UpgradeFiles;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/20
  */
-public final class ProcessServiceControl implements UpgradeExecutor.ServiceControl {
-
-  private static final Set<String> LOOPBACK_HOSTS = Set.of("127.0.0.1", "localhost", "[::1]");
-
-  private final Path root;
-
-  private final URI healthUrl;
+public final class ProcessServiceControl extends ApiServiceControl {
 
   private final Path state;
 
@@ -61,16 +50,11 @@ public final class ProcessServiceControl implements UpgradeExecutor.ServiceContr
 
   public ProcessServiceControl(Path root, Path state, Path workDirectory, URI healthUrl,
           List<String> launcherPrefix, UpgradeFiles files) {
-    this.root = root.toAbsolutePath().normalize();
+    super(root, healthUrl, files);
     this.state = state.toAbsolutePath().normalize();
     this.workDirectory = workDirectory.toAbsolutePath().normalize();
-    this.healthUrl = healthUrl;
     this.launcherPrefix = List.copyOf(launcherPrefix);
     this.files = files;
-    if (!"http".equals(healthUrl.getScheme()) || healthUrl.getHost() == null
-            || !LOOPBACK_HOSTS.contains(healthUrl.getHost())) {
-      throw new IllegalArgumentException("健康检查必须使用本机 HTTP 地址");
-    }
   }
 
   @Override
@@ -79,39 +63,12 @@ public final class ProcessServiceControl implements UpgradeExecutor.ServiceContr
     start();
   }
 
-  void restartAndWait(int timeoutSeconds) throws Exception {
-    long build = Long.parseLong(files.read(currentRelease().resolve("release.properties")).getProperty("build"));
-    restart();
-    if (!healthy(build, timeoutSeconds)) {
-      throw new IOException("API 重启后健康检查失败，预期构建号: " + build);
-    }
+  @Override
+  boolean isStartedProcessAlive() {
+    return started != null && started.isAlive();
   }
 
   @Override
-  public boolean healthy(long build, int timeoutSeconds) throws Exception {
-    HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
-    long deadline = System.nanoTime() + Duration.ofSeconds(timeoutSeconds).toNanos();
-    long remaining;
-    while (started != null && started.isAlive() && (remaining = deadline - System.nanoTime()) > 0) {
-      try {
-        var response = client.send(HttpRequest.newBuilder(healthUrl)
-                        .timeout(Duration.ofNanos(Math.min(remaining, TimeUnit.SECONDS.toNanos(3))))
-                        .GET().build(),
-                HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() == 200 && response.body().trim().equals("UP:" + build) && started.isAlive()) {
-          return true;
-        }
-      }
-      catch (IOException ignored) {
-      }
-      remaining = deadline - System.nanoTime();
-      if (remaining > 0) {
-        TimeUnit.NANOSECONDS.sleep(Math.min(remaining, TimeUnit.MILLISECONDS.toNanos(500)));
-      }
-    }
-    return false;
-  }
-
   void stop() throws Exception {
     Path pidFile = root.resolve("run/blog-api.pid");
     if (Files.notExists(pidFile, LinkOption.NOFOLLOW_LINKS)) {
@@ -153,6 +110,7 @@ public final class ProcessServiceControl implements UpgradeExecutor.ServiceContr
     Files.deleteIfExists(pidFile);
   }
 
+  @Override
   void start() throws IOException {
     if (!Files.notExists(root.resolve("run/blog-api.pid"), LinkOption.NOFOLLOW_LINKS)) {
       throw new IOException("已有 API PID 文件；如需重启，请执行 today-blog restart");
@@ -188,14 +146,6 @@ public final class ProcessServiceControl implements UpgradeExecutor.ServiceContr
       process.destroyForcibly();
       throw failure;
     }
-  }
-
-  private Path currentRelease() throws IOException {
-    Path release = root.resolve("current").toRealPath();
-    if (!root.resolve("releases").toRealPath().equals(release.getParent())) {
-      throw new IOException("current 未指向受管理的发行目录");
-    }
-    return release;
   }
 
 }

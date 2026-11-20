@@ -1,6 +1,7 @@
 # 打包、部署和后台升级
 
-API 和运维 CLI 均直接通过命令启动，不依赖 systemd。`today-blog` 位于独立 Gradle 模块 `blog-cli`，是执行完即退出的非 Web infra 应用。
+`today-blog` 位于独立 Gradle 模块 `blog-cli`，是执行完即退出的非 Web infra 应用。
+API 默认由 CLI 直接管理进程，不依赖 systemd；也可在部署时选择 systemd，CLI 的启停和升级命令不变。
 升级包校验、发行文件映射和磁盘协议位于纯 JDK 模块 `blog-upgrade-protocol`，
 由 `blog-api` 和 `blog-cli` 共同依赖；`blog-api` 不依赖 CLI 实现。
 CLI 实现位于 `cn.taketoday.blog.cli`。升级命令使用 infra 的 `EntityManager` 读写任务，
@@ -36,6 +37,8 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 `./gradlew -PnativeCli --no-configuration-cache :blog-cli:nativeSmokeTest`，构建
 `blog-cli/build/native/nativeCompile/today-blog` 并运行 `--help`，验证原生应用能启动。
 默认安装仍使用 JAR。原生 CLI 无需 JVM，但须按目标系统和 CPU 架构构建；`blog-api` 仍需要 Java。
+绕过安装脚本的 `/usr/local/bin/today-blog` 包装入口直接运行原生二进制时，systemd 部署需显式设置
+`BLOG_SERVICE_MANAGER=systemd`；包装入口会自动读取安装时记录的模式。
 
 可指定构建编号：
 
@@ -58,12 +61,15 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 
 ## 首次部署
 
-Linux 服务器需要 JDK、sudo >= 1.9.10、Bash、rsync 和 util-linux（提供 `setsid`、`setpriv`）。
+Linux 服务器需要 JDK、sudo >= 1.9.10、Bash 和 rsync。直接进程模式还需要 util-linux（`setsid`、`setpriv`）；
+systemd 模式要求服务器运行 systemd（支持 `Type=exec` 和 `ExecCondition`）。
 部署用户需要 SSH 和首次安装 sudo 权限。数据库需自行创建并备份。新建的空库先导入
 `blog-api/src/main/resources/db/migration/v1.0__init.sql`，再启动 API，由 Flyway 应用后续迁移。
 
 ```bash
 bash scripts/deploy.sh deploy@server build/today-blog-<version>-<build>.zip
+# 或改用 systemd 托管 API
+bash scripts/deploy.sh --systemd deploy@server build/today-blog-<version>-<build>.zip
 ```
 
 安装脚本不会启动服务。先创建 `/etc/today-blog/today-blog.env`（建议 `root:today`、`0640`），
@@ -88,7 +94,9 @@ curl --fail http://127.0.0.1:8080/api/internal/health
 
 正常返回 `UP:<build>`。确认 API 和两套静态页面正常后再使用在线升级。
 停止 API：`sudo today-blog stop`。重启：`sudo today-blog restart`，它会等待当前构建健康（最多 90 秒）。
-`start` 不等待 API 就绪，请以健康接口和日志为准。直接命令模式不提供开机自启或崩溃自动重启。
+`start` 不等待 API 就绪，请以健康接口和日志为准。直接进程模式不提供开机自启或崩溃自动重启。
+systemd 模式由 `today-blog.service` 以 `today` 身份运行 API，异常退出时自动尝试重启；如需开机自启，
+请在配置完成并确认 API 健康后执行 `sudo systemctl enable today-blog.service`。
 查看命令：`today-blog --help`。运维可用 `sudo today-blog upgrade --task-id <ID>` 执行已提交且仍待接管的数据库任务；
 该命令不创建任务，也不直接接受 ZIP。升级未成功时，即使回滚成功也返回非零退出码。
 
@@ -263,7 +271,7 @@ GET    /api/console/maintenance/upgrade/records            升级记录
 GET    /api/console/maintenance/upgrade/records/{id}       任务详情
 ```
 
-升级器通过 JDBC 读取 `t_upgrade_record`、`t_upgrade_package` 和 `t_upgrade_path_mapping`，
+升级器通过 `EntityManager` 读取 `t_upgrade_record` 和 `t_upgrade_path_mapping`，
 直接更新任务状态。成功后会按 `delete_package_after_upgrade` 删除升级包文件和记录。
 `t_backup_operation` 不再创建，系统备份页不展示操作记录；备份执行器接通时需要审计再单独建表。
 
@@ -279,12 +287,13 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
   current -> releases/<version>-<build>
   releases/                            新旧版本并存
   highest-build.properties             成功发布的最高构建号
-  run/blog-api.pid                      PID 与进程启动时间，root 写
-  logs/blog-api.log                    API 标准输出与错误输出
+  run/blog-api.pid                      直接进程模式下的 PID 与进程启动时间
+  logs/blog-api.log                     直接进程模式下的 API 日志
 /usr/local/bin/today-blog               运维 CLI 入口
 /usr/local/lib/today-blog/cli.jar       固定、root 所有，包含 JDBC 驱动
-/usr/local/lib/today-blog/{updater,today-updater,launch-api}
-                                        root 管理的命令及 API 降权启动脚本
+/usr/local/lib/today-blog/{updater,today-updater,launch-api,start-api}
+                                         root 管理的升级入口和 API 启动脚本
+/etc/today-blog/service-manager          root 管理的服务模式：direct 或 systemd
 /etc/today-blog/upgrade.properties       升级器数据库和备份配置，root 所有
 /etc/today-blog/release-mapping-roots    root 所有，前端映射目标白名单
 /var/lib/today-blog-upgrade/
@@ -308,6 +317,11 @@ sudo tail -n 100 /var/lib/today-blog-upgrade/updater.log
 mysql -e "select id,status,message from today.t_upgrade_record order by created_at desc limit 5"
 ```
 
+systemd 模式用 `sudo journalctl -u today-blog.service` 查看 API 日志，用
+`sudo journalctl -u today-blog-updater@<ID>.service` 查看后台升级任务日志（替换 `<ID>`）。
+后台升级任务运行在独立的 oneshot unit 中，API 重启不会终止升级器；`today` 仍只获准通过固定入口传入任务 ID。
+日常启停应使用 `today-blog`，这样会与升级共用文件锁；手动执行 `systemctl start/stop/restart` 会绕过该锁。
+
 自动回滚仅覆盖可捕获的安装、启动、健康检查失败。
 断电、SIGKILL、磁盘写满可能留下中间状态，当前不提供崩溃后自动恢复或后台手动回滚按钮。
 此时先确认升级进程已退出，再用 `sudo today-blog stop` 停止 API，将 current 原子切回已知正常的 release，
@@ -315,11 +329,18 @@ mysql -e "select id,status,message from today.t_upgrade_record order by created_
 不要将程序回滚误认为数据库恢复。不要删除正在运行或可能用于回滚的版本目录。
 上传包、失败版本和历史版本暂不自动清理，由管理员定期按保留策略清理。
 在线包不能修改 CLI 或启动脚本；这些受信任的文件需通过 SSH 人工维护。
-从旧 systemd 部署切换时，先在维护窗口停止并禁用旧 API 服务，确认没有旧升级任务在跑，
-再运行 `sudo bash scripts/install-server.sh --runtime-only dist/today-blog-cli.jar` 安装新的 JAR、
-启动脚本和 sudoers 规则，并启动 API。该模式不替换 `current` 或现有版本。
-不要让两种启动方式同时管理同一进程。
-已采用旧版直接命令模式的服务器，也可在没有升级任务运行时用 `--runtime-only` 更新入口；之后使用 `today-blog` 运维。
+更新运维入口或切换服务模式都应在没有升级任务运行的维护窗口进行。`--runtime-only` 不替换 `current`
+或现有版本；不指定模式时保留已记录的模式，旧安装没有模式文件则默认使用 `direct`。
+
+- 直接进程切到 systemd：先 `sudo today-blog stop`，再运行
+  `sudo bash scripts/install-server.sh --systemd --runtime-only dist/today-blog-cli.jar`，最后 `sudo today-blog start`。
+- systemd 切到直接进程：先 `sudo systemctl disable --now today-blog.service`，再运行
+  `sudo bash scripts/install-server.sh --direct --runtime-only dist/today-blog-cli.jar`，最后 `sudo today-blog start`。
+- 从早期 systemd 安装升级并继续使用 systemd：先停止旧服务，检查旧 unit 的 drop-in，
+  再用 `--systemd --runtime-only` 更新。API 环境文件现在由 `today` 按 Bash 语法读取；
+  确认 `/etc/today-blog/today-blog.env` 可由 `today` 读取（例如 `root:today`、`0640`）后再启动。
+
+不要让两种启动方式同时管理同一个 API 实例。
 新校验器不接受含旧 `META-INF/upgrade.sig` 的包，请使用新脚本重新打包。
 
 发布前必须在独立 Linux 环境验收正常升级、启动失败回滚、权限、代理、附件保留。

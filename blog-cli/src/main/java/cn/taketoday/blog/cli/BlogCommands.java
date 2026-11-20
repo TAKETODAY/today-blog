@@ -58,11 +58,11 @@ final class BlogCommands implements ApplicationRunner {
   private final ReleaseMappings mappings;
   private final ObjectProvider<UpgradeTaskStore> stores;
   private final DatabaseBackupFactory backups;
-  private final ProcessServiceControl service;
+  private final ApiServiceControl service;
 
   BlogCommands(Path root, Path state, Path policy, UpgradeFiles files, UpgradePackage packages,
           ReleaseMappings mappings, ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups,
-          ProcessServiceControl service) {
+          ApiServiceControl service) {
     this.root = root;
     this.state = state;
     this.policy = policy;
