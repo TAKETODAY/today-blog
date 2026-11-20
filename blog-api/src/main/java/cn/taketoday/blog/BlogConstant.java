@@ -17,7 +17,6 @@
 
 package cn.taketoday.blog;
 
-import infra.lang.VersionExtractor;
 import infra.logging.Logger;
 import infra.logging.LoggerFactory;
 
@@ -28,8 +27,6 @@ import infra.logging.LoggerFactory;
  * @since 2018-09-16 21:09 s
  */
 public interface BlogConstant extends infra.lang.Constant {
-
-  String version = VersionExtractor.forClass(BlogConstant.class);
 
   // default font
   String DEFAULT_FONT = "Verdana";
