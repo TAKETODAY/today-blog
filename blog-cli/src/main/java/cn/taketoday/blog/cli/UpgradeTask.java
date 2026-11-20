@@ -15,9 +15,11 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.updater;
+package cn.taketoday.blog.cli;
 
 import java.util.List;
+
+import cn.taketoday.blog.updater.ReleaseMapping;
 
 /**
  * 升级器从数据库读取的任务快照。

@@ -15,7 +15,9 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.updater;
+package cn.taketoday.blog.cli;
+
+import cn.taketoday.blog.updater.DatabaseBackupResult;
 
 /**
  * 升级器与数据库的任务状态协议。
@@ -23,7 +25,7 @@ package cn.taketoday.blog.updater;
  * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
  * @since 4.0
  */
-public interface UpgradeTaskStore extends AutoCloseable {
+public interface UpgradeTaskStore {
 
   UpgradeTask load(long id) throws Exception;
 
@@ -41,8 +43,5 @@ public interface UpgradeTaskStore extends AutoCloseable {
   void finished(long id, String status, String message) throws Exception;
 
   void deletePackage(long packageId) throws Exception;
-
-  @Override
-  void close() throws Exception;
 
 }

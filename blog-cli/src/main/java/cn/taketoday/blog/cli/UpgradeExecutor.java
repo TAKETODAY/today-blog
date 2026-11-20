@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.updater;
+package cn.taketoday.blog.cli;
 
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -29,6 +29,12 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.util.Comparator;
 import java.util.Properties;
+
+import cn.taketoday.blog.updater.DatabaseBackupResult;
+import cn.taketoday.blog.updater.ReleaseMapping;
+import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.UpgradeFiles;
+import cn.taketoday.blog.updater.UpgradePackage;
 import java.util.Set;
 
 /**
@@ -71,7 +77,7 @@ public final class UpgradeExecutor {
     this.backup = backup;
   }
 
-  public void execute(UpgradeTask task) throws Exception {
+  public boolean execute(UpgradeTask task) throws Exception {
     long id = task.id();
     Path lockPath = root.resolve("upgrade.lock");
     Files.createDirectories(root.resolve("releases"));
@@ -154,6 +160,7 @@ public final class UpgradeExecutor {
         files.write(highWaterPath, metadata);
         store.finished(id, "SUCCESS", "升级成功: " + manifest.version());
         deleteConsumedPackage(task);
+        return true;
       }
       catch (Exception error) {
         if (switched) {
@@ -183,6 +190,7 @@ public final class UpgradeExecutor {
         if (!switched || rollbackFailed) {
           throw error;
         }
+        return false;
       }
       finally {
         if (taskDirectory != null) {

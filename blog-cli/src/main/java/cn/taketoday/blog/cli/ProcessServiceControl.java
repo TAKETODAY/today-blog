@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.updater;
+package cn.taketoday.blog.cli;
 
 import java.io.IOException;
 import java.net.URI;
@@ -32,6 +32,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import cn.taketoday.blog.updater.UpgradeFiles;
 
 /**
  * 直接管理 blog-api 子进程，不依赖 systemd。
@@ -75,6 +77,14 @@ public final class ProcessServiceControl implements UpgradeExecutor.ServiceContr
   public void restart() throws Exception {
     stop();
     start();
+  }
+
+  void restartAndWait(int timeoutSeconds) throws Exception {
+    long build = Long.parseLong(files.read(currentRelease().resolve("release.properties")).getProperty("build"));
+    restart();
+    if (!healthy(build, timeoutSeconds)) {
+      throw new IOException("API 重启后健康检查失败，预期构建号: " + build);
+    }
   }
 
   @Override
@@ -145,12 +155,9 @@ public final class ProcessServiceControl implements UpgradeExecutor.ServiceContr
 
   void start() throws IOException {
     if (!Files.notExists(root.resolve("run/blog-api.pid"), LinkOption.NOFOLLOW_LINKS)) {
-      throw new IOException("已有 API PID 文件；如需重启，请先执行 stop-api");
+      throw new IOException("已有 API PID 文件；如需重启，请执行 today-blog restart");
     }
-    Path release = root.resolve("current").toRealPath();
-    if (!root.resolve("releases").toRealPath().equals(release.getParent())) {
-      throw new IOException("current 未指向受管理的发行目录");
-    }
+    Path release = currentRelease();
     Path executable = release.resolve("api/bin/blog-api");
     if (!Files.isExecutable(executable)) {
       throw new IOException("当前发行版缺少可执行的 blog-api");
@@ -181,6 +188,14 @@ public final class ProcessServiceControl implements UpgradeExecutor.ServiceContr
       process.destroyForcibly();
       throw failure;
     }
+  }
+
+  private Path currentRelease() throws IOException {
+    Path release = root.resolve("current").toRealPath();
+    if (!root.resolve("releases").toRealPath().equals(release.getParent())) {
+      throw new IOException("current 未指向受管理的发行目录");
+    }
+    return release;
   }
 
 }

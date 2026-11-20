@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.updater;
+package cn.taketoday.blog.cli;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import cn.taketoday.blog.updater.UpgradeFiles;
 
 /**
  * 升级器数据库连接配置。默认复用备份凭据文件中的 {@code [client]} 配置。

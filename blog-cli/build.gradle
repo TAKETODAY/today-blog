@@ -1,0 +1,63 @@
+plugins {
+  id 'java'
+  id 'application'
+  id 'infra.application'
+}
+
+description = 'TODAY BLOG operations CLI'
+
+tasks.withType(JavaCompile).configureEach {
+  options.release = 17
+}
+
+dependencies {
+  implementation project(':blog-upgrade-protocol')
+  implementation 'cn.taketoday:infra-starter-application'
+  implementation 'cn.taketoday:infra-starter-logback'
+  implementation 'cn.taketoday:infra-persistence'
+  implementation 'com.mysql:mysql-connector-j:26.10.0'
+  testImplementation platform('org.junit:junit-bom:5.14.2')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+  testImplementation 'org.assertj:assertj-core:3.27.7'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+application {
+  mainClass = 'cn.taketoday.blog.cli.BlogCliApplication'
+  applicationName = 'today-blog'
+}
+
+infraApplication {
+  enableBuildInfo()
+}
+
+tasks.named('infraJar') {
+  archiveFileName = 'today-blog-cli.jar'
+}
+
+if (providers.gradleProperty('nativeCli').isPresent()) {
+  // 当前 GraalVM 插件与仓库的 Gradle 配置缓存不兼容，保持普通 JAR 构建不变。
+  apply plugin: 'org.graalvm.buildtools.native'
+  graalvmNative {
+    binaries {
+      main {
+        imageName = 'today-blog'
+        quickBuild = true
+      }
+    }
+  }
+  tasks.register('nativeSmokeTest', Exec) {
+    group = 'verification'
+    description = '启动原生 CLI，检查 infra AOT 上下文和命令分发。'
+    def binary = tasks.named('nativeCompile').flatMap {
+      it.outputFile
+    }
+    executable = binary.get().asFile.absolutePath
+    args '--help'
+    dependsOn tasks.named('nativeCompile')
+  }
+}
+
+test {
+  useJUnitPlatform()
+}

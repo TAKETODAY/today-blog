@@ -15,13 +15,16 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.updater;
+package cn.taketoday.blog.cli;
+
+import com.sun.net.httpserver.HttpServer;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +32,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import cn.taketoday.blog.updater.UpgradeFiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -99,6 +105,42 @@ class ProcessServiceControlTests {
     }
     finally {
       other.destroyForcibly().waitFor(5, TimeUnit.SECONDS);
+    }
+  }
+
+  @Test
+  void restartRequiresTheCurrentBuildInTheHealthResponse() throws Exception {
+    Path release = Files.createDirectories(root.resolve("releases/first"));
+    Path executable = Files.createDirectories(release.resolve("api/bin")).resolve("blog-api");
+    Files.writeString(executable, "#!/bin/sh\nexec /bin/sleep 60\n");
+    assertThat(executable.toFile().setExecutable(true)).isTrue();
+    Files.writeString(release.resolve("release.properties"), "build=42\n");
+    Files.createSymbolicLink(root.resolve("current"), release);
+
+    var body = new AtomicReference<>("UP:42");
+    var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    server.createContext("/api/internal/health", exchange -> {
+      byte[] bytes = body.get().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+      exchange.sendResponseHeaders(200, bytes.length);
+      try (var output = exchange.getResponseBody()) {
+        output.write(bytes);
+      }
+    });
+    server.start();
+    var url = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/api/internal/health");
+    var service = new ProcessServiceControl(root, root.resolve("state"), root, url, List.of(), files);
+    try {
+      service.restartAndWait(5);
+      body.set("UP:41");
+      assertThatThrownBy(() -> service.restartAndWait(1)).hasMessageContaining("预期构建号: 42");
+    }
+    finally {
+      try {
+        service.stop();
+      }
+      finally {
+        server.stop(0);
+      }
     }
   }
 

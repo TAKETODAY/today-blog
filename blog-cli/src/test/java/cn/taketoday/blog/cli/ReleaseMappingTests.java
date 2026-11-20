@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.updater;
+package cn.taketoday.blog.cli;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -27,6 +27,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
+
+import cn.taketoday.blog.updater.DatabaseBackupResult;
+import cn.taketoday.blog.updater.ReleaseMapping;
+import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.UpgradeFiles;
+import cn.taketoday.blog.updater.UpgradePackage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

@@ -130,13 +130,13 @@ def verifyRelease = tasks.register('verifyRelease', JavaExec) {
   args releaseZip.get().asFile.absolutePath
 }
 
-def updater = tasks.register('releaseUpdater', Copy) {
-  from project(':blog-updater').tasks.named('infraJar')
+def cli = tasks.register('releaseCli', Copy) {
+  from project(':blog-cli').tasks.named('infraJar')
   into layout.projectDirectory.dir('dist')
 }
 
 tasks.register('release') {
   group = 'distribution'
-  description = '构建后端、Console、Desktop，生成无签名升级包和独立 updater。'
-  dependsOn verifyRelease, updater
+  description = '构建后端、Console、Desktop，生成无签名升级包和独立运维 CLI。'
+  dependsOn verifyRelease, cli
 }

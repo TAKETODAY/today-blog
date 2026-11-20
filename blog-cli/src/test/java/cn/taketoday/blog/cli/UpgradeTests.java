@@ -15,7 +15,7 @@
  * along with this program. If not, see [https://www.gnu.org/licenses/]
  */
 
-package cn.taketoday.blog.updater;
+package cn.taketoday.blog.cli;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -34,6 +34,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import cn.taketoday.blog.updater.DatabaseBackupResult;
+import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.UpgradeFiles;
+import cn.taketoday.blog.updater.UpgradePackage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -116,7 +121,7 @@ class UpgradeTests {
     Scenario scenario = scenario(false);
     FakeStore store = new FakeStore();
     FakeService service = new FakeService(false, false);
-    executor(scenario, service, store, (id, timeout) -> backup(scenario, id)).execute(scenario.task);
+    assertThat(executor(scenario, service, store, (id, timeout) -> backup(scenario, id)).execute(scenario.task)).isTrue();
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("3.4-2");
     assertThat(store.statuses.get(store.statuses.size() - 1)).isEqualTo("SUCCESS");
     assertThat(service.restarts).isEqualTo(1);
@@ -129,7 +134,7 @@ class UpgradeTests {
     Scenario scenario = scenario(false);
     FakeStore store = new FakeStore();
     FakeService service = new FakeService(true, false);
-    executor(scenario, service, store, (id, timeout) -> backup(scenario, id)).execute(scenario.task);
+    assertThat(executor(scenario, service, store, (id, timeout) -> backup(scenario, id)).execute(scenario.task)).isFalse();
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("old");
     assertThat(store.statuses).contains("ROLLED_BACK");
     assertThat(service.restarts).isEqualTo(2);
@@ -273,10 +278,6 @@ class UpgradeTests {
     @Override
     public void deletePackage(long packageId) {
       deletedPackage = packageId;
-    }
-
-    @Override
-    public void close() {
     }
   }
 
