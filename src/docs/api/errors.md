@@ -260,7 +260,6 @@ else if (code.startsWith('maintenance.upgrade.package.')) {
 - 普通 `ResponseStatusException` 保留状态和响应头，原因使用安全的通用模板。
 - 未明确为客户端输入错误的 `IllegalArgumentException` 按内部错误处理；业务校验应使用类型化异常。
 - OSS、数据库、空指针等异常对外统一安全提示，完整异常留在日志中。
-- 文章访问的密码分支已使用明确类型；旧 `ArticlePasswordException` 暂保留兼容处理。
 - 校验失败返回 `errors` 数组，包含可用的 `field`、校验器 `code` 和 `detail`，不公开拒绝值。
   字段消息从原始 `{validation.*}` 约束模板按请求语言解析；标准规则使用 `validation.<规则名>`，未知规则安全兜底。
   校验器 code 不是顶层业务错误码。

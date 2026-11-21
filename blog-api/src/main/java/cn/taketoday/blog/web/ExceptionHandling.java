@@ -113,11 +113,6 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
             e.getHeaders(), e.getStatusCode(), request);
   }
 
-  @ExceptionHandler(ArticlePasswordException.class)
-  public ResponseEntity<ProblemDetail> articlePassword(ArticlePasswordException exception, HttpContext request) {
-    return problem(ProblemException.of(CommonProblems.ACCESS_DENIED, exception.getMessage()), request);
-  }
-
   @ExceptionHandler
   public ResponseEntity<ProblemDetail> error(Throwable exception, HttpContext request) {
     log.error("An Exception occurred", exception);

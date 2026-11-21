@@ -55,6 +55,15 @@ public class ProblemException extends NoStackTraceRuntimeException implements Ht
   }
 
   /**
+   * @param problem 稳定的问题类型
+   * @param arguments 问题资源模板参数
+   * @return 问题异常
+   */
+  public static ProblemException of(Problem problem, Object... arguments) {
+    return new ProblemException(problem, null, arguments);
+  }
+
+  /**
    * 创建携带请求级 detail 的问题异常。detail 优先作为消息键按请求语言解析；找不到消息键时保留原文，
    * 并覆盖问题默认 detail。
    *

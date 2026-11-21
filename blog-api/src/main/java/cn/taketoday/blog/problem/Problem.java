@@ -17,6 +17,8 @@
 
 package cn.taketoday.blog.problem;
 
+import org.jspecify.annotations.Nullable;
+
 import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
 
@@ -60,6 +62,38 @@ public interface Problem {
    * @return 默认 HTTP 状态
    */
   HttpStatusCode status();
+
+  /**
+   * 创建携带此问题类型和消息模板参数的问题异常。
+   *
+   * <p>返回的异常不包含请求级 detail，响应时使用错误码对应的资源模板生成正文。
+   * 每次调用都会创建新的异常实例，问题定义本身保持不变。
+   *
+   * <p>注意：单个字符串参数会被 {@link #toException(String, Object...)} 匹配并当作
+   * detail 处理；若字符串是模板参数而非 detail，应显式传入数组。
+   *
+   * @param arguments 问题资源模板参数，可为空
+   * @return 携带此问题类型和参数的问题异常
+   * @see ProblemException#getArguments()
+   */
+  default ProblemException toException(Object... arguments) {
+    return new ProblemException(this, arguments);
+  }
+
+  /**
+   * 创建携带请求级 detail 的问题异常。
+   *
+   * <p>detail 优先作为消息键按请求语言解析；找不到对应消息键时保留原文，
+   * 并覆盖错误码对应的默认正文。detail 只应包含允许展示给客户端的内容。
+   *
+   * @param detail 允许展示给客户端的本次请求说明，可为 {@code null}
+   * @param arguments 问题资源模板参数，可为空
+   * @return 携带 detail 和参数的问题异常
+   * @see ProblemException#of(Problem, String, Object...)
+   */
+  default ProblemException toException(@Nullable String detail, Object... arguments) {
+    return new ProblemException(this, detail, arguments);
+  }
 
   /**
    * 创建不可变的问题定义。

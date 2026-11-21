@@ -204,10 +204,10 @@ class ArticleHttpHandler {
       try {
         article = articleService.getById(Integer.parseInt(uri));
       }
-      catch (NumberFormatException ignored) { }
-
+      catch (NumberFormatException ignored) {
+      }
       if (article == null) {
-        throw new ProblemException(ArticleProblems.NOT_FOUND);
+        throw ProblemException.of(ArticleProblems.NOT_FOUND);
       }
     }
 
@@ -216,14 +216,14 @@ class ArticleHttpHandler {
     }
 
     if (article.getStatus() != PostStatus.PUBLISHED) { // 放在控制器层控制
-      throw new ProblemException(ArticleProblems.NOT_ACCESSIBLE);
+      throw ProblemException.of(ArticleProblems.NOT_ACCESSIBLE);
     }
     if (article.needPassword()) {
       if (key == null) {
-        throw new ProblemException(ArticleProblems.PASSWORD_REQUIRED);
+        throw ArticleProblems.PASSWORD_REQUIRED.toException();
       }
       if (!key.equals(article.getPassword())) {
-        throw new ProblemException(ArticleProblems.PASSWORD_INVALID);
+        throw ArticleProblems.PASSWORD_INVALID.toException();
       }
     }
     // 重置
