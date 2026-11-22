@@ -27,7 +27,6 @@ import cn.taketoday.blog.updater.ReleaseMappings;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
 import infra.aot.hint.annotation.RegisterReflection;
-import infra.app.Application;
 import infra.app.ApplicationRunner;
 import infra.app.InfraApplication;
 import infra.beans.factory.ObjectProvider;

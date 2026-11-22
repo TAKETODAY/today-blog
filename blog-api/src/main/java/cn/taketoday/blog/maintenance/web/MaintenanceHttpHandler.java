@@ -46,7 +46,6 @@ import cn.taketoday.blog.maintenance.upgrade.UpgradeSettingService;
 import cn.taketoday.blog.maintenance.upgrade.UpgradeStatus;
 import cn.taketoday.blog.problem.CommonProblems;
 import cn.taketoday.blog.problem.ProblemException;
-import cn.taketoday.blog.updater.DatabaseBackup;
 import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.ReleaseMappings;
