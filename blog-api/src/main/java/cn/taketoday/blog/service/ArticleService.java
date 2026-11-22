@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import cn.taketoday.blog.config.BlogConfig;
 import cn.taketoday.blog.model.Article;
 import cn.taketoday.blog.model.ArticleItem;
+import cn.taketoday.blog.model.Category;
 import cn.taketoday.blog.model.Label;
 import cn.taketoday.blog.model.Sitemap;
 import cn.taketoday.blog.model.enums.PostStatus;
@@ -114,8 +115,8 @@ public class ArticleService implements InitializingBean {
     // update category
     if (!Objects.equals(article.getCategory(), oldArticle.getCategory())) {
       try {
-        categoryService.updateArticleCount(article.getCategory());
-        categoryService.updateArticleCount(oldArticle.getCategory());
+        updateCategoryArticleCount(article.getCategory());
+        updateCategoryArticleCount(oldArticle.getCategory());
       }
       catch (Exception e) {
         throw new InternalServerException("文章分类更新失败", e);
@@ -309,11 +310,6 @@ public class ArticleService implements InitializingBean {
     buildSitemap();
   }
 
-  @Override
-  public void afterPropertiesSet() {
-    refreshFeedArticles();
-  }
-
   /**
    * Atom
    */
@@ -396,7 +392,7 @@ public class ArticleService implements InitializingBean {
   public void deleteById(long id) {
     entityManager.delete(Article.class, id);
     // 更新文章标签数量
-    categoryService.updateArticleCount();
+    updateCategoriesArticleCount();
     refreshFeedArticles();
   }
 
@@ -410,7 +406,7 @@ public class ArticleService implements InitializingBean {
       if (status != PostStatus.PUBLISHED) {
         clearPinned(id);
       }
-      categoryService.updateArticleCount(findById.getCategory());
+      updateCategoryArticleCount(findById.getCategory());
     });
 
     refreshFeedArticles();
@@ -467,7 +463,7 @@ public class ArticleService implements InitializingBean {
     }
 
     // update category
-    categoryService.updateArticleCount(article.getCategory());
+    updateCategoryArticleCount(article.getCategory());
 
     // build feed
     refreshFeedArticles();
@@ -480,7 +476,7 @@ public class ArticleService implements InitializingBean {
    */
   @Cacheable(key = "'countBy_'+#status")
   public int countByStatus(PostStatus status) {
-    return entityManager.count(Article.class, Map.of("status", status)).intValue();
+    return entityManager.count(Article.class, new ArticleStatus(status)).intValue();
   }
 
   /***
@@ -512,6 +508,36 @@ public class ArticleService implements InitializingBean {
             FROM article ORDER BY id DESC LIMIT 6""")) {
       return applyLabels(query.fetch(Article.class));
     }
+  }
+
+  /**
+   * 更新对应文章分类的数量
+   *
+   * @param categoryName 分类名称
+   * @since 4.0
+   */
+  public void updateCategoryArticleCount(String categoryName) {
+    int count = countByCategory(categoryName);
+    entityManager.updateById(new CategoryArticleCount(count), categoryName);
+  }
+
+  /**
+   * 更新所有的分类对应文章数量
+   *
+   * @since 4.0
+   */
+  @Transactional
+  public void updateCategoriesArticleCount() {
+    try (Query query = repository.createQuery("""
+            UPDATE category c SET c.article_count = (SELECT COUNT(a.id) FROM article a WHERE a.status = 0 and a.category = c.name)""")) {
+      query.executeUpdate();
+    }
+  }
+
+  @Override
+  public void afterPropertiesSet() {
+    updateCategoriesArticleCount();
+    refreshFeedArticles();
   }
 
   public Rss getRss() {
@@ -614,6 +640,17 @@ public class ArticleService implements InitializingBean {
         return true;
       }
       return property.getValue(entity) != null;
+    }
+
+  }
+
+  @EntityRef(Category.class)
+  static class CategoryArticleCount {
+
+    public final int articleCount;
+
+    CategoryArticleCount(Integer articleCount) {
+      this.articleCount = articleCount;
     }
 
   }

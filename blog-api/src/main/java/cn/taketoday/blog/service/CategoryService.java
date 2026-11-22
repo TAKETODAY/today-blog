@@ -22,14 +22,8 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 
 import cn.taketoday.blog.model.Category;
-import infra.app.context.event.ApplicationStartedEvent;
-import infra.context.event.EventListener;
-import infra.jdbc.NamedQuery;
-import infra.jdbc.Query;
-import infra.jdbc.RepositoryManager;
 import infra.persistence.EntityManager;
 import infra.stereotype.Service;
-import infra.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -41,8 +35,6 @@ import lombok.RequiredArgsConstructor;
 public class CategoryService {
 
   private final EntityManager entityManager;
-
-  private final RepositoryManager repository;
 
   public void persist(Category category) {
     entityManager.persist(category);
@@ -65,39 +57,6 @@ public class CategoryService {
    */
   public @Nullable Category findCategory(String name) {
     return entityManager.findById(Category.class, name);
-  }
-
-  /**
-   * 更新对应文章分类的数量
-   *
-   * @param categoryName 分类名称
-   */
-  public void updateArticleCount(String categoryName) {
-    try (NamedQuery query = repository.createNamedQuery("""
-            UPDATE category SET article_count = (
-                SELECT COUNT(id) FROM article WHERE status = 0 and category =:name
-            ) WHERE name = :name""")) {
-      // language=
-      query.addParameter("name", categoryName);
-      query.executeUpdate();
-    }
-  }
-
-  /**
-   * 更新所有的分类对应文章数量
-   */
-  @Transactional
-  @EventListener(ApplicationStartedEvent.class)
-  public void updateArticleCount() {
-    try (Query query = repository.createQuery("""
-            UPDATE category SET article_count =
-                    (SELECT COUNT(id)
-                     FROM article
-                     WHERE status = 0
-                       and category = name)
-            WHERE name in ((select names from (select name names from category) as a))""")) {
-      query.executeUpdate();
-    }
   }
 
   /**
