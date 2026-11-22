@@ -20,7 +20,12 @@ if [[ "$MODE" != direct && "$MODE" != systemd ]]; then
   exit 2
 fi
 ROOT=/opt/today-blog
-STATE=/var/lib/today-blog-upgrade
+DATA_ROOT=${BLOG_DATA_ROOT:-/var/lib/today-blog}
+if [[ "$DATA_ROOT" != /* ]]; then
+  echo 'BLOG_DATA_ROOT 必须是绝对路径' >&2
+  exit 2
+fi
+STATE=$DATA_ROOT/upgrade
 if [[ $1 != --runtime-only ]]; then
   [[ ! -e "$ROOT/current" ]] || { echo '已有安装，请使用后台升级'; exit 1; }
 fi
@@ -46,18 +51,25 @@ elif [[ -x /usr/bin/systemctl ]]; then
     exit 1
   fi
 fi
-id today >/dev/null 2>&1 || useradd --system --home /var/lib/today-blog --shell /usr/sbin/nologin today
-install -d -m 755 "$ROOT/releases" "$STATE" /etc/today-blog /usr/local/lib/today-blog /var/lib/today-blog
-install -d -m 755 /var/backups/today-blog /var/www/today-blog
+id today >/dev/null 2>&1 || useradd --system --home "$DATA_ROOT" --shell /usr/sbin/nologin today
+install -d -m 755 "$ROOT/releases" /etc/today-blog /usr/local/lib/today-blog
+# 运行时数据统一放在 DATA_ROOT 下；配置、发行版本和运维入口留在各自的安全位置。
+install -d -m 755 "$DATA_ROOT" "$DATA_ROOT/backups" "$DATA_ROOT/backups/db" \
+  "$DATA_ROOT/upgrade" "$DATA_ROOT/logs"
+install -d -m 755 /var/www/today-blog
+install -d -m 700 -o today -g today "$STATE/packages" "$DATA_ROOT/tmp"
+install -d -m 755 -o today -g today "$DATA_ROOT/data"
+touch "$DATA_ROOT/data/.keep"
+chown today:today "$DATA_ROOT/data/.keep"
+# 数据根目录供 CLI 和启动脚本读取，避免同一组路径在多处硬编码。
+printf '%s\n' "$DATA_ROOT" | install -m 644 /dev/stdin /etc/today-blog/data-root
 # 前端映射目标白名单由 root 管理；管理端只能在此目录内选择目标。
 if [[ ! -e /etc/today-blog/release-mapping-roots ]]; then
   printf '/var/www/today-blog\n' > /etc/today-blog/release-mapping-roots
   chmod 644 /etc/today-blog/release-mapping-roots
 fi
-install -d -m 700 -o today -g today "$STATE/packages"
 touch "$STATE/updater.log"
 chmod 600 "$STATE/updater.log"
-chown today:today /var/lib/today-blog
 install -m 644 "$2" /usr/local/lib/today-blog/cli.jar
 # 首次包校验文件完整性后安装；包必须来自可信渠道，不运行包内的任何 root 脚本。
 WORK=''
@@ -82,8 +94,10 @@ EOF
 cat > /usr/local/lib/today-blog/start-api <<'EOF'
 #!/bin/bash
 set -euo pipefail
-export HOME=/var/lib/today-blog USER=today LOGNAME=today
+DATA_ROOT=$(/usr/bin/cat /etc/today-blog/data-root 2>/dev/null || echo /var/lib/today-blog)
+export HOME="$DATA_ROOT/data" USER=today LOGNAME=today
 export JAVA_OPTS=-Dinfra.profiles.active=prod
+export BLOG_DATA_ROOT="$DATA_ROOT"
 if [[ -r /etc/today-blog/today-blog.env ]]; then
   set -a
   source /etc/today-blog/today-blog.env
@@ -92,7 +106,7 @@ fi
 if [[ $# == 1 ]]; then
   exec "$1"
 fi
-export BLOG_INSTALL_PATH=/opt/today-blog BLOG_UPGRADE_STATE=/var/lib/today-blog-upgrade
+export BLOG_INSTALL_PATH=/opt/today-blog BLOG_UPGRADE_STATE="$DATA_ROOT/upgrade" BLOG_API_WORK_PATH="$DATA_ROOT"
 BLOG_RELEASE_PATH=$(/usr/bin/readlink -e "$BLOG_INSTALL_PATH/current")
 [[ ${BLOG_RELEASE_PATH%/*} == "$BLOG_INSTALL_PATH/releases" ]]
 export BLOG_RELEASE_PATH
@@ -106,6 +120,8 @@ if [[ $# != 0 && $1 != --help && $EUID != 0 ]]; then
   exit 2
 fi
 umask 022
+DATA_ROOT=$(/usr/bin/cat /etc/today-blog/data-root 2>/dev/null || echo /var/lib/today-blog)
+export BLOG_DATA_ROOT="$DATA_ROOT"
 export BLOG_SERVICE_MANAGER=direct
 if [[ -f /etc/today-blog/service-manager ]]; then
   BLOG_SERVICE_MANAGER=$(/usr/bin/cat /etc/today-blog/service-manager)
@@ -117,11 +133,12 @@ cat > /usr/local/lib/today-blog/updater <<'EOF'
 set -euo pipefail
 [[ $EUID == 0 && $# == 1 && $1 =~ ^[1-9][0-9]{0,18}$ ]] || exit 2
 cd /usr/local/lib/today-blog
+DATA_ROOT=$(/usr/bin/cat /etc/today-blog/data-root 2>/dev/null || echo /var/lib/today-blog)
 if [[ -f /etc/today-blog/service-manager && $(/usr/bin/cat /etc/today-blog/service-manager) == systemd ]]; then
   # 等待 oneshot 退出，API 才能判断升级器是否在接管任务前失败。
-  exec /usr/bin/systemctl --system --no-pager start "today-blog-updater@$1.service" >>/var/lib/today-blog-upgrade/updater.log 2>&1
+  exec /usr/bin/systemctl --system --no-pager start "today-blog-updater@$1.service" >>"$DATA_ROOT/upgrade/updater.log" 2>&1
 fi
-exec /usr/local/bin/today-blog upgrade --task-id "$1" >>/var/lib/today-blog-upgrade/updater.log 2>&1
+exec /usr/local/bin/today-blog upgrade --task-id "$1" >>"$DATA_ROOT/upgrade/updater.log" 2>&1
 EOF
 cat > /usr/local/lib/today-blog/today-updater <<'EOF'
 #!/bin/bash
@@ -135,7 +152,7 @@ if /usr/bin/systemctl --system show --property=Version --value >/dev/null 2>&1; 
   SYSTEMD_AVAILABLE=1
 fi
 if [[ "$MODE" == systemd || ( "$MODE" == direct && "$SYSTEMD_AVAILABLE" == 1 ) ]]; then
-  cat > /etc/systemd/system/today-blog.service <<'EOF'
+  cat > /etc/systemd/system/today-blog.service <<EOF
 [Unit]
 Description=TODAY Blog API
 Wants=network-online.target
@@ -145,7 +162,7 @@ After=network-online.target
 Type=exec
 User=today
 Group=today
-WorkingDirectory=/var/lib/today-blog
+WorkingDirectory=$DATA_ROOT
 ExecCondition=/usr/bin/grep -qx systemd /etc/today-blog/service-manager
 ExecStart=/usr/local/lib/today-blog/start-api
 Restart=on-failure
@@ -183,4 +200,5 @@ if [[ "$MODE" == systemd ]]; then
   echo 'systemd 模式：API 日志使用 journalctl -u today-blog.service；如需开机自启，配置完成后执行 systemctl enable today-blog.service'
 fi
 echo '安装完成。配置 /etc/today-blog/today-blog.env、数据库和反向代理后，执行 sudo today-blog install --wizard'
+echo "运行时数据根目录: $DATA_ROOT（可通过 BLOG_DATA_ROOT 指定，使用 today-blog data --help 管理）"
 echo '向导完成后执行 sudo today-blog start；也可以直接编辑配置文件后跳过向导。'

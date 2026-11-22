@@ -49,6 +49,7 @@ import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeOptions;
 import cn.taketoday.blog.updater.UpgradePackage;
@@ -83,7 +84,8 @@ class MaintenanceHttpHandler {
 
   public static final int DEFAULT_RETRY_AFTER_SECONDS = 120;
 
-  private final Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
+  private final Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE",
+          RuntimeLayout.fromEnvironment().upgrade().toString()));
 
   private final Path installRoot = Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
 

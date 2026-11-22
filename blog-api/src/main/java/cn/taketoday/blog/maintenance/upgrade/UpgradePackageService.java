@@ -26,6 +26,7 @@ import java.util.List;
 
 import cn.taketoday.blog.maintenance.MaintenanceProblems;
 import cn.taketoday.blog.problem.ProblemException;
+import cn.taketoday.blog.updater.RuntimeLayout;
 import infra.beans.factory.annotation.Autowired;
 import infra.persistence.EntityManager;
 import infra.stereotype.Service;
@@ -47,7 +48,7 @@ public class UpgradePackageService {
   @Autowired
   public UpgradePackageService(EntityManager entityManager) {
     this(entityManager, Path.of(System.getenv().getOrDefault(
-            "BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade")));
+            "BLOG_UPGRADE_STATE", RuntimeLayout.fromEnvironment().upgrade().toString())));
   }
 
   UpgradePackageService(EntityManager entityManager, Path state) {

@@ -36,6 +36,5 @@ pnpm-lock.yaml
 !blog-frontend/console/pnpm-lock.yaml
 !blog-frontend/desktop/pnpm-lock.yaml
 .codegraph
-/dist/
 
 build

@@ -48,6 +48,7 @@ final class BlogCommands implements ApplicationRunner {
             restart                     重启 API 并等待当前构建健康
             install --wizard            启动首次安装浏览器向导
             upgrade --task-id <ID>      执行已提交的升级任务
+            data <命令>                 统一管理备份、升级包和日志（data --help）
             --help                      显示帮助
           """;
 
@@ -63,9 +64,11 @@ final class BlogCommands implements ApplicationRunner {
 
   private final InstallWizard wizard;
 
+  private final DataCommands data;
+
   BlogCommands(Path root, Path state, Path policy, UpgradeFiles files, UpgradePackage packages,
           ReleaseMappings mappings, ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups,
-          ApiServiceControl service, InstallWizard wizard) {
+          ApiServiceControl service, InstallWizard wizard, DataCommands data) {
     this.root = root;
     this.state = state;
     this.policy = policy;
@@ -76,6 +79,7 @@ final class BlogCommands implements ApplicationRunner {
     this.backups = backups;
     this.service = service;
     this.wizard = wizard;
+    this.data = data;
   }
 
   @Override
@@ -83,6 +87,9 @@ final class BlogCommands implements ApplicationRunner {
     String[] args = arguments.getSourceArgs();
     if (args.length == 0 || (args.length == 1 && args[0].equals("--help"))) {
       System.out.print(USAGE);
+    }
+    else if (args[0].equals("data")) {
+      data.run(java.util.Arrays.copyOfRange(args, 1, args.length));
     }
     else if (args.length == 1) {
       switch (args[0]) {

@@ -21,9 +21,11 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 
+import cn.taketoday.blog.updater.DataPolicy;
 import cn.taketoday.blog.updater.DatabaseBackup;
 import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
 import infra.aot.hint.annotation.RegisterReflection;
@@ -72,18 +74,23 @@ public class BlogCliApplication {
   }
 
   @Bean
+  RuntimeLayout runtimeLayout() {
+    return RuntimeLayout.fromEnvironment();
+  }
+
+  @Bean
   DatabaseBackupFactory databaseBackupFactory(UpgradeFiles files) {
     return new DatabaseBackupFactory(files, Path.of(System.getenv().getOrDefault(
             "BLOG_UPGRADE_CONFIG", DatabaseBackup.CONFIG.toString())));
   }
 
   @Bean
-  ApiServiceControl serviceControl(UpgradeFiles files) {
+  ApiServiceControl serviceControl(UpgradeFiles files, RuntimeLayout layout) {
     URI health = URI.create(System.getenv().getOrDefault("BLOG_HEALTH_URL",
             "http://127.0.0.1:8080/api/internal/health"));
     return switch (System.getenv().getOrDefault("BLOG_SERVICE_MANAGER", "direct")) {
       case "direct" -> {
-        Path work = Path.of(System.getenv().getOrDefault("BLOG_API_WORK_PATH", "/var/lib/today-blog"));
+        Path work = Path.of(System.getenv().getOrDefault("BLOG_API_WORK_PATH", layout.root().toString()));
         String launcher = System.getenv().getOrDefault("BLOG_API_LAUNCHER", "/usr/local/lib/today-blog/launch-api");
         yield new ProcessServiceControl(installRoot(), state(), work, health, List.of(launcher), files);
       }
@@ -93,11 +100,18 @@ public class BlogCliApplication {
   }
 
   @Bean
+  DataCommands dataCommands(UpgradeFiles files, DatabaseBackupFactory backups, RuntimeLayout layout) {
+    Path policy = Path.of(System.getenv().getOrDefault("BLOG_DATA_POLICY", DataPolicy.DEFAULT_CONFIG.toString()));
+    return new DataCommands(layout, files, backups, policy);
+  }
+
+  @Bean
   ApplicationRunner commandRunner(UpgradeFiles files, UpgradePackage packages, ReleaseMappings mappings,
           ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups, ApiServiceControl service,
-          InstallWizard wizard) {
+          InstallWizard wizard, DataCommands data) {
     Path policy = Path.of(System.getenv().getOrDefault("BLOG_MAPPING_ROOTS", ReleaseMappings.POLICY.toString()));
-    return new BlogCommands(installRoot(), state(), policy, files, packages, mappings, stores, backups, service, wizard);
+    return new BlogCommands(installRoot(), state(), policy, files, packages, mappings, stores, backups, service,
+            wizard, data);
   }
 
   private Path installRoot() {
@@ -105,7 +119,8 @@ public class BlogCliApplication {
   }
 
   private Path state() {
-    return Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE", "/var/lib/today-blog-upgrade"));
+    return Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE",
+            RuntimeLayout.fromEnvironment().upgrade().toString()));
   }
 
 }

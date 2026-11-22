@@ -8,7 +8,7 @@ CLI 实现位于 `cn.taketoday.blog.cli`。升级命令使用 infra 的 `EntityM
 不依赖 API 或 Web 模块；帮助和启停命令不会读取数据库配置。CLI 实体的 Native Image 反射元数据由
 infra AOT 从 `@ReflectiveScan` 和 `@Table` 生成。
 可单独运行 `./gradlew :blog-upgrade-protocol:test :blog-cli:test releaseCli` 构建并测试，产物为
-`dist/today-blog-cli.jar`。API 以任务 ID 调用独立升级进程；停止旧 API 不会终止升级器。
+`build/dist/today-blog-cli.jar`。API 以任务 ID 调用独立升级进程；停止旧 API 不会终止升级器。
 
 ## 构建
 
@@ -30,7 +30,7 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 在线升级仅接受 ZIP。`release` 会运行 `verifyRelease`，用服务器升级器校验最终 ZIP；
 任一文件缺失、路径不合规或摘要不匹配都会中止构建。正式打包请使用干净的工作目录，
 避免本地旧编译产物（例如已删除的 Flyway 迁移）进入发行包。
-产物为 `build/today-blog-<version>-<build>.zip` 和 `dist/today-blog-cli.jar`。
+产物为 `build/today-blog-<version>-<build>.zip` 和 `build/dist/today-blog-cli.jar`。
 `release` 不自动执行测试，发布前可运行 `./gradlew :blog-upgrade-protocol:test :blog-cli:test :blog-api:test`。
 
 在目标平台上安装 GraalVM JDK 25（含 `native-image`）和 C 工具链，将 `JAVA_HOME` 指向该 JDK 后运行
@@ -65,6 +65,7 @@ Linux 服务器需要 JDK、sudo >= 1.9.10、Bash 和 rsync。直接进程模式
 systemd 模式要求服务器运行 systemd（支持 `Type=exec` 和 `ExecCondition`）。
 部署用户需要 SSH 和首次安装 sudo 权限。数据库需自行创建并备份。安装向导只连接已经创建的空库，
 自动导入发行包内的初始化脚本；已有博客不要导入初始化脚本。
+运行时数据统一放在 `BLOG_DATA_ROOT`（默认 `/var/lib/today-blog`），可用 `today-blog data` 管理。
 
 ```bash
 bash scripts/deploy.sh deploy@server build/today-blog-<version>-<build>.zip
@@ -82,6 +83,7 @@ API 工作目录 `/var/lib/today-blog`，运行时数据不得写入 release。
 API 可通过 `JAVA_HOME` 选择 Java；默认部署的 CLI JAR 使用 `/usr/bin/java`。
 配置文件不得存储在版本目录；需要时通过 `JAVA_OPTS` 的
 `-Dapp.config.additional-location=file:<path>` 追加外部覆盖文件，向导生成的 `today-blog.env` 即采用这种方式。
+附件目录默认是 `$BLOG_DATA_ROOT/data`，向导会把它写入 `attachment.outside-resource`。
 
 反向代理静态目录：
 
@@ -196,7 +198,7 @@ sudo chmod 644 /etc/today-blog/release-mapping-roots
 ```properties
 dumpExecutable=/usr/bin/mysqldump
 defaultsFile=/etc/today-blog/backup.cnf
-backupRoot=/var/backups/today-blog
+backupRoot=/var/lib/today-blog/backups/db
 database=today
 ```
 
@@ -293,20 +295,23 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
   releases/                            新旧版本并存
   highest-build.properties             成功发布的最高构建号
   run/blog-api.pid                      直接进程模式下的 PID 与进程启动时间
-  logs/blog-api.log                     直接进程模式下的 API 日志
 /usr/local/bin/today-blog               运维 CLI 入口
 /usr/local/lib/today-blog/cli.jar       固定、root 所有，包含 JDBC 驱动
 /usr/local/lib/today-blog/{updater,today-updater,launch-api,start-api}
                                          root 管理的升级入口和 API 启动脚本
 /etc/today-blog/service-manager          root 管理的服务模式：direct 或 systemd
+/etc/today-blog/data-root                root 管理的运行时数据根目录记录
+/etc/today-blog/data.properties          保留策略与空间告警阈值，root 所有
 /etc/today-blog/upgrade.properties       升级器数据库和备份配置，root 所有
 /etc/today-blog/release-mapping-roots    root 所有，前端映射目标白名单
-/var/lib/today-blog-upgrade/
-  updater.log                           升级进程日志，root 写
-  packages/<UUID>/package.zip           today 写，升级包文件
-/var/lib/today-blog/                     today 写，业务运行数据
-/var/backups/today-blog/                 root 写，数据库备份
-/var/www/today-blog/                    映射目标，root 管理，升级器发布链接
+/var/lib/today-blog/                     运行时数据根目录（BLOG_DATA_ROOT）
+  data/                                  today 写，业务数据、上传和附件
+  backups/db/                            root 写，数据库备份
+  upgrade/packages/                      today 写，升级包文件
+  upgrade/updater.log                    升级进程日志，root 写
+  logs/blog-api.log                      直接进程模式下的 API 日志
+  tmp/                                   备份解压、恢复等临时文件
+/var/www/today-blog/                     映射目标，root 管理，升级器发布链接
 ```
 
 维护状态保存在 API 进程内存中，不写入磁盘。API 重启后维护状态自动清除，因此升级器切换
@@ -314,11 +319,35 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
 会清除，需要长期维护时请在服务重启后重新开启。健康检查仍返回 `UP:<build>`，维护状态不会
 阻止新版本验收。
 
+## 运行时数据统一管理
+
+所有可由运维清理、备份或搬迁的数据都在 `BLOG_DATA_ROOT`（默认 `/var/lib/today-blog`）下，
+不再分散到多个目录。配置、发行版本和受信任的运维入口仍保留在 `/etc/today-blog`、
+`/opt/today-blog` 和 `/usr/local`。
+
+```bash
+sudo today-blog data status                     # 各子目录占用、磁盘余量和空间告警
+sudo today-blog data list backups|packages|logs
+sudo today-blog data check                      # 所有权、权限和可用空间校验
+sudo today-blog data prune                      # 按保留策略预览待删数据
+sudo today-blog data prune --apply              # 实际删除
+sudo today-blog data backup                     # 立即导出数据库备份
+sudo today-blog data restore <database.sql.gz> --yes
+sudo today-blog data export --output /tmp/today-blog-data.zip
+sudo today-blog data policy                     # 查看保留策略
+sudo today-blog data policy --backups-keep 5 --packages-keep 3 --logs-days 14
+```
+
+保留策略和空间告警阈值保存在 `/etc/today-blog/data.properties`，默认保留 5 份数据库备份、
+3 个升级包、14 天日志，已用空间达到 85% 或可用空间低于 1 GiB 时在 `data status` 中告警。
+`prune` 默认只预览，只有加 `--apply` 才删除；删除时跳过符号链接，带 `.protected` 标记的
+备份不会被清理。
+
 ## 运维与边界
 
 ```bash
-sudo tail -n 100 /opt/today-blog/logs/blog-api.log
-sudo tail -n 100 /var/lib/today-blog-upgrade/updater.log
+sudo tail -n 100 /var/lib/today-blog/logs/blog-api.log
+sudo tail -n 100 /var/lib/today-blog/upgrade/updater.log
 mysql -e "select id,status,message from today.t_upgrade_record order by created_at desc limit 5"
 ```
 
@@ -338,9 +367,9 @@ systemd 模式用 `sudo journalctl -u today-blog.service` 查看 API 日志，�
 或现有版本；不指定模式时保留已记录的模式，旧安装没有模式文件则默认使用 `direct`。
 
 - 直接进程切到 systemd：先 `sudo today-blog stop`，再运行
-  `sudo bash scripts/install-server.sh --systemd --runtime-only dist/today-blog-cli.jar`，最后 `sudo today-blog start`。
+  `sudo bash scripts/install-server.sh --systemd --runtime-only build/dist/today-blog-cli.jar`，最后 `sudo today-blog start`。
 - systemd 切到直接进程：先 `sudo systemctl disable --now today-blog.service`，再运行
-  `sudo bash scripts/install-server.sh --direct --runtime-only dist/today-blog-cli.jar`，最后 `sudo today-blog start`。
+  `sudo bash scripts/install-server.sh --direct --runtime-only build/dist/today-blog-cli.jar`，最后 `sudo today-blog start`。
 - 从早期 systemd 安装升级并继续使用 systemd：先停止旧服务，检查旧 unit 的 drop-in，
   再用 `--systemd --runtime-only` 更新。API 环境文件现在由 `today` 按 Bash 语法读取；
   确认 `/etc/today-blog/today-blog.env` 可由 `today` 读取（例如 `root:today`、`0640`）后再启动。

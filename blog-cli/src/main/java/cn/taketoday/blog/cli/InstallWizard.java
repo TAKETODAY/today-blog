@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
@@ -220,7 +221,8 @@ final class InstallWizard {
 
   private void writeConfiguration(InstallationRequest request) throws IOException {
     Files.createDirectories(configDirectory);
-    Path data = Path.of(System.getenv().getOrDefault("BLOG_DATA_PATH", "/var/lib/today-blog/data"));
+    Path data = Path.of(System.getenv().getOrDefault("BLOG_DATA_PATH",
+            RuntimeLayout.fromEnvironment().data().toString()));
     Files.createDirectories(data);
     setOwner(data, "today");
     writeSecret(configDirectory.resolve("upgrade-db.password"), request.databasePassword() + "\n");
@@ -246,6 +248,7 @@ final class InstallWizard {
     writeFile(configDirectory.resolve("application.yaml"), application, 0640);
 
     String upgrade = "database=" + request.databaseName() + "\n"
+            + "backupRoot=" + RuntimeLayout.fromEnvironment().backups() + "\n"
             + "jdbcUrl=" + request.jdbcUrl() + "\n"
             + "jdbcUser=" + request.databaseUser() + "\n"
             + "jdbcPasswordFile=" + configDirectory.resolve("upgrade-db.password") + "\n";

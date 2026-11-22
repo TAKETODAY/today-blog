@@ -121,7 +121,7 @@ public final class ProcessServiceControl extends ApiServiceControl {
       throw new IOException("当前发行版缺少可执行的 blog-api");
     }
     Path run = Files.createDirectories(root.resolve("run"));
-    Path logs = Files.createDirectories(root.resolve("logs"));
+    Path logs = Files.createDirectories(workDirectory.resolve("logs"));
     var command = new ArrayList<>(launcherPrefix);
     command.add(executable.toString());
     ProcessBuilder builder = new ProcessBuilder(command);

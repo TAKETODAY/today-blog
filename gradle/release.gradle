@@ -132,7 +132,7 @@ def verifyRelease = tasks.register('verifyRelease', JavaExec) {
 
 def cli = tasks.register('releaseCli', Copy) {
   from project(':blog-cli').tasks.named('infraJar')
-  into layout.projectDirectory.dir('dist')
+  into layout.buildDirectory.dir('dist')
 }
 
 tasks.register('release') {
