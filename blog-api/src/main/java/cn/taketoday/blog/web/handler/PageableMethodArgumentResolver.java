@@ -26,8 +26,8 @@ import cn.taketoday.blog.web.Pageable;
 import infra.stereotype.Component;
 import infra.util.Assert;
 import infra.web.HttpContext;
+import infra.web.bind.resolver.ParameterResolvingStrategy;
 import infra.web.handler.method.HandlerParameter;
-import infra.web.handler.method.ParameterResolvingStrategy;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
