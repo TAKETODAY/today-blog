@@ -81,11 +81,14 @@ final class InstallWizard {
 
   private final UpgradeFiles files;
 
-  InstallWizard(Path root, UpgradeFiles files) {
+  private final RuntimeLayout layout;
+
+  InstallWizard(Path root, UpgradeFiles files, RuntimeLayout layout) {
     this.root = root.toAbsolutePath().normalize();
     this.configDirectory = Path.of(System.getenv().getOrDefault("BLOG_CONFIG_DIRECTORY", CONFIG_DIRECTORY))
             .toAbsolutePath().normalize();
     this.files = files;
+    this.layout = layout;
   }
 
   void run() throws Exception {
@@ -221,8 +224,9 @@ final class InstallWizard {
 
   private void writeConfiguration(InstallationRequest request) throws IOException {
     Files.createDirectories(configDirectory);
-    Path data = Path.of(System.getenv().getOrDefault("BLOG_DATA_PATH",
-            RuntimeLayout.fromEnvironment().data().toString()));
+    String override = System.getenv("BLOG_DATA_PATH");
+    boolean customDataPath = override != null && !override.isBlank();
+    Path data = customDataPath ? Path.of(override) : layout.data();
     Files.createDirectories(data);
     setOwner(data, "today");
     writeSecret(configDirectory.resolve("upgrade-db.password"), request.databasePassword() + "\n");
@@ -242,13 +246,14 @@ final class InstallWizard {
             + "  type: com.zaxxer.hikari.HikariDataSource\n"
             + "  driver-class-name: com.mysql.cj.jdbc.Driver\n"
             + "site:\n"
-            + "  host: " + yamlQuote(request.siteHost()) + "\n"
-            + "attachment:\n"
-            + "  outside-resource: " + yamlQuote(data.toString()) + "\n";
+            + "  host: " + yamlQuote(request.siteHost()) + "\n";
+    if (customDataPath) {
+      application += "attachment:\n"
+              + "  outside-resource: " + yamlQuote(data.toString()) + "\n";
+    }
     writeFile(configDirectory.resolve("application.yaml"), application, 0640);
 
     String upgrade = "database=" + request.databaseName() + "\n"
-            + "backupRoot=" + RuntimeLayout.fromEnvironment().backups() + "\n"
             + "jdbcUrl=" + request.jdbcUrl() + "\n"
             + "jdbcUser=" + request.databaseUser() + "\n"
             + "jdbcPasswordFile=" + configDirectory.resolve("upgrade-db.password") + "\n";

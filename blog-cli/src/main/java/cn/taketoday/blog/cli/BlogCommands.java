@@ -26,6 +26,7 @@ import java.util.Properties;
 
 import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeOptions;
 import cn.taketoday.blog.updater.UpgradePackage;
@@ -53,7 +54,7 @@ final class BlogCommands implements ApplicationRunner {
           """;
 
   private final Path root;
-  private final Path state;
+  private final RuntimeLayout layout;
   private final Path policy;
   private final UpgradeFiles files;
   private final UpgradePackage packages;
@@ -66,11 +67,11 @@ final class BlogCommands implements ApplicationRunner {
 
   private final DataCommands data;
 
-  BlogCommands(Path root, Path state, Path policy, UpgradeFiles files, UpgradePackage packages,
+  BlogCommands(Path root, RuntimeLayout layout, Path policy, UpgradeFiles files, UpgradePackage packages,
           ReleaseMappings mappings, ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups,
           ApiServiceControl service, InstallWizard wizard, DataCommands data) {
     this.root = root;
-    this.state = state;
+    this.layout = layout;
     this.policy = policy;
     this.files = files;
     this.packages = packages;
@@ -129,7 +130,7 @@ final class BlogCommands implements ApplicationRunner {
     files.checkId(taskId);
     long id = Long.parseLong(taskId);
     UpgradeTaskStore store = stores.get();
-    UpgradeExecutor executor = new UpgradeExecutor(root, state, policy, files, packages, mappings,
+    UpgradeExecutor executor = new UpgradeExecutor(root, layout, policy, files, packages, mappings,
             service, store, (backupId, timeout) -> backups.configured().create(backupId, timeout));
     if (!executor.execute(store.load(id))) {
       throw new IOException("升级未成功，已回滚到旧版本；请查看任务 " + id + " 的记录");

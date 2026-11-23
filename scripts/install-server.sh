@@ -20,7 +20,12 @@ if [[ "$MODE" != direct && "$MODE" != systemd ]]; then
   exit 2
 fi
 ROOT=/opt/today-blog
-DATA_ROOT=${BLOG_DATA_ROOT:-/var/lib/today-blog}
+DATA_ROOT_FILE=/etc/today-blog/data-root
+DATA_ROOT=${BLOG_DATA_ROOT:-}
+if [[ -z "$DATA_ROOT" && $1 == --runtime-only && -f "$DATA_ROOT_FILE" ]]; then
+  DATA_ROOT=$(cat "$DATA_ROOT_FILE")
+fi
+DATA_ROOT=${DATA_ROOT:-/var/lib/today-blog}
 if [[ "$DATA_ROOT" != /* ]]; then
   echo 'BLOG_DATA_ROOT 必须是绝对路径' >&2
   exit 2
@@ -57,12 +62,12 @@ install -d -m 755 "$ROOT/releases" /etc/today-blog /usr/local/lib/today-blog
 install -d -m 755 "$DATA_ROOT" "$DATA_ROOT/backups" "$DATA_ROOT/backups/db" \
   "$DATA_ROOT/upgrade" "$DATA_ROOT/logs"
 install -d -m 755 /var/www/today-blog
-install -d -m 700 -o today -g today "$STATE/packages" "$DATA_ROOT/tmp"
+install -d -m 700 -o today -g today "$STATE/packages" "$DATA_ROOT/tmp/multipart"
 install -d -m 755 -o today -g today "$DATA_ROOT/data"
 touch "$DATA_ROOT/data/.keep"
 chown today:today "$DATA_ROOT/data/.keep"
 # 数据根目录供 CLI 和启动脚本读取，避免同一组路径在多处硬编码。
-printf '%s\n' "$DATA_ROOT" | install -m 644 /dev/stdin /etc/today-blog/data-root
+printf '%s\n' "$DATA_ROOT" | install -m 644 /dev/stdin "$DATA_ROOT_FILE"
 # 前端映射目标白名单由 root 管理；管理端只能在此目录内选择目标。
 if [[ ! -e /etc/today-blog/release-mapping-roots ]]; then
   printf '/var/www/today-blog\n' > /etc/today-blog/release-mapping-roots
@@ -95,18 +100,19 @@ cat > /usr/local/lib/today-blog/start-api <<'EOF'
 #!/bin/bash
 set -euo pipefail
 DATA_ROOT=$(/usr/bin/cat /etc/today-blog/data-root 2>/dev/null || echo /var/lib/today-blog)
+readonly DATA_ROOT
 export HOME="$DATA_ROOT/data" USER=today LOGNAME=today
 export JAVA_OPTS=-Dinfra.profiles.active=prod
-export BLOG_DATA_ROOT="$DATA_ROOT"
 if [[ -r /etc/today-blog/today-blog.env ]]; then
   set -a
   source /etc/today-blog/today-blog.env
   set +a
 fi
+export BLOG_DATA_ROOT="$DATA_ROOT"
 if [[ $# == 1 ]]; then
   exec "$1"
 fi
-export BLOG_INSTALL_PATH=/opt/today-blog BLOG_UPGRADE_STATE="$DATA_ROOT/upgrade" BLOG_API_WORK_PATH="$DATA_ROOT"
+export BLOG_INSTALL_PATH=/opt/today-blog
 BLOG_RELEASE_PATH=$(/usr/bin/readlink -e "$BLOG_INSTALL_PATH/current")
 [[ ${BLOG_RELEASE_PATH%/*} == "$BLOG_INSTALL_PATH/releases" ]]
 export BLOG_RELEASE_PATH

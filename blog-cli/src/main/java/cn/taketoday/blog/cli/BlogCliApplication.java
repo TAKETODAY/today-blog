@@ -69,8 +69,8 @@ public class BlogCliApplication {
   }
 
   @Bean
-  InstallWizard installWizard(UpgradeFiles files) {
-    return new InstallWizard(installRoot(), files);
+  InstallWizard installWizard(UpgradeFiles files, RuntimeLayout layout) {
+    return new InstallWizard(installRoot(), files, layout);
   }
 
   @Bean
@@ -79,9 +79,9 @@ public class BlogCliApplication {
   }
 
   @Bean
-  DatabaseBackupFactory databaseBackupFactory(UpgradeFiles files) {
-    return new DatabaseBackupFactory(files, Path.of(System.getenv().getOrDefault(
-            "BLOG_UPGRADE_CONFIG", DatabaseBackup.CONFIG.toString())));
+  DatabaseBackupFactory databaseBackupFactory(UpgradeFiles files, RuntimeLayout layout) {
+    Path config = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_CONFIG", DatabaseBackup.CONFIG.toString()));
+    return new DatabaseBackupFactory(files, config, layout);
   }
 
   @Bean
@@ -90,9 +90,8 @@ public class BlogCliApplication {
             "http://127.0.0.1:8080/api/internal/health"));
     return switch (System.getenv().getOrDefault("BLOG_SERVICE_MANAGER", "direct")) {
       case "direct" -> {
-        Path work = Path.of(System.getenv().getOrDefault("BLOG_API_WORK_PATH", layout.root().toString()));
         String launcher = System.getenv().getOrDefault("BLOG_API_LAUNCHER", "/usr/local/lib/today-blog/launch-api");
-        yield new ProcessServiceControl(installRoot(), state(), work, health, List.of(launcher), files);
+        yield new ProcessServiceControl(installRoot(), layout, health, List.of(launcher), files);
       }
       case "systemd" -> new SystemdServiceControl(installRoot(), health, files);
       default -> throw new IllegalArgumentException("BLOG_SERVICE_MANAGER 必须为 direct 或 systemd");
@@ -108,19 +107,14 @@ public class BlogCliApplication {
   @Bean
   ApplicationRunner commandRunner(UpgradeFiles files, UpgradePackage packages, ReleaseMappings mappings,
           ObjectProvider<UpgradeTaskStore> stores, DatabaseBackupFactory backups, ApiServiceControl service,
-          InstallWizard wizard, DataCommands data) {
+          InstallWizard wizard, DataCommands data, RuntimeLayout layout) {
     Path policy = Path.of(System.getenv().getOrDefault("BLOG_MAPPING_ROOTS", ReleaseMappings.POLICY.toString()));
-    return new BlogCommands(installRoot(), state(), policy, files, packages, mappings, stores, backups, service,
+    return new BlogCommands(installRoot(), layout, policy, files, packages, mappings, stores, backups, service,
             wizard, data);
   }
 
   private Path installRoot() {
     return Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
-  }
-
-  private Path state() {
-    return Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE",
-            RuntimeLayout.fromEnvironment().upgrade().toString()));
   }
 
 }

@@ -22,8 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 运行时数据根目录布局。所有可由运维清理或备份的数据都位于同一个根目录下，
- * 配置、发行版本和受信任的运维入口仍保留在各自的安全位置。
+ * 运行时数据的默认目录布局。配置、发行版本和受信任的运维入口仍保留在各自的安全位置。
  *
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/22
@@ -51,9 +50,16 @@ public final class RuntimeLayout {
   }
 
   public static RuntimeLayout fromEnvironment(Map<String, String> environment) {
+    return fromEnvironment(environment, DEFAULT_ROOT);
+  }
+
+  /**
+   * 读取环境变量中的数据根目录，未设置或为空白时使用调用方提供的默认目录。
+   */
+  public static RuntimeLayout fromEnvironment(Map<String, String> environment, Path defaultRoot) {
     String configured = environment.get(ROOT_ENVIRONMENT);
     return new RuntimeLayout(configured == null || configured.isBlank()
-            ? DEFAULT_ROOT : Path.of(configured.trim()));
+            ? defaultRoot : Path.of(configured.trim()));
   }
 
   public Path root() {
@@ -96,10 +102,17 @@ public final class RuntimeLayout {
   }
 
   /**
-   * 备份导出、解压等临时文件。
+   * 上传和数据恢复等临时文件。
    */
   public Path tmp() {
     return root.resolve("tmp");
+  }
+
+  /**
+   * multipart 上传超过内存阈值时使用的临时目录。
+   */
+  public Path multipart() {
+    return tmp().resolve("multipart");
   }
 
   /**
@@ -113,6 +126,7 @@ public final class RuntimeLayout {
     directories.put(packages(), "升级包");
     directories.put(logs(), "API 日志");
     directories.put(tmp(), "临时文件");
+    directories.put(multipart(), "上传临时文件");
     return directories;
   }
 

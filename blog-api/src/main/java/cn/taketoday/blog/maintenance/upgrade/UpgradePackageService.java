@@ -46,9 +46,8 @@ public class UpgradePackageService {
   private final Path state;
 
   @Autowired
-  public UpgradePackageService(EntityManager entityManager) {
-    this(entityManager, Path.of(System.getenv().getOrDefault(
-            "BLOG_UPGRADE_STATE", RuntimeLayout.fromEnvironment().upgrade().toString())));
+  public UpgradePackageService(EntityManager entityManager, RuntimeLayout layout) {
+    this(entityManager, layout.upgrade());
   }
 
   UpgradePackageService(EntityManager entityManager, Path state) {

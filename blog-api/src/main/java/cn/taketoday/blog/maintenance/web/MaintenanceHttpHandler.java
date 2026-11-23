@@ -84,8 +84,7 @@ class MaintenanceHttpHandler {
 
   public static final int DEFAULT_RETRY_AFTER_SECONDS = 120;
 
-  private final Path state = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_STATE",
-          RuntimeLayout.fromEnvironment().upgrade().toString()));
+  private final Path state;
 
   private final Path installRoot = Path.of(System.getenv().getOrDefault("BLOG_INSTALL_PATH", "/opt/today-blog"));
 
@@ -121,7 +120,7 @@ class MaintenanceHttpHandler {
           UpgradeRecordService records, UpgradePathMappingService pathMappings,
           UpgradeSettingService settings, ReleaseMappingService releaseMappings,
           ReleaseMappings mappingOperations, UpgradeFiles files, UpgradePackage upgradePackage,
-          DatabaseBackupFactory backupFactory) {
+          DatabaseBackupFactory backupFactory, RuntimeLayout layout) {
     this.serverStatus = serverStatus;
     this.packages = packages;
     this.records = records;
@@ -132,7 +131,8 @@ class MaintenanceHttpHandler {
     this.files = files;
     this.upgradePackage = upgradePackage;
     this.backupFactory = backupFactory;
-    this.packageRoot = state.resolve("packages").toAbsolutePath().normalize();
+    this.state = layout.upgrade();
+    this.packageRoot = layout.packages();
   }
 
   @GET

@@ -31,6 +31,7 @@ import java.util.List;
 import cn.taketoday.blog.updater.DatabaseBackupResult;
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
 
@@ -169,7 +170,7 @@ class ReleaseMappingTests {
     Scenario scenario = scenario(mapping("console", target));
     Path policy = Files.writeString(temp.resolve("mapping-roots"), www + "\n");
 
-    new UpgradeExecutor(scenario.root, temp.resolve("state"), policy, files, new UpgradePackage(), mappings,
+    new UpgradeExecutor(scenario.root, new RuntimeLayout(temp), policy, files, new UpgradePackage(), mappings,
             new FakeService(false, false), new UpgradeTests.FakeStore(), (id, timeout) -> backup())
             .execute(scenario.task);
 
@@ -186,7 +187,7 @@ class ReleaseMappingTests {
     Scenario scenario = scenario(mapping("console", target));
     Path policy = Files.writeString(temp.resolve("mapping-roots"), www + "\n");
 
-    new UpgradeExecutor(scenario.root, temp.resolve("state"), policy, files, new UpgradePackage(), mappings,
+    new UpgradeExecutor(scenario.root, new RuntimeLayout(temp), policy, files, new UpgradePackage(), mappings,
             new FakeService(true, false), new UpgradeTests.FakeStore(), (id, timeout) -> backup())
             .execute(scenario.task);
 
@@ -205,7 +206,7 @@ class ReleaseMappingTests {
     Files.writeString(old.resolve("index.html"), "old");
     files.write(old.getParent().resolve("release.properties"), properties());
     Files.createSymbolicLink(root.resolve("current"), old.getParent());
-    Path upload = Files.createDirectories(temp.resolve("state/packages/test-upload")).resolve("package.zip");
+    Path upload = Files.createDirectories(new RuntimeLayout(temp).packages().resolve("test-upload")).resolve("package.zip");
     Files.move(archive(), upload);
     UpgradeTask task = new UpgradeTask(1L, 10L, upload.toString(),
             "3.4", 2, 1L, false, 600, 90, false, List.of(mapping));

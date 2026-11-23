@@ -34,6 +34,7 @@ import java.util.Set;
 import cn.taketoday.blog.updater.DatabaseBackupResult;
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
 
@@ -47,7 +48,7 @@ public final class UpgradeExecutor {
 
   private final Path root;
 
-  private final Path state;
+  private final RuntimeLayout layout;
 
   private final Path mappingPolicy;
 
@@ -63,11 +64,11 @@ public final class UpgradeExecutor {
 
   private final BackupControl backup;
 
-  public UpgradeExecutor(Path root, Path state, Path mappingPolicy, UpgradeFiles files,
+  public UpgradeExecutor(Path root, RuntimeLayout layout, Path mappingPolicy, UpgradeFiles files,
           UpgradePackage packages, ReleaseMappings mappings, ServiceControl service,
           UpgradeTaskStore store, BackupControl backup) {
     this.root = root.toAbsolutePath().normalize();
-    this.state = state.toAbsolutePath().normalize();
+    this.layout = layout;
     this.mappingPolicy = mappingPolicy.toAbsolutePath().normalize();
     this.files = files;
     this.packages = packages;
@@ -150,7 +151,7 @@ public final class UpgradeExecutor {
         switched = true;
         store.started(id, release.toString());
         if (!task.mappings().isEmpty()) {
-          mappings.publish(root, state, task.mappings(), mappings.roots(mappingPolicy));
+          mappings.publish(root, layout.upgrade(), task.mappings(), mappings.roots(mappingPolicy));
         }
         service.restart();
         store.status(id, "HEALTH_CHECKING", "等待新版本健康检查");
@@ -201,7 +202,7 @@ public final class UpgradeExecutor {
   }
 
   private Path packageDirectory(UpgradeTask task) throws IOException {
-    Path packageRoot = state.resolve("packages");
+    Path packageRoot = layout.packages();
     Path path = Path.of(task.packagePath());
     if (!path.isAbsolute() || !path.normalize().equals(path) || !path.startsWith(packageRoot)
             || packageRoot.relativize(path).getNameCount() != 2 || !path.getFileName().toString().equals("package.zip")) {
@@ -211,7 +212,7 @@ public final class UpgradeExecutor {
   }
 
   private SecureDirectoryStream<Path> openPackageRoot() throws IOException {
-    var directory = Files.newDirectoryStream(state.resolve("packages"));
+    var directory = Files.newDirectoryStream(layout.packages());
     if (directory instanceof SecureDirectoryStream<Path> secure) {
       return secure;
     }

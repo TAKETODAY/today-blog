@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 
 /**
@@ -38,9 +39,7 @@ import cn.taketoday.blog.updater.UpgradeFiles;
  */
 public final class ProcessServiceControl extends ApiServiceControl {
 
-  private final Path state;
-
-  private final Path workDirectory;
+  private final RuntimeLayout layout;
 
   private final List<String> launcherPrefix;
 
@@ -48,11 +47,10 @@ public final class ProcessServiceControl extends ApiServiceControl {
 
   private Process started;
 
-  public ProcessServiceControl(Path root, Path state, Path workDirectory, URI healthUrl,
+  public ProcessServiceControl(Path root, RuntimeLayout layout, URI healthUrl,
           List<String> launcherPrefix, UpgradeFiles files) {
     super(root, healthUrl, files);
-    this.state = state.toAbsolutePath().normalize();
-    this.workDirectory = workDirectory.toAbsolutePath().normalize();
+    this.layout = layout;
     this.launcherPrefix = List.copyOf(launcherPrefix);
     this.files = files;
   }
@@ -121,17 +119,18 @@ public final class ProcessServiceControl extends ApiServiceControl {
       throw new IOException("当前发行版缺少可执行的 blog-api");
     }
     Path run = Files.createDirectories(root.resolve("run"));
-    Path logs = Files.createDirectories(workDirectory.resolve("logs"));
+    Files.createDirectories(layout.root());
+    Files.createDirectories(layout.logs());
     var command = new ArrayList<>(launcherPrefix);
     command.add(executable.toString());
     ProcessBuilder builder = new ProcessBuilder(command);
     builder.environment().put("BLOG_RELEASE_PATH", release.toString());
     builder.environment().put("BLOG_INSTALL_PATH", root.toString());
-    builder.environment().put("BLOG_UPGRADE_STATE", state.toString());
+    builder.environment().put(RuntimeLayout.ROOT_ENVIRONMENT, layout.root().toString());
     Process process = builder
-            .directory(workDirectory.toFile())
+            .directory(layout.root().toFile())
             .redirectInput(Path.of("/dev/null").toFile())
-            .redirectOutput(ProcessBuilder.Redirect.appendTo(logs.resolve("blog-api.log").toFile()))
+            .redirectOutput(ProcessBuilder.Redirect.appendTo(layout.logs().resolve("blog-api.log").toFile()))
             .redirectErrorStream(true)
             .start();
     try {

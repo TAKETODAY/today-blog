@@ -22,6 +22,10 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import org.aopalliance.aop.Advice;
 import org.jspecify.annotations.Nullable;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +36,7 @@ import cn.taketoday.blog.service.OptionService;
 import cn.taketoday.blog.updater.DatabaseBackup;
 import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
 import cn.taketoday.blog.util.BCryptPasswordEncoder;
@@ -42,6 +47,8 @@ import infra.aop.support.annotation.AnnotationMatchingPointcut;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.RuntimeHints;
 import infra.aot.hint.RuntimeHintsRegistrar;
+import infra.beans.factory.InitializationBeanPostProcessor;
+import infra.beans.factory.ObjectProvider;
 import infra.beans.factory.annotation.Qualifier;
 import infra.beans.factory.config.BeanDefinition;
 import infra.cache.annotation.EnableCaching;
@@ -50,6 +57,7 @@ import infra.context.annotation.ImportRuntimeHints;
 import infra.context.annotation.Primary;
 import infra.context.annotation.Role;
 import infra.context.annotation.config.DisableDIAutoConfiguration;
+import infra.core.env.Environment;
 import infra.flyway.config.FlywayMigrationStrategy;
 import infra.session.SessionManager;
 import infra.session.SessionManagerOperations;
@@ -58,6 +66,7 @@ import infra.stereotype.Component;
 import infra.web.config.annotation.ViewControllerRegistry;
 import infra.web.config.annotation.ViewResolverRegistry;
 import infra.web.config.annotation.WebMvcConfigurer;
+import infra.web.multipart.parsing.DefaultMultipartParser;
 import infra.web.view.InternalResourceViewResolver;
 import infra.web.view.ModelAndView;
 import lombok.RequiredArgsConstructor;
@@ -110,9 +119,36 @@ class AppConfig implements WebMvcConfigurer {
   }
 
   @Component
-  static DatabaseBackupFactory databaseBackupFactory(UpgradeFiles files) {
-    return new DatabaseBackupFactory(files, java.nio.file.Path.of(System.getenv().getOrDefault(
-            "BLOG_UPGRADE_CONFIG", DatabaseBackup.CONFIG.toString())));
+  static RuntimeLayout runtimeLayout(Environment environment) {
+    Path defaultRoot = environment.matchesProfiles("dev")
+            ? Path.of(System.getProperty("user.home"), "today-blog") : RuntimeLayout.DEFAULT_ROOT;
+    return RuntimeLayout.fromEnvironment(System.getenv(), defaultRoot);
+  }
+
+  @Component
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+  static InitializationBeanPostProcessor multipartStorage(ObjectProvider<RuntimeLayout> layouts) {
+    return new InitializationBeanPostProcessor() {
+      @Override
+      public Object postProcessAfterInitialization(Object bean, String beanName) {
+        if (bean instanceof DefaultMultipartParser parser) {
+          // 保留框架配置的上传阈值和限制，只替换落盘目录。
+          try {
+            parser.setTempRepository(Files.createDirectories(layouts.get().multipart()));
+          }
+          catch (IOException failure) {
+            throw new UncheckedIOException("无法创建上传临时目录", failure);
+          }
+        }
+        return bean;
+      }
+    };
+  }
+
+  @Component
+  static DatabaseBackupFactory databaseBackupFactory(UpgradeFiles files, RuntimeLayout layout) {
+    Path config = Path.of(System.getenv().getOrDefault("BLOG_UPGRADE_CONFIG", DatabaseBackup.CONFIG.toString()));
+    return new DatabaseBackupFactory(files, config, layout);
   }
 
   @Override

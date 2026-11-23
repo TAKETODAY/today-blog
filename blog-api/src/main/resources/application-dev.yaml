@@ -44,9 +44,6 @@ site:
   #aliyun.oss.enable=false
   host: http://localhost:8080
 
-attachment:
-  outside-resource: ${user.home}/today-blog/data
-
 aliyun:
   oss:
     enabled: false

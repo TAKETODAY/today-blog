@@ -34,6 +34,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,6 +52,9 @@ class ProcessServiceControlTests {
   @TempDir
   Path root;
 
+  @TempDir
+  Path dataRoot;
+
   private final UpgradeFiles files = new UpgradeFiles();
 
   @Test
@@ -59,22 +63,23 @@ class ProcessServiceControlTests {
     Path bin = Files.createDirectories(release.resolve("api/bin"));
     Path launcher = Files.writeString(bin.resolve("blog-api"), """
             #!/bin/sh
-            printf '%s\\n' "$BLOG_RELEASE_PATH" "$BLOG_UPGRADE_STATE" "$PWD"
+            printf '%s\\n' "$BLOG_RELEASE_PATH" "$BLOG_DATA_ROOT" "$PWD"
             exec /bin/sleep 60
             """);
     assertThat(launcher.toFile().setExecutable(true)).isTrue();
     Files.createSymbolicLink(root.resolve("current"), release);
-    Path work = Files.createDirectory(root.resolve("work"));
     Path pidFile = root.resolve("run/blog-api.pid");
-    ProcessServiceControl service = service(work);
+    ProcessServiceControl service = service();
     service.start();
     try {
-      Path log = root.resolve("logs/blog-api.log");
+      Path log = dataRoot.resolve("logs/blog-api.log");
+      String expected = String.join("\n", release.toString(), dataRoot.toString(), dataRoot.toString()) + "\n";
       long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-      while (!Files.readString(log).contains(work.toString()) && System.nanoTime() < deadline) {
+      while (!Files.readString(log).contains(expected) && System.nanoTime() < deadline) {
         Thread.sleep(20);
       }
-      assertThat(log).content().contains(release.toString(), root.resolve("state").toString(), work.toString());
+      assertThat(log).content().isEqualTo(expected);
+      assertThat(root.resolve("logs")).doesNotExist();
       long oldPid = Long.parseLong(files.read(pidFile).getProperty("pid"));
       assertThatThrownBy(service::start).hasMessageContaining("已有 API PID 文件");
       service.restart();
@@ -98,7 +103,7 @@ class ProcessServiceControlTests {
       stale.setProperty("startedAt", Instant.EPOCH.toString());
       files.write(pidFile, stale);
 
-      service(root).stop();
+      service().stop();
 
       assertThat(other.isAlive()).isTrue();
       assertThat(pidFile).doesNotExist();
@@ -128,7 +133,7 @@ class ProcessServiceControlTests {
     });
     server.start();
     var url = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/api/internal/health");
-    var service = new ProcessServiceControl(root, root.resolve("state"), root, url, List.of(), files);
+    var service = new ProcessServiceControl(root, new RuntimeLayout(dataRoot), url, List.of(), files);
     try {
       service.restartAndWait(5);
       body.set("UP:41");
@@ -144,8 +149,8 @@ class ProcessServiceControlTests {
     }
   }
 
-  private ProcessServiceControl service(Path work) {
-    return new ProcessServiceControl(root, root.resolve("state"), work,
+  private ProcessServiceControl service() {
+    return new ProcessServiceControl(root, new RuntimeLayout(dataRoot),
             URI.create("http://127.0.0.1:8080/api/internal/health"), List.of(), files);
   }
 

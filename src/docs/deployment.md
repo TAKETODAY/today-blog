@@ -79,11 +79,15 @@ bash scripts/deploy.sh --systemd deploy@server build/today-blog-<version>-<build
 它不会覆盖非空数据库、自动启动 API、启用 systemd 或修改 NGINX。远程服务器通过 SSH 本地端口转发访问向导。
 向导完成后配置文件位于 `/etc/today-blog/`，数据库密码不出现在命令行；已有博客不要使用向导，直接配置并走升级流程。
 `today-blog.env` 采用 Bash 赋值语法，由 `today` 用户加载，含空格的值须加引号。默认 prod profile，
-API 工作目录 `/var/lib/today-blog`，运行时数据不得写入 release。
+API 工作目录为 `$BLOG_DATA_ROOT`，运行时数据不得写入 release。
 API 可通过 `JAVA_HOME` 选择 Java；默认部署的 CLI JAR 使用 `/usr/bin/java`。
 配置文件不得存储在版本目录；需要时通过 `JAVA_OPTS` 的
 `-Dapp.config.additional-location=file:<path>` 追加外部覆盖文件，向导生成的 `today-blog.env` 即采用这种方式。
-附件目录默认是 `$BLOG_DATA_ROOT/data`，向导会把它写入 `attachment.outside-resource`。
+附件、头像和背景图的本地文件默认保存在 `$BLOG_DATA_ROOT/data/upload/`，新安装无需单独配置附件路径。
+开发环境（`dev`）未设置 `BLOG_DATA_ROOT` 时，默认仍使用 `~/today-blog/data` 存储附件。
+已有的 `attachment.outside-resource` 仍优先，不会自动迁移文件或改写配置。
+安装向导默认不写此配置；仅在向导进程设置 `BLOG_DATA_PATH` 时，才把它写成显式覆盖。
+如果自定义附件目录不在 `$BLOG_DATA_ROOT/data` 下，请单独备份和检查；`today-blog data` 不会读取 API 的附件配置来查找这些文件。
 
 反向代理静态目录：
 
@@ -198,9 +202,11 @@ sudo chmod 644 /etc/today-blog/release-mapping-roots
 ```properties
 dumpExecutable=/usr/bin/mysqldump
 defaultsFile=/etc/today-blog/backup.cnf
-backupRoot=/var/lib/today-blog/backups/db
 database=today
 ```
+
+备份默认写入 `$BLOG_DATA_ROOT/backups/db`。已有的 `backupRoot` 显式配置仍然生效；
+若它指向默认目录之外，`today-blog data list backups`、`data prune` 和 `data export` 不会管理该位置。
 
 创建 root:root、0600 的 `/etc/today-blog/backup.cnf`，不要将实际密码放入仓库：
 
@@ -310,7 +316,7 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
   upgrade/packages/                      today 写，升级包文件
   upgrade/updater.log                    升级进程日志，root 写
   logs/blog-api.log                      直接进程模式下的 API 日志
-  tmp/                                   备份解压、恢复等临时文件
+  tmp/                                   上传、备份解压和恢复等临时文件
 /var/www/today-blog/                     映射目标，root 管理，升级器发布链接
 ```
 
@@ -321,9 +327,18 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
 
 ## 运行时数据统一管理
 
-所有可由运维清理、备份或搬迁的数据都在 `BLOG_DATA_ROOT`（默认 `/var/lib/today-blog`）下，
-不再分散到多个目录。配置、发行版本和受信任的运维入口仍保留在 `/etc/today-blog`、
+默认情况下，可由运维清理、备份或搬迁的数据集中在 `BLOG_DATA_ROOT`（默认 `/var/lib/today-blog`）下。
+直接进程模式的 API 控制台日志由 CLI 写入该根目录的 `logs/blog-api.log`，systemd 模式由 journal 收集。
+上传请求超出内存阈值时，临时文件写入 `$BLOG_DATA_ROOT/tmp/multipart`，不会纳入数据导出。
+配置、发行版本和受信任的运维入口仍保留在 `/etc/today-blog`、
 `/opt/today-blog` 和 `/usr/local`。
+
+升级目录和直接进程模式的工作目录分别使用 `$BLOG_DATA_ROOT/upgrade` 和 `$BLOG_DATA_ROOT`，
+不再读取 `BLOG_UPGRADE_STATE`、`BLOG_API_WORK_PATH`。更换数据根目录不会迁移文件，
+请先停止服务，备份并搬迁数据，再以 `BLOG_DATA_ROOT` 指定新目录运行 `install-server.sh --runtime-only`，
+并检查 `attachment.outside-resource`、`backupRoot` 和反向代理配置。未显式指定新目录时，
+`--runtime-only` 会保留 `/etc/today-blog/data-root` 中已有的根目录；部署后的 API 和 CLI 共用这份配置。
+已上传升级包的数据库记录保存绝对路径；改根目录后需要重新上传要使用的升级包。
 
 ```bash
 sudo today-blog data status                     # 各子目录占用、磁盘余量和空间告警

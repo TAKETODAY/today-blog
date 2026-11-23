@@ -37,6 +37,7 @@ import java.util.zip.ZipOutputStream;
 
 import cn.taketoday.blog.updater.DatabaseBackupResult;
 import cn.taketoday.blog.updater.ReleaseMappings;
+import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
 
@@ -191,7 +192,7 @@ class UpgradeTests {
     metadata.setProperty("build", "1");
     files.write(old.getParent().resolve("release.properties"), metadata);
     Files.createSymbolicLink(root.resolve("current"), old.getParent());
-    Path upload = Files.createDirectories(temp.resolve("state/packages/test-upload")).resolve("package.zip");
+    Path upload = Files.createDirectories(new RuntimeLayout(temp).packages().resolve("test-upload")).resolve("package.zip");
     Files.move(archive(null, false, false), upload);
     UpgradeTask task = new UpgradeTask(1L, 10L, upload.toString(),
             "3.4", 2, 1L, true, 600, 90, deletePackage, List.of());
@@ -238,7 +239,7 @@ class UpgradeTests {
 
   private UpgradeExecutor executor(Scenario scenario, UpgradeExecutor.ServiceControl service,
           UpgradeTaskStore store, UpgradeExecutor.BackupControl backup) {
-    return new UpgradeExecutor(scenario.root, temp.resolve("state"), temp.resolve("mapping-policy"),
+    return new UpgradeExecutor(scenario.root, new RuntimeLayout(temp), temp.resolve("mapping-policy"),
             files, packages, mappings, service, store, backup);
   }
 

@@ -20,6 +20,8 @@ package cn.taketoday.blog.config;
 import java.io.File;
 
 import cn.taketoday.blog.model.Attachment;
+import cn.taketoday.blog.updater.RuntimeLayout;
+import infra.beans.factory.annotation.Autowired;
 import infra.context.properties.ConfigurationProperties;
 import infra.stereotype.Component;
 
@@ -37,6 +39,11 @@ public class AttachmentConfig {
    * CDN
    */
   private String cdnHostPrefix;
+
+  @Autowired
+  public AttachmentConfig(RuntimeLayout layout) {
+    this.outsideResource = layout.data().toString();
+  }
 
   public void setCdnHostPrefix(String cdnHostPrefix) {
     this.cdnHostPrefix = cdnHostPrefix;
@@ -59,7 +66,7 @@ public class AttachmentConfig {
   }
 
   public File getLocalFile(Attachment attachment) {
-    return new File(outsideResource, attachment.getLocation());
+    return getLocalFile(attachment.getLocation());
   }
 
   public File getLocalFile(String location) {

@@ -28,6 +28,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class RuntimeLayoutTests {
 
   @Test
+  void usesTheSuppliedDefaultWhenTheEnvironmentRootIsMissingOrBlank() {
+    Path defaultRoot = Path.of("/srv/development-blog");
+
+    assertThat(RuntimeLayout.fromEnvironment(Map.of(), defaultRoot).data())
+            .isEqualTo(defaultRoot.resolve("data"));
+    assertThat(RuntimeLayout.fromEnvironment(Map.of(RuntimeLayout.ROOT_ENVIRONMENT, "  "), defaultRoot).data())
+            .isEqualTo(defaultRoot.resolve("data"));
+  }
+
+  @Test
+  void normalizesTheEnvironmentRootInsteadOfUsingTheSuppliedDefault() {
+    RuntimeLayout layout = RuntimeLayout.fromEnvironment(
+            Map.of(RuntimeLayout.ROOT_ENVIRONMENT, "  /srv/old/../blog  "), Path.of("/srv/development-blog"));
+
+    assertThat(layout.data()).isEqualTo(Path.of("/srv/blog/data"));
+  }
+
+  @Test
   void defaultsToSharedDataRoot() {
     RuntimeLayout layout = RuntimeLayout.fromEnvironment(Map.of());
     assertThat(layout.root()).isEqualTo(Path.of("/var/lib/today-blog"));

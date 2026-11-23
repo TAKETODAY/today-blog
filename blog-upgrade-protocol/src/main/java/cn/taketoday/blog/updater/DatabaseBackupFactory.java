@@ -35,13 +35,20 @@ public final class DatabaseBackupFactory {
 
   private final Path config;
 
+  private final RuntimeLayout layout;
+
   public DatabaseBackupFactory(UpgradeFiles files) {
     this(files, DatabaseBackup.CONFIG);
   }
 
   public DatabaseBackupFactory(UpgradeFiles files, Path config) {
+    this(files, config, RuntimeLayout.fromEnvironment());
+  }
+
+  public DatabaseBackupFactory(UpgradeFiles files, Path config, RuntimeLayout layout) {
     this.files = files;
     this.config = config;
+    this.layout = layout;
   }
 
   public DatabaseBackup configured() throws IOException {
@@ -50,7 +57,7 @@ public final class DatabaseBackupFactory {
     DatabaseBackup backup = new DatabaseBackup(
             Path.of(values.getProperty("dumpExecutable", "/usr/bin/mysqldump")),
             Path.of(values.getProperty("defaultsFile", "/etc/today-blog/backup.cnf")),
-            Path.of(values.getProperty("backupRoot", RuntimeLayout.fromEnvironment().backups().toString())),
+            Path.of(values.getProperty("backupRoot", layout.backups().toString())),
             values.getProperty("database"), files);
     files.verifyTrusted(backup.credentialsPath(), true);
     files.verifyTrusted(backup.executablePath().toRealPath(), false);
