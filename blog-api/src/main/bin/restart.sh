@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-sh stop.sh
-
-sh startup.sh
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+"$SCRIPT_DIR/stop.sh"
+"$SCRIPT_DIR/startup.sh"

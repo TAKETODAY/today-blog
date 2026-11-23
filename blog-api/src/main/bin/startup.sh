@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
 #
 # Copyright 2017 - 2024 the original author or authors.
@@ -17,6 +18,26 @@
 # along with this program. If not, see [https://www.gnu.org/licenses/]
 #
 
-./blog-api 1>>/dev/null 2>&1 &
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+PID_FILE="$SCRIPT_DIR/app.pid"
+DATA_ROOT=${BLOG_DATA_ROOT:-}
+if [[ -z "$DATA_ROOT" && -r /etc/today-blog/data-root ]]; then
+  DATA_ROOT=$(cat /etc/today-blog/data-root)
+fi
+DATA_ROOT=${DATA_ROOT:-/var/lib/today-blog}
 
-echo $! > app.pid
+if [[ -e "$PID_FILE" ]]; then
+  pid=$(cat "$PID_FILE")
+  if [[ "$pid" =~ ^[1-9][0-9]*$ ]] && kill -0 "$pid" 2>/dev/null; then
+    echo "today-blog 已在运行，PID: $pid" >&2
+    exit 1
+  fi
+  rm -f -- "$PID_FILE"
+fi
+
+install -d -m 755 "$DATA_ROOT/logs"
+export BLOG_DATA_ROOT="$DATA_ROOT"
+cd -- "$SCRIPT_DIR"
+nohup "$SCRIPT_DIR/blog-api" >>"$DATA_ROOT/logs/blog-api.log" 2>&1 </dev/null &
+
+echo $! > "$PID_FILE"

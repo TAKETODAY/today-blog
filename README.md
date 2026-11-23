@@ -147,9 +147,11 @@ find.sh      # 查看进程
 
 ```bash
 ./gradlew :blog-api:run -Dinfra.profiles.active=prod
-# 或直接运行发行包
-./blog-api/bin/start.sh
+# 或在前台运行发行包（日志输出到控制台）
+JAVA_OPTS=-Dinfra.profiles.active=prod ./blog-api/bin/blog-api
 ```
+
+生产环境后台运行请使用[部署文档](src/docs/deployment.md)中的 `today-blog start` 或 systemd 托管。
 
 可选：构建 GraalVM Native Image（需 GraalVM 及 `-PincludeAOT`）：
 
