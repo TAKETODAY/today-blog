@@ -22,9 +22,11 @@ import org.jspecify.annotations.Nullable;
 import java.io.Serial;
 
 import infra.core.NoStackTraceRuntimeException;
+import infra.http.HttpHeaders;
 import infra.http.HttpStatusCode;
+import infra.http.ProblemDetail;
 import infra.lang.Constant;
-import infra.web.HttpStatusProvider;
+import infra.web.ErrorResponse;
 
 /**
  * 业务失败携带稳定类型、可选的请求级 detail 和允许公开的模板参数，在响应阶段才选择语言。
@@ -32,7 +34,7 @@ import infra.web.HttpStatusProvider;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/16
  */
-public class ProblemException extends NoStackTraceRuntimeException implements HttpStatusProvider {
+public class ProblemException extends NoStackTraceRuntimeException implements ErrorResponse {
 
   @Serial
   private static final long serialVersionUID = 1L;
@@ -43,6 +45,10 @@ public class ProblemException extends NoStackTraceRuntimeException implements Ht
 
   private final @Nullable String detail;
 
+  private final HttpHeaders headers = HttpHeaders.forWritable();
+
+  private final ProblemDetail body;
+
   public ProblemException(Problem problem, Object... arguments) {
     this(problem, null, arguments);
   }
@@ -52,6 +58,8 @@ public class ProblemException extends NoStackTraceRuntimeException implements Ht
     this.problem = problem;
     this.detail = detail;
     this.arguments = arguments == null ? Constant.EMPTY_OBJECTS : arguments.clone();
+    this.body = ProblemDetail.forStatus(problem.status());
+    this.body.setProperty("code", problem.code());
   }
 
   /**
@@ -91,6 +99,21 @@ public class ProblemException extends NoStackTraceRuntimeException implements Ht
   @Override
   public HttpStatusCode getStatusCode() {
     return problem.status();
+  }
+
+  @Override
+  public HttpHeaders getHeaders() {
+    return headers;
+  }
+
+  @Override
+  public ProblemDetail getBody() {
+    return body;
+  }
+
+  public ProblemException withHeader(String name, String... values) {
+    headers.setOrRemove(name, values);
+    return this;
   }
 
   public static void notNull(@Nullable Object value, Problem problem, Object... arguments) {

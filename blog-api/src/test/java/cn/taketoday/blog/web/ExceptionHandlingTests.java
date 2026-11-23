@@ -19,6 +19,7 @@ package cn.taketoday.blog.web;
 
 import org.junit.jupiter.api.Test;
 
+import cn.taketoday.blog.problem.CommonProblems;
 import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.problem.ProblemResponses;
 import cn.taketoday.blog.service.ArticleProblems;
@@ -48,6 +49,20 @@ class ExceptionHandlingTests {
     var response = handler.problem(new ProblemException(ArticleProblems.PASSWORD_INVALID), request);
     assertThat(response.getStatusCode().value()).isEqualTo(403);
     assertThat(response.getBody().getDetail()).isEqualTo("Please check the article password and try again.");
+  }
+
+  @Test
+  void typedBusinessErrorsPreserveCustomHeaders() {
+    ProblemException exception = CommonProblems.RATE_LIMIT_EXCEEDED.toException()
+            .withHeader("Retry-After", "60", "120");
+
+    assertThat(exception.getBody()).isSameAs(exception.getBody());
+    assertThat(exception.getBody().getStatus()).isEqualTo(429);
+    assertThat(exception.getHeaders().get("Retry-After")).containsExactly("60", "120");
+
+    var response = handler.problem(exception, new MockHttpContext());
+
+    assertThat(response.getHeaders().get("Retry-After")).containsExactly("60", "120");
   }
 
   @Test

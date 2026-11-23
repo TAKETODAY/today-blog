@@ -84,7 +84,7 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   public ResponseEntity<ProblemDetail> problem(ProblemException exception, HttpContext request) {
     ProblemDetail problem = problems.createWithDetail(exception.getProblem(), request,
             exception.getDetail(), exception.getArguments());
-    return problems.response(problem, null, exception.getStatusCode(), request);
+    return problems.response(problem, exception.getHeaders(), exception.getStatusCode(), request);
   }
 
   @ExceptionHandler(UnauthorizedException.class)
