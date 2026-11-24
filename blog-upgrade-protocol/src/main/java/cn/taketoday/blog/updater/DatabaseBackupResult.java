@@ -21,12 +21,13 @@ import java.nio.file.Path;
 import java.time.Instant;
 
 /**
- * 数据库备份产物。元信息写入数据库，文件只保存在 {@code location}。
+ * 数据库备份产物。{@code relativeLocation} 相对于配置的备份根目录，用于持久化；
+ * {@code location} 是实际文件位置，用于本地文件操作。
  *
  * @author <a href="https://github.com/TAKETODAY">海子 Yang</a>
  * @since 4.0
  */
-public record DatabaseBackupResult(String id, Path location,
+public record DatabaseBackupResult(String id, Path location, String relativeLocation,
         long bytes, String sha256, Instant completedAt) {
 
 }

@@ -18,9 +18,11 @@
 package cn.taketoday.blog.config;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.updater.RuntimeLayout;
+import cn.taketoday.blog.updater.StoredPath;
 import infra.beans.factory.annotation.Autowired;
 import infra.context.properties.ConfigurationProperties;
 import infra.stereotype.Component;
@@ -70,7 +72,21 @@ public class AttachmentConfig {
   }
 
   public File getLocalFile(String location) {
-    return new File(outsideResource, location);
+    return Path.of(outsideResource).resolve(attachmentPath(location)).toFile();
+  }
+
+  public String relativeLocation(String location) {
+    Path path = attachmentPath(location);
+    return path.toString().replace(path.getFileSystem().getSeparator(), "/");
+  }
+
+  private static Path attachmentPath(String location) {
+    // 兼容原来直接用 /upload/... URL 作为本地路径的记录。
+    Path path = StoredPath.parse(location.startsWith("/upload/") ? location.substring(1) : location);
+    if (!path.startsWith("upload") || path.getNameCount() < 2) {
+      throw new IllegalArgumentException("附件路径必须位于上传目录内");
+    }
+    return path;
   }
 
   public String getUploadDir() {

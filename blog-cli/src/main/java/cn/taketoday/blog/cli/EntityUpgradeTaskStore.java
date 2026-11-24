@@ -25,6 +25,7 @@ import java.util.Set;
 
 import cn.taketoday.blog.updater.DatabaseBackupResult;
 import cn.taketoday.blog.updater.ReleaseMapping;
+import cn.taketoday.blog.updater.StoredPath;
 import infra.persistence.EntityManager;
 import infra.persistence.annotation.Column;
 import infra.persistence.annotation.GeneratedId;
@@ -65,7 +66,7 @@ final class EntityUpgradeTaskStore implements UpgradeTaskStore {
     TaskRow task = requireTask(id);
     List<ReleaseMapping> mappings = entities.find(MappingRow.class, Map.of("recordId", id)).stream()
             .sorted(Comparator.comparing(mapping -> mapping.name))
-            .map(mapping -> new ReleaseMapping(mapping.name, ReleaseMapping.Mode.valueOf(mapping.mode),
+            .map(mapping -> ReleaseMapping.fromStorage(mapping.name, ReleaseMapping.Mode.valueOf(mapping.mode),
                     mapping.source, mapping.target))
             .toList();
     return new UpgradeTask(id, task.packageId, task.packagePath, task.packageVersion,
@@ -92,6 +93,7 @@ final class EntityUpgradeTaskStore implements UpgradeTaskStore {
 
   @Override
   public void started(long id, String releasePath) {
+    StoredPath.parse(releasePath);
     TaskRow task = new TaskRow();
     task.id = id;
     task.startedAt = Instant.now();
@@ -101,6 +103,7 @@ final class EntityUpgradeTaskStore implements UpgradeTaskStore {
 
   @Override
   public void backup(long id, DatabaseBackupResult backup) {
+    StoredPath.parse(backup.relativeLocation());
     transactions.executeWithoutResult(transaction -> {
       TaskRow task = requireTask(id);
       BackupRow row = new BackupRow();
@@ -112,7 +115,7 @@ final class EntityUpgradeTaskStore implements UpgradeTaskStore {
       row.manifestSha256 = backup.sha256();
       row.totalBytes = backup.bytes();
       row.sourceOperationId = id;
-      row.location = backup.location().toString();
+      row.location = backup.relativeLocation();
       row.scope = "数据库";
       entities.persist(row);
 

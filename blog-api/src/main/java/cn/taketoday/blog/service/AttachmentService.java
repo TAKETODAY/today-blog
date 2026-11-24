@@ -30,6 +30,7 @@ import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
+import cn.taketoday.blog.problem.CommonProblems;
 import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.util.FileUtils;
 import cn.taketoday.blog.util.OssOperations;
@@ -69,6 +70,7 @@ public class AttachmentService {
    * @param attachment attachment
    */
   public void persist(Attachment attachment) {
+    normalizeLocation(attachment);
     entityManager.persist(attachment);
   }
 
@@ -93,8 +95,20 @@ public class AttachmentService {
   }
 
   public void updateById(Attachment model) {
+    normalizeLocation(model);
     model.setUpdateAt(null);
     entityManager.updateById(model);
+  }
+
+  private void normalizeLocation(Attachment attachment) {
+    if (attachment.getLocation() != null) {
+      try {
+        attachment.setLocation(attachmentConfig.relativeLocation(attachment.getLocation()));
+      }
+      catch (IllegalArgumentException invalid) {
+        throw new ProblemException(CommonProblems.INVALID_REQUEST);
+      }
+    }
   }
 
   /**
@@ -205,7 +219,7 @@ public class AttachmentService {
 
     attachment.setUri(uploadUri);
     attachment.setName(fileName);
-    attachment.setLocation(uploadUri);
+    attachment.setLocation(attachmentConfig.relativeLocation(uploadUri));
     attachment.setSize(dest.length());
     attachment.setFileType(AttachmentType.from(fileName));
     return attachment;

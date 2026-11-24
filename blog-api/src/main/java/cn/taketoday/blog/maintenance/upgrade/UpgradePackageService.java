@@ -43,16 +43,12 @@ public class UpgradePackageService {
 
   private final EntityManager entityManager;
 
-  private final Path state;
+  private final RuntimeLayout layout;
 
   @Autowired
   public UpgradePackageService(EntityManager entityManager, RuntimeLayout layout) {
-    this(entityManager, layout.upgrade());
-  }
-
-  UpgradePackageService(EntityManager entityManager, Path state) {
     this.entityManager = entityManager;
-    this.state = state.toAbsolutePath().normalize();
+    this.layout = layout;
   }
 
   public List<UpgradePackageEntity> findAll() {
@@ -71,6 +67,7 @@ public class UpgradePackageService {
 
   @Transactional
   public void create(UpgradePackageEntity entity) {
+    layout.resolvePackage(entity.getLocation());
     entityManager.persist(entity);
   }
 
@@ -112,21 +109,19 @@ public class UpgradePackageService {
   @Transactional
   public void delete(long id) {
     UpgradePackageEntity entity = find(id);
-    Path location = Path.of(entity.getLocation()).toAbsolutePath().normalize();
+    Path location = layout.resolvePackage(entity.getLocation());
     entityManager.delete(UpgradePackageEntity.class, id);
     deleteFile(location);
   }
 
   private void deleteFile(Path location) {
-    if (!location.startsWith(state)) {
-      throw new IllegalStateException("升级包文件路径不在升级状态目录内");
-    }
     try {
-      Files.deleteIfExists(location);
-      Path parent = location.getParent();
-      if (parent != null && !parent.equals(state)) {
-        Files.deleteIfExists(parent);
+      // 不跟随被替换的上传目录。
+      if (Files.isSymbolicLink(location.getParent())) {
+        throw new IOException("升级包目录不能是符号链接");
       }
+      Files.deleteIfExists(location);
+      Files.deleteIfExists(location.getParent());
     }
     catch (IOException failure) {
       throw new IllegalStateException("升级包文件删除失败", failure);

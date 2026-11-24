@@ -85,6 +85,23 @@ public record ReleaseMapping(String name, Mode mode, String source, String targe
   }
 
   /**
+   * 发布目标位于安装目录之外，以服务器文件系统根为基准存储，发布时仍须校验白名单。
+   */
+  public String storedTarget() {
+    Path path = targetPath();
+    return StoredPath.relativize(path.getRoot(), path);
+  }
+
+  public static ReleaseMapping fromStorage(String name, Mode mode, String source, String target) {
+    // CLI 可能在 API 执行数据库迁移前读取任务快照。
+    if (target.startsWith("/")) {
+      return new ReleaseMapping(name, mode, source, target);
+    }
+    StoredPath.parse(target);
+    return new ReleaseMapping(name, mode, source, "/" + target);
+  }
+
+  /**
    * 符号链接的最终指向。始终经过 {@code current}，版本切换和回滚会自动生效。
    */
   public Path linkTarget(Path installRoot) {

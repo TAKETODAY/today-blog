@@ -30,6 +30,7 @@ import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
 import infra.aot.hint.annotation.RegisterReflection;
 import infra.app.ApplicationRunner;
+import infra.app.Banner;
 import infra.app.InfraApplication;
 import infra.beans.factory.ObjectProvider;
 import infra.beans.factory.annotation.Autowired;
@@ -50,7 +51,10 @@ import static infra.app.Application.forNormalApplication;
 public class BlogCliApplication {
 
   public static void main(String[] args) {
-    forNormalApplication(BlogCliApplication.class).run(args).close();
+    forNormalApplication(BlogCliApplication.class)
+            .bannerMode(Banner.Mode.OFF)
+            .run(args)
+            .close();
   }
 
   @Bean

@@ -56,6 +56,7 @@ class UpgradeSettingsTests {
     DatabaseBackupResult result = backup.create(id, 30);
     Path archive = temp.resolve(id).resolve("database.sql.gz");
     assertThat(result.location()).isEqualTo(archive);
+    assertThat(result.relativeLocation()).isEqualTo("1/database.sql.gz");
     assertThat(result.bytes()).isPositive();
     try (var input = new GZIPInputStream(Files.newInputStream(archive))) {
       assertThat(new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)).contains("CREATE TABLE");

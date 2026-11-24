@@ -37,7 +37,9 @@ public class Attachment extends BasicModel {
   /** CDN地址 */
   private String uri;
 
-  /** 附件本地地址 */
+  /**
+   * 相对于附件根目录的本地路径。
+   */
   private String location;
 
   /** 附件类型 */

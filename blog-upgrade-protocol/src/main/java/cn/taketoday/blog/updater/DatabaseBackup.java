@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Instant;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
@@ -125,7 +124,7 @@ public final class DatabaseBackup {
       }
       Files.move(compressed, archive, StandardCopyOption.ATOMIC_MOVE);
       complete = true;
-      return new DatabaseBackupResult(id, archive, Files.size(archive),
+      return new DatabaseBackupResult(id, archive, StoredPath.relativize(root, archive), Files.size(archive),
               java.util.HexFormat.of().formatHex(digest.digest()), Instant.now());
     }
     finally {

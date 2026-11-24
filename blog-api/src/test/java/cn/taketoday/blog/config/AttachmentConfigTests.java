@@ -32,6 +32,7 @@ import infra.core.env.MapPropertySource;
 import infra.web.multipart.parsing.DefaultMultipartParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 /**
  * 验证附件目录的运行时默认值和配置覆盖。
@@ -97,7 +98,7 @@ class AttachmentConfigTests {
   }
 
   private void assertLocalFile(AttachmentConfig config, Path directory) {
-    String location = "/upload/image/photo.png";
+    String location = "upload/image/photo.png";
     var attachment = new Attachment();
     attachment.setLocation(location);
 
@@ -105,6 +106,10 @@ class AttachmentConfigTests {
     assertThat(Path.of(config.getUploadDir())).isEqualTo(directory.resolve("upload"));
     assertThat(config.getLocalFile(location).toPath()).isEqualTo(directory.resolve("upload/image/photo.png"));
     assertThat(config.getLocalFile(attachment)).isEqualTo(config.getLocalFile(location));
+    assertThat(config.getLocalFile("/" + location)).isEqualTo(config.getLocalFile(location));
+    assertThat(config.relativeLocation("/" + location)).isEqualTo(location);
+    assertThatIllegalArgumentException().isThrownBy(() -> config.getLocalFile("/var/data/photo.png"));
+    assertThatIllegalArgumentException().isThrownBy(() -> config.getLocalFile("upload/../photo.png"));
   }
 
 }

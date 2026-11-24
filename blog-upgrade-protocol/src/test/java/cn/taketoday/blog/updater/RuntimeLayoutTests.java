@@ -18,6 +18,8 @@
 package cn.taketoday.blog.updater;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -77,6 +79,24 @@ class RuntimeLayoutTests {
     RuntimeLayout layout = new RuntimeLayout(Path.of("/srv/blog"));
     assertThat(layout.relative(Path.of("/srv/blog/backups/db/1"))).isEqualTo("backups/db/1");
     assertThat(layout.relative(Path.of("/srv/blog"))).isEqualTo(".");
+  }
+
+  @Test
+  void storedPackagePathResolvesUnderTheCurrentDataRoot() {
+    RuntimeLayout original = new RuntimeLayout(Path.of("/srv/blog"));
+    RuntimeLayout relocated = new RuntimeLayout(Path.of("/srv/new-blog"));
+    String stored = StoredPath.relativize(original.packages(), original.packages().resolve("123/package.zip"));
+
+    assertThat(stored).isEqualTo("123/package.zip");
+    assertThat(relocated.resolvePackage(stored)).isEqualTo(relocated.packages().resolve("123/package.zip"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "", "/srv/blog/upgrade/packages/123/package.zip", "C:/123/package.zip",
+          "../package.zip", "123/../package.zip", "123//package.zip", "123/other.zip", "package.zip" })
+  void rejectsInvalidStoredPackagePaths(String location) {
+    RuntimeLayout layout = new RuntimeLayout(Path.of("/srv/blog"));
+    assertThatThrownBy(() -> layout.resolvePackage(location)).isInstanceOf(IllegalArgumentException.class);
   }
 
 }

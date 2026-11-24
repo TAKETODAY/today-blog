@@ -86,7 +86,7 @@ class BackupHttpHandlerTests {
     inserted.setScope("程序、数据库、本地附件、配置");
     entityManager.persist(inserted);
     Long id = inserted.getId();
-    inserted.setLocation("/var/backups/today-blog/" + id + "/database.sql.gz");
+    inserted.setLocation(id + "/database.sql.gz");
     entityManager.updateById(inserted);
 
     mvc.get().uri("/api/console/backups")
@@ -109,7 +109,7 @@ class BackupHttpHandlerTests {
               assertThat(detail.backup().protectedBackup()).isTrue();
               assertThat(detail.scope()).isEqualTo("程序、数据库、本地附件、配置");
               assertThat(detail.restoreVerifiedAt()).isNull();
-              assertThat(detail.location()).endsWith("/database.sql.gz");
+              assertThat(detail.location()).isEqualTo(id + "/database.sql.gz");
             });
   }
 

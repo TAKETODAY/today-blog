@@ -25,6 +25,8 @@ import java.util.List;
 
 import cn.taketoday.blog.maintenance.MaintenanceProblems;
 import cn.taketoday.blog.problem.ProblemException;
+import cn.taketoday.blog.updater.RuntimeLayout;
+import cn.taketoday.blog.updater.StoredPath;
 import infra.persistence.EntityManager;
 import infra.persistence.annotation.EntityRef;
 import infra.persistence.annotation.In;
@@ -51,8 +53,11 @@ public class UpgradeRecordService {
 
   private final EntityManager entityManager;
 
-  public UpgradeRecordService(EntityManager entityManager) {
+  private final RuntimeLayout layout;
+
+  public UpgradeRecordService(EntityManager entityManager, RuntimeLayout layout) {
     this.entityManager = entityManager;
+    this.layout = layout;
   }
 
   public List<UpgradeRecordEntity> findAll() {
@@ -71,6 +76,13 @@ public class UpgradeRecordService {
 
   @Transactional
   public void create(UpgradeRecordEntity entity) {
+    layout.resolvePackage(entity.getPackagePath());
+    if (entity.getReleasePath() != null) {
+      StoredPath.parse(entity.getReleasePath());
+    }
+    if (entity.getBackupPath() != null) {
+      StoredPath.parse(entity.getBackupPath());
+    }
     entityManager.persist(entity);
   }
 

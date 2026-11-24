@@ -208,13 +208,13 @@ class ReleaseMappingTests {
     Files.createSymbolicLink(root.resolve("current"), old.getParent());
     Path upload = Files.createDirectories(new RuntimeLayout(temp).packages().resolve("test-upload")).resolve("package.zip");
     Files.move(archive(), upload);
-    UpgradeTask task = new UpgradeTask(1L, 10L, upload.toString(),
+    UpgradeTask task = new UpgradeTask(1L, 10L, new RuntimeLayout(temp).packages().relativize(upload).toString(),
             "3.4", 2, 1L, false, 600, 90, false, List.of(mapping));
     return new Scenario(root, task);
   }
 
   private DatabaseBackupResult backup() {
-    return new DatabaseBackupResult("backup-id", temp.resolve("backup.sql.gz"), 1024,
+    return new DatabaseBackupResult("backup-id", temp.resolve("backup.sql.gz"), "backup-id/database.sql.gz", 1024,
             "a".repeat(64), Instant.parse("2026-11-14T00:00:00Z"));
   }
 

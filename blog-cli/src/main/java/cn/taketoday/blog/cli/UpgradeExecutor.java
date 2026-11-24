@@ -35,6 +35,7 @@ import cn.taketoday.blog.updater.DatabaseBackupResult;
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.ReleaseMappings;
 import cn.taketoday.blog.updater.RuntimeLayout;
+import cn.taketoday.blog.updater.StoredPath;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradePackage;
 
@@ -149,7 +150,7 @@ public final class UpgradeExecutor {
         store.status(id, "RESTARTING", "切换版本并重启 API");
         switchRelease(release);
         switched = true;
-        store.started(id, release.toString());
+        store.started(id, StoredPath.relativize(root, release));
         if (!task.mappings().isEmpty()) {
           mappings.publish(root, layout.upgrade(), task.mappings(), mappings.roots(mappingPolicy));
         }
@@ -202,13 +203,18 @@ public final class UpgradeExecutor {
   }
 
   private Path packageDirectory(UpgradeTask task) throws IOException {
-    Path packageRoot = layout.packages();
-    Path path = Path.of(task.packagePath());
-    if (!path.isAbsolute() || !path.normalize().equals(path) || !path.startsWith(packageRoot)
-            || packageRoot.relativize(path).getNameCount() != 2 || !path.getFileName().toString().equals("package.zip")) {
-      throw new IOException("升级包必须位于上传目录内");
+    try {
+      String location = task.packagePath();
+      Path path = Path.of(location);
+      if (path.isAbsolute()) {
+        // CLI 先于 API 更新时，启动新版本前 Flyway 尚未迁移已有任务。
+        location = StoredPath.relativize(layout.packages(), path);
+      }
+      return layout.resolvePackage(location).getParent().getFileName();
     }
-    return path.getParent().getFileName();
+    catch (IllegalArgumentException invalid) {
+      throw new IOException("升级包必须位于上传目录内", invalid);
+    }
   }
 
   private SecureDirectoryStream<Path> openPackageRoot() throws IOException {

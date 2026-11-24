@@ -46,7 +46,7 @@ public class UpgradePathMappingService {
             UpgradePathMappingEntity.class, Map.of("recordId", recordId));
     List<ReleaseMapping> mappings = new ArrayList<>(entities.size());
     for (UpgradePathMappingEntity entity : entities) {
-      mappings.add(new ReleaseMapping(entity.getName(),
+      mappings.add(ReleaseMapping.fromStorage(entity.getName(),
               ReleaseMapping.Mode.valueOf(entity.getMode()), entity.getSource(), entity.getTarget()));
     }
     return List.copyOf(mappings);
@@ -64,7 +64,7 @@ public class UpgradePathMappingService {
       entity.setName(mapping.name());
       entity.setMode(mapping.mode().name());
       entity.setSource(mapping.source());
-      entity.setTarget(mapping.target());
+      entity.setTarget(mapping.storedTarget());
       entityManager.persist(entity);
     }
   }

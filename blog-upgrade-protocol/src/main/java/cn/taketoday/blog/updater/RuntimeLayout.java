@@ -94,6 +94,14 @@ public final class RuntimeLayout {
     return upgrade().resolve("packages");
   }
 
+  public Path resolvePackage(String location) {
+    Path path = StoredPath.parse(location);
+    if (path.getNameCount() != 2 || !path.getFileName().toString().equals("package.zip")) {
+      throw new IllegalArgumentException("升级包必须位于上传目录内");
+    }
+    return packages().resolve(path);
+  }
+
   /**
    * API 日志目录。
    */

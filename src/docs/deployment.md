@@ -338,7 +338,12 @@ GET    /api/console/maintenance/upgrade/records/{id}       任务详情
 请先停止服务，备份并搬迁数据，再以 `BLOG_DATA_ROOT` 指定新目录运行 `install-server.sh --runtime-only`，
 并检查 `attachment.outside-resource`、`backupRoot` 和反向代理配置。未显式指定新目录时，
 `--runtime-only` 会保留 `/etc/today-blog/data-root` 中已有的根目录；部署后的 API 和 CLI 共用这份配置。
-已上传升级包的数据库记录保存绝对路径；改根目录后需要重新上传要使用的升级包。
+数据库只保存相对文件路径：附件相对于附件根目录，升级包相对于 `$BLOG_DATA_ROOT/upgrade/packages`，
+备份相对于配置的 `backupRoot`，发行目录相对于安装根目录。映射目标在库中相对于服务器文件系统根，
+API 仍用绝对路径显示和编辑，并在发布前校验白名单。附件的公开 `/upload/...` URL 不变。
+Flyway v3.8 会转换旧记录中的路径，不会移动文件。只要按原目录结构搬迁升级包，修改数据根目录后无需重新上传。
+部署本版本时请先更新 CLI，再更新 API。新版 CLI 可读取迁移前的任务；旧版 CLI 无法读取迁移后的升级包路径。
+若回滚到迁移前的 API，旧 API 的升级包管理与已迁移的记录不兼容；不要用旧 API 管理这些升级包。
 
 ```bash
 sudo today-blog data status                     # 各子目录占用、磁盘余量和空间告警

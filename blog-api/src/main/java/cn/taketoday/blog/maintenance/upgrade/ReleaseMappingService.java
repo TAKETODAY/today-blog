@@ -80,7 +80,7 @@ public class ReleaseMappingService {
 
   private static ReleaseMapping toMapping(ReleaseMappingEntity entity) {
     try {
-      return new ReleaseMapping(entity.getName(),
+      return ReleaseMapping.fromStorage(entity.getName(),
               ReleaseMapping.Mode.valueOf(entity.getMode()), entity.getSource(), entity.getTarget());
     }
     catch (RuntimeException corrupted) {
@@ -93,7 +93,7 @@ public class ReleaseMappingService {
     entity.setName(mapping.name());
     entity.setMode(mapping.mode().name());
     entity.setSource(mapping.source());
-    entity.setTarget(mapping.target());
+    entity.setTarget(mapping.storedTarget());
     return entity;
   }
 

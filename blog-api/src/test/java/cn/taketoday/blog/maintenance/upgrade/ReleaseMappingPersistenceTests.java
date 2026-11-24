@@ -59,6 +59,7 @@ class ReleaseMappingPersistenceTests {
             .filter(entity -> entity.getName().equals("console")).findFirst().orElseThrow();
     assertThat(saved.getCreatedAt()).isNotNull();
     assertThat(saved.getUpdatedAt()).isNotNull();
+    assertThat(saved.getTarget()).isEqualTo(temp.getRoot().relativize(temp.resolve("console")).toString());
 
     ReleaseMapping desktop = mapping("desktop", "desktop", temp.resolve("desktop"));
     service.replaceAll(List.of(desktop));

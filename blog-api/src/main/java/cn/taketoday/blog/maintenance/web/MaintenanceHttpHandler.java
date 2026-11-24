@@ -50,6 +50,7 @@ import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import cn.taketoday.blog.updater.ReleaseMapping;
 import cn.taketoday.blog.updater.ReleaseMappings;
 import cn.taketoday.blog.updater.RuntimeLayout;
+import cn.taketoday.blog.updater.StoredPath;
 import cn.taketoday.blog.updater.UpgradeFiles;
 import cn.taketoday.blog.updater.UpgradeOptions;
 import cn.taketoday.blog.updater.UpgradePackage;
@@ -237,7 +238,7 @@ class MaintenanceHttpHandler {
       entity.setFileSize(Files.size(location));
       entity.setSha256(sha256(location));
       entity.setEntryCount(manifest.hashes().size());
-      entity.setLocation(location.toString());
+      entity.setLocation(StoredPath.relativize(packageRoot, location));
       entity.setCreatedAt(Instant.now());
       packages.create(entity);
       return PackageView.from(entity);

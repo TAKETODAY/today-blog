@@ -26,10 +26,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
-import java.time.Instant;
 import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -124,6 +124,7 @@ class UpgradeTests {
     FakeService service = new FakeService(false, false);
     assertThat(executor(scenario, service, store, (id, timeout) -> backup(scenario, id)).execute(scenario.task)).isTrue();
     assertThat(scenario.root.resolve("current").toRealPath().getFileName().toString()).isEqualTo("3.4-2");
+    assertThat(store.releasePath).isEqualTo("releases/3.4-2");
     assertThat(store.statuses.get(store.statuses.size() - 1)).isEqualTo("SUCCESS");
     assertThat(service.restarts).isEqualTo(1);
     assertThat(files.read(scenario.root.resolve("highest-build.properties")).getProperty("build")).isEqualTo("2");
@@ -175,7 +176,7 @@ class UpgradeTests {
     executor(scenario, new FakeService(false, false), store,
             (id, timeout) -> backup(scenario, id)).execute(scenario.task);
     assertThat(store.deletedPackage).isEqualTo(10L);
-    assertThat(Files.exists(Path.of(scenario.task.packagePath()))).isFalse();
+    assertThat(Files.exists(new RuntimeLayout(temp).resolvePackage(scenario.task.packagePath()))).isFalse();
   }
 
   @Test
@@ -194,13 +195,13 @@ class UpgradeTests {
     Files.createSymbolicLink(root.resolve("current"), old.getParent());
     Path upload = Files.createDirectories(new RuntimeLayout(temp).packages().resolve("test-upload")).resolve("package.zip");
     Files.move(archive(null, false, false), upload);
-    UpgradeTask task = new UpgradeTask(1L, 10L, upload.toString(),
+    UpgradeTask task = new UpgradeTask(1L, 10L, "test-upload/package.zip",
             "3.4", 2, 1L, true, 600, 90, deletePackage, List.of());
     return new Scenario(root, task);
   }
 
   private DatabaseBackupResult backup(Scenario scenario, String id) {
-    return new DatabaseBackupResult(id, temp.resolve("backup.sql.gz"), 1024,
+    return new DatabaseBackupResult(id, temp.resolve("backup.sql.gz"), id + "/database.sql.gz", 1024,
             "a".repeat(64), Instant.parse("2026-11-14T00:00:00Z"));
   }
 
@@ -247,6 +248,7 @@ class UpgradeTests {
     final List<String> statuses = new ArrayList<>();
     DatabaseBackupResult backup;
     Long deletedPackage;
+    String releasePath;
     String message;
 
     @Override
@@ -262,6 +264,7 @@ class UpgradeTests {
 
     @Override
     public void started(long id, String releasePath) {
+      this.releasePath = releasePath;
       statuses.add("STARTED");
     }
 
