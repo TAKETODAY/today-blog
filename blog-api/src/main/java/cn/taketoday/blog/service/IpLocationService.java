@@ -34,11 +34,11 @@ import infra.http.service.annotation.GetExchange;
 import infra.http.service.annotation.HttpExchange;
 import infra.http.service.invoker.HttpServiceProxyFactory;
 import infra.http.service.support.RestClientAdapter;
+import infra.restclient.ClientResponse;
+import infra.restclient.RestClient;
+import infra.restclient.RestClientException;
 import infra.stereotype.Component;
 import infra.web.annotation.RequestParam;
-import infra.web.client.ClientResponse;
-import infra.web.client.RestClient;
-import infra.web.client.RestClientException;
 import lombok.Data;
 
 /**
