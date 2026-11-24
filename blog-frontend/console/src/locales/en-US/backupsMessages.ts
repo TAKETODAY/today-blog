@@ -20,6 +20,8 @@ export default {
   'backups.deleted': 'Deleted',
   'backups.deleting': 'Deleting',
   'backups.details': 'Details',
+  'backups.download': 'Download',
+  'backups.downloadFailed': 'Could not download the backup. Check that you are signed in and the archive is still readable.',
   'backups.failed': 'Failed',
   'backups.filePath': 'File path',
   'backups.goToSystemUpgrade': 'Go to system upgrade',

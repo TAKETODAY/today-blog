@@ -29,6 +29,7 @@ import infra.http.HttpStatus;
 public enum BackupProblems implements Problem {
 
   NOT_FOUND("backup.not_found", HttpStatus.NOT_FOUND),
+  DOWNLOAD_UNAVAILABLE("backup.download_unavailable", HttpStatus.NOT_FOUND),
   EXECUTOR_UNAVAILABLE("backup.executor_unavailable", HttpStatus.SERVICE_UNAVAILABLE);
 
   private final String code;

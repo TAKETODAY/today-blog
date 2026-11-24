@@ -203,6 +203,7 @@ sudo chmod 644 /etc/today-blog/release-mapping-roots
 dumpExecutable=/usr/bin/mysqldump
 defaultsFile=/etc/today-blog/backup.cnf
 database=today
+backupReadGroup=today
 ```
 
 备份默认写入 `$BLOG_DATA_ROOT/backups/db`。已有的 `backupRoot` 显式配置仍然生效；
@@ -236,9 +237,12 @@ GRANT DELETE ON today.t_upgrade_package TO 'blog_backup'@'localhost';
 `jdbcUrl`、`jdbcUser` 和 `jdbcPasswordFile`；密码文件必须由 root 管理且为 0600。
 升级器直连数据库，数据库不可用时升级无法启动或回写状态。
 
-备份根目录及全部父目录必须由 root 管理，且不可被组或其他用户写入；建议根目录 0755，
-升级器为每个任务建立 0700 子目录，SQL 临时文件及 gzip 文件使用 0600。
-API 只读取非敏感配置和凭据文件元信息，不读取数据库密码或备份内容。
+备份根目录及全部父目录必须由 root 管理，且不可被组或其他用户写入；建议根目录 0755。
+配置 `backupReadGroup=today` 后，已完成的 gzip 归档为 `root:today 0640`，任务目录为 `root:today 0710`；
+SQL 临时文件仍为 0600。未设置该项时，新任务目录和归档继续使用 0700 和 0600。
+博主可在「系统备份」下载已登记的数据库备份；不要将备份目录映射为 NGINX 静态目录。
+已有归档如需下载，由 root 对确认过的任务目录和归档分别设置上述属组和权限，无需重新备份。
+API 无需读取数据库密码，只检查凭据文件的元信息。
 若配置文件设为 0600，API 无法检查环境，会显示未就绪；密码必须单独保存在 0600 的 defaultsFile 中。
 
 使用自定义备份目录时须预先创建目录，不可放在 release 下。即使关闭升级前备份，仍需配置

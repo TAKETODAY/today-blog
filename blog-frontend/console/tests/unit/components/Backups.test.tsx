@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import Backups from '@/pages/system/backups';
 import { http } from '@/utils/http';
 
-jest.mock('@/utils/http', () => ({ http: { get: jest.fn(), post: jest.fn() } }));
+jest.mock('@/utils/http', () => ({ http: { get: jest.fn(), head: jest.fn(), post: jest.fn() } }));
 jest.mock('@umijs/max', () => ({
   history: { push: jest.fn() },
   useIntl: require('../../site-intl').getTestIntl,
@@ -15,7 +15,7 @@ describe('Backups', () => {
   let container: HTMLDivElement;
   let root = createRoot(document.createElement('div'));
   const backup = {
-    id: '86d25e56-e760-48df-bf3d-6a75e9635026', name: '更新前恢复点', status: 'AVAILABLE',
+    id: 12, name: '更新前恢复点', status: 'AVAILABLE',
     version: '3.4', build: '123', protectedBackup: true, totalBytes: 1048576, createdAt: '2026-11-12T00:00:00Z',
     operatorId: 42, manifestSha256: 'abc', sourceOperationId: null,
   };
@@ -76,6 +76,31 @@ describe('Backups', () => {
     await flushTableRequest();
     expect(container.textContent).toContain('更新前恢复点');
     expect(container.textContent).not.toContain('备份数据加载失败');
+  });
+
+  it('checks availability before starting a native download', async () => {
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      expect(this.getAttribute('href')).toBe(`/api/console/backups/${backup.id}/download`);
+      expect(this.hasAttribute('download')).toBe(true);
+    });
+    try {
+      (http.head as jest.Mock).mockResolvedValueOnce({ status: 200 });
+      await act(async () => root.render(<Backups />));
+      await flushTableRequest();
+      const download = Array.from(container.querySelectorAll('button')).find(item => item.textContent === '下载');
+      expect(download).toBeDefined();
+      await act(async () => download?.click());
+      expect(http.head).toHaveBeenCalledWith(`/api/console/backups/${backup.id}/download`);
+      expect(click).toHaveBeenCalledTimes(1);
+
+      (http.head as jest.Mock).mockRejectedValueOnce(new Error('not found'));
+      await act(async () => download?.click());
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain('无法下载备份');
+    }
+    finally {
+      click.mockRestore();
+    }
   });
 });
 

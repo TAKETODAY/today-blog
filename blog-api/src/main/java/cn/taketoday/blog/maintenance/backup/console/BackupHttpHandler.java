@@ -22,6 +22,12 @@ import java.util.Map;
 
 import cn.taketoday.blog.maintenance.backup.BackupService;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
+import infra.core.io.FileSystemResource;
+import infra.http.ContentDisposition;
+import infra.http.HttpHeaders;
+import infra.http.HttpMethod;
+import infra.http.ResponseEntity;
+import infra.web.HttpContext;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
@@ -60,6 +66,21 @@ class BackupHttpHandler {
   @GET("/{id}")
   public BackupService.BackupDetail detail(@PathVariable long id) {
     return backups.backup(id);
+  }
+
+  @GET("/{id}/download")
+  public ResponseEntity<?> download(@PathVariable long id, HttpContext request) {
+    BackupService.Download download = backups.download(id);
+    String filename = "database-backup-" + id + ".sql.gz";
+    var response = ResponseEntity.ok()
+            .contentType("application/gzip")
+            .contentLength(download.bytes())
+            .header(HttpHeaders.CACHE_CONTROL, "no-store")
+            .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(filename).build().toString());
+    if (request.getMethod() == HttpMethod.HEAD) {
+      return response.build();
+    }
+    return response.body(new FileSystemResource(download.archive()));
   }
 
   @POST

@@ -22,6 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.GroupPrincipal;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +36,8 @@ public final class DatabaseBackup {
 
   public static final Path CONFIG = Path.of("/etc/today-blog/upgrade.properties");
 
+  static final String ARCHIVE_NAME = "database.sql.gz";
+
   private final Path executable;
 
   private final Path credentials;
@@ -44,12 +48,19 @@ public final class DatabaseBackup {
 
   private final UpgradeFiles files;
 
+  private final GroupPrincipal readGroup;
+
   public DatabaseBackup(Path executable, Path credentials, Path root, String database) {
     this(executable, credentials, root, database, new UpgradeFiles());
   }
 
   public DatabaseBackup(Path executable, Path credentials, Path root, String database,
           UpgradeFiles files) {
+    this(executable, credentials, root, database, files, null);
+  }
+
+  DatabaseBackup(Path executable, Path credentials, Path root, String database,
+          UpgradeFiles files, GroupPrincipal readGroup) {
     if (!executable.isAbsolute() || !credentials.isAbsolute() || !root.isAbsolute()
             || database == null || !database.matches("[A-Za-z0-9_]+")) {
       throw new IllegalArgumentException("数据库备份服务器配置无效");
@@ -59,6 +70,7 @@ public final class DatabaseBackup {
     this.root = root;
     this.database = database;
     this.files = files;
+    this.readGroup = readGroup;
   }
 
   public long usableSpace() throws IOException {
@@ -71,10 +83,6 @@ public final class DatabaseBackup {
 
   Path credentialsPath() {
     return credentials;
-  }
-
-  Path rootPath() {
-    return root;
   }
 
   public DatabaseBackupResult create(String id, int timeoutSeconds) throws Exception {
@@ -94,7 +102,7 @@ public final class DatabaseBackup {
     Path raw = Files.createFile(task.resolve("database.sql.tmp"), PosixFilePermissions.asFileAttribute(
             PosixFilePermissions.fromString("rw-------")));
     Path compressed = task.resolve("database.sql.gz.tmp");
-    Path archive = task.resolve("database.sql.gz");
+    Path archive = task.resolve(ARCHIVE_NAME);
     long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds);
     Process process = null;
     boolean complete = false;
@@ -122,7 +130,16 @@ public final class DatabaseBackup {
           output.write(buffer, 0, count);
         }
       }
+      if (readGroup != null) {
+        // 仅发布完成的压缩文件；原始 SQL 仍由 root 独占。
+        Files.getFileAttributeView(task, PosixFileAttributeView.class).setGroup(readGroup);
+        Files.getFileAttributeView(compressed, PosixFileAttributeView.class).setGroup(readGroup);
+        Files.setPosixFilePermissions(compressed, PosixFilePermissions.fromString("rw-r-----"));
+      }
       Files.move(compressed, archive, StandardCopyOption.ATOMIC_MOVE);
+      if (readGroup != null) {
+        Files.setPosixFilePermissions(task, PosixFilePermissions.fromString("rwx--x---"));
+      }
       complete = true;
       return new DatabaseBackupResult(id, archive, StoredPath.relativize(root, archive), Files.size(archive),
               java.util.HexFormat.of().formatHex(digest.digest()), Instant.now());

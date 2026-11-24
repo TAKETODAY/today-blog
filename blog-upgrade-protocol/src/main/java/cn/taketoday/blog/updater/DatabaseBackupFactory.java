@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.attribute.GroupPrincipal;
 import java.util.Properties;
 
 /**
@@ -52,22 +53,50 @@ public final class DatabaseBackupFactory {
   }
 
   public DatabaseBackup configured() throws IOException {
-    files.verifyTrusted(config, false);
-    Properties values = files.read(config);
+    Properties values = configuration();
+    Path root = backupRoot(values);
+    String readGroup = values.getProperty("backupReadGroup", "").strip();
+    GroupPrincipal group = readGroup.isEmpty() ? null
+            : root.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByGroupName(readGroup);
     DatabaseBackup backup = new DatabaseBackup(
             Path.of(values.getProperty("dumpExecutable", "/usr/bin/mysqldump")),
             Path.of(values.getProperty("defaultsFile", "/etc/today-blog/backup.cnf")),
-            Path.of(values.getProperty("backupRoot", layout.backups().toString())),
-            values.getProperty("database"), files);
+            root, values.getProperty("database"), files, group);
     files.verifyTrusted(backup.credentialsPath(), true);
     files.verifyTrusted(backup.executablePath().toRealPath(), false);
-    files.verifyTrusted(backup.rootPath(), false);
     if (!Files.isExecutable(backup.executablePath())
-            || !Files.isRegularFile(backup.credentialsPath(), LinkOption.NOFOLLOW_LINKS)
-            || !Files.isDirectory(backup.rootPath(), LinkOption.NOFOLLOW_LINKS)) {
+            || !Files.isRegularFile(backup.credentialsPath(), LinkOption.NOFOLLOW_LINKS)) {
       throw new IOException("数据库备份环境未就绪");
     }
     return backup;
+  }
+
+  public Path archive(String location) throws IOException {
+    Path relative = StoredPath.parse(location);
+    if (relative.getNameCount() != 2 || !relative.getFileName().toString().equals(DatabaseBackup.ARCHIVE_NAME)) {
+      throw new IOException("不是受管理的数据库备份文件");
+    }
+    files.checkId(relative.getName(0).toString());
+    Path archive = backupRoot(configuration()).resolve(relative);
+    files.verifyTrusted(archive, false);
+    if (!Files.isRegularFile(archive, LinkOption.NOFOLLOW_LINKS) || !Files.isReadable(archive)) {
+      throw new IOException("数据库备份文件不可读取");
+    }
+    return archive;
+  }
+
+  private Properties configuration() throws IOException {
+    files.verifyTrusted(config, false);
+    return files.read(config);
+  }
+
+  private Path backupRoot(Properties values) throws IOException {
+    Path root = Path.of(values.getProperty("backupRoot", layout.backups().toString()));
+    files.verifyTrusted(root, false);
+    if (!Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) {
+      throw new IOException("数据库备份目录未就绪");
+    }
+    return root;
   }
 
 }

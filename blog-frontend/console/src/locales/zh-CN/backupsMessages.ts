@@ -20,6 +20,8 @@ export default {
   'backups.deleted': '已删除',
   'backups.deleting': '删除中',
   'backups.details': '详情',
+  'backups.download': '下载',
+  'backups.downloadFailed': '无法下载备份，请确认登录状态和备份文件是否仍可读取。',
   'backups.failed': '失败',
   'backups.filePath': '文件路径',
   'backups.goToSystemUpgrade': '前往系统升级',

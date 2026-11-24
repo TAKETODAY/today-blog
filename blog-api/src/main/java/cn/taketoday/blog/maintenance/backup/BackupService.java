@@ -17,11 +17,15 @@
 
 package cn.taketoday.blog.maintenance.backup;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 import cn.taketoday.blog.problem.ProblemException;
+import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import infra.persistence.EntityManager;
 import infra.persistence.Pageable;
 import infra.persistence.annotation.EntityRef;
@@ -41,8 +45,11 @@ public class BackupService {
 
   private final EntityManager entityManager;
 
-  public BackupService(EntityManager entityManager) {
+  private final DatabaseBackupFactory archives;
+
+  public BackupService(EntityManager entityManager, DatabaseBackupFactory archives) {
     this.entityManager = entityManager;
+    this.archives = archives;
   }
 
   public Map<String, Object> capabilities() {
@@ -64,12 +71,32 @@ public class BackupService {
   }
 
   public BackupDetail backup(long id) {
+    Backup record = requireBackup(id);
+    return new BackupDetail(BackupView.from(record), record.getScope(),
+            record.getRestoreVerifiedAt(), record.getLocation());
+  }
+
+  public Download download(long id) {
+    Backup record = requireBackup(id);
+    String location = record.getLocation();
+    if (record.getStatus() != BackupStatus.AVAILABLE || location == null) {
+      throw new ProblemException(BackupProblems.DOWNLOAD_UNAVAILABLE);
+    }
+    try {
+      Path archive = archives.archive(location);
+      return new Download(archive, Files.size(archive));
+    }
+    catch (IOException | IllegalArgumentException ex) {
+      throw new ProblemException(BackupProblems.DOWNLOAD_UNAVAILABLE);
+    }
+  }
+
+  private Backup requireBackup(long id) {
     Backup record = entityManager.findById(Backup.class, id);
     if (record == null) {
       throw new ProblemException(BackupProblems.NOT_FOUND);
     }
-    return new BackupDetail(BackupView.from(record), record.getScope(),
-            record.getRestoreVerifiedAt(), record.getLocation());
+    return record;
   }
 
   public void requireExecutor() {
@@ -119,6 +146,9 @@ public class BackupService {
    * 备份详情补充覆盖范围、恢复验证记录和本地文件路径。
    */
   public record BackupDetail(BackupView backup, String scope, Instant restoreVerifiedAt, String location) {
+  }
+
+  public record Download(Path archive, long bytes) {
   }
 
 }

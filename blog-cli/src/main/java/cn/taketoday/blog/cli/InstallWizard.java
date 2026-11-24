@@ -256,7 +256,8 @@ final class InstallWizard {
     String upgrade = "database=" + request.databaseName() + "\n"
             + "jdbcUrl=" + request.jdbcUrl() + "\n"
             + "jdbcUser=" + request.databaseUser() + "\n"
-            + "jdbcPasswordFile=" + configDirectory.resolve("upgrade-db.password") + "\n";
+            + "jdbcPasswordFile=" + configDirectory.resolve("upgrade-db.password") + "\n"
+            + "backupReadGroup=today\n";
     writeFile(configDirectory.resolve("upgrade.properties"), upgrade, 0640);
     writeFile(configDirectory.resolve("service-manager"), request.serviceManager() + "\n", 0644);
 
