@@ -19,8 +19,8 @@ package cn.taketoday.blog.cli;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.channels.FileChannel;
 import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -28,8 +28,8 @@ import java.nio.file.Path;
 import java.nio.file.SecureDirectoryStream;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -500,7 +500,8 @@ final class SiteBackup {
   }
 
   private static void writeChecksums(Path payload) throws IOException {
-    try (var paths = Files.walk(payload); var list = Files.newBufferedWriter(payload.resolve("SHA256SUMS"))) {
+    try (var paths = Files.walk(payload);
+            var list = Files.newBufferedWriter(payload.resolve("SHA256SUMS"))) {
       for (Path file : paths.sorted().toList()) {
         if (file.equals(payload.resolve("SHA256SUMS")) || Files.isDirectory(file, LinkOption.NOFOLLOW_LINKS)) {
           continue;
