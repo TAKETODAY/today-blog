@@ -29,6 +29,7 @@ import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.updater.RuntimeLayout;
 import infra.beans.factory.annotation.Autowired;
 import infra.persistence.EntityManager;
+import infra.persistence.PropertyUpdateStrategy;
 import infra.stereotype.Service;
 import infra.transaction.annotation.Transactional;
 
@@ -57,7 +58,7 @@ public class UpgradePackageService {
             .toList();
   }
 
-  public UpgradePackageEntity find(long id) {
+  public UpgradePackageEntity getById(long id) {
     UpgradePackageEntity entity = entityManager.findById(UpgradePackageEntity.class, id);
     if (entity == null) {
       throw new ProblemException(MaintenanceProblems.PACKAGE_NOT_FOUND);
@@ -73,7 +74,7 @@ public class UpgradePackageService {
 
   @Transactional
   public UpgradePackageEntity update(long id, String displayName, String note) {
-    UpgradePackageEntity entity = find(id);
+    UpgradePackageEntity entity = getById(id);
     if (displayName != null) {
       if (displayName.isBlank() || displayName.length() > 255) {
         throw new ProblemException(MaintenanceProblems.PACKAGE_NAME_INVALID);
@@ -92,7 +93,7 @@ public class UpgradePackageService {
 
   @Transactional
   public void markConsumed(long id) {
-    UpgradePackageEntity entity = find(id);
+    UpgradePackageEntity entity = getById(id);
     entity.setStatus(UpgradePackageStatus.CONSUMED);
     entity.setConsumedAt(Instant.now());
     entityManager.updateById(entity);
@@ -100,15 +101,15 @@ public class UpgradePackageService {
 
   @Transactional
   public void markReady(long id) {
-    UpgradePackageEntity entity = find(id);
+    UpgradePackageEntity entity = getById(id);
     entity.setStatus(UpgradePackageStatus.READY);
     entity.setConsumedAt(null);
-    entityManager.updateById(entity, infra.persistence.PropertyUpdateStrategy.always());
+    entityManager.updateById(entity, PropertyUpdateStrategy.always());
   }
 
   @Transactional
   public void delete(long id) {
-    UpgradePackageEntity entity = find(id);
+    UpgradePackageEntity entity = getById(id);
     Path location = layout.resolvePackage(entity.getLocation());
     entityManager.delete(UpgradePackageEntity.class, id);
     deleteFile(location);

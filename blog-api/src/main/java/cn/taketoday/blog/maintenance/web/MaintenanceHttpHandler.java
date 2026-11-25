@@ -81,8 +81,6 @@ import static cn.taketoday.blog.BlogConstant.upgradeLogger;
 @RequestMapping("/api/console/maintenance")
 class MaintenanceHttpHandler {
 
-  public static final String DEFAULT_MESSAGE = "系统维护中，请稍后重试";
-
   public static final int DEFAULT_RETRY_AFTER_SECONDS = 120;
 
   private final Path state;
@@ -274,7 +272,7 @@ class MaintenanceHttpHandler {
   @Logging(title = "启动系统升级", content = "升级包: [#{#id}]")
   public synchronized RecordView start(@PathVariable long id, @RequestBody StartUpgradeRequest request) throws Exception {
     enabled();
-    UpgradePackageEntity entity = packages.find(id);
+    UpgradePackageEntity entity = packages.getById(id);
     if (entity.getStatus() != UpgradePackageStatus.READY) {
       throw new ProblemException(MaintenanceProblems.PACKAGE_CONSUMED);
     }

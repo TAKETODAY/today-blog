@@ -77,15 +77,15 @@ class UpgradePersistenceTests {
     UpgradePackageEntity entity = packageEntity(relativeLocation);
 
     packages.create(entity);
-    assertThat(packages.find(entity.getId()).getDisplayName()).isEqualTo("测试包");
-    assertThat(packages.find(entity.getId()).getLocation()).isEqualTo(relativeLocation);
+    assertThat(packages.getById(entity.getId()).getDisplayName()).isEqualTo("测试包");
+    assertThat(packages.getById(entity.getId()).getLocation()).isEqualTo(relativeLocation);
 
     packages.update(entity.getId(), "新名称", "备注");
-    assertThat(packages.find(entity.getId()).getDisplayName()).isEqualTo("新名称");
-    assertThat(packages.find(entity.getId()).getNote()).isEqualTo("备注");
+    assertThat(packages.getById(entity.getId()).getDisplayName()).isEqualTo("新名称");
+    assertThat(packages.getById(entity.getId()).getNote()).isEqualTo("备注");
 
     packages.markConsumed(entity.getId());
-    assertThat(packages.find(entity.getId()).getStatus()).isEqualTo(UpgradePackageStatus.CONSUMED);
+    assertThat(packages.getById(entity.getId()).getStatus()).isEqualTo(UpgradePackageStatus.CONSUMED);
 
     packages.delete(entity.getId());
     assertThat(entityManager.findById(UpgradePackageEntity.class, entity.getId())).isNull();
