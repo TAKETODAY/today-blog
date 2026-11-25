@@ -61,7 +61,7 @@ abstract class ApiServiceControl implements UpgradeExecutor.ServiceControl {
 
   abstract boolean isStartedProcessAlive();
 
-  final void restartAndWait(int timeoutSeconds) throws Exception {
+  public final void restartAndWait(int timeoutSeconds) throws Exception {
     long build = Long.parseLong(files.read(currentRelease().resolve("release.properties")).getProperty("build"));
     restart();
     if (!healthy(build, timeoutSeconds)) {

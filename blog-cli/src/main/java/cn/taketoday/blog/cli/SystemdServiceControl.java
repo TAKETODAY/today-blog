@@ -31,7 +31,7 @@ import cn.taketoday.blog.updater.UpgradeFiles;
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 4.0 2026/11/20
  */
-final class SystemdServiceControl extends ApiServiceControl {
+final class SystemdServiceControl extends ApiServiceControl implements SiteBackup.Service {
 
   private static final String UNIT = "today-blog.service";
 
@@ -47,9 +47,18 @@ final class SystemdServiceControl extends ApiServiceControl {
   }
 
   @Override
-  void stop() throws Exception {
+  public void stop() throws Exception {
     started = null;
     systemctl("stop", null);
+  }
+
+  @Override
+  public boolean running() throws Exception {
+    return switch (systemctl("show", "ActiveState")) {
+      case "active" -> true;
+      case "inactive" -> false;
+      default -> throw new IOException("API 未处于稳定的运行或停止状态，无法备份");
+    };
   }
 
   @Override

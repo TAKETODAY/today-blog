@@ -23,7 +23,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Properties;
+import java.util.Set;
 
+import cn.taketoday.blog.updater.BackupType;
 import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import cn.taketoday.blog.updater.ReleaseMappings;
 import cn.taketoday.blog.updater.RuntimeLayout;
@@ -50,6 +52,8 @@ final class BlogCommands implements ApplicationRunner {
             install --wizard            启动首次安装浏览器向导
             upgrade --task-id <ID>      执行已提交的升级任务
             data <命令>                 统一管理备份、升级包和日志（data --help）
+            backup-site                 停写并生成加密的整站恢复点（systemd）
+            backup-site --types <类型>   选择逗号分隔的类型，或 all
             --help                      显示帮助
           """;
 
@@ -95,8 +99,12 @@ final class BlogCommands implements ApplicationRunner {
     else if (args.length == 1) {
       switch (args[0]) {
         case "start", "stop", "restart" -> controlApi(args[0]);
+        case "backup-site" -> backupSite(BackupType.recommended(), null);
         default -> throw new IllegalArgumentException(USAGE);
       }
+    }
+    else if (args.length == 3 && args[0].equals("backup-site") && args[1].equals("--types")) {
+      backupSite(BackupType.parse(args[2]), null);
     }
     else if (args.length == 3 && args[0].equals("upgrade") && args[1].equals("--task-id")) {
       upgrade(args[2]);
@@ -110,6 +118,22 @@ final class BlogCommands implements ApplicationRunner {
     else {
       throw new IllegalArgumentException(USAGE);
     }
+  }
+
+  private Path backupSite(Set<BackupType> types, Boolean uploadOffsite) throws Exception {
+    if (!(service instanceof SystemdServiceControl systemd)) {
+      throw new IOException("整站备份目前仅支持 systemd 部署");
+    }
+    SiteBackup backup = new SiteBackup(files, packages, root, systemd,
+            staging -> {
+              var dump = backups.privateBackup(staging);
+              return destination -> {
+                var result = dump.create("1", 600);
+                Files.move(result.location(), destination);
+              };
+            });
+    Path config = Path.of(System.getenv().getOrDefault("BLOG_SITE_BACKUP_CONFIG", "/etc/today-blog/site-backup.properties"));
+    return backup.create(config, types, uploadOffsite);
   }
 
   private void controlApi(String command) throws Exception {

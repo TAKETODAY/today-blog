@@ -58,6 +58,21 @@ public final class DatabaseBackupFactory {
     String readGroup = values.getProperty("backupReadGroup", "").strip();
     GroupPrincipal group = readGroup.isEmpty() ? null
             : root.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByGroupName(readGroup);
+    return configured(values, root, group);
+  }
+
+  /**
+   * 整站备份使用独立的私有暂存目录，不向 API 授予读取权限。
+   */
+  public DatabaseBackup privateBackup(Path stagingRoot) throws IOException {
+    files.verifyTrusted(stagingRoot, true);
+    if (!Files.isDirectory(stagingRoot, LinkOption.NOFOLLOW_LINKS)) {
+      throw new IOException("数据库备份暂存目录未就绪");
+    }
+    return configured(configuration(), stagingRoot, null);
+  }
+
+  private DatabaseBackup configured(Properties values, Path root, GroupPrincipal group) throws IOException {
     DatabaseBackup backup = new DatabaseBackup(
             Path.of(values.getProperty("dumpExecutable", "/usr/bin/mysqldump")),
             Path.of(values.getProperty("defaultsFile", "/etc/today-blog/backup.cnf")),
