@@ -1,0 +1,6 @@
+# /etc/today-blog/backup-console.properties: root:root 0644
+# 仅在运维验证 site-backup.properties 后安装本文件。
+# 允许后台提交的范围；配置 OSS 导出器且验证后才添加 OSS。
+types=DATABASE,ATTACHMENTS,WEBSITE,CONFIGURATION,RELEASE
+# 仅在异地上传器已配置并验证后启用。
+offsite=false

@@ -21,11 +21,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import cn.taketoday.blog.problem.CommonProblems;
 import cn.taketoday.blog.problem.ProblemException;
+import cn.taketoday.blog.updater.BackupJob;
+import cn.taketoday.blog.updater.BackupType;
 import cn.taketoday.blog.updater.DatabaseBackupFactory;
+import cn.taketoday.blog.updater.UpgradeFiles;
 import infra.persistence.EntityManager;
 import infra.persistence.Pageable;
 import infra.persistence.annotation.EntityRef;
@@ -43,6 +52,8 @@ public class BackupService {
 
   private static final int LIST_LIMIT = 500;
 
+  private static final Path SUBMIT = Path.of("/usr/local/lib/today-blog/backup-submit");
+
   private final EntityManager entityManager;
 
   private final DatabaseBackupFactory archives;
@@ -53,6 +64,12 @@ public class BackupService {
   }
 
   public Map<String, Object> capabilities() {
+    Properties policy = consolePolicy();
+    if (policy != null) {
+      return Map.of("create", true, "restore", false, "delete", false, "protect", false,
+              "types", BackupType.parse(policy.getProperty("types")),
+              "offsite", "true".equals(policy.getProperty("offsite")));
+    }
     // 在独立执行器具备完整校验和停写能力之前，后端也必须拒绝危险操作。
     return Map.of("create", false,
             "restore", false,
@@ -60,6 +77,106 @@ public class BackupService {
             "protect", false,
             "reason", "备份与恢复执行器尚未接通，暂不能创建、保护、删除或恢复备份。仅备份数据库不等于完整备份。"
     );
+  }
+
+  private Properties consolePolicy() {
+    try {
+      if (System.getenv("BLOG_RELEASE_PATH") == null || !"systemd".equals(
+              Files.readString(Path.of("/etc/today-blog/service-manager")).strip())) {
+        return null;
+      }
+      var files = new UpgradeFiles();
+      files.verifyTrusted(BackupJob.POLICY, false);
+      files.verifyTrusted(SUBMIT, false);
+      files.verifyTrusted(BackupJob.STATUS, false);
+      if (!Files.isExecutable(SUBMIT)) {
+        return null;
+      }
+      Properties policy = files.read(BackupJob.POLICY);
+      BackupType.parse(policy.getProperty("types", ""));
+      return policy;
+    }
+    catch (IOException | IllegalArgumentException | UnsupportedOperationException failure) {
+      return null;
+    }
+  }
+
+  public BackupJob submit(Set<BackupType> types, boolean offsite) {
+    Properties policy = consolePolicy();
+    if (policy == null) {
+      throw new ProblemException(BackupProblems.EXECUTOR_UNAVAILABLE);
+    }
+    if (types == null || types.isEmpty() || !BackupType.parse(policy.getProperty("types")).containsAll(types)
+            || (offsite && !"true".equals(policy.getProperty("offsite")))) {
+      throw new ProblemException(CommonProblems.INVALID_REQUEST);
+    }
+    BackupJob job = BackupJob.create(types, offsite);
+    try {
+      Process process = new ProcessBuilder("/usr/bin/sudo", "-n", "--", SUBMIT.toString(), job.encode())
+              .redirectInput(Path.of("/dev/null").toFile()).redirectOutput(ProcessBuilder.Redirect.DISCARD)
+              .redirectError(ProcessBuilder.Redirect.DISCARD).start();
+      try {
+        if (!process.waitFor(10, TimeUnit.SECONDS) || process.exitValue() != 0) {
+          throw new ProblemException(BackupProblems.EXECUTOR_UNAVAILABLE);
+        }
+      }
+      finally {
+        if (process.isAlive()) {
+          process.destroyForcibly();
+        }
+      }
+      return job;
+    }
+    catch (InterruptedException failure) {
+      Thread.currentThread().interrupt();
+      throw new ProblemException(BackupProblems.EXECUTOR_UNAVAILABLE);
+    }
+    catch (IOException failure) {
+      throw new ProblemException(BackupProblems.EXECUTOR_UNAVAILABLE);
+    }
+  }
+
+  public List<JobView> jobs() {
+    var files = new UpgradeFiles();
+    try {
+      files.verifyTrusted(BackupJob.STATUS, false);
+      try (var paths = Files.list(BackupJob.STATUS)) {
+        return paths.filter(path -> path.getFileName().toString().matches("[0-9a-f]{32}\\.properties"))
+                .map(this::readJob).filter(Objects::nonNull)
+                .sorted(Comparator.comparing(JobView::createdAt).reversed()).limit(LIST_LIMIT).toList();
+      }
+    }
+    catch (IOException | UnsupportedOperationException failure) {
+      if (Files.notExists(BackupJob.STATUS)) {
+        return List.of();
+      }
+      throw new ProblemException(BackupProblems.EXECUTOR_UNAVAILABLE);
+    }
+  }
+
+  private JobView readJob(Path path) {
+    try {
+      var files = new UpgradeFiles();
+      files.verifyTrusted(path, false);
+      Properties record = files.read(path);
+      Instant created = Instant.parse(record.getProperty("createdAt"));
+      String status = record.getProperty("status");
+      Instant now = Instant.now();
+      if (("STARTING".equals(status) && created.plusSeconds(120).isBefore(now))
+              || ("CREATING".equals(status) && created.plusSeconds(18120).isBefore(now))) {
+        status = "MAINTENANCE_REQUIRED";
+      }
+      return new JobView(record.getProperty("id"), record.getProperty("types"), status, created,
+              record.getProperty("completedAt"), Boolean.parseBoolean(record.getProperty("offsite")),
+              record.getProperty("archive"), Long.parseLong(record.getProperty("bytes", "0")));
+    }
+    catch (IOException | RuntimeException failure) {
+      return null;
+    }
+  }
+
+  public record JobView(String id, String types, String status, Instant createdAt, String completedAt,
+          boolean offsite, String archive, long bytes) {
   }
 
   public List<BackupView> backups() {

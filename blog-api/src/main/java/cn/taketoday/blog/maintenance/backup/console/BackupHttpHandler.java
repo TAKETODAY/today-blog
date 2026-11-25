@@ -19,8 +19,11 @@ package cn.taketoday.blog.maintenance.backup.console;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cn.taketoday.blog.maintenance.backup.BackupService;
+import cn.taketoday.blog.updater.BackupType;
+import cn.taketoday.blog.updater.BackupJob;
 import cn.taketoday.blog.web.interceptor.RequiresBlogger;
 import infra.core.io.FileSystemResource;
 import infra.http.ContentDisposition;
@@ -34,6 +37,7 @@ import infra.web.annotation.POST;
 import infra.web.annotation.PUT;
 import infra.web.annotation.PathVariable;
 import infra.web.annotation.RequestMapping;
+import infra.web.annotation.RequestBody;
 import infra.web.annotation.RestController;
 
 /**
@@ -84,8 +88,16 @@ class BackupHttpHandler {
   }
 
   @POST
-  public void create() {
-    backups.requireExecutor();
+  public BackupJob create(@RequestBody(required = false) CreateRequest request) {
+    return backups.submit(request == null ? null : request.types(), request != null && request.offsite());
+  }
+
+  @GET("/jobs")
+  public List<BackupService.JobView> jobs() {
+    return backups.jobs();
+  }
+
+  public record CreateRequest(Set<BackupType> types, boolean offsite) {
   }
 
   @POST("/{id}/restore")

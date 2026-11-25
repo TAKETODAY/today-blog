@@ -102,6 +102,41 @@ describe('Backups', () => {
       click.mockRestore();
     }
   });
+
+  it('defaults to the recommended scope and submits only selected types', async () => {
+    const types = ['DATABASE', 'ATTACHMENTS', 'WEBSITE', 'CONFIGURATION', 'RELEASE', 'OSS'];
+    (http.get as jest.Mock).mockImplementation(async (url: string) => {
+      if (url.endsWith('/capabilities')) {
+        return {data: {create: true, types, offsite: true}};
+      }
+      return {data: []};
+    });
+    (http.post as jest.Mock).mockResolvedValueOnce({data: {id: '0123456789abcdef0123456789abcdef'}});
+
+    await act(async () => root.render(<Backups />));
+    const create = Array.from(container.querySelectorAll('button')).find(item => item.textContent === '创建备份');
+    expect(create?.disabled).toBe(false);
+    await act(async () => create?.click());
+    const dialog = document.body.querySelector('[role="dialog"]')!;
+    const checked = () => Array.from(dialog.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked'))
+      .map(input => input.value).filter(value => types.includes(value));
+    expect(checked()).toEqual(types.slice(0, -1));
+    const all = Array.from(dialog.querySelectorAll('button')).find(item => item.textContent === '全选可用类型');
+    await act(async () => all?.click());
+    expect(checked()).toEqual(types);
+
+    for (const input of Array.from(dialog.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked'))) {
+      if (input.value !== 'DATABASE') {
+        await act(async () => input.click());
+      }
+    }
+    expect(checked()).toEqual(['DATABASE']);
+    expect(dialog.textContent).toContain('部分备份');
+    const submit = Array.from(dialog.querySelectorAll('button')).find(item => item.textContent === '创建备份');
+    await act(async () => submit?.click());
+    expect(http.post).toHaveBeenCalledWith('/api/console/backups', {types: ['DATABASE'], offsite: false});
+    expect(http.get).toHaveBeenCalledWith('/api/console/backups/jobs');
+  });
 });
 
 // ProTable debounces both the initial request and subsequent reloads.

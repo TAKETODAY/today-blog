@@ -22,9 +22,11 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.Properties;
 import java.util.Set;
 
+import cn.taketoday.blog.updater.BackupJob;
 import cn.taketoday.blog.updater.BackupType;
 import cn.taketoday.blog.updater.DatabaseBackupFactory;
 import cn.taketoday.blog.updater.ReleaseMappings;
@@ -106,6 +108,9 @@ final class BlogCommands implements ApplicationRunner {
     else if (args.length == 3 && args[0].equals("backup-site") && args[1].equals("--types")) {
       backupSite(BackupType.parse(args[2]), null);
     }
+    else if (args.length == 3 && args[0].equals("backup-site") && args[1].equals("--job")) {
+      backupJob(BackupJob.parse(args[2]));
+    }
     else if (args.length == 3 && args[0].equals("upgrade") && args[1].equals("--task-id")) {
       upgrade(args[2]);
     }
@@ -134,6 +139,49 @@ final class BlogCommands implements ApplicationRunner {
             });
     Path config = Path.of(System.getenv().getOrDefault("BLOG_SITE_BACKUP_CONFIG", "/etc/today-blog/site-backup.properties"));
     return backup.create(config, types, uploadOffsite);
+  }
+
+  private void backupJob(BackupJob job) throws Exception {
+    files.verifyTrusted(BackupJob.STATUS, false);
+    Path status = BackupJob.STATUS.resolve(job.id() + ".properties");
+    files.verifyTrusted(status, false);
+    Properties record = files.read(status);
+    if (!"STARTING".equals(record.getProperty("status")) || !job.id().equals(record.getProperty("id"))
+            || !BackupType.encode(job.types()).equals(record.getProperty("types"))
+            || !Boolean.toString(job.offsite()).equals(record.getProperty("offsite"))) {
+      throw new IOException("备份任务与提交记录不匹配");
+    }
+    record.setProperty("status", "CREATING");
+    files.write(status, record);
+    try {
+      files.verifyTrusted(BackupJob.POLICY, false);
+      Properties allowed = files.read(BackupJob.POLICY);
+      if (!BackupType.parse(allowed.getProperty("types", "")).containsAll(job.types())
+              || (job.offsite() && !"true".equals(allowed.getProperty("offsite")))) {
+        throw new IOException("备份范围未获得运维授权");
+      }
+      Path archive = backupSite(job.types(), job.offsite());
+      recordLocalArchive(record, archive);
+      record.setProperty("status", "AVAILABLE");
+    }
+    catch (SiteBackup.OffsiteUploadFailed failure) {
+      record.setProperty("status", "OFFSITE_FAILED");
+      recordLocalArchive(record, failure.archive());
+      throw failure;
+    }
+    catch (Exception failure) {
+      record.setProperty("status", "FAILED");
+      throw failure;
+    }
+    finally {
+      record.setProperty("completedAt", Instant.now().toString());
+      files.write(status, record);
+    }
+  }
+
+  private static void recordLocalArchive(Properties record, Path archive) throws IOException {
+    record.setProperty("archive", archive.getFileName().toString());
+    record.setProperty("bytes", Long.toString(Files.size(archive)));
   }
 
   private void controlApi(String command) throws Exception {

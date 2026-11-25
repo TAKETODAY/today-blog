@@ -191,6 +191,63 @@ ExecStart=/usr/local/bin/today-blog upgrade --task-id %i
 TimeoutStartSec=2h
 PrivateTmp=true
 EOF
+  install -d -o root -g root -m 755 /var/lib/today-blog-backup-jobs
+  cat > /usr/local/lib/today-blog/backup-submit <<'EOF'
+#!/bin/bash
+set -euo pipefail
+STATUS=/var/lib/today-blog-backup-jobs
+PATTERN='^[0-9a-f]{32}_[A-Z-]{1,80}_[01]$'
+[[ $EUID == 0 && $# == 1 ]] || exit 2
+if [[ $1 == --run ]]; then
+  IFS= read -r job < "$STATUS/.pending"
+  /usr/bin/rm -- "$STATUS/.pending"
+  [[ $job =~ $PATTERN ]] || exit 2
+  exec /usr/local/bin/today-blog backup-site --job "$job"
+fi
+[[ $1 =~ $PATTERN ]] || exit 2
+[[ $(/usr/bin/cat /etc/today-blog/service-manager) == systemd ]] || exit 2
+[[ -f /etc/today-blog/backup-console.properties ]] || exit 2
+umask 077
+# 仅序列化后台提交，不能代替 Java 对采集窗口的升级锁。
+exec 9>"$STATUS/.submit.lock"
+/usr/bin/flock -n 9 || exit 3
+state=$(/usr/bin/systemctl --system show -p ActiveState -p Job today-blog-backup-console.service)
+[[ $'\n'"$state"$'\n' == *$'\nJob=\n'* ]] || exit 3
+[[ $'\n'"$state"$'\n' == *$'\nActiveState=inactive\n'* || $'\n'"$state"$'\n' == *$'\nActiveState=failed\n'* ]] || exit 3
+IFS=_ read -r id types offsite <<< "$1"
+record="$STATUS/$id.properties"
+[[ ! -e $record ]] || exit 2
+started=$(/usr/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
+if [[ $offsite == 1 ]]; then
+  upload=true
+else
+  upload=false
+fi
+tmp=$(/usr/bin/mktemp "$STATUS/.submit-XXXXXXXX")
+trap '/usr/bin/rm -f -- "$tmp"' EXIT
+printf 'id=%s\ntypes=%s\noffsite=%s\ncreatedAt=%s\nstatus=STARTING\n' \
+  "$id" "${types//-/,}" "$upload" "$started" > "$tmp"
+/usr/bin/chmod 644 "$tmp"
+/usr/bin/mv -- "$tmp" "$record"
+printf '%s\n' "$1" > "$STATUS/.pending"
+if ! /usr/bin/systemctl --system --no-block start today-blog-backup-console.service; then
+  /usr/bin/rm -f -- "$STATUS/.pending" "$record"
+  exit 2
+fi
+EOF
+  chmod 755 /usr/local/lib/today-blog/backup-submit
+  cat > /etc/systemd/system/today-blog-backup-console.service <<'EOF'
+[Unit]
+Description=TODAY Blog console backup
+
+[Service]
+Type=oneshot
+ExecCondition=/usr/bin/grep -qx systemd /etc/today-blog/service-manager
+ExecStart=/usr/local/lib/today-blog/backup-submit --run
+TimeoutStartSec=5h
+UMask=0077
+PrivateTmp=true
+EOF
   /usr/bin/systemctl daemon-reload
 fi
 # 同一个 root 配置供终端 CLI 和后台任务选择服务管理方式，不从 API 继承。
@@ -200,6 +257,9 @@ SUDOERS="$(mktemp)"
 cat > "$SUDOERS" <<'EOF'
 today ALL=(root) NOPASSWD: NOSETENV: /usr/local/lib/today-blog/updater ^[1-9][0-9]{0,18}$
 EOF
+if [[ "$MODE" == systemd ]]; then
+  echo 'today ALL=(root) NOPASSWD: NOSETENV: /usr/local/lib/today-blog/backup-submit ^[0-9a-f]{32}_[A-Z-]{1,80}_[01]$' >> "$SUDOERS"
+fi
 visudo -cf "$SUDOERS"
 install -m 440 "$SUDOERS" /etc/sudoers.d/today-blog-upgrade
 if [[ "$MODE" == systemd ]]; then

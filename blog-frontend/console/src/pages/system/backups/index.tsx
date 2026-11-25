@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Alert, Button, Card, Descriptions, Drawer, Space, Tag, Tooltip } from 'antd';
+import { Alert, Button, Card, Checkbox, Descriptions, Drawer, Modal, Space, Table, Tag, Tooltip } from 'antd';
 import { LockOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history } from '@umijs/max';
 import { http } from '@/utils/http';
@@ -30,6 +30,19 @@ interface BackupDetail {
   location: string | null;
 }
 
+const backupTypes = ['DATABASE', 'ATTACHMENTS', 'WEBSITE', 'CONFIGURATION', 'RELEASE', 'OSS'];
+
+interface BackupJob {
+  id: string;
+  types: string;
+  status: string;
+  createdAt: string;
+  completedAt?: string;
+  offsite: boolean;
+  archive?: string;
+  bytes: number;
+}
+
 function bytes(value: number) {
   const size = Number(value);
   if (!Number.isFinite(size) || size < 0) {
@@ -47,14 +60,26 @@ export default function Backups() {
     CREATING: t('backups.creating'), AVAILABLE: t('backups.available'), FAILED: t('backups.failed'),
     DELETING: t('backups.deleting'), DELETED: t('backups.deleted'), STARTING: t('backups.submitted'),
     SUCCESS: t('backups.succeeded'), RESTORING: t('backups.restoring'), MAINTENANCE_REQUIRED: t('backups.manualActionRequired'),
+    OFFSITE_FAILED: t('backups.offsiteFailed'),
   };
   const status = (value: string) => {
     const color = ['AVAILABLE', 'SUCCESS'].includes(value) ? 'success'
-      : ['FAILED', 'MAINTENANCE_REQUIRED'].includes(value) ? 'error' : 'default';
+      : ['FAILED', 'MAINTENANCE_REQUIRED', 'OFFSITE_FAILED'].includes(value) ? 'error' : 'default';
     return <Tag color={color}>{statusNames[value] || value}</Tag>;
   };
   const actionRef = useRef<ActionType>();
-  const [capabilities, setCapabilities] = useState<{ reason?: string }>();
+  const [capabilities, setCapabilities] = useState<{ reason?: string; create?: boolean; types?: string[]; offsite?: boolean }>();
+  const [jobs, setJobs] = useState<BackupJob[]>([]);
+  const [jobsError, setJobsError] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [offsite, setOffsite] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
+  const allowed = backupTypes.filter(type => capabilities?.types?.includes(type));
+  const recommended = allowed.filter(type => type !== 'OSS');
+  const isFullScope = (types: string[]) => backupTypes.filter(type => type !== 'OSS').every(type => types.includes(type));
+  const typeLabel = (type: string) => t(`backups.type.${type}`);
   const [error, setError] = useState(false);
   const [detail, setDetail] = useState<BackupDetail>();
   const [detailLoading, setDetailLoading] = useState(false);
@@ -79,6 +104,39 @@ export default function Backups() {
   useEffect(() => {
     loadCapabilities();
   }, [loadCapabilities]);
+
+  const loadJobs = useCallback(async () => {
+    try {
+      const response = await http.get('/api/console/backups/jobs');
+      setJobs(response.data);
+      setJobsError(false);
+    } catch {
+      setJobsError(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!capabilities) {
+      return undefined;
+    }
+    loadJobs();
+    const timer = window.setInterval(loadJobs, 5000);
+    return () => window.clearInterval(timer);
+  }, [capabilities, loadJobs]);
+
+  const submit = async () => {
+    setSubmitting(true);
+    setSubmitError(false);
+    try {
+      await http.post('/api/console/backups', {types: selected, offsite});
+      setCreateOpen(false);
+      void loadJobs();
+    } catch {
+      setSubmitError(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (!detailId) {
@@ -216,9 +274,30 @@ export default function Backups() {
     <Space direction="vertical" size="large" style={{width: '100%'}}>
       <Alert type="warning" showIcon message={t('backups.restoringABackupRollsBack')}
              description={t('backups.aRestoreRevertsTheApplication')}/>
-      <Alert type={error ? 'error' : 'info'} showIcon message={error ? t('backups.couldNotLoadBackupInformation') : t('backups.backupOperationsAreNotReady')}
+      {(!capabilities?.create || error) && <Alert type={error ? 'error' : 'info'} showIcon message={error ? t('backups.couldNotLoadBackupInformation') : t('backups.backupOperationsAreNotReady')}
              description={error ? t('backups.theListAndEnvironmentStatus') : reason}
-             action={error ? <Button size="small" onClick={refresh}>{t('backups.retry')}</Button> : undefined}/>
+             action={error ? <Button size="small" onClick={refresh}>{t('backups.retry')}</Button> : undefined}/>}
+      {(capabilities?.create || jobs.length > 0 || jobsError) && <Card title={t('backups.jobs')}>
+        {jobsError && <Alert type="warning" showIcon message={t('backups.jobsUnavailable')}/>}
+        <Table<BackupJob> rowKey="id" dataSource={jobs} size="small" pagination={{pageSize: 5}}
+                          scroll={{x: 800}} columns={[
+          {title: t('backups.scope'), render: (_, job) => {
+            const types = job.types.split(',');
+            return <Space direction="vertical" size={0}>
+              <span>{types.map(typeLabel).join(' / ')}</span>
+              <Tag>{t(isFullScope(types) ? 'backups.fullLocalScope' : 'backups.partialScope')}</Tag>
+            </Space>;
+          }},
+          {title: t('backups.status'), render: (_, job) => status(job.status)},
+          {title: t('backups.created'), render: (_, job) => format(job.createdAt)},
+          {title: t('backups.duration'), render: (_, job) => job.completedAt
+            ? `${Math.max(0, Math.floor((Date.parse(job.completedAt) - Date.parse(job.createdAt)) / 1000))} s` : '—'},
+          {title: t('backups.size'), render: (_, job) => bytes(job.bytes)},
+          {title: t('backups.offsite'), render: (_, job) => job.offsite && job.status === 'AVAILABLE' ? t('backups.succeeded') : '—'},
+          {title: t('backups.recoveryVerification'), render: (_, job) => job.archive ? t('backups.notVerified') : '—'},
+          {title: t('backups.filePath'), dataIndex: 'archive'},
+        ]}/>
+      </Card>}
       {downloadError && <Alert type="error" showIcon closable onClose={() => setDownloadError(false)}
                                message={t('backups.downloadFailed')}/>}
       <ProTable<Backup>
@@ -266,13 +345,38 @@ export default function Backups() {
         }}
         toolBarRender={() => [
           <Button key="refresh" icon={<ReloadOutlined/>} onClick={refresh}>{t('backups.refresh')}</Button>,
-          <Tooltip key="create" title={reason}>
-            <span><Button type="primary" icon={<PlusOutlined/>} disabled>{t('backups.createBackup')}</Button></span>
+          <Tooltip key="create" title={capabilities?.create ? undefined : reason}>
+            <span><Button type="primary" icon={<PlusOutlined/>} disabled={!capabilities?.create || error
+              || jobs.some(job => ['STARTING', 'CREATING'].includes(job.status))} onClick={() => {
+              setSelected(recommended);
+              setOffsite(!!capabilities?.offsite);
+              setSubmitError(false);
+              setCreateOpen(true);
+            }}>{t('backups.createBackup')}</Button></span>
           </Tooltip>,
         ]}
       />
       <span className="backup-secondary">{t('backups.showsUpTo500Recent')}</span>
     </Space>
+    <Modal title={t('backups.createBackup')} open={createOpen} onCancel={() => setCreateOpen(false)}
+           onOk={submit} confirmLoading={submitting} okButtonProps={{disabled: !selected.length || !selected.every(type => allowed.includes(type))}}
+           okText={t('backups.createBackup')}>
+      <Space direction="vertical" style={{width: '100%'}}>
+        <Alert showIcon type="warning" message={t('backups.captureWarning')}/>
+        {!!selected.length && <Tag>{t(isFullScope(selected) ? 'backups.fullLocalScope' : 'backups.partialScope')}</Tag>}
+        <Space>
+          <Button size="small" onClick={() => setSelected(allowed)}>{t('backups.selectAll')}</Button>
+          <Button size="small" onClick={() => setSelected(recommended)}>{t('backups.recommended')}</Button>
+        </Space>
+        <Checkbox.Group value={selected} onChange={values => setSelected(values.map(String))}>
+          <Space direction="vertical">
+            {backupTypes.map(type => <Checkbox key={type} value={type} disabled={!allowed.includes(type)}>{typeLabel(type)}</Checkbox>)}
+          </Space>
+        </Checkbox.Group>
+        <Checkbox checked={offsite} disabled={!capabilities?.offsite} onChange={event => setOffsite(event.target.checked)}>{t('backups.offsite')}</Checkbox>
+        {submitError && <Alert type="error" showIcon message={t('backups.submitFailed')}/>}
+      </Space>
+    </Modal>
     <Drawer className="backup-detail-drawer" title={t('backups.backupDetails')} open={detailId !== undefined} onClose={() => setDetailId(undefined)} width={640}
             contentWrapperStyle={{maxWidth: '100vw'}}>
       {detailError && <Alert type="error" showIcon message={t('backups.couldNotReadTheBackup')}

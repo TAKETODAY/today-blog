@@ -126,11 +126,23 @@ class BackupHttpHandlerTests {
     String base = "/api/console/backups";
     mvc.get().uri(base).assertThat().hasStatusOk();
     mvc.get().uri(base + "/capabilities").assertThat().hasStatusOk();
+    mvc.get().uri(base + "/jobs").assertThat().hasStatusOk();
     mvc.post().uri(base).assertThat().hasStatus(503);
     String id = "1";
     mvc.post().uri(base + "/{id}/restore", id).assertThat().hasStatus(503);
     mvc.put().uri(base + "/{id}/protection", id).assertThat().hasStatus(503);
     mvc.delete().uri(base + "/{id}", id).assertThat().hasStatus(503);
+  }
+
+  @Test
+  void backupJobsRequireAuthentication() {
+    String base = "/api/console/backups";
+    mvc.get().uri(base + "/jobs")
+            .with((request, context) -> request.removeHeader(HeaderSessionIdResolver.HEADER_AUTHENTICATION_INFO))
+            .assertThat().hasStatus(401);
+    mvc.post().uri(base)
+            .with((request, context) -> request.removeHeader(HeaderSessionIdResolver.HEADER_AUTHENTICATION_INFO))
+            .assertThat().hasStatus(401);
   }
 
   @Test
