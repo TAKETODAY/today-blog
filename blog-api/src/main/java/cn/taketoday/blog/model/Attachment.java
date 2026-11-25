@@ -19,6 +19,7 @@ package cn.taketoday.blog.model;
 
 import java.util.Objects;
 
+import cn.taketoday.blog.file.Locatable;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import infra.core.style.ToStringBuilder;
 import infra.persistence.annotation.Table;
@@ -29,7 +30,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Table("attachment")
-public class Attachment extends BasicModel {
+public class Attachment extends BasicModel implements Locatable {
 
   /** 附件名 */
   private String name;

@@ -86,7 +86,6 @@ class AttachmentHttpHandler {
   }
 
   public record UploadReturnValue(String uri, String cdnURL) {
-
   }
 
   @GET("/{id}")

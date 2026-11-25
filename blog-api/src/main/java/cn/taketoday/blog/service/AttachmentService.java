@@ -26,11 +26,9 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
-import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
-import cn.taketoday.blog.problem.CommonProblems;
 import cn.taketoday.blog.problem.ProblemException;
 import cn.taketoday.blog.util.FileUtils;
 import cn.taketoday.blog.util.OssOperations;
@@ -46,6 +44,8 @@ import infra.web.multipart.Part;
 import infra.web.server.InternalServerException;
 import lombok.RequiredArgsConstructor;
 
+import static cn.taketoday.blog.file.FileOperations.attachments;
+
 /**
  * 附件服务
  *
@@ -60,8 +60,6 @@ public class AttachmentService {
 
   private final OssOperations ossOperations;
 
-  private final AttachmentConfig attachmentConfig;
-
   private final TransactionOperations txOperations;
 
   /**
@@ -70,7 +68,6 @@ public class AttachmentService {
    * @param attachment attachment
    */
   public void persist(Attachment attachment) {
-    normalizeLocation(attachment);
     entityManager.persist(attachment);
   }
 
@@ -95,20 +92,8 @@ public class AttachmentService {
   }
 
   public void updateById(Attachment model) {
-    normalizeLocation(model);
     model.setUpdateAt(null);
     entityManager.updateById(model);
-  }
-
-  private void normalizeLocation(Attachment attachment) {
-    if (attachment.getLocation() != null) {
-      try {
-        attachment.setLocation(attachmentConfig.relativeLocation(attachment.getLocation()));
-      }
-      catch (IllegalArgumentException invalid) {
-        throw new ProblemException(CommonProblems.INVALID_REQUEST);
-      }
-    }
   }
 
   /**
@@ -127,11 +112,7 @@ public class AttachmentService {
     // 先删除数据库，可以回滚
     entityManager.delete(Attachment.class, attachId);
 
-    File file = attachmentConfig.getLocalFile(attachment);
-    try {
-      FileUtils.deleteFolder(file);
-    }
-    catch (IOException ignored) { }
+    attachments.delete(attachment);
 
     // 删除远程OSS
 
@@ -178,7 +159,7 @@ public class AttachmentService {
   }
 
   private File saveFile(Part file, String uploadUrl) throws IOException {
-    File dest = attachmentConfig.getLocalFile(uploadUrl);
+    File dest = attachments.getLocalFile(uploadUrl);
     dest.getParentFile().mkdirs();
     file.transferTo(dest);
     return dest;
@@ -219,7 +200,7 @@ public class AttachmentService {
 
     attachment.setUri(uploadUri);
     attachment.setName(fileName);
-    attachment.setLocation(attachmentConfig.relativeLocation(uploadUri));
+    attachment.setLocation(uploadUri);
     attachment.setSize(dest.length());
     attachment.setFileType(AttachmentType.from(fileName));
     return attachment;
@@ -240,7 +221,7 @@ public class AttachmentService {
       // 数据库删除之后文件没有删除可以回滚
       entityManager.updateById(update);
 
-      File dest = attachmentConfig.getLocalFile(attachment);
+      File dest = attachments.getLocalFile(attachment);
       ossOperations.uploadFile(attachment.getLocation(), dest);
     }
     else {
