@@ -19,7 +19,7 @@ package cn.taketoday.blog.maintenance.upgrade;
 
 import java.time.Instant;
 
-import infra.persistence.annotation.GeneratedId;
+import cn.taketoday.blog.model.BasicGeneratedIdModel;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,10 +33,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table("t_upgrade_record")
-public class UpgradeRecordEntity {
-
-  @GeneratedId
-  private Long id;
+public class UpgradeRecordEntity extends BasicGeneratedIdModel {
 
   private Long packageId;
 

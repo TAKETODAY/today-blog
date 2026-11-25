@@ -19,7 +19,8 @@ package cn.taketoday.blog.maintenance.upgrade;
 
 import java.time.Instant;
 
-import infra.persistence.annotation.GeneratedId;
+import cn.taketoday.blog.file.Locatable;
+import cn.taketoday.blog.model.BasicGeneratedIdModel;
 import infra.persistence.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,10 +34,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table("t_upgrade_package")
-public class UpgradePackageEntity {
-
-  @GeneratedId
-  private Long id;
+public class UpgradePackageEntity extends BasicGeneratedIdModel implements Locatable {
 
   private String originalName;
 
@@ -61,5 +59,10 @@ public class UpgradePackageEntity {
   private Instant createdAt;
 
   private Instant consumedAt;
+
+  @Override
+  public String getLocation() {
+    return location;
+  }
 
 }

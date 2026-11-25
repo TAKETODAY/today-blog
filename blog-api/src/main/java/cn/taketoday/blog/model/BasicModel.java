@@ -17,35 +17,21 @@
 
 package cn.taketoday.blog.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.Instant;
-
-import infra.persistence.NewEntityIndicator;
-import infra.persistence.annotation.GeneratedId;
-import infra.persistence.annotation.Transient;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
  * @since 3.2 2024/10/13 17:40
  */
-public abstract class BasicModel implements Serializable, NewEntityIndicator {
+public abstract class BasicModel extends BasicGeneratedIdModel {
 
   @Serial
   private static final long serialVersionUID = 1L;
 
-  @GeneratedId
-  protected Long id;
-
   protected Instant createAt;
 
   protected Instant updateAt;
-
-  public void setId(Long id) {
-    this.id = id;
-  }
 
   public void setCreateAt(Instant createAt) {
     this.createAt = createAt;
@@ -55,23 +41,12 @@ public abstract class BasicModel implements Serializable, NewEntityIndicator {
     this.updateAt = updateAt;
   }
 
-  public Long getId() {
-    return id;
-  }
-
   public Instant getCreateAt() {
     return createAt;
   }
 
   public Instant getUpdateAt() {
     return updateAt;
-  }
-
-  @Transient
-  @JsonIgnore
-  @Override
-  public boolean isNew() {
-    return id == null;
   }
 
 }
