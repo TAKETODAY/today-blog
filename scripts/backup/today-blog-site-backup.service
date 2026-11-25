@@ -1,0 +1,11 @@
+[Unit]
+Description=TODAY Blog encrypted full-site backup
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/today-blog backup-site
+UMask=0077
+PrivateTmp=true
+TimeoutStartSec=5h

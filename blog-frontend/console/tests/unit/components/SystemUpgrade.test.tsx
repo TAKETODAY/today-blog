@@ -97,4 +97,12 @@ describe('SystemUpgrade', () => {
     expect(Array.from(container.querySelectorAll('button')).find(element => element.textContent === '上传升级包')?.disabled).toBe(false);
     expect(Array.from(container.querySelectorAll('button')).some(element => element.textContent?.replace(/\s/g, '') === '升级')).toBe(false);
   });
+
+  it('distinguishes rollback from recovery and links to the full-site backup guide', async () => {
+    await render();
+    expect(container.textContent).toContain('程序回滚不会撤销数据库迁移或恢复网站文件');
+    expect(container.textContent).toContain('整站备份不包含 OSS 对象');
+    expect(container.querySelector('a[href$="/src/docs/backup-restore.md"]')?.textContent)
+        .toBe('整站备份与恢复指南');
+  });
 });

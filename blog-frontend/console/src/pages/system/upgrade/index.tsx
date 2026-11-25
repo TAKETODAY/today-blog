@@ -201,7 +201,11 @@ export default function SystemUpgrade() {
 
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Alert type="warning" showIcon message={t('upgrade.rollingBackTheApplicationDoes')}
-             description={t('upgrade.onlyPublishReleasesWithBackward')}/>
+             description={<>
+               {t('upgrade.onlyPublishReleasesWithBackward')}{' '}
+               <a href="https://github.com/TAKETODAY/today-blog/blob/main/src/docs/backup-restore.md"
+                  target="_blank" rel="noreferrer">{t('upgrade.siteBackupGuide')}</a>
+             </>}/>
       {maintenance.status?.enabled && <Alert type="warning" showIcon message={t('upgrade.maintenanceIsActive')}
                                              description={<>{maintenance.status.message || t('upgrade.maintenanceInProgressTryAgain')}{' '}
                                                {t('upgrade.retryAfter', { seconds: maintenance.status.retryAfterSeconds || 120 })}{' '}{maintenance.sourceLabel}</>}/>}
