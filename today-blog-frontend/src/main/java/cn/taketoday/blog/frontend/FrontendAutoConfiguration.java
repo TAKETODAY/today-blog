@@ -19,13 +19,14 @@ package cn.taketoday.blog.frontend;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import infra.context.annotation.Bean;
 import infra.context.annotation.Configuration;
+import infra.core.env.Environment;
 import infra.core.io.ClassPathResource;
 import infra.core.io.Resource;
 import infra.http.HttpHeaders;
@@ -33,6 +34,7 @@ import infra.web.handler.function.RouterFunction;
 import infra.web.handler.function.RouterFunctions;
 import infra.web.handler.function.ServerRequest;
 import infra.web.handler.function.ServerResponse;
+import infra.web.util.UriUtils;
 
 /**
  * 内嵌前端资源和 React 单页应用回退路由。
@@ -47,27 +49,39 @@ public class FrontendAutoConfiguration {
 
   private static final String API_PREFIX = "/api";
 
-  private static final Resource CONSOLE = new ClassPathResource("frontend/console/");
+  private static final ClassPathResource CONSOLE = new ClassPathResource("frontend/console/");
 
-  private static final Resource DESKTOP = new ClassPathResource("frontend/desktop/");
+  private static final ClassPathResource DESKTOP = new ClassPathResource("frontend/desktop/");
 
-  private static final Pattern HASHED_ASSET = Pattern.compile(".*(?:[.-])[0-9a-f]{8,}(?:[.-]).*",
-          Pattern.CASE_INSENSITIVE);
+  private static final Pattern CONSOLE_HASH = Pattern.compile(".+\\.[0-9a-fA-F]{8}\\..+");
+
+  private static final Pattern DESKTOP_HASH = Pattern.compile(".+-[A-Za-z0-9_-]{8}\\..+");
 
   @Bean
-  RouterFunction<ServerResponse> frontendRouter() {
-    Function<ServerRequest, Optional<Resource>> lookup = this::lookup;
-    BiConsumer<Resource, HttpHeaders> headers = this::setCacheHeaders;
-    return RouterFunctions.resources(lookup, headers);
+  RouterFunction<ServerResponse> frontendRouter(Environment environment) {
+    var consoleCache = CachePolicy.load(environment, "frontend.cache.console.");
+    var desktopCache = CachePolicy.load(environment, "frontend.cache.desktop.");
+    return RouterFunctions.resources(this::lookupConsole,
+                    (resource, headers) -> consoleCache.apply(resource, headers,
+                            asset -> CONSOLE_HASH.matcher(asset.getName()).matches()))
+            .and(RouterFunctions.resources(this::lookupDesktop,
+                    (resource, headers) -> desktopCache.apply(resource, headers,
+                            asset -> asset.getPath().startsWith(DESKTOP.getPath() + "assets/")
+                                    && DESKTOP_HASH.matcher(asset.getName()).matches())));
   }
 
-  private Optional<Resource> lookup(ServerRequest request) {
-    String path = request.path();
-    if (path.equals(API_PREFIX) || path.startsWith(API_PREFIX + "/")) {
-      return Optional.empty();
-    }
-    if (path.equals(CONSOLE_PREFIX) || path.startsWith(CONSOLE_PREFIX + "/")) {
+  private Optional<Resource> lookupConsole(ServerRequest request) {
+    String path = request.requestPath().pathWithinApplication().value();
+    if (under(path, CONSOLE_PREFIX)) {
       return find(CONSOLE, path.substring(CONSOLE_PREFIX.length()));
+    }
+    return Optional.empty();
+  }
+
+  private Optional<Resource> lookupDesktop(ServerRequest request) {
+    String path = request.requestPath().pathWithinApplication().value();
+    if (under(path, API_PREFIX) || under(path, CONSOLE_PREFIX) || under(path, "/upload")) {
+      return Optional.empty();
     }
     if (path.equals("/sitemap.xml") || path.equals("/feed.rss") || path.equals("/feed.atom")) {
       return Optional.empty();
@@ -75,16 +89,17 @@ public class FrontendAutoConfiguration {
     return find(DESKTOP, path);
   }
 
+  private static boolean under(String path, String prefix) {
+    return path.equals(prefix) || path.startsWith(prefix + "/");
+  }
+
   private Optional<Resource> find(Resource root, String path) {
-    String relativePath = path;
-    if (relativePath.isEmpty() || relativePath.equals("/")) {
-      relativePath = "index.html";
+    String relativePath;
+    try {
+      relativePath = path.length() <= 1 ? "index.html" : UriUtils.decode(path.substring(1), StandardCharsets.UTF_8);
     }
-    else {
-      relativePath = relativePath.substring(1);
-      if (relativePath.isEmpty()) {
-        relativePath = "index.html";
-      }
+    catch (IllegalArgumentException ex) {
+      return Optional.empty();
     }
     if (!safe(relativePath)) {
       return Optional.empty();
@@ -92,12 +107,12 @@ public class FrontendAutoConfiguration {
 
     try {
       Resource resource = root.createRelative(relativePath);
-      if (resource.exists() && resource.isReadable()) {
+      if (resource.isReadable()) {
         return Optional.of(resource);
       }
       if (!hasExtension(relativePath)) {
         Resource index = root.createRelative("index.html");
-        if (index.exists() && index.isReadable()) {
+        if (index.isReadable()) {
           return Optional.of(index);
         }
       }
@@ -114,20 +129,30 @@ public class FrontendAutoConfiguration {
   }
 
   private static boolean hasExtension(String path) {
-    int slash = path.lastIndexOf('/');
-    int dot = path.lastIndexOf('.');
-    return dot > slash;
+    // 尾部斜杠不应把缺失的文件请求变成 SPA 路由。
+    String name = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+    return name.lastIndexOf('.') > name.lastIndexOf('/');
   }
 
-  private void setCacheHeaders(Resource resource, HttpHeaders headers) {
-    if ("index.html".equals(resource.getName())) {
-      headers.setCacheControl(HttpHeaders.NO_CACHE);
+  private record CachePolicy(String index, String assets, String hashedAssets) {
+
+    static CachePolicy load(Environment environment, String prefix) {
+      return new CachePolicy(environment.getProperty(prefix + "index", HttpHeaders.NO_CACHE),
+              environment.getProperty(prefix + "assets", "public, max-age=86400"),
+              environment.getProperty(prefix + "hashed-assets", "public, max-age=31536000, immutable"));
     }
-    else if (HASHED_ASSET.matcher(resource.getName()).matches()) {
-      headers.setCacheControl("public, max-age=31536000, immutable");
-    }
-    else {
-      headers.setCacheControl("public, max-age=86400");
+
+    void apply(Resource resource, HttpHeaders headers, Predicate<ClassPathResource> hashed) {
+      String name = resource.getName();
+      if ("index.html".equals(name)) {
+        headers.setCacheControl(index);
+      }
+      else if (name != null && resource instanceof ClassPathResource asset && hashed.test(asset)) {
+        headers.setCacheControl(hashedAssets);
+      }
+      else {
+        headers.setCacheControl(assets);
+      }
     }
   }
 

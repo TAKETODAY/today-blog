@@ -23,9 +23,11 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Objects;
 import java.util.Optional;
 
+import cn.taketoday.blog.config.AttachmentConfig;
 import cn.taketoday.blog.model.Attachment;
 import cn.taketoday.blog.model.enums.AttachmentType;
 import cn.taketoday.blog.model.form.AttachmentForm;
@@ -44,8 +46,6 @@ import infra.web.multipart.Part;
 import infra.web.server.InternalServerException;
 import lombok.RequiredArgsConstructor;
 
-import static cn.taketoday.blog.file.FileOperations.attachments;
-
 /**
  * 附件服务
  *
@@ -61,6 +61,8 @@ public class AttachmentService {
   private final OssOperations ossOperations;
 
   private final TransactionOperations txOperations;
+
+  private final AttachmentConfig attachments;
 
   /**
    * 新增附件信息
@@ -112,7 +114,7 @@ public class AttachmentService {
     // 先删除数据库，可以回滚
     entityManager.delete(Attachment.class, attachId);
 
-    attachments.delete(attachment);
+    attachments.getLocalFile(attachment).delete();
 
     // 删除远程OSS
 
@@ -160,7 +162,7 @@ public class AttachmentService {
 
   private File saveFile(Part file, String uploadUrl) throws IOException {
     File dest = attachments.getLocalFile(uploadUrl);
-    dest.getParentFile().mkdirs();
+    Files.createDirectories(dest.toPath().getParent());
     file.transferTo(dest);
     return dest;
   }

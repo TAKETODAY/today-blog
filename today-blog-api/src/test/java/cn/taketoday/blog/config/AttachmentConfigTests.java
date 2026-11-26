@@ -51,6 +51,7 @@ class AttachmentConfigTests {
     try (var context = attachmentContext(root, Map.of())) {
       AttachmentConfig config = context.getBean(AttachmentConfig.class);
       assertLocalFile(config, root.resolve("data"));
+      assertThat(config.getRemoteURL("/upload/image/photo.png")).isEqualTo("/upload/image/photo.png");
     }
   }
 

@@ -78,6 +78,7 @@ dependencies {
   testImplementation 'cn.taketoday:infra-starter-webmvc-test'
   testImplementation 'cn.taketoday:infra-starter-restclient-test'
   testImplementation 'cn.taketoday:infra-mariadb4j'
+  testRuntimeOnly project(':today-blog-frontend')
 
   testImplementation 'org.projectlombok:lombok'
   testAnnotationProcessor("org.projectlombok:lombok")

@@ -122,6 +122,13 @@ tasks.withType(JavaCompile).configureEach {
 dependencies {
   compileOnly platform('cn.taketoday:infra-bom:5.0-Draft.10-SNAPSHOT')
   compileOnly 'cn.taketoday:infra-webmvc'
+  testImplementation platform('cn.taketoday:infra-bom:5.0-Draft.10-SNAPSHOT')
+  testImplementation 'cn.taketoday:infra-starter-test'
+  testImplementation 'cn.taketoday:infra-starter-webmvc-test'
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
 }
 
 tasks.named('assemble') {

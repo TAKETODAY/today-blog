@@ -65,7 +65,7 @@ public class AttachmentConfig {
   }
 
   public String getRemoteURL(String uri) {
-    return cdnHostPrefix + uri;
+    return cdnHostPrefix == null || cdnHostPrefix.isBlank() ? uri : cdnHostPrefix + uri;
   }
 
   public File getLocalFile(Attachment attachment) {

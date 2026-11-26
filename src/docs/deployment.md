@@ -103,15 +103,39 @@ API 可通过 `JAVA_HOME` 选择 Java；默认部署的 CLI JAR 使用 `/usr/bin
 
 - Console：`/opt/today-blog/current/console`
 - Desktop：`/opt/today-blog/current/desktop`
+- 本地附件：在 NGINX 中将 `/upload/` 映射到 `$BLOG_DATA_ROOT/data/upload/`；若配置了 `attachment.outside-resource`，则映射到其下的 `upload/`。
 - API：代理到 `127.0.0.1:8080`
 - 向导生成的 NGINX 草案：`/etc/today-blog/nginx.conf.example`；审核后复制，先执行 `nginx -t` 再 reload。
 - 必须拒绝外部访问 `/api/internal/health`；绑定本机 API 或用防火墙阻止公网直连端口。
 - 上传请求大小、超时需与后端保持一致。
 
-`frontendMode=embedded` 不需要 NGINX，CDN 可以直接将 API 服务作为源站。API 会提供 `/blog-admin/`
-和 Desktop 的根路径，并为 Desktop 的 React `BrowserRouter` 路由回退到 `index.html`；带扩展名的缺失
-静态资源不会错误地回退为 HTML。此模式下必须由防火墙或 CDN 源站策略保护 API 端口，并禁止缓存 `/api/**`
-以及 `/api/internal/health`。
+`frontendMode=embedded` 不需要 NGINX，CDN 可以直接将 API 服务作为源站。API 提供 Console `/blog-admin/`、
+Desktop `/` 和本地附件 `/upload/**`。两套单页应用的前端路由可回退到各自的 `index.html`，但缺失的
+JS、CSS、图片或附件返回 404。附件读取与写入使用同一目录，默认是 `$BLOG_DATA_ROOT/data/upload/`；
+配置 `attachment.outside-resource` 后，使用该目录下的 `upload/`。如果旧部署曾将附件写到其他目录，
+请在升级前核对实际位置；升级不会移动旧文件。
+
+可以在 API 的外部 YAML 中单独覆盖 Console、Desktop 和附件的 `Cache-Control`。以下是默认值，
+只需配置想覆盖的项，修改后重启 API：
+
+```yaml
+frontend:
+  cache:
+    console:
+      index: 'no-cache'
+      assets: 'public, max-age=86400'
+      hashed-assets: 'public, max-age=31536000, immutable'
+    desktop:
+      index: 'no-cache'
+      assets: 'public, max-age=86400'
+      hashed-assets: 'public, max-age=31536000, immutable'
+    upload: 'no-cache'
+```
+
+`index` 也适用于 SPA 回退响应。建议让 CDN 遵循源站缓存头，不强制延长 HTML 和 404 的缓存时间，
+避免升级或回滚后旧入口引用不可用的构建资源。若不希望缓存 Console 入口，可设置 `console.index: 'no-store'`
+（完整属性名为 `frontend.cache.console.index`）。`/api/**` 不得缓存，且必须由防火墙或 CDN 源站策略保护
+API 端口，不对外暴露 `/api/internal/health`。上述缓存配置只对内嵌模式生效；NGINX 模式由代理配置控制。
 
 ```bash
 sudo today-blog start
