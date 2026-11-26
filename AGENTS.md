@@ -33,8 +33,7 @@
 
 - **后端（`today-blog-api/`）**: Gradle 9.8.1（wrapper），最低支持 Java 17（`today-blog-api/build.gradle` 中
   `sourceCompatibility/targetCompatibility = VERSION_17`），推荐使用 JDK 25（`.sdkmanrc` 锁定 `25-librca`）。根项目名 `today-blog`。
-- **前端（`today-blog-frontend/`）**: pnpm 10.33 monorepo，4 个子包：`console/`、`desktop/`、`mobile/`、`common/`。
-- 两套系统独立运作，没有统一的编排器。
+- **前端（`today-blog-frontend/`）**: `console/`、`desktop/`、`common/` 分别维护 pnpm 锁文件。根项目的 `./gradlew release` 同时构建前后端。
 
 ## 后端框架：TODAY Infrastructure（不是 Spring Boot）
 
@@ -152,31 +151,29 @@ Flyway 迁移文件位于 `src/main/resources/db/migration/`，基线版本 `3.1
 ## 前端命令
 
 ```bash
-# Console（管理后台）— React 17 + UmiJS 3 + Ant Design Pro 4
+# 在仓库根目录安装锁定依赖，或安装后构建 Console 和 Desktop
+./gradlew :today-blog-frontend:installFrontendDependencies
+./gradlew :today-blog-frontend:buildReleaseFrontend
+
+# Console（管理后台）— React 18 + Umi 4 + Ant Design 4
 cd today-blog-frontend/console
 pnpm dev          # 开发服务器（代理到 localhost:8080）
 pnpm build        # 生产构建
-pnpm lint         # lint（会自动执行 umi g tmp 生成临时文件）
+pnpm lint         # lint
 pnpm tsc          # TypeScript 类型检查
 pnpm test         # 单元测试
 pnpm test:e2e     # E2E 测试（Puppeteer）
 
-# Desktop（公开博客）— React 16 + CRA + react-app-rewired
+# Desktop（公开博客）— React 18 + Vite
 cd today-blog-frontend/desktop
 pnpm start        # 开发服务器（代理到 localhost:8080）
-pnpm build        # 生产构建
-
-# Mobile（公开博客）— Vue 2 + vue-cli-service
-cd today-blog-frontend/mobile
-pnpm serve        # 开发服务器
 pnpm build        # 生产构建
 ```
 
 ## 前端陷阱
 
-- **`NODE_OPTIONS=--openssl-legacy-provider`**：console 和 desktop 构建时需要（老版本 webpack + 新版 Node.js）。
-- Console lint 依赖 Umi 生成文件：lint 脚本会自动执行 `umi g tmp` 生成临时文件后再 lint。
-- Desktop 通过 `react-app-rewired` + `customize-cra` 覆盖 webpack 配置。 **不要 eject。**
+- Gradle 前端构建任务会在现有 `NODE_OPTIONS` 后追加 `--openssl-legacy-provider`。
+- Console lint 会先执行 `max setup` 生成 Umi 临时文件。
 - Console 测试使用 Puppeteer 环境（`tests/PuppeteerEnvironment.js`），E2E 测试需先启动开发服务器。
 
 ## Gradle buildSrc 自定义插件

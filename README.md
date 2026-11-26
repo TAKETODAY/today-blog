@@ -15,16 +15,18 @@
   嵌入式服务器、虚拟线程、Flyway 迁移、FreeMarker、Caffeine 缓存）、MySQL
 - **前端**：
     1. 公开 PC 博客使用 React + Vite
-    2. 后台管理使用 React + Ant Design（UmiJS 3）
+    2. 后台管理使用 React + Ant Design（Umi 4）
 
 ## 📁 项目结构
 
 ```text
 today-blog-opensource
 ├── today-blog-api/                  # 后端 REST API（公开 API /console/* 管理 API）
-├── today-blog-frontend/             # 前端 monorepo（pnpm workspace）
-│   ├── console/               # 后台管理（React 17 + UmiJS 3 + Ant Design Pro 4）
-│   ├── desktop/               # PC 端公开博客（React 16 + CRA）
+├── today-blog-cli/                  # 独立运维 CLI
+├── today-blog-upgrade-protocol/     # API 与 CLI 共用的升级协议
+├── today-blog-frontend/             # 前端 Gradle 子项目（通过 pnpm 构建）
+│   ├── console/               # 后台管理（React 18 + Umi 4 + Ant Design 4）
+│   ├── desktop/               # PC 端公开博客（React 18 + Vite）
 │   └── common/                # 前端共享模块
 ├── buildSrc/                  # Gradle 自定义插件
 └── resources/                 # 站点静态资源
@@ -38,7 +40,7 @@ today-blog-opensource
 | Gradle  | 随 wrapper 自动下载（9.8.x）                       | 无需手动安装，使用 `./gradlew`                                                      |
 | MySQL   | 8.x                                                | 本地开发数据库，`localhost:3306`                                                    |
 | Node.js | 18 及以上（建议 Node LTS）                         | Console 仍使用旧版 webpack，相关脚本已内置 `NODE_OPTIONS=--openssl-legacy-provider` |
-| pnpm    | 10.x                                               | 前端 monorepo 包管理（可用 Corepack 启用）                                          |
+| pnpm    | 12.x（已验证）                                      | 前端依赖安装与构建                                                                  |
 
 > 测试无需 MySQL：后端测试通过内嵌 **MariaDB4j**（端口 3307）运行。
 
@@ -76,10 +78,10 @@ mysql -uroot -ppassword today < today-blog-api/src/main/resources/db/data.sql
 
 ### 3. 启动前端
 
-在 `today-blog-frontend/` 根目录安装一次所有 workspace 依赖：
+在仓库根目录执行以下命令，按各自的锁文件安装前端依赖：
 
 ```bash
-cd today-blog-frontend && pnpm install
+./gradlew :today-blog-frontend:installFrontendDependencies
 ```
 
 | 端                  | 目录                    | 命令         | 访问地址              | 代理目标                   |
@@ -128,13 +130,21 @@ JAVA_OPTS="-Dinfra.profiles.active=prod" ./today-blog-api/build/install/blog-api
 
 ## 📦 生产构建与部署
 
-构建发行包：
+在仓库根目录一键构建完整发行包（API、Console、Desktop 和独立运维 CLI）：
 
 ```bash
-./gradlew :today-blog-api:clean installInfraDist
+./gradlew release
 ```
 
-产物位于 `today-blog-api/build/install/`，包含可直接运行的脚本（被打包进 `bin/`）：
+产物为 `build/today-blog-<version>-<build>.zip` 和 `build/dist/today-blog-cli.jar`。
+也可以单独构建前端或 API：
+
+```bash
+./gradlew :today-blog-frontend:buildReleaseFrontend
+./gradlew :today-blog-api:installDist
+```
+
+API 发行目录为 `today-blog-api/build/install/blog-api/`，包含可直接运行的脚本：
 
 ```bash
 start.sh     # 后台启动（写入 app.pid）
@@ -157,15 +167,6 @@ JAVA_OPTS=-Dinfra.profiles.active=prod ./today-blog-api/build/install/blog-api/b
 
 ```bash
 ./gradlew :today-blog-api:clean nativeBuild -PincludeAOT
-```
-
-前端生产构建：
-
-```bash
-# console（构建时同样需要 openssl-legacy-provider，脚本已内置）
-cd today-blog-frontend/console && pnpm build
-# desktop
-cd today-blog-frontend/desktop && pnpm build
 ```
 
 ## 📚 API 文档

@@ -23,8 +23,9 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 自动回滚仅恢复程序，不撤销数据库迁移。发布前应确认迁移向后兼容；不可逆迁移必须人工维护部署。
 包内包含版本、构建编号和所有文件的 SHA-256 摘要。`BUILD_NUMBER` 必须单调递增（默认 UTC 时间戳）。
 
-任务定义位于 `gradle/release.gradle`，通过 Gradle 依赖依次完成前端依赖安装、Console/Desktop 构建、
-后端发行目录整理、SHA-256 清单和 ZIP 生成；不再依赖 Python 或嵌套调用 Gradle。
+`gradle/release.gradle` 编排 `:today-blog-frontend:buildReleaseFrontend` 和后端 `installDist`，
+在 Console、Desktop 和 API 均构建完成后，整理发行目录、生成 SHA-256 清单并打包。
+如需单独构建前端，可运行 `./gradlew :today-blog-frontend:buildReleaseFrontend`。
 `releaseDistZip`、`releaseDistTar` 和 `installReleaseDist` 共用固定的 `today-blog/` 根目录。
 文件名带版本号和构建编号，但归档内清单必须位于 `today-blog/META-INF/upgrade.properties`。
 在线升级仅接受 ZIP。`release` 会运行 `verifyRelease`，用服务器升级器校验最终 ZIP；

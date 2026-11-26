@@ -1,7 +1,5 @@
 import cn.taketoday.blog.release.ReleaseManifest
 
-import java.util.regex.Pattern
-
 def projectVersion = version.toString()
 def releaseBuild = providers.gradleProperty('buildNumber')
     .orElse(providers.environmentVariable('BUILD_NUMBER'))
@@ -9,24 +7,6 @@ def releaseBuild = providers.gradleProperty('buildNumber')
       java.time.format.DateTimeFormatter.ofPattern('yyyyMMddHHmmss')
           .withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.now())
     })
-
-def frontend = layout.projectDirectory.dir('today-blog-frontend')
-def nodeOptions = providers.environmentVariable('NODE_OPTIONS').orElse('')
-def releasePath = providers.environmentVariable('PATH').orElse('').get()
-def pnpmCommand = providers.gradleProperty('pnpmExecutable')
-    .orElse(providers.environmentVariable('PNPM_EXECUTABLE')).getOrNull()
-if (pnpmCommand == null) {
-  def candidates = releasePath.split(Pattern.quote(File.pathSeparator))
-      .collect { directory ->
-        new File(directory, 'pnpm')
-      }
-  pnpmCommand = candidates.find { candidate ->
-    candidate.isFile() && candidate.canExecute()
-  }?.absolutePath ?: 'pnpm'
-}
-
-def pnpmDirectory = new File(pnpmCommand).absoluteFile.parent
-def frontendPath = pnpmDirectory + File.pathSeparator + releasePath
 
 def validateRelease = tasks.register('validateRelease') {
   group = 'distribution'
@@ -39,46 +19,17 @@ def validateRelease = tasks.register('validateRelease') {
   }
 }
 
-def installFrontend = tasks.register('installReleaseFrontend')
-['common', 'console', 'desktop'].each { module ->
-  def installModule = tasks.register("installRelease${module.capitalize()}Dependencies", Exec) {
-    dependsOn validateRelease
-    workingDir frontend.dir(module)
-    environment 'PATH', frontendPath
-    commandLine pnpmCommand, 'install', '--frozen-lockfile'
-  }
-  installFrontend.configure {
-    dependsOn installModule
-  }
-}
-
-def buildConsole = tasks.register('buildReleaseConsole', Exec) {
-  dependsOn installFrontend
-  workingDir frontend.dir('console')
-  environment 'NODE_OPTIONS', nodeOptions.get() + ' --openssl-legacy-provider'
-  environment 'PATH', frontendPath
-  commandLine pnpmCommand, 'build'
-}
-
-def buildDesktop = tasks.register('buildReleaseDesktop', Exec) {
-  dependsOn installFrontend
-  workingDir frontend.dir('desktop')
-  environment 'NODE_OPTIONS', nodeOptions.get() + ' --openssl-legacy-provider'
-  environment 'PATH', frontendPath
-  commandLine pnpmCommand, 'build'
-}
-
 def stageRelease = tasks.register('stageRelease', Sync) {
-  dependsOn validateRelease, ':today-blog-api:installDist', buildConsole, buildDesktop
+  dependsOn validateRelease, ':today-blog-api:installDist', ':today-blog-frontend:buildReleaseFrontend'
   into layout.buildDirectory.dir('release/payload')
   from(project(':today-blog-api').layout.buildDirectory.dir('install/blog-api')) {
     include 'bin/**', 'lib/**'
     into 'api'
   }
-  from(frontend.dir('console/dist')) {
+  from(project(':today-blog-frontend').layout.projectDirectory.dir('console/dist')) {
     into 'console'
   }
-  from(frontend.dir('desktop/build')) {
+  from(project(':today-blog-frontend').layout.projectDirectory.dir('desktop/build')) {
     into 'desktop'
   }
   exclude '**/.DS_Store', '**/__MACOSX/**'
@@ -137,6 +88,6 @@ def cli = tasks.register('releaseCli', Copy) {
 
 tasks.register('release') {
   group = 'distribution'
-  description = '构建后端、Console、Desktop，生成无签名升级包和独立运维 CLI。'
+  description = '构建后端、前端，生成无签名升级包和独立运维 CLI。'
   dependsOn verifyRelease, cli
 }
