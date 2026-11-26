@@ -45,7 +45,7 @@ public final class UpgradePackage {
   public UpgradePackage() {
   }
 
-  public record Manifest(String version, long build, Map<String, String> hashes) {
+  public record Manifest(String version, long build, String frontendMode, Map<String, String> hashes) {
   }
 
   public Manifest verify(Path archive) throws Exception {
@@ -68,6 +68,10 @@ public final class UpgradePackage {
       if (build <= 0 || Runtime.version().feature() < Integer.parseInt(properties.getProperty("minimumJava", "17"))) {
         throw new IOException("构建编号或 Java 版本不符合要求");
       }
+      String frontendMode = properties.getProperty("frontendMode", "nginx");
+      if (!frontendMode.equals("nginx") && !frontendMode.equals("embedded")) {
+        throw new IOException("前端发行模式无效");
+      }
       Map<String, String> hashes = new HashMap<>();
       for (String name : properties.stringPropertyNames()) {
         if (name.startsWith("sha256.")) {
@@ -79,8 +83,13 @@ public final class UpgradePackage {
           hashes.put(path, hash);
         }
       }
-      if (!hashes.keySet().containsAll(Set.of("api/bin/blog-api", "console/index.html", "desktop/index.html"))
-              || hashes.keySet().stream().noneMatch(name -> name.startsWith("api/lib/") && name.endsWith(".jar"))) {
+      boolean hasApi = hashes.containsKey("api/bin/blog-api")
+              && hashes.keySet().stream().anyMatch(name -> name.startsWith("api/lib/") && name.endsWith(".jar"));
+      boolean hasFrontend = frontendMode.equals("nginx")
+              ? hashes.keySet().containsAll(Set.of("console/index.html", "desktop/index.html"))
+              : hashes.keySet().stream().anyMatch(name -> name.startsWith("api/lib/")
+              && name.contains("today-blog-frontend") && name.endsWith(".jar"));
+      if (!hasApi || !hasFrontend) {
         throw new IOException("升级包缺少后端或前端必要文件");
       }
       Set<String> entries = new HashSet<>();
@@ -129,7 +138,7 @@ public final class UpgradePackage {
       }
       if (!checked.equals(hashes.keySet()))
         throw new IOException("清单中存在缺失文件");
-      return new Manifest(version, build, Map.copyOf(hashes));
+      return new Manifest(version, build, frontendMode, Map.copyOf(hashes));
     }
   }
 

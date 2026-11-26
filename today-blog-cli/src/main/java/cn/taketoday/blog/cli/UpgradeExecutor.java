@@ -118,6 +118,11 @@ public final class UpgradeExecutor {
         if (manifest.build() <= Math.max(oldBuild, highest)) {
           throw new IOException("禁止重复安装或降级");
         }
+        String oldFrontendMode = files.read(oldRelease.resolve("release.properties"))
+                .getProperty("frontendMode", "nginx");
+        if (!oldFrontendMode.equals(manifest.frontendMode())) {
+          throw new IOException("不允许在普通升级中切换前端发行模式");
+        }
         Path release = root.resolve("releases").resolve(manifest.version() + "-" + manifest.build());
         if (Files.exists(release)) {
           throw new IOException("版本目录已存在");
@@ -131,6 +136,7 @@ public final class UpgradeExecutor {
         Properties metadata = new Properties();
         metadata.setProperty("version", manifest.version());
         metadata.setProperty("build", Long.toString(manifest.build()));
+        metadata.setProperty("frontendMode", manifest.frontendMode());
         files.write(unpacked.resolve("release.properties"), metadata);
         if (task.backupEnabled()) {
           store.status(id, "BACKING_UP", "备份数据库，尚未切换版本");

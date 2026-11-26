@@ -4,7 +4,7 @@ MODE=--direct
 case ${1:-} in
   --direct|--systemd) MODE=$1; shift ;;
 esac
-[[ $# == 2 ]] || { echo '用法: deploy.sh [--direct|--systemd] user@host build/today-blog-version-build.zip（首次安装）'; exit 1; }
+[[ $# == 2 ]] || { echo '用法: deploy.sh [--direct|--systemd] user@host build/today-blog-version-build-mode.zip（首次安装）'; exit 1; }
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REMOTE="$(ssh "$1" mktemp -d)"
 [[ "$REMOTE" =~ ^/tmp/tmp\.[A-Za-z0-9]+$ ]] || { echo '服务器临时目录格式不受支持'; exit 1; }

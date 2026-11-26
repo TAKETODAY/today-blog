@@ -17,7 +17,11 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 服务器建议 JDK 25。当前版本不使用密钥、证书或数字签名。
 
 ```bash
-./gradlew release
+# NGINX 静态托管模式（默认）
+./gradlew release -PfrontendMode=nginx
+
+# API JAR 直接提供 React 前端资源，不需要 NGINX
+./gradlew release -PfrontendMode=embedded
 ```
 
 自动回滚仅恢复程序，不撤销数据库迁移。发布前应确认迁移向后兼容；不可逆迁移必须人工维护部署。
@@ -31,7 +35,10 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 在线升级仅接受 ZIP。`release` 会运行 `verifyRelease`，用服务器升级器校验最终 ZIP；
 任一文件缺失、路径不合规或摘要不匹配都会中止构建。正式打包请使用干净的工作目录，
 避免本地旧编译产物（例如已删除的 Flyway 迁移）进入发行包。
-产物为 `build/today-blog-<version>-<build>.zip` 和 `build/dist/today-blog-cli.jar`。
+产物为 `build/today-blog-<version>-<build>-<frontendMode>.zip` 和
+`build/dist/today-blog-cli.jar`。`frontendMode=nginx` 的包包含独立的 `console/`、`desktop/`
+目录；`frontendMode=embedded` 的包将前端资源和 `FrontendAutoConfiguration` 放入
+`api/lib/today-blog-frontend-*.jar`，由 API 直接提供资源。
 `release` 不自动执行测试，发布前可运行 `./gradlew :today-blog-upgrade-protocol:test :today-blog-cli:test :today-blog-api:test`。
 
 在目标平台上安装 GraalVM JDK 25（含 `native-image`）和 C 工具链，将 `JAVA_HOME` 指向该 JDK 后运行
@@ -69,16 +76,18 @@ systemd 模式要求服务器运行 systemd（支持 `Type=exec` 和 `ExecCondit
 运行时数据统一放在 `BLOG_DATA_ROOT`（默认 `/var/lib/today-blog`），可用 `today-blog data` 管理。
 
 ```bash
-bash scripts/deploy.sh deploy@server build/today-blog-<version>-<build>.zip
+bash scripts/deploy.sh deploy@server build/today-blog-<version>-<build>-<frontendMode>.zip
 # 或改用 systemd 托管 API
-bash scripts/deploy.sh --systemd deploy@server build/today-blog-<version>-<build>.zip
+bash scripts/deploy.sh --systemd deploy@server build/today-blog-<version>-<build>-<frontendMode>.zip
 ```
 
 安装脚本不会启动服务。安装完成后可以直接创建 `/etc/today-blog/today-blog.env`（建议 `root:today`、`0640`），
 也可以执行 `sudo today-blog install --wizard` 打开一次性的本机浏览器向导。向导会让管理员选择
 `direct` 或 `systemd`、测试数据库连接、初始化空库、创建博主账号，并生成应用配置和 NGINX 示例；
 它不会覆盖非空数据库、自动启动 API、启用 systemd 或修改 NGINX。远程服务器通过 SSH 本地端口转发访问向导。
-向导完成后配置文件位于 `/etc/today-blog/`，数据库密码不出现在命令行；已有博客不要使用向导，直接配置并走升级流程。
+向导完成后配置文件位于 `/etc/today-blog/`，数据库密码不出现在命令行；向导会根据发行包的
+`frontendMode` 记录部署模式，仅在 NGINX 模式生成 `nginx.conf.example`；已有博客不要使用向导，
+直接配置并走升级流程。
 `today-blog.env` 采用 Bash 赋值语法，由 `today` 用户加载，含空格的值须加引号。默认 prod profile，
 API 工作目录为 `$BLOG_DATA_ROOT`，运行时数据不得写入 release。
 API 可通过 `JAVA_HOME` 选择 Java；默认部署的 CLI JAR 使用 `/usr/bin/java`。
@@ -90,7 +99,7 @@ API 可通过 `JAVA_HOME` 选择 Java；默认部署的 CLI JAR 使用 `/usr/bin
 安装向导默认不写此配置；仅在向导进程设置 `BLOG_DATA_PATH` 时，才把它写成显式覆盖。
 如果自定义附件目录不在 `$BLOG_DATA_ROOT/data` 下，请单独备份和检查；`today-blog data` 不会读取 API 的附件配置来查找这些文件。
 
-反向代理静态目录：
+反向代理静态目录（仅 `frontendMode=nginx`）：
 
 - Console：`/opt/today-blog/current/console`
 - Desktop：`/opt/today-blog/current/desktop`
@@ -98,6 +107,11 @@ API 可通过 `JAVA_HOME` 选择 Java；默认部署的 CLI JAR 使用 `/usr/bin
 - 向导生成的 NGINX 草案：`/etc/today-blog/nginx.conf.example`；审核后复制，先执行 `nginx -t` 再 reload。
 - 必须拒绝外部访问 `/api/internal/health`；绑定本机 API 或用防火墙阻止公网直连端口。
 - 上传请求大小、超时需与后端保持一致。
+
+`frontendMode=embedded` 不需要 NGINX，CDN 可以直接将 API 服务作为源站。API 会提供 `/blog-admin/`
+和 Desktop 的根路径，并为 Desktop 的 React `BrowserRouter` 路由回退到 `index.html`；带扩展名的缺失
+静态资源不会错误地回退为 HTML。此模式下必须由防火墙或 CDN 源站策略保护 API 端口，并禁止缓存 `/api/**`
+以及 `/api/internal/health`。
 
 ```bash
 sudo today-blog start

@@ -1,5 +1,7 @@
 description = "TODAY BLOG REST API"
 
+def frontendMode = providers.gradleProperty('frontendMode').orElse('nginx')
+
 apply plugin: "application"
 apply plugin: 'infra.application'
 apply plugin: 'cn.taketoday.blog.conventions'
@@ -53,6 +55,10 @@ dependencies {
   annotationProcessor 'org.projectlombok:lombok'
 
   implementation 'com.github.ben-manes.caffeine:caffeine'
+
+  if (frontendMode.get() == 'embedded') {
+    implementation project(':today-blog-frontend')
+  }
 //  implementation("io.netty:netty-transport-native-kqueue") {
 //    artifact {
 //      classifier = 'osx-aarch_64'
@@ -76,6 +82,10 @@ dependencies {
   testImplementation 'org.projectlombok:lombok'
   testAnnotationProcessor("org.projectlombok:lombok")
 
+}
+
+tasks.named('installDist') {
+  inputs.property('frontendMode', frontendMode)
 }
 
 compileJava {

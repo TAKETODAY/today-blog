@@ -1,6 +1,7 @@
 import cn.taketoday.blog.release.ReleaseManifest
 
 def projectVersion = version.toString()
+def frontendMode = providers.gradleProperty('frontendMode').orElse('nginx')
 def releaseBuild = providers.gradleProperty('buildNumber')
     .orElse(providers.environmentVariable('BUILD_NUMBER'))
     .orElse(providers.provider {
@@ -12,6 +13,9 @@ def validateRelease = tasks.register('validateRelease') {
   group = 'distribution'
   description = '校验发行版本和构建编号。'
   doLast {
+    if (!['nginx', 'embedded'].contains(frontendMode.get())) {
+      throw new GradleException('frontendMode 必须为 nginx 或 embedded')
+    }
     if (!(projectVersion ==~ /[A-Za-z0-9][A-Za-z0-9._-]{0,99}/)
         || !(releaseBuild.get() ==~ /[1-9][0-9]{0,17}/)) {
       throw new GradleException('发行版本或构建编号格式错误')
@@ -21,16 +25,19 @@ def validateRelease = tasks.register('validateRelease') {
 
 def stageRelease = tasks.register('stageRelease', Sync) {
   dependsOn validateRelease, ':today-blog-api:installDist', ':today-blog-frontend:buildReleaseFrontend'
+  inputs.property('frontendMode', frontendMode)
   into layout.buildDirectory.dir('release/payload')
   from(project(':today-blog-api').layout.buildDirectory.dir('install/blog-api')) {
     include 'bin/**', 'lib/**'
     into 'api'
   }
-  from(project(':today-blog-frontend').layout.projectDirectory.dir('console/dist')) {
-    into 'console'
-  }
-  from(project(':today-blog-frontend').layout.projectDirectory.dir('desktop/build')) {
-    into 'desktop'
+  if (frontendMode.get() == 'nginx') {
+    from(project(':today-blog-frontend').layout.projectDirectory.dir('console/dist')) {
+      into 'console'
+    }
+    from(project(':today-blog-frontend').layout.projectDirectory.dir('desktop/build')) {
+      into 'desktop'
+    }
   }
   exclude '**/.DS_Store', '**/__MACOSX/**'
 }
@@ -41,6 +48,7 @@ def manifest = tasks.register('releaseManifest', ReleaseManifest) {
   manifestFile = layout.buildDirectory.file('release/metadata/upgrade.properties')
   productVersion = projectVersion
   buildNumber = releaseBuild
+  getFrontendMode().set(frontendMode)
 }
 
 // 在线协议规定 ZIP 根目录固定为 today-blog，不能使用 distribution 插件的版本化外层目录。
@@ -63,7 +71,7 @@ tasks.register('installReleaseDist', Sync) {
     with releaseContents
     destinationDirectory = layout.buildDirectory
     archiveFileName = releaseBuild.zip(archiveExtension) { build, extension ->
-      "today-blog-${projectVersion}-${build}.${extension}"
+      "today-blog-${projectVersion}-${build}-${frontendMode.get()}.${extension}"
     }.get()
     preserveFileTimestamps = false
     reproducibleFileOrder = true

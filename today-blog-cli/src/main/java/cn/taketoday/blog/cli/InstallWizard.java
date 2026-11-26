@@ -159,7 +159,7 @@ final class InstallWizard {
       InstallationRequest request = InstallationRequest.from(form);
       install(request);
       send(exchange, 200, page("安装完成", "博客初始化已完成。现在可以关闭此页面。", "配置文件已写入 "
-              + escape(configDirectory.toString()) + "。请运行 sudo today-blog start 启动 API，再按需启用 NGINX。"));
+              + escape(configDirectory.toString()) + "。请运行 sudo today-blog start 启动 API。"));
       finished.countDown();
     }
     catch (Exception failure) {
@@ -263,9 +263,24 @@ final class InstallWizard {
 
     String installed = "installedAt=" + Instant.now() + "\n"
             + "siteHost=" + request.siteHost() + "\n"
-            + "siteName=" + request.siteName() + "\n";
+            + "siteName=" + request.siteName() + "\n"
+            + "frontendMode=" + frontendMode() + "\n";
     writeFile(configDirectory.resolve("install.properties"), installed, 0640);
-    writeFile(configDirectory.resolve("nginx.conf.example"), nginx(request), 0644);
+    if ("nginx".equals(frontendMode())) {
+      writeFile(configDirectory.resolve("nginx.conf.example"), nginx(request), 0644);
+    }
+  }
+
+  private String frontendMode() throws IOException {
+    Path metadata = root.resolve("current/release.properties");
+    if (!Files.isRegularFile(metadata, LinkOption.NOFOLLOW_LINKS)) {
+      throw new IOException("当前发行版缺少 release.properties");
+    }
+    String mode = files.read(metadata).getProperty("frontendMode", "nginx");
+    if (!mode.equals("nginx") && !mode.equals("embedded")) {
+      throw new IOException("当前发行版的前端模式无效");
+    }
+    return mode;
   }
 
   private void writeSecret(Path path, String value) throws IOException {

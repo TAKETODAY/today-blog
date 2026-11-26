@@ -218,6 +218,7 @@ final class BlogCommands implements ApplicationRunner {
     Properties metadata = new Properties();
     metadata.setProperty("version", manifest.version());
     metadata.setProperty("build", Long.toString(manifest.build()));
+    metadata.setProperty("frontendMode", manifest.frontendMode());
     files.write(target.resolve("release.properties"), metadata);
   }
 

@@ -53,11 +53,15 @@ public abstract class ReleaseManifest extends DefaultTask {
   @Input
   public abstract Property<String> getBuildNumber();
 
+  @Input
+  public abstract Property<String> getFrontendMode();
+
   @TaskAction
   public void generate() throws Exception {
     Path root = getPayloadDirectory().get().getAsFile().toPath();
     StringBuilder content = new StringBuilder("format=1\nproduct=today-blog\nversion=")
         .append(getProductVersion().get()).append("\nbuild=").append(getBuildNumber().get())
+        .append("\nfrontendMode=").append(getFrontendMode().get())
         .append("\nminimumJava=17\n");
     try (var paths = Files.walk(root)) {
       for (Path path : paths.sorted().toList()) {

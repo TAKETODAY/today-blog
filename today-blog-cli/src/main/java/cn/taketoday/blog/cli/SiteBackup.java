@@ -384,7 +384,8 @@ final class SiteBackup {
     }
     var current = files.read(release.resolve("release.properties"));
     if (!manifest.version().equals(current.getProperty("version"))
-            || !Long.toString(manifest.build()).equals(current.getProperty("build"))) {
+            || !Long.toString(manifest.build()).equals(current.getProperty("build"))
+            || !manifest.frontendMode().equals(current.getProperty("frontendMode", "nginx"))) {
       throw new IOException("备份用发行 ZIP 与当前运行版本不匹配");
     }
     for (var file : manifest.hashes().entrySet()) {
