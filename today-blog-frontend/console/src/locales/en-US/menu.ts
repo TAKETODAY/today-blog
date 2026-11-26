@@ -14,6 +14,7 @@ export default {
   'menu.system.mails': 'Mail Records',
   'menu.system.logging': 'Logs',
   'menu.system.options': 'Site Options',
+  'menu.system.frontend-cache': 'Cache Settings',
   'menu.system.api-keys': 'API Keys',
   'menu.system.account': 'Account',
   'menu.system.account.settings': 'Account Settings',

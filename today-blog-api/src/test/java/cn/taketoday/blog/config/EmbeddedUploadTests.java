@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
+import cn.taketoday.blog.config.embedded.FrontendCacheSettings;
 import cn.taketoday.blog.service.AttachmentService;
 import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.util.OssOperations;
@@ -34,6 +35,7 @@ import infra.context.annotation.Configuration;
 import infra.context.properties.ConfigurationPropertiesBindingPostProcessor;
 import infra.core.env.MapPropertySource;
 import infra.http.HttpHeaders;
+import infra.jdbc.core.JdbcOperations;
 import infra.persistence.EntityManager;
 import infra.test.classpath.ClassPathExclusions;
 import infra.test.web.mock.assertj.MockMvcTester;
@@ -72,6 +74,7 @@ class EmbeddedUploadTests {
   void doesNotServeExistingUploadsWithoutTheEmbeddedFrontendJar() throws Exception {
     writeDefaultUpload();
     try (var context = context(Map.of())) {
+      assertThat(context.getBeanProvider(FrontendCacheSettings.class).getIfAvailable()).isNull();
       MockMvcTester.from(context).get().uri("/upload/images/photo.png").assertThat().hasStatus(404);
     }
   }
@@ -97,6 +100,31 @@ class EmbeddedUploadTests {
               .hasHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=120");
       mvc.head().uri(uri).assertThat().hasStatusOk().hasBodyTextEqualTo("")
               .hasHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=120");
+    }
+  }
+
+  @Test
+  void appliesSavedPoliciesWithoutRestartingAndFallsBackWhenOverridesAreRemoved() throws Exception {
+    writeDefaultUpload();
+    try (var context = context(Map.of("frontend.cache.upload", "private, max-age=60"))) {
+      var mvc = MockMvcTester.from(context);
+      var settings = context.getBean(FrontendCacheSettings.class);
+      String url = "/upload/images/photo.png";
+      mvc.get().uri(url).assertThat().hasStatusOk().hasHeader(HttpHeaders.CACHE_CONTROL, "private, max-age=60");
+      mvc.get().uri("/blog-admin/").assertThat().hasStatusOk().hasHeader(HttpHeaders.CACHE_CONTROL, "no-cache");
+      mvc.get().uri("/").assertThat().hasStatusOk().hasHeader(HttpHeaders.CACHE_CONTROL, "no-cache");
+
+      settings.update(Map.of("console.index", "no-store", "desktop.index", "5m", "upload", "1h"));
+      mvc.get().uri(url).assertThat().hasStatusOk().hasBodyTextEqualTo("photo")
+              .hasHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=3600");
+      mvc.get().uri("/blog-admin/articles/edit").assertThat().hasStatusOk().hasHeader(HttpHeaders.CACHE_CONTROL, "no-store");
+      mvc.get().uri("/articles/42").assertThat().hasStatusOk().hasHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=300");
+      mvc.head().uri(url).assertThat().hasStatusOk().hasBodyTextEqualTo("")
+              .hasHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=3600");
+
+      settings.update(Map.of("upload", "inherit"));
+      mvc.head().uri(url).assertThat().hasStatusOk().hasHeader(HttpHeaders.CACHE_CONTROL, "private, max-age=60");
+      mvc.get().uri("/blog-admin/").assertThat().hasStatusOk().hasHeader(HttpHeaders.CACHE_CONTROL, "no-cache");
     }
   }
 
@@ -127,10 +155,16 @@ class EmbeddedUploadTests {
     ConfigurationPropertiesBindingPostProcessor.register(context);
     context.registerBean(RuntimeLayout.class, () -> new RuntimeLayout(temp));
     context.registerBean(EntityManager.class, () -> mock(EntityManager.class));
+    context.registerBean(JdbcOperations.class, () -> {
+      var jdbc = mock(JdbcOperations.class);
+      when(jdbc.queryForObject("select policies from t_frontend_cache where id = 1", String.class)).thenReturn("{}");
+      when(jdbc.update(any(String.class), any(String.class))).thenReturn(1);
+      return jdbc;
+    });
     context.registerBean(OssOperations.class, () -> mock(OssOperations.class));
     context.registerBean(TransactionOperations.class, () -> mock(TransactionOperations.class));
     context.register(WebConfiguration.class, AttachmentConfig.class, AttachmentService.class);
-    context.scan("cn.taketoday.blog.config.embedded");
+    context.scan("cn.taketoday.blog.config.embedded", "cn.taketoday.blog.frontend");
     context.refresh();
     return context;
   }

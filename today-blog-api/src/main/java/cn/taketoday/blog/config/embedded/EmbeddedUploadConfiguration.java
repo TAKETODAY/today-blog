@@ -27,10 +27,12 @@ import cn.taketoday.blog.config.AttachmentConfig;
 import infra.context.annotation.Bean;
 import infra.context.annotation.Configuration;
 import infra.context.condition.ConditionalOnClass;
+import infra.core.env.ConfigurableEnvironment;
 import infra.core.env.Environment;
 import infra.core.io.FileSystemResource;
 import infra.core.io.Resource;
 import infra.http.HttpHeaders;
+import infra.jdbc.core.JdbcOperations;
 import infra.web.handler.function.RouterFunction;
 import infra.web.handler.function.RouterFunctions;
 import infra.web.handler.function.ServerResponse;
@@ -47,14 +49,20 @@ import infra.web.util.UriUtils;
 class EmbeddedUploadConfiguration {
 
   @Bean
+  FrontendCacheSettings frontendCacheSettings(ConfigurableEnvironment environment, JdbcOperations jdbc) {
+    var settings = new FrontendCacheSettings(environment, jdbc);
+    environment.getPropertySources().addFirst(settings);
+    return settings;
+  }
+
+  @Bean
   RouterFunction<ServerResponse> embeddedUploadRouter(AttachmentConfig attachments, Environment environment) {
-    String cacheControl = environment.getProperty("frontend.cache.upload", HttpHeaders.NO_CACHE);
     Path root = Path.of(attachments.getUploadDir());
     return RouterFunctions.resources(request -> {
       String path = request.requestPath().pathWithinApplication().value();
       return path.startsWith("/upload/") ? findUpload(attachments, root, path) : Optional.empty();
     }, (resource, headers) -> {
-      headers.setCacheControl(cacheControl);
+      headers.setCacheControl(environment.getProperty("frontend.cache.upload", HttpHeaders.NO_CACHE));
       // 用户上传的 HTML 或 SVG 不能以博客同源页面的权限执行。
       headers.set("Content-Security-Policy", "sandbox; default-src 'none'");
       headers.set("X-Content-Type-Options", "nosniff");

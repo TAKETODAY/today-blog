@@ -150,6 +150,11 @@ export default [
         component: './system/options',
       },
       {
+        name: 'frontend-cache',
+        path: '/system/frontend-cache',
+        component: './system/frontend-cache',
+      },
+      {
         name: 'api-keys',
         path: '/system/api-keys',
         component: './system/api-keys',

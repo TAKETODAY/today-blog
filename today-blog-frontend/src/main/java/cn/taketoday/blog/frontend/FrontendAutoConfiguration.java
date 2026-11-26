@@ -59,13 +59,11 @@ public class FrontendAutoConfiguration {
 
   @Bean
   RouterFunction<ServerResponse> frontendRouter(Environment environment) {
-    var consoleCache = CachePolicy.load(environment, "frontend.cache.console.");
-    var desktopCache = CachePolicy.load(environment, "frontend.cache.desktop.");
     return RouterFunctions.resources(this::lookupConsole,
-                    (resource, headers) -> consoleCache.apply(resource, headers,
+                    (resource, headers) -> applyCache(environment, "frontend.cache.console.", resource, headers,
                             asset -> CONSOLE_HASH.matcher(asset.getName()).matches()))
             .and(RouterFunctions.resources(this::lookupDesktop,
-                    (resource, headers) -> desktopCache.apply(resource, headers,
+                    (resource, headers) -> applyCache(environment, "frontend.cache.desktop.", resource, headers,
                             asset -> asset.getPath().startsWith(DESKTOP.getPath() + "assets/")
                                     && DESKTOP_HASH.matcher(asset.getName()).matches())));
   }
@@ -134,25 +132,17 @@ public class FrontendAutoConfiguration {
     return name.lastIndexOf('.') > name.lastIndexOf('/');
   }
 
-  private record CachePolicy(String index, String assets, String hashedAssets) {
-
-    static CachePolicy load(Environment environment, String prefix) {
-      return new CachePolicy(environment.getProperty(prefix + "index", HttpHeaders.NO_CACHE),
-              environment.getProperty(prefix + "assets", "public, max-age=86400"),
-              environment.getProperty(prefix + "hashed-assets", "public, max-age=31536000, immutable"));
+  private static void applyCache(Environment environment, String prefix, Resource resource, HttpHeaders headers,
+          Predicate<ClassPathResource> hashed) {
+    String name = resource.getName();
+    if ("index.html".equals(name)) {
+      headers.setCacheControl(environment.getProperty(prefix + "index", HttpHeaders.NO_CACHE));
     }
-
-    void apply(Resource resource, HttpHeaders headers, Predicate<ClassPathResource> hashed) {
-      String name = resource.getName();
-      if ("index.html".equals(name)) {
-        headers.setCacheControl(index);
-      }
-      else if (name != null && resource instanceof ClassPathResource asset && hashed.test(asset)) {
-        headers.setCacheControl(hashedAssets);
-      }
-      else {
-        headers.setCacheControl(assets);
-      }
+    else if (name != null && resource instanceof ClassPathResource asset && hashed.test(asset)) {
+      headers.setCacheControl(environment.getProperty(prefix + "hashed-assets", "public, max-age=31536000, immutable"));
+    }
+    else {
+      headers.setCacheControl(environment.getProperty(prefix + "assets", "public, max-age=86400"));
     }
   }
 

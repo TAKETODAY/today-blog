@@ -115,8 +115,12 @@ JS、CSS、图片或附件返回 404。附件读取与写入使用同一目录�
 配置 `attachment.outside-resource` 后，使用该目录下的 `upload/`。如果旧部署曾将附件写到其他目录，
 请在升级前核对实际位置；升级不会移动旧文件。
 
-可以在 API 的外部 YAML 中单独覆盖 Console、Desktop 和附件的 `Cache-Control`。以下是默认值，
-只需配置想覆盖的项，修改后重启 API：
+在后台 Console 的 **系统 → 缓存设置** 中，可以分别为 Console 和 Desktop 的入口页（含 SPA 回退）、
+普通静态资源、带内容哈希的资源，以及本地附件选择缓存策略。可选不缓存、每次使用前验证，以及缓存
+5 分钟、1 小时、1 天或 1 年。带内容哈希的资源选择 1 年时会附带 `immutable`。
+
+设置保存在数据库，保存后立即应用于新的源站响应。选择「沿用服务器配置或默认值」可取消对应覆盖；
+没有后台覆盖时，优先采用 API 的外部 YAML，未配置的项采用以下默认值：
 
 ```yaml
 frontend:
@@ -132,10 +136,9 @@ frontend:
     upload: 'no-cache'
 ```
 
-`index` 也适用于 SPA 回退响应。建议让 CDN 遵循源站缓存头，不强制延长 HTML 和 404 的缓存时间，
-避免升级或回滚后旧入口引用不可用的构建资源。若不希望缓存 Console 入口，可设置 `console.index: 'no-store'`
-（完整属性名为 `frontend.cache.console.index`）。`/api/**` 不得缓存，且必须由防火墙或 CDN 源站策略保护
-API 端口，不对外暴露 `/api/internal/health`。上述缓存配置只对内嵌模式生效；NGINX 模式由代理配置控制。
+浏览器或 CDN 已缓存的响应不会因保存设置而自动失效。建议让 CDN 遵循源站缓存头，不强制延长 HTML 和 404
+的缓存时间，避免升级或回滚后旧入口引用不可用的构建资源。`/api/**` 不得缓存，且必须由防火墙或 CDN
+源站策略保护 API 端口，不对外暴露 `/api/internal/health`。NGINX 模式的缓存策略由 NGINX 配置控制。
 
 ```bash
 sudo today-blog start

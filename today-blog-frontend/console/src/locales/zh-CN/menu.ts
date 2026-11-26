@@ -14,6 +14,7 @@ export default {
   'menu.system.mails':'邮件记录',
   'menu.system.logging':'日志管理',
   'menu.system.options':'变量管理',
+  'menu.system.frontend-cache': '缓存设置',
   'menu.system.api-keys': 'API Key 管理',
   'menu.system.account': '账号管理',
   'menu.system.account.settings': '账号设置',

@@ -90,6 +90,24 @@ class FrontendAutoConfigurationTests {
     }
   }
 
+  @Test
+  void usesUpdatedCachePoliciesWithoutRefreshingTheContext() {
+    try (var context = context(Map.of())) {
+      var mvc = MockMvcTester.from(context);
+      assertCache(mvc, "/blog-admin/articles/edit", "no-cache");
+      assertCache(mvc, "/assets/test-DerJ7jKC.js", "public, max-age=31536000, immutable");
+
+      context.getEnvironment().getPropertySources().replace("frontend-test", new MapPropertySource("frontend-test", Map.of(
+              "frontend.cache.console.index", "no-store",
+              "frontend.cache.desktop.hashed-assets", "public, max-age=120")));
+
+      assertCache(mvc, "/blog-admin/articles/edit", "no-store");
+      assertCache(mvc, "/assets/test-DerJ7jKC.js", "public, max-age=120");
+      assertCache(mvc, "/blog-admin/test.1234abcd.async.js", "public, max-age=31536000, immutable");
+      assertCache(mvc, "/articles/42", "no-cache");
+    }
+  }
+
   private static void assertCache(MockMvcTester mvc, String path, String cacheControl) {
     mvc.get().uri(path).assertThat().hasStatusOk().hasHeader(HttpHeaders.CACHE_CONTROL, cacheControl);
   }
