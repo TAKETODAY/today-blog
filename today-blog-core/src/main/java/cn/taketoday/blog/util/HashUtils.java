@@ -38,15 +38,18 @@ public abstract class HashUtils {
   private static char generateRandomCharacter(int type) {
     int rand;
     switch (type) {
-      case 0://随机小写字母
+      // 随机小写字母。
+      case 0:
         rand = random.nextInt(26);
         rand += 97;
         return (char) rand;
-      case 1://随机大写字母
+      // 随机大写字母。
+      case 1:
         rand = random.nextInt(26);
         rand += 65;
         return (char) rand;
-      case 2://随机数字
+      // 随机数字。
+      case 2:
       default:
         rand = random.nextInt(10);
         rand += 48;

@@ -18,6 +18,8 @@
 package cn.taketoday.blog.util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import cn.taketoday.blog.util.BCryptPasswordEncoder.BCryptVersion;
 
@@ -34,6 +36,35 @@ class BCryptPasswordEncoderTests {
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(BCryptVersion.$2A);
     String encode = encoder.encode("taketoday.cn");
     assertThat(encoder.matches("taketoday.cn", encode)).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "strong-password", "中文密码-123456", "" })
+  void matchesExistingInstallerHashes(String password) {
+    String salt = "$2a$04$......................";
+    String existing = org.mindrot.jbcrypt.BCrypt.hashpw(password, salt);
+
+    assertThat(BCrypt.hashpw(password, salt)).isEqualTo(existing);
+    assertThat(new BCryptPasswordEncoder().matches(password, existing)).isTrue();
+  }
+
+  @Test
+  void preservesInstallerVersionAndStrength() {
+    String password = "strong-password";
+    String encoded = BCrypt.hashpw(password, BCrypt.gensalt(12));
+
+    assertThat(encoded).startsWith("$2a$12$");
+    assertThat(new BCryptPasswordEncoder().matches(password, encoded)).isTrue();
+    assertThat(org.mindrot.jbcrypt.BCrypt.checkpw(password, encoded)).isTrue();
+  }
+
+  @Test
+  void rejectsMismatchedAndInvalidHashes() {
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(4);
+
+    assertThat(encoder.matches("wrong-password", encoder.encode("strong-password"))).isFalse();
+    assertThat(encoder.matches("strong-password", null)).isFalse();
+    assertThat(encoder.matches("strong-password", "invalid")).isFalse();
   }
 
 }

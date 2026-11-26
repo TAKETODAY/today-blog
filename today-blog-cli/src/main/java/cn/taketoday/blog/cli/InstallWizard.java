@@ -20,7 +20,6 @@ package cn.taketoday.blog.cli;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
-import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +49,7 @@ import java.util.concurrent.CountDownLatch;
 
 import cn.taketoday.blog.updater.RuntimeLayout;
 import cn.taketoday.blog.updater.UpgradeFiles;
+import cn.taketoday.blog.util.BCrypt;
 import infra.jdbc.Query;
 import infra.jdbc.RepositoryManager;
 import infra.persistence.annotation.Column;

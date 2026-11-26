@@ -1,4 +1,4 @@
-description = "TODAY BLOG REST API"
+description = "TODAY BLOG server"
 
 def frontendMode = providers.gradleProperty('frontendMode').orElse('nginx')
 
@@ -24,6 +24,7 @@ configure(project) {
 }
 
 dependencies {
+  implementation project(':today-blog-core')
   implementation project(':today-blog-upgrade-protocol')
   implementation 'cn.taketoday:infra-starter-application'
   implementation 'cn.taketoday:infra-starter-netty-server'

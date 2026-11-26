@@ -11,12 +11,12 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 dependencies {
+  implementation project(':today-blog-core')
   implementation project(':today-blog-upgrade-protocol')
   implementation 'cn.taketoday:infra-starter-application'
   implementation 'cn.taketoday:infra-starter-logback'
   implementation 'cn.taketoday:infra-persistence'
   implementation 'com.mysql:mysql-connector-j:26.10.0'
-  implementation 'org.mindrot:jbcrypt:0.4'
   testImplementation platform('org.junit:junit-bom:5.14.2')
   testImplementation 'org.junit.jupiter:junit-jupiter'
   testImplementation 'org.assertj:assertj-core:3.27.7'
@@ -48,7 +48,7 @@ tasks.named('infraJar') {
 }
 
 processResources {
-  from(project(':today-blog-api').file('src/main/resources/db/migration/v1.0__init.sql')) {
+  from(project(':today-blog-server').file('src/main/resources/db/migration/v1.0__init.sql')) {
     into 'db/migration'
   }
 }

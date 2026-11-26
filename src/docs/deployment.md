@@ -3,7 +3,9 @@
 `today-blog` 位于独立 Gradle 模块 `today-blog-cli`，是执行完即退出的非 Web infra 应用。
 API 默认由 CLI 直接管理进程，不依赖 systemd；也可在部署时选择 systemd，CLI 的启停和升级命令不变。
 升级包校验、发行文件映射和磁盘协议位于纯 JDK 模块 `today-blog-upgrade-protocol`，
-由 `today-blog-api` 和 `today-blog-cli` 共同依赖；`today-blog-api` 不依赖 CLI 实现。
+由 `today-blog-server` 和 `today-blog-cli` 共同依赖；`today-blog-server` 不依赖 CLI 实现。
+通用密码编码和基础工具位于 `today-blog-core`，由服务器和 CLI 复用，不引入 Web 或数据库依赖。
+服务器模块名为 `today-blog-server`，应用标识仍为 `today-blog-api`，启动器仍为 `blog-api`，发行包内仍使用 `api/` 目录。
 CLI 实现位于 `cn.taketoday.blog.cli`。升级命令使用 infra 的 `EntityManager` 读写任务，
 不依赖 API 或 Web 模块；帮助和启停命令不会读取数据库配置。CLI 实体的 Native Image 反射元数据由
 infra AOT 从 `@ReflectiveScan` 和 `@Table` 生成。
@@ -39,12 +41,12 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 `build/dist/today-blog-cli.jar`。`frontendMode=nginx` 的包包含独立的 `console/`、`desktop/`
 目录；`frontendMode=embedded` 的包将前端资源和 `FrontendAutoConfiguration` 放入
 `api/lib/today-blog-frontend-*.jar`，由 API 直接提供资源。
-`release` 不自动执行测试，发布前可运行 `./gradlew :today-blog-upgrade-protocol:test :today-blog-cli:test :today-blog-api:test`。
+`release` 不自动执行测试，发布前可运行 `./gradlew :today-blog-core:test :today-blog-upgrade-protocol:test :today-blog-cli:test :today-blog-server:test`。
 
 在目标平台上安装 GraalVM JDK 25（含 `native-image`）和 C 工具链，将 `JAVA_HOME` 指向该 JDK 后运行
 `./gradlew -PnativeCli :today-blog-cli:nativeSmokeTest`，构建
 `today-blog-cli/build/native/nativeCompile/today-blog` 并运行 `--help`，验证原生应用能启动。
-默认安装仍使用 JAR。原生 CLI 无需 JVM，但须按目标系统和 CPU 架构构建；`today-blog-api` 仍需要 Java。
+默认安装仍使用 JAR。原生 CLI 无需 JVM，但须按目标系统和 CPU 架构构建；`today-blog-server` 仍需要 Java。
 绕过安装脚本的 `/usr/local/bin/today-blog` 包装入口直接运行原生二进制时，systemd 部署需显式设置
 `BLOG_SERVICE_MANAGER=systemd`；包装入口会自动读取安装时记录的模式。
 

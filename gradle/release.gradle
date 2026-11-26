@@ -24,10 +24,10 @@ def validateRelease = tasks.register('validateRelease') {
 }
 
 def stageRelease = tasks.register('stageRelease', Sync) {
-  dependsOn validateRelease, ':today-blog-api:installDist', ':today-blog-frontend:buildReleaseFrontend'
+  dependsOn validateRelease, ':today-blog-server:installDist', ':today-blog-frontend:buildReleaseFrontend'
   inputs.property('frontendMode', frontendMode)
   into layout.buildDirectory.dir('release/payload')
-  from(project(':today-blog-api').layout.buildDirectory.dir('install/blog-api')) {
+  from(project(':today-blog-server').layout.buildDirectory.dir('install/blog-api')) {
     include 'bin/**', 'lib/**'
     into 'api'
   }

@@ -1,0 +1,25 @@
+plugins {
+  id 'java-library'
+}
+
+description = 'TODAY BLOG shared core utilities'
+
+tasks.withType(JavaCompile).configureEach {
+  options.release = 17
+}
+
+// 公共实现仅依赖基础框架，不引入 Web、数据库或服务器应用。
+dependencies {
+  api platform('cn.taketoday:infra-bom:5.0-Draft.10-SNAPSHOT')
+  api 'cn.taketoday:infra-core'
+  testImplementation platform('org.junit:junit-bom:5.14.2')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+  testImplementation 'org.assertj:assertj-core:3.27.7'
+  // 仅在测试中验证安装向导原有 BCrypt 实现的兼容性。
+  testImplementation 'org.mindrot:jbcrypt:0.4'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+  useJUnitPlatform()
+}

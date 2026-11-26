@@ -43,7 +43,7 @@
 
 ## 定义位置
 
-统一契约：`today-blog-api/src/main/java/cn/taketoday/blog/problem/Problem.java`。
+统一契约：`today-blog-server/src/main/java/cn/taketoday/blog/problem/Problem.java`。
 各领域枚举实现 `Problem`，定义 `code()` 和 `status()`；`type()` 默认从 code 派生。
 异常与响应仅依赖接口，不要求业务枚举继承集中式类型。
 错误码不需要集中登记；协议一致性测试从编译产物中发现领域枚举，并纳入维护模块的问题常量。
@@ -86,7 +86,7 @@
 
 ## 消息与国际化
 
-- 消息按领域放在 `today-blog-api/src/main/resources/problems/<领域>/`，不再集中在 `i18n/errors`。
+- 消息按领域放在 `today-blog-server/src/main/resources/problems/<领域>/`，不再集中在 `i18n/errors`。
 - 每个领域的默认简体中文文件为 `messages.properties`，英文文件为 `messages_en.properties`。
 - 所有资源显式按 UTF-8 加载，正文直接使用完整 `code` 作为键，标题使用 `code.title`。
   这只影响资源键，HTTP 响应仍使用 `title` 和 `detail` 字段。

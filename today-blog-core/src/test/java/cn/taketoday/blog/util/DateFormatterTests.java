@@ -20,6 +20,11 @@ package cn.taketoday.blog.util;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -29,9 +34,22 @@ class DateFormatterTests {
 
   @Test
   void parse() {
-    Instant parse = DateFormatter.parse("2025-01-01 22:41:07");
-    System.out.println(parse);
-    System.out.println(Instant.now());
+    Instant expected = LocalDateTime.of(2025, 1, 1, 22, 41, 7).atZone(ZoneId.systemDefault()).toInstant();
+
+    assertThat(DateFormatter.parse("2025-01-01 22:41:07")).isEqualTo(expected);
+    assertThat(DateFormatter.parse("2025-01-01T22:41:07")).isEqualTo(expected);
+  }
+
+  @Test
+  void parsesExplicitTimeZone() {
+    assertThat(DateFormatter.parse("2025-01-01T22:41:07+08:00"))
+            .isEqualTo(Instant.parse("2025-01-01T14:41:07Z"));
+  }
+
+  @Test
+  void rejectsInvalidDates() {
+    assertThatThrownBy(() -> DateFormatter.parse("not-a-date"))
+            .isInstanceOf(java.time.format.DateTimeParseException.class);
   }
 
 }

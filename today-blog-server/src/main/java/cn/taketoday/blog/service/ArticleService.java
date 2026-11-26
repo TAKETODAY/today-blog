@@ -517,6 +517,9 @@ public class ArticleService implements InitializingBean {
    * @since 4.0
    */
   public void updateCategoryArticleCount(String categoryName) {
+    if (categoryName == null) {
+      return;
+    }
     int count = countByCategory(categoryName);
     entityManager.updateById(new CategoryArticleCount(count), categoryName);
   }

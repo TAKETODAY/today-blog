@@ -21,7 +21,8 @@
 
 ```text
 today-blog-opensource
-├── today-blog-api/                  # 后端 REST API（公开 API /console/* 管理 API）
+├── today-blog-core/                 # 公共基础能力（密码编码、日期、字符串和通用返回值）
+├── today-blog-server/               # 服务器实现（公开 API /console/* 管理 API）
 ├── today-blog-cli/                  # 独立运维 CLI
 ├── today-blog-upgrade-protocol/     # API 与 CLI 共用的升级协议
 ├── today-blog-frontend/             # 前端 Gradle 子项目（通过 pnpm 构建）
@@ -31,6 +32,11 @@ today-blog-opensource
 ├── buildSrc/                  # Gradle 自定义插件
 └── resources/                 # 站点静态资源
 ```
+
+`today-blog-core` 提供服务器与 CLI 可复用的基础能力，仅依赖 `infra-core`，不依赖 Web、数据库或应用模块。
+服务器业务、持久化模型、附件配置、HTTP 路由与启动装配集中在 `today-blog-server`；升级协议仍独立维护。
+只有出现明确的服务器公共能力复用需求时，才增加 `today-blog-server-core`，不预先创建接口转发层。
+模块重命名不改变应用标识 `today-blog-api`、启动器 `blog-api`、发行包内的 `api/` 目录及 HTTP 路径。
 
 ## 🧰 环境要求
 
@@ -57,13 +63,13 @@ CREATE DATABASE IF NOT EXISTS today DEFAULT CHARACTER SET utf8mb4;
 执行初始化脚本（建库 + 全量建表）：
 
 ```bash
-mysql -uroot -ppassword today < today-blog-api/src/main/resources/db/schema.sql
+mysql -uroot -ppassword today < today-blog-server/src/main/resources/db/schema.sql
 ```
 
 可选：导入演示数据：
 
 ```bash
-mysql -uroot -ppassword today < today-blog-api/src/main/resources/db/data.sql
+mysql -uroot -ppassword today < today-blog-server/src/main/resources/db/data.sql
 ```
 
 启动后端时 Flyway 会自动完成增量迁移（`repair → baseline(3.1.0) → migrate`），无需手动处理后续版本。
@@ -71,7 +77,7 @@ mysql -uroot -ppassword today < today-blog-api/src/main/resources/db/data.sql
 ### 2. 启动后端
 
 ```bash
-./gradlew :today-blog-api:run
+./gradlew :today-blog-server:run
 ```
 
 服务默认监听 `http://localhost:8080`，默认激活 `dev` profile。
@@ -93,7 +99,7 @@ mysql -uroot -ppassword today < today-blog-api/src/main/resources/db/data.sql
 
 ## ⚙️ 配置文件说明
 
-后端配置位于 `today-blog-api/src/main/resources/`：
+后端配置位于 `today-blog-server/src/main/resources/`：
 
 | 文件                    | 说明                                                                                                 |
 |-------------------------|------------------------------------------------------------------------------------------------------|
@@ -113,16 +119,17 @@ mysql -uroot -ppassword today < today-blog-api/src/main/resources/db/data.sql
 切换环境 profile：
 
 ```bash
-./gradlew :today-blog-api:run -Dinfra.profiles.active=prod
+./gradlew :today-blog-server:run -Dinfra.profiles.active=prod
 # 或
-JAVA_OPTS="-Dinfra.profiles.active=prod" ./today-blog-api/build/install/blog-api/bin/blog-api
+JAVA_OPTS="-Dinfra.profiles.active=prod" ./today-blog-server/build/install/blog-api/bin/blog-api
 ```
 
 ## 🧪 测试
 
 ```bash
-./gradlew :today-blog-api:test              # 全部测试
-./gradlew :today-blog-api:test --tests "cn.taketoday.blog.web.http.ArticleHttpHandlerTests"   # 单个测试类
+./gradlew :today-blog-core:test :today-blog-upgrade-protocol:test :today-blog-cli:test :today-blog-server:test
+# 单个服务器测试类
+./gradlew :today-blog-server:test --tests "cn.taketoday.blog.web.http.ArticleHttpHandlerTests"
 ```
 
 - 测试使用内嵌 MariaDB4j（端口 3307）， **无需本地 MySQL**，用例默认 `@Transactional` 自动回滚。
@@ -141,10 +148,10 @@ JAVA_OPTS="-Dinfra.profiles.active=prod" ./today-blog-api/build/install/blog-api
 
 ```bash
 ./gradlew :today-blog-frontend:buildReleaseFrontend
-./gradlew :today-blog-api:installDist
+./gradlew :today-blog-server:installDist
 ```
 
-API 发行目录为 `today-blog-api/build/install/blog-api/`，包含可直接运行的脚本：
+API 发行目录为 `today-blog-server/build/install/blog-api/`，包含可直接运行的脚本：
 
 ```bash
 start.sh     # 后台启动（写入 app.pid）
@@ -156,9 +163,9 @@ find.sh      # 查看进程
 生产环境以 `prod` profile 启动（记得先用 `application-prod.yaml` 配置真实数据源）：
 
 ```bash
-./gradlew :today-blog-api:run -Dinfra.profiles.active=prod
+./gradlew :today-blog-server:run -Dinfra.profiles.active=prod
 # 或在前台运行发行包（日志输出到控制台）
-JAVA_OPTS=-Dinfra.profiles.active=prod ./today-blog-api/build/install/blog-api/bin/blog-api
+JAVA_OPTS=-Dinfra.profiles.active=prod ./today-blog-server/build/install/blog-api/bin/blog-api
 ```
 
 生产环境后台运行请使用[部署文档](src/docs/deployment.md)中的 `today-blog start` 或 systemd 托管。
@@ -166,19 +173,19 @@ JAVA_OPTS=-Dinfra.profiles.active=prod ./today-blog-api/build/install/blog-api/b
 可选：构建 GraalVM Native Image（需 GraalVM 及 `-PincludeAOT`）：
 
 ```bash
-./gradlew :today-blog-api:clean nativeBuild -PincludeAOT
+./gradlew :today-blog-server:clean nativeBuild -PincludeAOT
 ```
 
 ## 📚 API 文档
 
 项目提供 OpenAPI 3.0 规范文件，可直接导入 Swagger UI / Redoc 等工具浏览：
 
-- **规范文件**：`today-blog-api/docs/openapi.yaml`
+- **规范文件**：`today-blog-server/docs/openapi.yaml`
 - **本地预览**：将文件导入 https://editor.swagger.io 或本地 Swagger UI 即可查看全部接口与鉴权说明。
 
 其余入口：
 
-- **代码即文档**：公开 API 位于 `today-blog-api/src/main/java/cn/taketoday/blog/web/http/`，管理后台 API 位于 `web/console/`（路径前缀 `/console/*`
+- **代码即文档**：公开 API 位于 `today-blog-server/src/main/java/cn/taketoday/blog/web/http/`，管理后台 API 位于 `web/console/`（路径前缀 `/console/*`
   ），直接阅读 `@RestController` 即可。
 - **Console 生成**：在 `today-blog-frontend/console` 下执行 `pnpm openapi`（umi openapi）可基于后端接口生成类型定义。
 - **鉴权**：登录 / 博主接口支持浏览器会话（`SESSION` Cookie，博主接口需博主账号）或 API Key，见下文「API Key」章节。
