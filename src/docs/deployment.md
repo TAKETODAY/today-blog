@@ -1,13 +1,13 @@
 # 打包、部署和后台升级
 
-`today-blog` 位于独立 Gradle 模块 `blog-cli`，是执行完即退出的非 Web infra 应用。
+`today-blog` 位于独立 Gradle 模块 `today-blog-cli`，是执行完即退出的非 Web infra 应用。
 API 默认由 CLI 直接管理进程，不依赖 systemd；也可在部署时选择 systemd，CLI 的启停和升级命令不变。
-升级包校验、发行文件映射和磁盘协议位于纯 JDK 模块 `blog-upgrade-protocol`，
-由 `blog-api` 和 `blog-cli` 共同依赖；`blog-api` 不依赖 CLI 实现。
+升级包校验、发行文件映射和磁盘协议位于纯 JDK 模块 `today-blog-upgrade-protocol`，
+由 `today-blog-api` 和 `today-blog-cli` 共同依赖；`today-blog-api` 不依赖 CLI 实现。
 CLI 实现位于 `cn.taketoday.blog.cli`。升级命令使用 infra 的 `EntityManager` 读写任务，
 不依赖 API 或 Web 模块；帮助和启停命令不会读取数据库配置。CLI 实体的 Native Image 反射元数据由
 infra AOT 从 `@ReflectiveScan` 和 `@Table` 生成。
-可单独运行 `./gradlew :blog-upgrade-protocol:test :blog-cli:test releaseCli` 构建并测试，产物为
+可单独运行 `./gradlew :today-blog-upgrade-protocol:test :today-blog-cli:test releaseCli` 构建并测试，产物为
 `build/dist/today-blog-cli.jar`。API 以任务 ID 调用独立升级进程；停止旧 API 不会终止升级器。
 
 ## 构建
@@ -31,12 +31,12 @@ Gradle 在 `common`、`console`、`desktop` 下分别按各自的 `pnpm-lock.yam
 任一文件缺失、路径不合规或摘要不匹配都会中止构建。正式打包请使用干净的工作目录，
 避免本地旧编译产物（例如已删除的 Flyway 迁移）进入发行包。
 产物为 `build/today-blog-<version>-<build>.zip` 和 `build/dist/today-blog-cli.jar`。
-`release` 不自动执行测试，发布前可运行 `./gradlew :blog-upgrade-protocol:test :blog-cli:test :blog-api:test`。
+`release` 不自动执行测试，发布前可运行 `./gradlew :today-blog-upgrade-protocol:test :today-blog-cli:test :today-blog-api:test`。
 
 在目标平台上安装 GraalVM JDK 25（含 `native-image`）和 C 工具链，将 `JAVA_HOME` 指向该 JDK 后运行
-`./gradlew -PnativeCli :blog-cli:nativeSmokeTest`，构建
-`blog-cli/build/native/nativeCompile/today-blog` 并运行 `--help`，验证原生应用能启动。
-默认安装仍使用 JAR。原生 CLI 无需 JVM，但须按目标系统和 CPU 架构构建；`blog-api` 仍需要 Java。
+`./gradlew -PnativeCli :today-blog-cli:nativeSmokeTest`，构建
+`today-blog-cli/build/native/nativeCompile/today-blog` 并运行 `--help`，验证原生应用能启动。
+默认安装仍使用 JAR。原生 CLI 无需 JVM，但须按目标系统和 CPU 架构构建；`today-blog-api` 仍需要 Java。
 绕过安装脚本的 `/usr/local/bin/today-blog` 包装入口直接运行原生二进制时，systemd 部署需显式设置
 `BLOG_SERVICE_MANAGER=systemd`；包装入口会自动读取安装时记录的模式。
 

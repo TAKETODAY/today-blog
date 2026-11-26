@@ -1,5 +1,5 @@
 
 rootProject.name = 'today-blog'
-include 'blog-api'
-include 'blog-upgrade-protocol'
-include 'blog-cli'
+include 'today-blog-api'
+include 'today-blog-upgrade-protocol'
+include 'today-blog-cli'

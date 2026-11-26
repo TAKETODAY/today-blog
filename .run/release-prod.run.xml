@@ -2,7 +2,7 @@
   <configuration default="false" name="release-prod" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
       <option name="executionName" />
-      <option name="externalProjectPath" value="$PROJECT_DIR$/blog-api" />
+      <option name="externalProjectPath" value="$PROJECT_DIR$/today-blog-api" />
       <option name="externalSystemIdString" value="GRADLE" />
       <option name="scriptParameters" value="" />
       <option name="taskDescriptions">

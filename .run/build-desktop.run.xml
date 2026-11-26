@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="build-desktop" type="js.build_tools.npm">
-    <package-json value="$PROJECT_DIR$/blog-frontend/desktop/package.json" />
+    <package-json value="$PROJECT_DIR$/today-blog-frontend/desktop/package.json" />
     <command value="run" />
     <scripts>
       <script value="build" />

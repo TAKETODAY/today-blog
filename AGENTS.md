@@ -31,9 +31,9 @@
  */
 ```
 
-- **后端（`blog-api/`）**: Gradle 9.8.1（wrapper），最低支持 Java 17（`blog-api/build.gradle` 中
+- **后端（`today-blog-api/`）**: Gradle 9.8.1（wrapper），最低支持 Java 17（`today-blog-api/build.gradle` 中
   `sourceCompatibility/targetCompatibility = VERSION_17`），推荐使用 JDK 25（`.sdkmanrc` 锁定 `25-librca`）。根项目名 `today-blog`。
-- **前端（`blog-frontend/`）**: pnpm 10.33 monorepo，4 个子包：`console/`、`desktop/`、`mobile/`、`common/`。
+- **前端（`today-blog-frontend/`）**: pnpm 10.33 monorepo，4 个子包：`console/`、`desktop/`、`mobile/`、`common/`。
 - 两套系统独立运作，没有统一的编排器。
 
 ## 后端框架：TODAY Infrastructure（不是 Spring Boot）
@@ -50,7 +50,7 @@
   https://context7.com/taketoday/today-infrastructure/llms.txt（可用 `webfetch` 抓取），不要凭 Spring Boot 记忆推断。
 - **以文档为准，不以 Spring 文档为准**：TODAY Infrastructure 大量 API 与 Spring 同名但行为/签名可能不同；冲突时一律采用框架文档。
 - **禁止凭印象造 API**：文档中查不到的类、注解属性或方法不要写；无法确认时先看项目内已有用法
-  （`blog-api/src/main/java` 中的 `infra.*` 导入）或直接询问用户。
+  （`today-blog-api/src/main/java` 中的 `infra.*` 导入）或直接询问用户。
 - **只导 `infra.*` 包**：任何 `org.springframework.*` 导入都是错误；Servlet 容器相关实现同理（框架使用 Netty，不是 Tomcat/Jetty）。
 - **文档覆盖范围**：框架文档涵盖 core/beans、AOP、web/webmvc（含 FreeMarker 视图、函数式路由、URI 编码）、数据访问（JDBC、事务、OXM）、
   缓存、调度、RestClient、测试框架（`@InfraTest`、`MockMvcTester`、`RestTestClient`）、GraalVM 等；优先按模块目录定位章节。
@@ -97,7 +97,7 @@
 
 ### 项目核心文件
 
-- 入口类: `blog-api/src/main/java/cn/taketoday/blog/BlogApplication.java`
+- 入口类: `today-blog-api/src/main/java/cn/taketoday/blog/BlogApplication.java`
 - 自动配置声明: `META-INF/config/infra.context.annotation.config.AutoConfiguration.imports`（指向 `AppConfig`）
 - 主配置: `cn.taketoday.blog.config.AppConfig`（缓存、会话、FreeMarker 视图、Flyway 策略）
 - 自定义注解: `@ConfigBinding`（配置前缀绑定，如 `prefix "site."`）
@@ -105,19 +105,19 @@
 ## 后端常用命令
 
 ```bash
-./gradlew :blog-api:build          # 编译 + 测试 + 打包
-./gradlew :blog-api:test           # 只运行测试
-./gradlew :blog-api:run            # 启动开发服务器
-./gradlew :blog-api:clean installInfraDist  # 生产构建
+./gradlew :today-blog-api:build          # 编译 + 测试 + 打包
+./gradlew :today-blog-api:test           # 只运行测试
+./gradlew :today-blog-api:run            # 启动开发服务器
+./gradlew :today-blog-api:clean installInfraDist  # 生产构建
 ./gradlew clean                    # 清理所有
 
 # 运行单个测试类
-./gradlew :blog-api:test --tests "cn.taketoday.blog.web.http.ArticleHttpHandlerTests"
+./gradlew :today-blog-api:test --tests "cn.taketoday.blog.web.http.ArticleHttpHandlerTests"
 
 # AOT 处理（GraalVM Native Image 准备，测试中禁用）
-./gradlew :blog-api:processAot
+./gradlew :today-blog-api:processAot
 # Native Image 构建
-./gradlew :blog-api:nativeBuild
+./gradlew :today-blog-api:nativeBuild
 ```
 
 ## 后端测试注意事项
@@ -153,7 +153,7 @@ Flyway 迁移文件位于 `src/main/resources/db/migration/`，基线版本 `3.1
 
 ```bash
 # Console（管理后台）— React 17 + UmiJS 3 + Ant Design Pro 4
-cd blog-frontend/console
+cd today-blog-frontend/console
 pnpm dev          # 开发服务器（代理到 localhost:8080）
 pnpm build        # 生产构建
 pnpm lint         # lint（会自动执行 umi g tmp 生成临时文件）
@@ -162,12 +162,12 @@ pnpm test         # 单元测试
 pnpm test:e2e     # E2E 测试（Puppeteer）
 
 # Desktop（公开博客）— React 16 + CRA + react-app-rewired
-cd blog-frontend/desktop
+cd today-blog-frontend/desktop
 pnpm start        # 开发服务器（代理到 localhost:8080）
 pnpm build        # 生产构建
 
 # Mobile（公开博客）— Vue 2 + vue-cli-service
-cd blog-frontend/mobile
+cd today-blog-frontend/mobile
 pnpm serve        # 开发服务器
 pnpm build        # 生产构建
 ```

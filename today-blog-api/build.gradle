@@ -22,7 +22,7 @@ configure(project) {
 }
 
 dependencies {
-  implementation project(':blog-upgrade-protocol')
+  implementation project(':today-blog-upgrade-protocol')
   implementation 'cn.taketoday:infra-starter-application'
   implementation 'cn.taketoday:infra-starter-netty-server'
   implementation 'cn.taketoday:infra-starter-webmvc'
@@ -87,6 +87,7 @@ compileJava {
 // -Djdk.tracePinnedThreads=full
 
 application {
+  applicationName = 'blog-api'
   applicationDefaultJvmArgs = [
       "-server",
       "--add-opens=java.base/java.nio=ALL-UNNAMED",

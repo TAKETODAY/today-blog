@@ -20,7 +20,6 @@ package cn.taketoday.blog.cli;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -635,7 +634,7 @@ final class DataCommands {
     private static boolean isKnownValue(String name) {
       return switch (name) {
         case "backups-keep", "packages-keep", "logs-days", "warn-used-percent",
-            "warn-free-bytes", "timeout", "output" -> true;
+             "warn-free-bytes", "timeout", "output" -> true;
         default -> false;
       };
     }

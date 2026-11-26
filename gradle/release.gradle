@@ -10,7 +10,7 @@ def releaseBuild = providers.gradleProperty('buildNumber')
           .withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.now())
     })
 
-def frontend = layout.projectDirectory.dir('blog-frontend')
+def frontend = layout.projectDirectory.dir('today-blog-frontend')
 def nodeOptions = providers.environmentVariable('NODE_OPTIONS').orElse('')
 def releasePath = providers.environmentVariable('PATH').orElse('').get()
 def pnpmCommand = providers.gradleProperty('pnpmExecutable')
@@ -69,9 +69,9 @@ def buildDesktop = tasks.register('buildReleaseDesktop', Exec) {
 }
 
 def stageRelease = tasks.register('stageRelease', Sync) {
-  dependsOn validateRelease, ':blog-api:installDist', buildConsole, buildDesktop
+  dependsOn validateRelease, ':today-blog-api:installDist', buildConsole, buildDesktop
   into layout.buildDirectory.dir('release/payload')
-  from(project(':blog-api').layout.buildDirectory.dir('install/blog-api')) {
+  from(project(':today-blog-api').layout.buildDirectory.dir('install/blog-api')) {
     include 'bin/**', 'lib/**'
     into 'api'
   }
@@ -125,13 +125,13 @@ def releaseZip = tasks.named('releaseDistZip', Zip).flatMap {
 def verifyRelease = tasks.register('verifyRelease', JavaExec) {
   group = 'verification'
   inputs.file(releaseZip)
-  classpath = files(project(':blog-upgrade-protocol').tasks.named('jar'))
+  classpath = files(project(':today-blog-upgrade-protocol').tasks.named('jar'))
   mainClass = 'cn.taketoday.blog.updater.VerifyReleasePackage'
   args releaseZip.get().asFile.absolutePath
 }
 
 def cli = tasks.register('releaseCli', Copy) {
-  from project(':blog-cli').tasks.named('infraJar')
+  from project(':today-blog-cli').tasks.named('infraJar')
   into layout.buildDirectory.dir('dist')
 }
 

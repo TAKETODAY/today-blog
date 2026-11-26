@@ -11,7 +11,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 dependencies {
-  implementation project(':blog-upgrade-protocol')
+  implementation project(':today-blog-upgrade-protocol')
   implementation 'cn.taketoday:infra-starter-application'
   implementation 'cn.taketoday:infra-starter-logback'
   implementation 'cn.taketoday:infra-persistence'
@@ -48,7 +48,7 @@ tasks.named('infraJar') {
 }
 
 processResources {
-  from(project(':blog-api').file('src/main/resources/db/migration/v1.0__init.sql')) {
+  from(project(':today-blog-api').file('src/main/resources/db/migration/v1.0__init.sql')) {
     into 'db/migration'
   }
 }
