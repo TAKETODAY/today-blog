@@ -1,0 +1,85 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.model;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Objects;
+
+import infra.core.style.ToStringBuilder;
+import infra.persistence.annotation.GeneratedId;
+import infra.persistence.annotation.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * 文章标签
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 2018-09-17 15:01
+ */
+@Getter
+@Setter
+@Table("label")
+public class Label implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
+
+  @GeneratedId
+  private Long id;
+
+  private String name;
+
+  public Label() {
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.forInstance(this)
+            .append("id", id)
+            .append("name", name)
+            .toString();
+  }
+
+  @Override
+  public int hashCode() {
+    if (name == null) {
+      return id.hashCode();
+    }
+    return name.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (obj instanceof Label label) {
+      return Objects.equals(label.id, id) && Objects.equals(name, label.name);
+    }
+    return false;
+  }
+
+  public static Label forName(String name) {
+    Label label = new Label();
+    label.name = name;
+    return label;
+  }
+
+}

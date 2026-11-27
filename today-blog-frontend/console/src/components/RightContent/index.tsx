@@ -1,0 +1,39 @@
+import { Space, Tag } from 'antd';
+import React from 'react';
+import { useModel } from '@umijs/max';
+import Avatar from './AvatarDropdown';
+import LayoutSettings from '@/components/LayoutSettings';
+import styles from './index.less';
+
+const ENVTagColor = {
+  dev: 'orange',
+  test: 'green',
+  pre: '#87d068',
+};
+
+const GlobalHeaderRight: React.FC = () => {
+  const { initialState } = useModel('@@initialState');
+
+  if (!initialState || !initialState.settings) {
+    return null;
+  }
+
+  const { navTheme, layout } = initialState.settings;
+  let className = styles.right;
+
+  if ((navTheme === 'dark' && layout === 'top') || layout === 'mix') {
+    className = `${styles.right}  ${styles.dark}`;
+  }
+  return (
+      <Space className={className}>
+        <LayoutSettings />
+        <Avatar menu/>
+        {REACT_APP_ENV && (
+            <span>
+          <Tag color={ENVTagColor[REACT_APP_ENV]}>{REACT_APP_ENV}</Tag>
+        </span>
+        )}
+      </Space>
+  );
+};
+export default GlobalHeaderRight;

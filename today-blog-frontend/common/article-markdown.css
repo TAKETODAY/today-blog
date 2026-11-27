@@ -1,0 +1,108 @@
+.markdown {
+  color: #333;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.markdown a {
+  color: #337ab7;
+}
+
+.markdown em {
+  color: inherit;
+  font-style: italic;
+}
+
+.markdown h1, .markdown h2, .markdown h3,
+.markdown h4, .markdown h5, .markdown h6 {
+  margin: 24px 0 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.markdown h1 { font-size: 2em; }
+.markdown h2 { font-size: 1.5em; }
+.markdown h3 { font-size: 1.25em; }
+.markdown h4 { font-size: 1em; }
+.markdown h5 { font-size: .875em; }
+.markdown h6 { font-size: .85em; }
+
+.markdown h1, .markdown h2 {
+  padding-bottom: .3em;
+  border-bottom: 1px solid #eaecef;
+}
+
+.markdown blockquote, .markdown details, .markdown dl, .markdown ol,
+.markdown p, .markdown pre, .markdown table, .markdown ul {
+  margin: 0 0 16px;
+}
+
+.markdown blockquote {
+  padding: 0 1em;
+  color: #586069;
+  border-left: 4px solid #dfe2e5;
+}
+
+.markdown ul, .markdown ol {
+  padding-left: 2em;
+}
+
+.markdown ul {
+  list-style: disc outside;
+}
+
+.markdown ol {
+  list-style: decimal outside;
+}
+
+.markdown li > ul, .markdown li > ol {
+  margin-bottom: 0;
+}
+
+.markdown img {
+  max-width: 100%;
+  background-color: #fff;
+}
+
+.markdown table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+  border-collapse: collapse;
+}
+
+.markdown table tr {
+  background-color: #fff;
+}
+
+.markdown table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+.markdown table th {
+  font-weight: 600;
+}
+
+.markdown table td, .markdown table th {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+.markdown code {
+  padding: .2em .4em;
+  background-color: #f6f8fa;
+  font-size: .875em;
+}
+
+.markdown pre {
+  overflow: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.markdown hr {
+  margin: 24px 0;
+  border: 0;
+  border-top: 1px solid #dfe2e5;
+}

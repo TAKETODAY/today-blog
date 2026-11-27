@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily TODAY Blog full-site backup
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+AccuracySec=1min
+# 不在错过计划时间的白天启动停写备份。
+Persistent=false
+
+[Install]
+WantedBy=timers.target

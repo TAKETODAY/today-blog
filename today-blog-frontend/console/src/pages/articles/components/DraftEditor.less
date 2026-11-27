@@ -1,0 +1,189 @@
+.article-editor-shell {
+  width: calc(100% - 32px);
+  max-width: 1180px;
+  margin: 24px auto 32px;
+  background: #fff;
+  border: 1px solid #e3eaf1;
+  border-radius: 16px;
+  box-shadow: 0 10px 32px rgba(28, 43, 62, 0.07);
+}
+
+.article-editor-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 24px;
+  padding: 18px clamp(16px, 4vw, 32px);
+  background: #f7fafe;
+  border-bottom: 1px solid #e3eaf1;
+  border-radius: 15px 15px 0 0;
+}
+
+.article-editor-heading,
+.article-editor-header-actions,
+.article-editor-buttons,
+.article-editor-save-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.article-editor-heading h1 {
+  margin: 0;
+  color: #1f2d3d;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.article-editor-mode {
+  padding: 3px 9px;
+  color: #2f6693;
+  font-size: 12px;
+  background: #e7f1fa;
+  border-radius: 999px;
+}
+
+.article-editor-header-actions {
+  gap: 10px 18px;
+}
+
+.article-editor-buttons .ant-btn {
+  height: 36px;
+  border-radius: 8px;
+}
+
+.article-editor-save-status {
+  gap: 6px;
+  color: #536377;
+  font-size: 12px;
+}
+
+.article-editor-save-time {
+  color: #5e6d7f;
+  font-variant-numeric: tabular-nums;
+}
+
+.article-editor-status-dot {
+  width: 7px;
+  height: 7px;
+  background: #8292a4;
+  border-radius: 50%;
+}
+
+.article-editor-save-status.is-saved .article-editor-status-dot {
+  background: #2d8754;
+}
+
+.article-editor-save-status.is-pending .article-editor-status-dot {
+  background: #b5750f;
+}
+
+.article-editor-save-status.is-error {
+  color: #a61d24;
+}
+
+.article-editor-save-status.is-error .article-editor-status-dot {
+  background: currentColor;
+}
+
+.article-editor-content {
+  padding: 18px clamp(16px, 4vw, 32px) 0;
+}
+
+.article-editor-title {
+  display: block;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 9px 2px 12px;
+  color: #172435;
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 700;
+  line-height: 1.4;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #e3eaf1;
+  outline: none;
+}
+
+.article-editor-title:focus {
+  border-bottom-color: #337ab7;
+}
+
+.article-editor-title::placeholder {
+  color: #6a7b8e;
+}
+
+.article-editor-stage .editor-toolbar:not(.fullscreen) {
+  padding: 4px 6px;
+  background: #f4f7fb;
+  border: 1px solid #e3eaf1;
+  border-radius: 8px;
+}
+
+.article-editor-stage .editor-toolbar:not(.fullscreen)::before,
+.article-editor-stage .editor-toolbar:not(.fullscreen)::after {
+  display: none;
+}
+
+.article-editor-stage .editor-toolbar button {
+  color: #43566d;
+  vertical-align: middle;
+}
+
+.article-editor-stage .editor-toolbar button.active,
+.article-editor-stage .editor-toolbar button:hover {
+  color: #2f6693;
+  background: #e7f1fa;
+  border-color: transparent;
+}
+
+.article-editor-stage .editor-toolbar .separator {
+  vertical-align: middle;
+}
+
+.article-editor-stage .CodeMirror-lines {
+  padding-top: 12px;
+}
+
+.article-editor-stage .CodeMirror-placeholder {
+  color: #65768a;
+  opacity: 1;
+}
+
+.article-editor-stage .ck-editor__editable {
+  min-height: 420px;
+}
+
+.article-editor-footer {
+  padding: 12px 0 16px;
+  color: #536377;
+  font-size: 12px;
+  border-top: 1px solid #e3eaf1;
+}
+
+@media (max-width: 600px) {
+  .article-editor-shell {
+    width: calc(100% - 20px);
+    margin-top: 10px;
+  }
+
+  .article-editor-header-actions {
+    width: 100%;
+  }
+
+  .article-editor-stage .editor-toolbar:not(.fullscreen) button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .article-editor-stage .editor-toolbar:not(.fullscreen) .separator {
+    margin: 0 2px;
+  }
+
+  .article-editor-stage .ck-editor__editable {
+    min-height: 300px;
+  }
+}

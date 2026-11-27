@@ -1,0 +1,181 @@
+.draft-dialog .ant-modal-content {
+  border-radius: 14px;
+}
+
+.draft-dialog .ant-modal-header {
+  padding: 20px 48px 16px 20px;
+  border-color: #e3eaf1;
+  border-radius: 14px 14px 0 0;
+}
+
+.draft-dialog .ant-modal-body {
+  padding: 16px 20px;
+}
+
+.draft-dialog-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.draft-dialog-title-icon,
+.draft-list-icon {
+  display: inline-flex;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  color: #2f6693;
+  background: #e7f1fa;
+  border-radius: 8px;
+}
+
+.draft-dialog-title-main {
+  color: #1f2d3d;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.draft-dialog-title-hint {
+  margin-top: 4px;
+  color: #536377;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.draft-dialog-toolbar,
+.draft-dialog-create,
+.draft-list-title,
+.draft-list-actions,
+.draft-list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.draft-dialog-toolbar {
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.draft-dialog-create .ant-btn {
+  border-radius: 8px;
+}
+
+.draft-dialog-summary,
+.draft-list-meta {
+  color: #536377;
+  font-size: 12px;
+}
+
+.draft-dialog .ant-alert {
+  margin-bottom: 12px;
+}
+
+.draft-list {
+  display: grid;
+  gap: 8px;
+  max-height: 50vh;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.draft-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px;
+  border: 1px solid #e3eaf1;
+  border-radius: 10px;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.draft-list-item:hover,
+.draft-list-item:focus-within,
+.draft-list-item[aria-current='true'] {
+  background: #f6fafe;
+  border-color: #c6dcef;
+}
+
+.draft-list-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.draft-list-title {
+  color: #1f2d3d;
+  overflow-wrap: anywhere;
+}
+
+.draft-list-meta {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.draft-list-meta > span:not(:last-child) {
+  padding: 1px 5px;
+  background: #edf3f8;
+  border-radius: 4px;
+}
+
+.draft-list-actions .draft-list-resume {
+  color: #2f6693;
+  background: #fff;
+  border-color: #c6dcef;
+  border-radius: 7px;
+}
+
+.draft-list-actions .draft-list-delete {
+  color: #536377;
+}
+
+.draft-list-actions .draft-list-delete:hover,
+.draft-list-actions .draft-list-delete:focus-visible {
+  color: #a61d24;
+  background: #fff1f0;
+}
+
+.draft-dialog-empty {
+  margin: 0;
+  padding: 28px 12px;
+  background: #f7fafe;
+  border-radius: 10px;
+}
+
+.draft-dialog-footer {
+  margin-top: 10px;
+  text-align: right;
+}
+
+@media (max-width: 550px) {
+  .draft-dialog .ant-modal-body {
+    padding: 14px;
+  }
+
+  .draft-list-item {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .draft-list-actions {
+    justify-content: space-between;
+    width: 100%;
+    padding-top: 6px;
+    border-top: 1px solid #e3eaf1;
+  }
+
+  .draft-list-actions .ant-btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draft-list-item {
+    transition: none;
+  }
+}

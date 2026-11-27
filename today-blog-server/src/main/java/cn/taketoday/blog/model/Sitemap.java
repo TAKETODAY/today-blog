@@ -1,0 +1,117 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.model;
+
+import org.jspecify.annotations.Nullable;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.LinkedList;
+import java.util.Objects;
+
+import lombok.Getter;
+
+/**
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 2019-04-08 08:22
+ */
+public class Sitemap implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
+
+  // always hourly daily weekly monthly yearly never
+
+  private final LinkedList<SiteURL> urls = new LinkedList<>();
+
+  public void clear() {
+    urls.clear();
+  }
+
+  public void addArticle(Article article) {
+    addUrl(newURL(article));
+  }
+
+  public void addUrl(SiteURL url) {
+    urls.add(url);
+  }
+
+  public static SiteURL newURL(Article article) {
+    Instant updateAt = article.getUpdateAt();
+    if (updateAt == null) {
+      updateAt = article.getCreateAt();
+      if (updateAt == null) {
+        updateAt = Instant.now();
+      }
+    }
+
+    String lastModify = updateAt.toString();
+    String cover = article.getCover();
+    return newURL(0.9f, "/articles/" + article.getUri(), lastModify, "daily", cover);
+  }
+
+  public LinkedList<SiteURL> getUrls() {
+    return urls;
+  }
+
+  public static SiteURL newURL(float priority, String location, String lastModify, String changeFreq, String cover) {
+    return new SiteURL(location, priority, lastModify, changeFreq, cover);
+  }
+
+  @Getter
+  public static final class SiteURL implements Serializable {
+
+    private final String loc; // location
+
+    private final float priority; // 优先级
+
+    @Nullable
+    private final String lastModify;// 最后更改
+
+    private final String changeFreq;// 更新频率
+
+    private final @Nullable String cover;
+
+    public SiteURL(String loc, float priority, @Nullable String lastModify, String changeFreq, @Nullable String cover) {
+      this.loc = loc;
+      this.priority = priority;
+      this.lastModify = lastModify;
+      this.changeFreq = changeFreq;
+      this.cover = cover;
+    }
+
+    public boolean hasCover() {
+      return cover != null;
+    }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (!(o instanceof Sitemap sitemap))
+      return false;
+    return Objects.equals(urls, sitemap.urls);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(urls);
+  }
+}

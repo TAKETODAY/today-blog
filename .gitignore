@@ -32,3 +32,9 @@
 
 yarn.lock
 pnpm-lock.yaml
+!today-blog-frontend/common/pnpm-lock.yaml
+!today-blog-frontend/console/pnpm-lock.yaml
+!today-blog-frontend/desktop/pnpm-lock.yaml
+.codegraph
+
+build

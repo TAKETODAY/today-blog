@@ -1,0 +1,81 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.service;
+
+import org.jspecify.annotations.Nullable;
+
+import java.util.List;
+
+import cn.taketoday.blog.model.Category;
+import infra.persistence.EntityManager;
+import infra.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 2018-11-02 21:02
+ */
+@Service
+@RequiredArgsConstructor
+public class CategoryService {
+
+  private final EntityManager entityManager;
+
+  public void persist(Category category) {
+    entityManager.persist(category);
+  }
+
+  /**
+   * 获取所有分类，并按排序字段升序排列
+   *
+   * @return 分类列表
+   */
+  public List<Category> getOrderedCategories() {
+    return entityManager.find(Category.class);
+  }
+
+  /**
+   * 根据名称获取分类
+   *
+   * @param name 分类名称
+   * @return 分类对象，如果不存在则返回 null
+   */
+  public @Nullable Category findCategory(String name) {
+    return entityManager.findById(Category.class, name);
+  }
+
+  /**
+   * 根据 name 删除
+   *
+   * @param name id
+   */
+  public void deleteById(String name) {
+    entityManager.delete(Category.class, name);
+  }
+
+  /**
+   * 根据 name 更新 信息
+   *
+   * @param category 更新的数据体
+   * @param name id
+   */
+  public void updateById(Category category, String name) {
+    entityManager.updateById(category, name);
+  }
+
+}

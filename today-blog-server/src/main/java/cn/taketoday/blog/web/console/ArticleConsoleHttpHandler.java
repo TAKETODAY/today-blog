@@ -1,0 +1,138 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.web.console;
+
+import java.time.Instant;
+
+import cn.taketoday.blog.event.ArticleUpdateEvent;
+import cn.taketoday.blog.log.Logging;
+import cn.taketoday.blog.model.Article;
+import cn.taketoday.blog.model.enums.PostStatus;
+import cn.taketoday.blog.model.form.ArticleConditionForm;
+import cn.taketoday.blog.service.ArticleService;
+import cn.taketoday.blog.service.LabelService;
+import cn.taketoday.blog.web.Pageable;
+import cn.taketoday.blog.web.Pagination;
+import cn.taketoday.blog.web.interceptor.RequiresBlogger;
+import infra.context.ApplicationEventPublisher;
+import infra.http.HttpStatus;
+import infra.util.StringUtils;
+import infra.web.annotation.DELETE;
+import infra.web.annotation.GET;
+import infra.web.annotation.POST;
+import infra.web.annotation.PUT;
+import infra.web.annotation.PathVariable;
+import infra.web.annotation.RequestBody;
+import infra.web.annotation.RequestMapping;
+import infra.web.annotation.RequestParam;
+import infra.web.annotation.ResponseStatus;
+import infra.web.annotation.RestController;
+import lombok.CustomLog;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * 后台接口
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0 2024/3/30 22:27
+ */
+@CustomLog
+@RequiresBlogger
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/console/articles")
+class ArticleConsoleHttpHandler {
+
+  private final LabelService labelService;
+
+  private final ArticleService articleService;
+
+  private final ApplicationEventPublisher eventPublisher;
+
+  /**
+   * 查询 文章列表 API
+   */
+  @GET
+  public Pagination<Article> articles(ArticleConditionForm from, Pageable pageable) {
+    return articleService.search(from, pageable);
+  }
+
+  /**
+   * 创建文章 API
+   */
+  @POST
+  @ResponseStatus(HttpStatus.CREATED)
+  @Logging(title = "创建文章", content = "标题: [#{#form.title}]")
+  public void create(@RequestBody ArticleForm form) {
+    Article article = ArticleForm.forArticle(form, labelService);
+
+    if (StringUtils.isBlank(article.getUri())) {
+      article.setUri(form.title);
+    }
+
+    if (log.isDebugEnabled()) {
+      log.debug("创建新文章: [{}]", form.title);
+    }
+
+    articleService.createArticle(article);
+  }
+
+  /**
+   * 更新 API
+   */
+  @PUT("/{id}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Logging(title = "更新文章", content = "更新文章: [#{#from.title}]")
+  public void update(@PathVariable("id") long id, @RequestBody ArticleForm from) {
+    Article article = ArticleForm.forArticle(from, labelService);
+    article.setId(id);
+    article.setUpdateAt(Instant.now());
+    articleService.update(article);
+
+    eventPublisher.publishEvent(new ArticleUpdateEvent(this, id));
+  }
+
+  /**
+   * 更新状态 API
+   *
+   * @since 3.2
+   */
+  @PUT(path = "/{id}", params = "status")
+  @Logging(title = "更新文章状态", content = "更新文章：《#{@articleService.getById(#id)?.title}》状态为：[#{#status.description}]")
+  public void updateStatus(@PathVariable Long id, PostStatus status) {
+    articleService.updateStatusById(status, id);
+  }
+
+  @PUT(path = "/{id}", params = "pinned")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Logging(title = "更新文章置顶", content = "文章: [#{#id}]，置顶: [#{#pinned}]")
+  public void updatePinned(@PathVariable long id, @RequestParam boolean pinned) {
+    articleService.setPinned(id, pinned);
+  }
+
+  /**
+   * 删除 API
+   */
+  @DELETE("/{id}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Logging(title = "删除文章", content = "删除文章: [#{#id}]")
+  public void delete(@PathVariable Long id) {
+    articleService.deleteById(id);
+  }
+
+}

@@ -1,0 +1,252 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.web.interceptor;
+
+import org.jspecify.annotations.Nullable;
+
+import java.lang.reflect.Method;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+
+import cn.taketoday.blog.config.UserSessionResolver;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
+import cn.taketoday.blog.util.BlogUtils;
+import infra.lang.Constant;
+import infra.stereotype.Component;
+import infra.util.Assert;
+import infra.util.MapCache;
+import infra.web.HandlerInterceptor;
+import infra.web.ServerHttpExchange;
+import infra.web.InterceptorChain;
+import infra.web.handler.method.HandlerMethod;
+
+/**
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0 2022/8/11 10:22
+ */
+@Component
+final class RequestLimitInterceptor implements HandlerInterceptor {
+
+  static final MapCache<HandlerMethod, @Nullable RequestLimit, Object> requestLimitConfigCache = new MapCache<>(
+          new ConcurrentHashMap<>(128), RequestLimitInterceptor::findRequestLimit);
+
+  private int maxCacheSize = 1024;
+
+  private @Nullable String defaultErrorMessage;
+
+  private Clock clock = Clock.systemUTC();
+
+  private final ExpiredChecker expiredChecker = new ExpiredChecker();
+
+  private final ConcurrentHashMap<RequestKey, RequestLimitEntry> requestLimitCache = new ConcurrentHashMap<>();
+
+  private final UserSessionResolver identities;
+
+  RequestLimitInterceptor(UserSessionResolver identities) {
+    this.identities = identities;
+  }
+
+  public void setDefaultErrorMessage(String defaultErrorMessage) {
+    Assert.notNull(defaultErrorMessage, "默认的错误消息不能为空");
+    this.defaultErrorMessage = defaultErrorMessage;
+  }
+
+  public void setClock(Clock clock) {
+    Assert.notNull(clock, "Clock is required");
+    this.clock = clock;
+    removeExpiredEntries();
+  }
+
+  public void setMaxCacheSize(int maxCacheSize) {
+    Assert.isTrue(maxCacheSize > 0, "最大缓存数不能小于0");
+    this.maxCacheSize = maxCacheSize;
+  }
+
+  @Override
+  public @Nullable Object intercept(ServerHttpExchange request, InterceptorChain chain) throws Exception {
+    if (identities.getLoggedInBlogger(request) == null) {
+      // 非博主，进行限流
+      HandlerMethod handlerMethod = HandlerMethod.resolve(chain.getHandler());
+      if (handlerMethod != null) {
+        RequestLimit requestLimit = requestLimitConfigCache.get(handlerMethod);
+        if (requestLimit != null && hasTooManyRequests(request, handlerMethod, requestLimit)) {
+          throw tooManyRequests(requestLimit);
+        }
+        //不需要限流
+      }
+    }
+
+    // next in the chain
+    return chain.proceed(request);
+  }
+
+  private RuntimeException tooManyRequests(RequestLimit requestLimit) {
+    String errorMessage = requestLimit.errorMessage();
+    if (Constant.DEFAULT_NONE.equals(errorMessage)) {
+      errorMessage = defaultErrorMessage;
+    }
+
+    if (errorMessage == null) {
+      return new ProblemException(CommonProblems.RATE_LIMIT_EXCEEDED);
+    }
+
+    // X-RateLimit-Limit: The maximum number of requests you're permitted to make per hour.
+    // X-RateLimit-Remaining: The number of requests remaining in the current rate limit window.
+    // X-RateLimit-Reset: the time at which the current rate limit window resets in UTC epoch seconds
+
+    return ProblemException.of(CommonProblems.RATE_LIMIT_EXCEEDED, errorMessage);
+  }
+
+  private void checkMaxCacheLimit() {
+    if (requestLimitCache.size() >= maxCacheSize) {
+      expiredChecker.removeExpired(clock.instant());
+    }
+  }
+
+  /**
+   * 接口的访问频次限制
+   */
+  private boolean hasTooManyRequests(ServerHttpExchange request, HandlerMethod handler, RequestLimit requestLimit) {
+    Instant now = clock.instant();
+    expiredChecker.checkIfNecessary(now);
+
+    Method method = handler.getMethod();
+    String ip = BlogUtils.remoteAddress(request);
+    RequestKey key = new RequestKey(ip, method);
+
+    return requestLimitCache.computeIfAbsent(key, requestKey -> new RequestLimitEntry(requestLimit))
+            .isExceeded(now);
+  }
+
+  /**
+   * Check for expired entry and remove them.
+   *
+   * @since 4.0
+   */
+  private void removeExpiredEntries() {
+    expiredChecker.removeExpired(clock.instant());
+  }
+
+  private static RequestLimit findRequestLimit(HandlerMethod handlerMethod) {
+    RequestLimit annotation = handlerMethod.getAnnotation(RequestLimit.class);
+    if (annotation != null) {
+      return annotation;
+    }
+    return handlerMethod.getBeanType().getAnnotation(RequestLimit.class);
+  }
+
+  record RequestKey(String ip, Method action) {
+
+  }
+
+  class RequestLimitEntry {
+    public final int maxCount;
+    public volatile int requestCount;
+
+    public Instant lastAccessTime = Instant.now(clock);
+
+    public final Duration timeout;
+
+    RequestLimitEntry(RequestLimit requestLimit) {
+      long timeout = requestLimit.timeout();
+      TimeUnit timeUnit = requestLimit.unit();
+      this.maxCount = requestLimit.count();
+      this.timeout = Duration.of(timeout, timeUnit.toChronoUnit());
+    }
+
+    public boolean isNew() {
+      return requestCount == 0;
+    }
+
+    // test Exceeded maximum number of requests
+    public synchronized boolean isExceeded(Instant now) {
+      // 判断是不是已经在规定时间之外了
+      if (checkExpired(now)) {
+        // 在规定时间之外直接返回不限流
+        requestCount = 0;
+        lastAccessTime = Instant.now(clock);
+        return false;
+      }
+      int requestCount = this.requestCount;
+      this.requestCount++;
+      // 在超时时间范围内，请求次数大于最大次数就需要限制
+      return requestCount >= maxCount;
+    }
+
+    public boolean isExpired() {
+      return isExpired(clock.instant());
+    }
+
+    private boolean isExpired(Instant now) {
+      return checkExpired(now);
+    }
+
+    private boolean checkExpired(Instant currentTime) {
+      return currentTime.minus(timeout).isAfter(lastAccessTime);
+    }
+
+  }
+
+  private final class ExpiredChecker {
+
+    /** Max time between expiration checks. */
+    private static final int CHECK_PERIOD = 10;
+
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private Instant checkTime = clock.instant().plus(CHECK_PERIOD, ChronoUnit.SECONDS);
+
+    public void checkIfNecessary() {
+      checkIfNecessary(clock.instant());
+    }
+
+    public void checkIfNecessary(Instant now) {
+      if (checkTime.isBefore(now)) {
+        removeExpired(now);
+      }
+    }
+
+    public void removeExpired(Instant now) {
+      if (!requestLimitCache.isEmpty()) {
+        if (lock.tryLock()) {
+          try {
+            Iterator<RequestLimitEntry> iterator = requestLimitCache.values().iterator();
+            while (iterator.hasNext()) {
+              RequestLimitEntry limitEntry = iterator.next();
+              if (limitEntry.isExpired(now) && limitEntry.isNew()) {
+                iterator.remove();
+              }
+            }
+          }
+          finally {
+            this.checkTime = now.plus(CHECK_PERIOD, ChronoUnit.MILLIS);
+            lock.unlock();
+          }
+        }
+      }
+    }
+  }
+
+}

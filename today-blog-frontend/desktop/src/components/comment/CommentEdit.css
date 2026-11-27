@@ -1,0 +1,36 @@
+.comment-edit-footer .ant-form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.comment-edit-footer .ant-form-inline > .ant-form-item {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+}
+
+.comment-edit-footer .ant-form-item-control,
+.comment-edit-footer .ant-form-item-control-input-content {
+  min-width: 0;
+}
+
+.comment-edit-footer .ant-input-affix-wrapper {
+  width: 100%;
+  min-width: 0;
+}
+
+.comment-edit-footer .ant-form-inline > .comment-edit-submit {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 575px) {
+  .comment-edit-footer .ant-form-inline > .ant-form-item {
+    flex-basis: 100%;
+  }
+
+  .comment-edit-footer .comment-edit-submit .ant-btn {
+    width: 100%;
+  }
+}

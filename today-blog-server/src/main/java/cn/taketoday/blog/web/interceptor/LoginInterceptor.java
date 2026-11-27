@@ -1,0 +1,64 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.web.interceptor;
+
+import java.io.IOException;
+
+import cn.taketoday.blog.UnauthorizedException;
+import cn.taketoday.blog.config.UserSessionResolver;
+import cn.taketoday.blog.problem.CommonProblems;
+import cn.taketoday.blog.problem.ProblemException;
+import infra.aot.hint.MemberCategory;
+import infra.aot.hint.annotation.RegisterReflection;
+import infra.web.HandlerInterceptor;
+import infra.web.ServerHttpExchange;
+import infra.web.resource.ResourceHttpRequestHandler;
+
+/**
+ * 登录拦截器，用于验证用户会话状态。
+ * <p>
+ * 如果用户未登录且请求的不是静态资源，则抛出 {@link UnauthorizedException} 异常。
+ * 如果请求的是静态资源且用户未登录，则返回 404 状态码。
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 2018-10-30 20:36
+ */
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)
+final class LoginInterceptor implements HandlerInterceptor {
+
+  // Authorization
+
+  private final UserSessionResolver identities;
+
+  LoginInterceptor(UserSessionResolver identities) {
+    this.identities = identities;
+  }
+
+  @Override
+  public boolean preProcessing(ServerHttpExchange request, Object handler) throws IOException {
+    if (identities.getLoginUser(request) != null) {
+      return true;
+    }
+
+    if (handler instanceof ResourceHttpRequestHandler) {
+      throw new ProblemException(CommonProblems.NOT_FOUND);
+    }
+    throw new UnauthorizedException();
+  }
+
+}

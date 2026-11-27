@@ -1,0 +1,126 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.model;
+
+import java.time.Instant;
+import java.util.Objects;
+import java.util.Set;
+
+import cn.taketoday.blog.model.enums.PostStatus;
+import cn.taketoday.blog.util.StringUtils;
+import infra.core.style.ToStringBuilder;
+import infra.persistence.annotation.Table;
+import infra.persistence.annotation.Transient;
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * 文章实体
+ *
+ * @since 2017 10 11--18:07
+ */
+@Setter
+@Getter
+@Table("article")
+public class Article extends BasicModel {
+
+  private String cover;
+
+  private String title;
+
+  private Integer pv;
+
+  private PostStatus status;
+
+  /** 首页置顶时间，null 表示未置顶。 */
+  private Instant pinnedAt;
+
+  private String summary;
+
+  /** html content **/
+  private String content;
+
+  /** markdown content */
+  private String markdown;
+
+  /** 需要输入密码才能访问该页面 */
+  private String password;
+
+  private String uri;
+
+  /** category name */
+  private String category;
+  private String copyright;
+
+  @Transient
+  private Set<Label> labels;
+
+  public boolean needPassword() {
+    return password != null;
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.forInstance(this)
+            .append("id", id)
+            .append("cover", cover)
+            .append("title", title)
+            .append("pv", pv)
+            .append("status", status)
+            .append("pinnedAt", pinnedAt)
+            .append("summary", summary != null ? StringUtils.truncate(summary, 10) : null)
+            .append("password", password)
+            .append("createAt", createAt)
+            .append("updateAt", updateAt)
+            .append("uri", uri)
+            .append("category", category)
+            .append("copyright", copyright)
+            .append("labels", labels)
+            .toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (!(o instanceof Article article))
+      return false;
+    return Objects.equals(pv, article.pv)
+            && status == article.status
+            && Objects.equals(pinnedAt, article.pinnedAt)
+            && Objects.equals(id, article.id)
+            && Objects.equals(uri, article.uri)
+            && Objects.equals(cover, article.cover)
+            && Objects.equals(title, article.title)
+            && Objects.equals(summary, article.summary)
+            && Objects.equals(content, article.content)
+            && Objects.equals(markdown, article.markdown)
+            && Objects.equals(password, article.password)
+            && Objects.equals(createAt, article.createAt)
+            && Objects.equals(updateAt, article.updateAt)
+            && Objects.equals(category, article.category)
+            && Objects.equals(copyright, article.copyright)
+            && Objects.equals(labels, article.labels);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, cover, title, pv, status, summary, content, markdown,
+            password, createAt, updateAt, uri, category, copyright, labels, pinnedAt);
+  }
+}

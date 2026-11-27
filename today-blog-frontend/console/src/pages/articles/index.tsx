@@ -1,0 +1,325 @@
+/*
+ * Original Author -> Harry Yang (taketoday@foxmail.com) https://taketoday.cn
+ * Copyright © TODAY & 2017 - 2023 All Rights Reserved.
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see [http://www.gnu.org/licenses/]
+ */
+
+import { useEffect, useRef, useState } from 'react';
+import { articleMessage as t } from '@/utils/article-i18n';
+import { Button, Divider, message, Popconfirm, Popover, Tag } from 'antd';
+import { PageContainer } from '@ant-design/pro-layout';
+import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table'
+import { format, isEmpty } from "@/utils";
+
+
+import { ArticleItem } from "./data.d";
+import { deleteArticle, getCategories, queryArticles, updatePinned, updateStatus } from "./service";
+import { PlusOutlined } from "@ant-design/icons/lib";
+import { history, Link } from '@umijs/max';
+import DraftDialog from './drafts/DraftDialog';
+import { draftUrl } from './drafts/storage';
+import { ArticleLink } from "@/components/Article";
+import Image from "@/components/Image";
+import { CheckCircleOutlined, ExclamationCircleOutlined, SyncOutlined } from "@ant-design/icons";
+
+
+/**
+ * 删除节点
+ * @param article
+ */
+const handleRemove = async (article: ArticleItem) => {
+  const hide = message.loading(t('deletingName', { name: article.title }))
+  return deleteArticle(article)
+      .finally(hide)
+      .then(() => message.success(t('deleteSuccess'), 1))
+      .catch(() => message.error(t('deleteFailed')))
+}
+
+const renderStatusMenu = (article: ArticleItem, reload: () => Promise<any>) => {
+
+  const toggleStatus = async (status: string) => {
+    return updateStatus(article.id, status)
+        .then(() => message.success(t('statusSuccess'), 1))
+        .catch(() => message.error(t('statusFailed')))
+        .then(reload)
+  }
+
+  const renderPublished = () => {
+    return (<>
+      <Popconfirm title={t('confirmDraft')} placement="topLeft" onConfirm={() => toggleStatus('DRAFT')}>
+        <a href="#">{t('draft')}</a>
+      </Popconfirm>
+      <Divider type="vertical"/>
+      <Popconfirm title={t('confirmRecycle')} placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
+        <a href="#">{t('recycle')}</a>
+      </Popconfirm>
+    </>)
+  }
+
+  const renderDraft = () => {
+    return (<>
+      <Popconfirm title={t('confirmPublish')} placement="topLeft" onConfirm={() => toggleStatus('PUBLISHED')}>
+        <a href="#">{t('publish')}</a>
+      </Popconfirm>
+      <Divider type="vertical"/>
+      <Popconfirm title={t('confirmRecycle')} placement="topLeft" onConfirm={() => toggleStatus('RECYCLE')}>
+        <a href="#">{t('recycle')}</a>
+      </Popconfirm>
+    </>)
+  }
+
+  if (article.status === 'PUBLISHED') {
+    return renderPublished()
+  }
+  else if (article.status === 'DRAFT') {
+    return renderDraft()
+  }
+
+  return (
+      <>
+        <Popconfirm title={t('confirmPublish')} placement="topLeft" onConfirm={() => toggleStatus('PUBLISHED')}>
+          <a href="#">{t('publish')}</a>
+        </Popconfirm>
+        <Divider type="vertical"/>
+        <Popconfirm title={t('confirmDraft')} placement="topLeft" onConfirm={() => toggleStatus('DRAFT')}>
+          <a href="#">{t('draft')}</a>
+        </Popconfirm>
+      </>
+  )
+}
+
+const isPinned = (article: ArticleItem): boolean => article.pinnedAt != null
+
+const renderStatus = (article: ArticleItem) => {
+  switch (article.status) {
+    case 'DRAFT' :
+      return <Tag color='processing' icon={<ExclamationCircleOutlined/>}>{t('draft')}</Tag>
+    case 'PUBLISHED' :
+      return <Tag color='success' icon={<CheckCircleOutlined/>}>{t('published')}</Tag>
+    default :
+      return <Tag color='error' icon={<SyncOutlined/>}>{t('recycleBin')}</Tag>
+  }
+}
+
+export default () => {
+  const actionRef = useRef<ActionType>()
+  const [categories, setCategories] = useState({})
+  const [pinning, setPinning] = useState<number[]>([])
+  const [draftsOpen, setDraftsOpen] = useState(false)
+  const pinningIds = useRef(new Set<number>())
+
+  const reload = async (): Promise<any> => {
+    return actionRef.current?.reload()
+  }
+
+  const remove = async (record: ArticleItem) => {
+    return handleRemove(record)
+        .then(reload)
+  }
+
+  useEffect(() => {
+    getCategories().then(res => {
+      const categoriesEnum = {}
+      res.data.forEach(category => {
+        const { name } = category
+        categoriesEnum[name] = { text: name }
+      })
+
+      setCategories(categoriesEnum)
+    })
+
+  }, [])
+
+  const togglePinned = async (article: ArticleItem) => {
+    if (pinningIds.current.has(article.id)) return
+    pinningIds.current.add(article.id)
+    setPinning([...pinningIds.current])
+    const pinned = !isPinned(article)
+    try {
+      await updatePinned(article.id, pinned)
+      message.success(t(pinned ? 'pinSuccess' : 'unpinSuccess'))
+      await reload()
+    }
+    catch {
+      message.error(t('pinFailed'))
+    }
+    finally {
+      pinningIds.current.delete(article.id)
+      setPinning([...pinningIds.current])
+    }
+  }
+
+
+  const columns: ProColumns<ArticleItem>[] = [
+    {
+      title: 'ID',
+      width: 60,
+      dataIndex: 'id',
+      fixed: 'left',
+      hideInSearch: true
+    },
+    {
+      width: 200,
+      title: t('title'),
+      fixed: 'left',
+      dataIndex: 'title',
+      render: (_, article) => (
+          <Popover title={t('articleTitle')} content={<span dangerouslySetInnerHTML={{ __html: article.title }}/>}>
+            <ArticleLink article={article}>
+              {article.title?.length > 15 ? `${article.title.substring(0, 15)}...` : article.title}
+              {isPinned(article) && <Tag color="red">{t('pinned')}</Tag>}
+            </ArticleLink>
+          </Popover>
+      )
+    },
+    {
+      title: t('cover'),
+      width: 150,
+      dataIndex: 'cover',
+      hideInSearch: true,
+      render: (_, article) => (
+          article.cover && <Image title={article.title} src={article.cover} width={120} original={false}/>
+      ),
+    },
+    {
+      title: t('category'),
+      width: 100,
+      dataIndex: 'category',
+      valueEnum: categories,
+      render: (_, article) => (
+          <Tag>{article.category}</Tag>
+      ),
+    },
+    {
+      title: t('content'),
+      width: 250,
+      dataIndex: 'content',
+      render: (_, article) => (
+          <Popover title={article.title} trigger="hover"
+                   content={<div style={{ maxWidth: 1000, height: 550, overflowY: "auto" }}
+                                 dangerouslySetInnerHTML={{ __html: article.content }}/>}>
+            <span>{article.summary?.substring(0, 70)}</span>
+          </Popover>
+      )
+    },
+    {
+      title: t('views'),
+      width: 80,
+      dataIndex: 'pv',
+      sorter: true,
+      hideInSearch: true
+    },
+    {
+      title: t('password'),
+      width: 100,
+      dataIndex: 'password',
+      hideInSearch: true
+    },
+    {
+      title: t('status'),
+      width: 100,
+      dataIndex: 'status',
+      valueEnum: { 'PUBLISHED': { text: t('published') }, 'DRAFT': { text: t('draft') }, 'RECYCLE': { text: t('recycled') } },
+      render: (_, record) => (
+          <>
+            {renderStatus(record)}
+          </>
+      ),
+    },
+    {
+      title: t('createdAt'),
+      dataIndex: 'createAt',
+      width: 220,
+      sorter: true,
+      valueType: 'dateTimeRange',
+      render: (_, record) => (
+          <>
+            {format(record.createAt)}
+          </>
+      ),
+    },
+    {
+      width: 220,
+      title: t('updatedAt'),
+      sorter: true,
+      dataIndex: 'updateAt',
+      valueType: 'dateTimeRange',
+      render: (_, record) => (
+          <>
+            {format(record.updateAt)}
+          </>
+      ),
+    },
+    {
+      width: 300,
+      title: t('actions'),
+      fixed: 'right',
+      valueType: 'option',
+      render: (_, record) => (
+          <>
+            <Link to={isEmpty(record.markdown) ? `/articles/${record.id}/modify-rich-text` : `/articles/${record.id}/modify`}
+                  target='_blank'>{t('edit')}</Link>
+            <Divider type="vertical"/>
+            <Popconfirm title={t('confirmDelete')} placement="topLeft" onConfirm={() => remove(record)}>
+              <a href="#">{t('delete')}</a>
+            </Popconfirm>
+            <Divider type="vertical"/>
+            {
+              renderStatusMenu(record, reload)
+            }
+            {record.status === 'PUBLISHED' && <>
+              <Divider type="vertical"/>
+              <Button type="link" size="small" loading={pinning.includes(record.id)}
+                      disabled={pinning.includes(record.id)} onClick={() => togglePinned(record)}>
+                {t(isPinned(record) ? 'unpin' : 'pin')}
+              </Button>
+            </>}
+          </>
+      ),
+    },
+  ]
+
+  return (
+      <PageContainer>
+        <ProTable<ArticleItem>
+            rowKey="id"
+            headerTitle={t('list')}
+            actionRef={actionRef}
+            request={queryArticles}
+            columns={columns}
+            scroll={{ x: 1200 }}
+            toolBarRender={() => [
+              <Button type="primary">
+                <Link to="/articles/write-rich-text" target="_blank">
+                  <PlusOutlined/> {t('richText')}
+                </Link>
+              </Button>,
+              <Button type="primary">
+                <Link to="/articles/write" target="_blank">
+                  <PlusOutlined/> {t('markdown')}
+                </Link>
+              </Button>,
+              <Button key="drafts" onClick={() => setDraftsOpen(true)}>{t('localDrafts')}</Button>
+            ]}
+        />
+        <DraftDialog open={draftsOpen} onClose={() => setDraftsOpen(false)} onSelect={draft => {
+          setDraftsOpen(false);
+          history.push(draftUrl(draft));
+        }}/>
+      </PageContainer>
+  )
+}

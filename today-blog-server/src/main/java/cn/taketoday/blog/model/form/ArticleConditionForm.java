@@ -1,0 +1,199 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.model.form;
+
+import org.jspecify.annotations.Nullable;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import cn.taketoday.blog.model.enums.OrderBy;
+import cn.taketoday.blog.model.enums.PostStatus;
+import cn.taketoday.blog.util.StringUtils;
+import infra.core.style.ToStringBuilder;
+import infra.format.annotation.DateTimeFormat;
+import infra.logging.LogMessage;
+import infra.persistence.DebugDescriptive;
+import infra.persistence.EntityMetadata;
+import infra.persistence.EntityProperty;
+import infra.persistence.query.QueryCondition;
+import infra.persistence.sql.OrderSpec;
+import infra.persistence.sql.Restriction;
+import lombok.Getter;
+import lombok.Setter;
+
+import static infra.persistence.sql.Restrictions.between;
+import static infra.persistence.sql.Restrictions.equal;
+import static infra.persistence.sql.Restrictions.plain;
+
+/**
+ * 文章条件查询
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 2020/12/20 22:42
+ */
+@Getter
+@Setter
+public class ArticleConditionForm implements QueryCondition, DebugDescriptive {
+
+  private @Nullable String q;
+
+  private @Nullable String title;
+
+  private @Nullable String content;
+
+  private @Nullable String category;
+
+  private @Nullable PostStatus status;
+
+  private @Nullable Map<String, OrderBy> sort;
+
+  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  private LocalDateTime @Nullable [] createAt;
+
+  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  private LocalDateTime @Nullable [] updateAt;
+
+  @Override
+  public void collectRestrictions(EntityMetadata metadata, List<Restriction> restrictions) {
+    if (StringUtils.hasText(q)) {
+      restrictions.add(plain(" (`title` like ? OR `content` like ? )"));
+    }
+
+    if (StringUtils.hasText(title)) {
+      restrictions.add(plain("`title` like ?"));
+    }
+
+    if (StringUtils.hasText(content)) {
+      restrictions.add(plain("`content` like ?"));
+    }
+
+    if (StringUtils.hasText(category)) {
+      restrictions.add(equal("category"));
+    }
+
+    if (status != null) {
+      restrictions.add(equal("status"));
+    }
+
+    if (createAt != null && createAt.length == 2) {
+      restrictions.add(between("create_at"));
+    }
+
+    if (updateAt != null && updateAt.length == 2) {
+      restrictions.add(between("update_at"));
+    }
+
+  }
+
+  @Override
+  public OrderSpec resolveOrderByClause(EntityMetadata metadata) {
+    if (sort != null) {
+      var builder = OrderSpec.builder();
+      for (var entry : sort.entrySet()) {
+        EntityProperty property = metadata.findProperty(entry.getKey());
+        if (property != null) {
+          builder.orderBy(property.getColumnName(), entry.getValue().order);
+        }
+      }
+      return builder.build();
+    }
+    return OrderSpec.plain("update_at DESC, create_at DESC");
+  }
+
+  @Override
+  public int setParameter(EntityMetadata metadata, PreparedStatement smt, int idx) throws SQLException {
+    if (StringUtils.hasText(q)) {
+      String string = '%' + q.trim() + '%';
+      smt.setString(idx++, string);
+      smt.setString(idx++, string);
+    }
+
+    if (StringUtils.hasText(title)) {
+      smt.setString(idx++, '%' + title.trim() + '%');
+    }
+
+    if (StringUtils.hasText(content)) {
+      smt.setString(idx++, '%' + content.trim() + '%');
+    }
+
+    if (StringUtils.hasText(category)) {
+      smt.setString(idx++, category.trim());
+    }
+
+    if (status != null) {
+      smt.setInt(idx++, status.getValue());
+    }
+
+    if (createAt != null && createAt.length == 2) {
+      smt.setObject(idx++, createAt[0]);
+      smt.setObject(idx++, createAt[1]);
+    }
+
+    if (updateAt != null && updateAt.length == 2) {
+      smt.setObject(idx++, updateAt[0]);
+      smt.setObject(idx++, updateAt[1]);
+    }
+    return idx;
+  }
+
+  @Override
+  public String getDescription() {
+    return "Articles searching";
+  }
+
+  @Override
+  public Object getDebugLogMessage() {
+    return LogMessage.format("Articles searching with [{}]", this);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (!(o instanceof final ArticleConditionForm that))
+      return false;
+    return status == that.status
+            && Objects.equals(q, that.q)
+            && Objects.equals(category, that.category);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(q, category, status);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.forInstance(this)
+            .append("q", q)
+            .append("title", title)
+            .append("content", content)
+            .append("category", category)
+            .append("status", status)
+            .append("sort", sort)
+            .append("createAt", createAt)
+            .append("updateAt", updateAt)
+            .toString();
+  }
+
+}

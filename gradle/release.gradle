@@ -1,0 +1,101 @@
+import cn.taketoday.blog.release.ReleaseManifest
+
+def projectVersion = version.toString()
+def frontendMode = providers.gradleProperty('frontendMode').orElse('nginx')
+def releaseBuild = providers.gradleProperty('buildNumber')
+    .orElse(providers.environmentVariable('BUILD_NUMBER'))
+    .orElse(providers.provider {
+      java.time.format.DateTimeFormatter.ofPattern('yyyyMMddHHmmss')
+          .withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.now())
+    })
+
+def validateRelease = tasks.register('validateRelease') {
+  group = 'distribution'
+  description = '校验发行版本和构建编号。'
+  doLast {
+    if (!['nginx', 'embedded'].contains(frontendMode.get())) {
+      throw new GradleException('frontendMode 必须为 nginx 或 embedded')
+    }
+    if (!(projectVersion ==~ /[A-Za-z0-9][A-Za-z0-9._-]{0,99}/)
+        || !(releaseBuild.get() ==~ /[1-9][0-9]{0,17}/)) {
+      throw new GradleException('发行版本或构建编号格式错误')
+    }
+  }
+}
+
+def stageRelease = tasks.register('stageRelease', Sync) {
+  dependsOn validateRelease, ':today-blog-server:installDist', ':today-blog-frontend:buildReleaseFrontend'
+  inputs.property('frontendMode', frontendMode)
+  into layout.buildDirectory.dir('release/payload')
+  from(project(':today-blog-server').layout.buildDirectory.dir('install/blog-api')) {
+    include 'bin/**', 'lib/**'
+    into 'api'
+  }
+  if (frontendMode.get() == 'nginx') {
+    from(project(':today-blog-frontend').layout.projectDirectory.dir('console/dist')) {
+      into 'console'
+    }
+    from(project(':today-blog-frontend').layout.projectDirectory.dir('desktop/build')) {
+      into 'desktop'
+    }
+  }
+  exclude '**/.DS_Store', '**/__MACOSX/**'
+}
+
+def manifest = tasks.register('releaseManifest', ReleaseManifest) {
+  dependsOn stageRelease
+  payloadDirectory = layout.buildDirectory.dir('release/payload')
+  manifestFile = layout.buildDirectory.file('release/metadata/upgrade.properties')
+  productVersion = projectVersion
+  buildNumber = releaseBuild
+  getFrontendMode().set(frontendMode)
+}
+
+// 在线协议规定 ZIP 根目录固定为 today-blog，不能使用 distribution 插件的版本化外层目录。
+def releaseContents = copySpec {
+  into 'today-blog'
+  from(stageRelease)
+  from(manifest) {
+    into 'META-INF'
+  }
+}
+
+tasks.register('installReleaseDist', Sync) {
+  into layout.buildDirectory.dir('install/today-blog')
+  with releaseContents
+}
+
+[releaseDistZip: Zip, releaseDistTar: Tar].each { taskName, archiveType ->
+  tasks.register(taskName, archiveType) {
+    group = 'distribution'
+    with releaseContents
+    destinationDirectory = layout.buildDirectory
+    archiveFileName = releaseBuild.zip(archiveExtension) { build, extension ->
+      "today-blog-${projectVersion}-${build}-${frontendMode.get()}.${extension}"
+    }.get()
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+  }
+}
+
+def releaseZip = tasks.named('releaseDistZip', Zip).flatMap {
+  it.archiveFile
+}
+def verifyRelease = tasks.register('verifyRelease', JavaExec) {
+  group = 'verification'
+  inputs.file(releaseZip)
+  classpath = files(project(':today-blog-upgrade-protocol').tasks.named('jar'))
+  mainClass = 'cn.taketoday.blog.updater.VerifyReleasePackage'
+  args releaseZip.get().asFile.absolutePath
+}
+
+def cli = tasks.register('releaseCli', Copy) {
+  from project(':today-blog-cli').tasks.named('infraJar')
+  into layout.buildDirectory.dir('dist')
+}
+
+tasks.register('release') {
+  group = 'distribution'
+  description = '构建后端、前端，生成无签名升级包和独立运维 CLI。'
+  dependsOn verifyRelease, cli
+}

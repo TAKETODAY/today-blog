@@ -1,0 +1,233 @@
+# AGENTS.md
+
+## 代码排版规则
+
+- 新增或修改代码时，注释独占行，放在所说明代码之前；代码行末不追加注释。Javadoc 使用多行格式。
+- `if`、`else`、`for`、`while`、`do` 等控制语句始终保留完整的 `{}`，即使语句体只有一行；语言不支持花括号的语法按其自身规范书写。
+- 块体采用多行格式：起始 `{` 后换行，语句逐行书写，结束 `}` 独占行；方法、构造器、`try/catch/finally` 和块形式的 lambda/Gradle 闭包同样遵循，不压缩成单行。
+- 修改既有文件时，所触及的代码遵循以上规则；未经要求不批量重排无关代码。
+- 新增 Java 顶层类型（包括测试）时，类级 Javadoc 必须包含 `@author <a href="https://github.com/TAKETODAY">Harry Yang</a>` 和 `@since <引入版本> <YYYY/MM/DD>`（例如 `@since 4.0 2026/11/18`）。修改已有类型时保留原有的 `@author` 和 `@since`。
+
+## Java 文件版权头
+
+新增 Java 文件（包括测试）在 `package` 声明之前使用以下完整版权头，逐行保留模板内容：
+
+```java
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+```
+
+- **后端（`today-blog-server/`）**: Gradle 9.8.1（wrapper），最低支持 Java 17（`today-blog-server/build.gradle` 中
+  `sourceCompatibility/targetCompatibility = VERSION_17`），推荐使用 JDK 25（`.sdkmanrc` 锁定 `25-librca`）。根项目名 `today-blog`。
+- **前端（`today-blog-frontend/`）**: `console/`、`desktop/`、`common/` 分别维护 pnpm 锁文件。根项目的 `./gradlew release` 同时构建前后端。
+- **公共代码（`today-blog-core/`）**: 使用 `java-library`，仅依赖 `infra-core`；服务器与 CLI 复用密码编码、日期、字符串等基础能力。业务实现、Web、数据库及服务器装配保留在 `today-blog-server/`；有实际复用需求后再提取 `today-blog-server-core`。
+
+## 后端框架：TODAY Infrastructure（不是 Spring Boot）
+
+后端使用的是自研框架 **TODAY Infrastructure**（`cn.taketoday:infra-*`，版本 `5.0-Draft.6-SNAPSHOT`）。注解和类名看起来很像 Spring Boot（
+`@InfraApplication`、`@InfraTest`、`MockMvcTester`、`RestTestClient`、`EntityManager`），但 **全部来自 `infra.*` 包**。 **严禁导入
+`org.springframework.*`。**
+
+框架详细文档（Context7 LLM 可读）: https://context7.com/taketoday/today-infrastructure/llms.txt
+
+### 查阅框架文档规则
+
+- **写后端代码前先查文档**：涉及 `infra.*` 的注解、接口、类名或方法签名不确定时，先读
+  https://context7.com/taketoday/today-infrastructure/llms.txt（可用 `webfetch` 抓取），不要凭 Spring Boot 记忆推断。
+- **以文档为准，不以 Spring 文档为准**：TODAY Infrastructure 大量 API 与 Spring 同名但行为/签名可能不同；冲突时一律采用框架文档。
+- **禁止凭印象造 API**：文档中查不到的类、注解属性或方法不要写；无法确认时先看项目内已有用法
+  （`today-blog-server/src/main/java` 中的 `infra.*` 导入）或直接询问用户。
+- **只导 `infra.*` 包**：任何 `org.springframework.*` 导入都是错误；Servlet 容器相关实现同理（框架使用 Netty，不是 Tomcat/Jetty）。
+- **文档覆盖范围**：框架文档涵盖 core/beans、AOP、web/webmvc（含 FreeMarker 视图、函数式路由、URI 编码）、数据访问（JDBC、事务、OXM）、
+  缓存、调度、RestClient、测试框架（`@InfraTest`、`MockMvcTester`、`RestTestClient`）、GraalVM 等；优先按模块目录定位章节。
+
+### 文档中易错的常用 API
+
+| 场景         | 正确用法                                                                                            |
+|--------------|-----------------------------------------------------------------------------------------------------|
+| 应用启动     | `infra.app.Application.run(XxxApplication.class, args)` + `@InfraApplication`                       |
+| 请求方法注解 | `@GET` / `@POST` / `@PUT` / `@DELETE`（`infra.web.annotation.*`），不是 `@GetMapping` 系列          |
+| 控制器       | `@RestController` = `@Controller` + `@ResponseBody`（同一包）                                       |
+| 请求参数     | `@RequestBody`、`@PathVariable`、`@RequestParam`；`Part` 用于文件上传（`infra.web.multipart.Part`） |
+| 临时目录     | `infra.core.ApplicationTemp`（`getDir(...)`），不要硬编码 `java.io.tmpdir`                          |
+| 事务         | `infra.transaction.annotation.Transactional`                                                        |
+| JDBC         | `infra.jdbc.core.JdbcTemplate` / `NamedParameterJdbcTemplate`（支持 `:name` 命名参数）              |
+| 缓存         | `@EnableCaching` + `infra.cache.support.CaffeineCacheManager`                                       |
+| 事件         | `infra.context.ApplicationEventPublisher` + `@EventListener`                                        |
+| 测试         | `@InfraTest`、`MockMvcTester`、`RestTestClient`（项目内优先使用 `@WebAPITest`）                     |
+| 启动插桩     | `ApplicationStartup.start(...)`（`StartupStep` + `tag`）                                            |
+
+### 框架核心概念
+
+| 概念     | 对应 API                                                                                                                     |
+|----------|------------------------------------------------------------------------------------------------------------------------------|
+| 应用入口 | `infra.app.Application.run()` + `@InfraApplication`（组合了 `@Configuration`、`@EnableAutoConfiguration`、`@ComponentScan`） |
+| 控制器   | `@RestController`（组合了 `@Controller` + `@ResponseBody`）+ `@GET`/`@POST`/`@PUT`/`@DELETE`                                 |
+| 请求映射 | `@RequestMapping`、`@PathVariable`、`@RequestParam`、`@RequestBody`                                                          |
+| 依赖注入 | `@Autowired`（构造器/字段/方法注入）、`@Qualifier`、`@Configuration` + `@Bean`                                               |
+| 事件     | `@EventListener` + `ApplicationEventPublisher`，支持异步（`@Async`）、条件（SpEL）、排序（`@Order`）                         |
+| 异常处理 | `@ExceptionHandler`（控制器内）或 `@RestControllerAdvice`（全局）                                                            |
+| 事务     | `@Transactional`（`infra.transaction.annotation.Transactional`），支持隔离级别、传播行为、回滚规则                           |
+| 数据库   | `JdbcTemplate`（`infra.jdbc.core.JdbcTemplate`）或 `EntityManager`（项目自定义 JDBC ORM）                                    |
+| 缓存     | `@EnableCaching` + Caffeine（`infra.cache.support.CaffeineCacheManager`）                                                    |
+| 会话     | `@EnableSession` + `SessionManager`，支持 `HeaderSessionIdResolver`                                                          |
+| 服务器   | Netty 嵌入式（不是 Tomcat/Jetty）                                                                                            |
+| 模板     | FreeMarker（`.ftl` 文件在 `templates/`）                                                                                     |
+| DB 迁移  | Flyway（通过 `infra.flyway.config.FlywayMigrationStrategy` 配置）                                                            |
+
+### 数据库表命名规则
+
+- 新增数据库表统一使用 `t_` 前缀，例如 `t_api_key`。
+- Java 实体的 `@Table` 名称必须与迁移脚本中的表名保持一致。
+- 新增表的 Flyway migration、实体映射和测试数据应同时遵循该命名规则。
+
+### 项目核心文件
+
+- 入口类: `today-blog-server/src/main/java/cn/taketoday/blog/BlogApplication.java`
+- 自动配置声明: `META-INF/config/infra.context.annotation.config.AutoConfiguration.imports`（指向 `AppConfig`）
+- 主配置: `cn.taketoday.blog.config.AppConfig`（缓存、会话、FreeMarker 视图、Flyway 策略）
+- 自定义注解: `@ConfigBinding`（配置前缀绑定，如 `prefix "site."`）
+
+## 后端常用命令
+
+```bash
+./gradlew :today-blog-server:build          # 编译 + 测试 + 打包
+./gradlew :today-blog-server:test           # 只运行服务器测试
+./gradlew :today-blog-core:test             # 运行公共模块测试
+./gradlew :today-blog-server:run            # 启动开发服务器
+./gradlew :today-blog-server:clean installInfraDist  # 生产构建
+./gradlew clean                    # 清理所有
+
+# 运行单个测试类
+./gradlew :today-blog-server:test --tests "cn.taketoday.blog.web.http.ArticleHttpHandlerTests"
+
+# AOT 处理（GraalVM Native Image 准备，测试中禁用）
+./gradlew :today-blog-server:processAot
+# Native Image 构建
+./gradlew :today-blog-server:nativeBuild
+```
+
+## 后端测试注意事项
+
+- 测试使用 **MariaDB4j**（内嵌 MariaDB，端口 3307）， **不是 H2**。需有 `infra-mariadb4j` 依赖。
+- 测试元注解 `@WebAPITest`（位于 `cn.taketoday.blog.web`）组合了 `@AutoLogin`、`@AutoConfigureMockMvc`、`@AutoConfigureRestTestClient`、
+  `@ActiveProfiles("test")`、`@InfraTest`。建议写 API 测试时直接用 `@WebAPITest`。
+- 测试自动登录：`SessionConfig` 在测试环境中自动创建带 Blogger 和 User 的会话，通过 `HeaderSessionIdResolver` 注入 header key。
+  `MockMvcBuilderCustomizer` 自动为每个请求添加认证头。
+- 测试配置: `src/test/resources/application-test.yaml`。
+- 测试是 `@Transactional` 的（自动回滚）。AOT 处理在测试中禁用（`processTestAot { enabled = false }`）。
+- 测试中可同时注入 `MockMvcTester` 和 `RestTestClient`。
+
+## 本地开发数据库
+
+启动后端前需创建 MySQL 数据库：
+
+```sql
+CREATE DATABASE IF NOT EXISTS today DEFAULT CHARACTER SET utf8mb4;
+```
+
+开发环境配置（`application-dev.yaml`）要求 MySQL 在 `localhost:3306`，用户 `root`，密码 `88888888`，数据库 `today`。
+Flyway 在启动时按顺序执行：`repair()` → `baseline()` → `migrate()`（在 `AppConfig` 中通过 `FlywayMigrationStrategy` Bean 配置）。
+Flyway 迁移文件位于 `src/main/resources/db/migration/`，基线版本 `3.1.0`。
+
+## 主题色规则
+
+- 公开博客、管理后台及后端生成的页面、模板统一使用 `#337ab7` 作为品牌主题色（Primary）。
+- 新增页面、调整样式或升级 UI 组件库时，保持主题配置、主按钮、链接及选中态的品牌主色一致；优先复用现有主题变量或设计 Token。
+- Hover、Active 等交互态可从该主色派生；成功、警告、错误等语义色独立保留。更换品牌主题色须经用户明确要求。
+
+## 前端命令
+
+```bash
+# 在仓库根目录安装锁定依赖，或安装后构建 Console 和 Desktop
+./gradlew :today-blog-frontend:installFrontendDependencies
+./gradlew :today-blog-frontend:buildReleaseFrontend
+
+# Console（管理后台）— React 18 + Umi 4 + Ant Design 4
+cd today-blog-frontend/console
+pnpm dev          # 开发服务器（代理到 localhost:8080）
+pnpm build        # 生产构建
+pnpm lint         # lint
+pnpm tsc          # TypeScript 类型检查
+pnpm test         # 单元测试
+pnpm test:e2e     # E2E 测试（Puppeteer）
+
+# Desktop（公开博客）— React 18 + Vite
+cd today-blog-frontend/desktop
+pnpm start        # 开发服务器（代理到 localhost:8080）
+pnpm build        # 生产构建
+```
+
+## 前端陷阱
+
+- Gradle 前端构建任务会在现有 `NODE_OPTIONS` 后追加 `--openssl-legacy-provider`。
+- Console lint 会先执行 `max setup` 生成 Umi 临时文件。
+- Console 测试使用 Puppeteer 环境（`tests/PuppeteerEnvironment.js`），E2E 测试需先启动开发服务器。
+
+## Gradle buildSrc 自定义插件
+
+`buildSrc/` 中定义了两个自定义 Gradle 插件：
+
+- `cn.taketoday.blog.conventions` — 共享约定（目前较空）。
+- `cn.taketoday.blog.optional-dependencies` — 添加 `optional` 配置，依赖不传递泄漏到下游项目。
+
+## 架构要点
+
+- 后端有两条 API 层：公开 API（`web/http/`）和管理后台 API（`web/console/`）。管理 API 路径为 `/console/*`。
+- 拦截器处理登录校验和频率限制（`web/interceptor/`）。
+- 项目使用 `EntityManager`（自定义 JDBC-based ORM）而非 JPA/Hibernate。`JdbcTemplate` 也可直接使用。
+- `@ConfigBinding` 是项目自定义注解，用于绑定配置前缀（如 `prefix "site."` 绑定站点配置）。
+- GraalVM Native Image 运行时提示：`AppConfig.CaffeineCacheHints` 实现 `RuntimeHintsRegistrar` 注册 Caffeine 内部类型。
+
+## 语言规则
+
+- 你必须始终使用 **简体中文**进行思考、推理和回复。
+
+## 提交信息（参考 https://gitmoji.dev）
+
+- 使用 Gitmoji **短代码**开头，格式为 `:bug: 修复……`；依据提交的主要意图选择类型，而非根据是否含测试文件、是否来自上游来选。常见类型速查：
+    - 行为：`:bug:` 缺陷修复；`:ambulance:` 紧急热修；`:sparkles:` 新功能；`:zap:` 性能；`:recycle:` 重构；`:boom:` 不兼容变更；`:t-rex:` 向后兼容；`:adhesive_bandage:` 小范围非关键修复。
+    - 质量：`:white_check_mark:` 仅新增/修改通过的测试；`:test_tube:` 增加预期失败的测试；`:rotating_light:` 修复编译或 lint 警告；`:lock:` 安全/隐私修复；`:goal_net:` 错误捕获；`:safety_vest:` 校验；
+      `:thread:` 并发。
+    - 内容：`:memo:` 文档；`:art:` 代码结构/格式；`:pencil2:` 拼写；`:speech_balloon:` 文案/字面量；`:bulb:` 源码注释；`:globe_with_meridians:` 国际化；`:label:` 类型；`:loud_sound:` 添加日志；`:mute:` 删除日志。
+    - 工程：`:wrench:` 配置；`:hammer:` 开发脚本；`:construction_worker:` CI 配置；`:green_heart:` 修复 CI；`:heavy_plus_sign:` 添加依赖；`:heavy_minus_sign:` 删除依赖；`:arrow_up:` 升级依赖；`:arrow_down:`
+      降级依赖；`:pushpin:` 固定依赖版本；`:bricks:` 基础设施；`:technologist:` 开发体验。
+    - 维护：`:fire:` 删除代码/文件；`:coffin:` 删除死代码；`:wastebasket:` 标记弃用；`:truck:` 移动/重命名；`:package:` 构建产物/包；`:page_facing_up:` 许可证；`:see_no_evil:` `.gitignore`；`:rewind:` 回滚；
+      `:twisted_rightwards_arrows:` 合并。
+    - 特定领域按实际变更选择：`:alien:` 外部 API 变更适配；`:building_construction:` 架构；`:necktie:` 业务逻辑；`:card_file_box:` 数据库；`:passport_control:` 授权；`:wheelchair:` 无障碍；
+      `:children_crossing:` 易用性；`:iphone:` 响应式设计；`:airplane:` 离线；`:triangular_flag_on_post:` 特性开关；`:stethoscope:` 健康检查；`:chart_with_upwards_trend:` 分析/跟踪；`:mag:` SEO；`:seedling:`
+      种子数据。
+    - 其他场景：`:rocket:` 部署；`:bookmark:` 版本标签；`:tada:` 项目初始化；`:construction:` 进行中；`:lipstick:` UI 样式；`:bento:` 素材；`:camera_flash:` 快照；`:clown_face:` mock；`:egg:` 彩蛋；`:alembic:`
+      实验；`:monocle_face:` 数据探索；`:busts_in_silhouette:` 贡献者；`:money_with_wings:` 赞助设施；`:dizzy:` 动画；`:beers:` / `:poop:` 属于非正式语义，不用于正常移植提交。
+- 中文主题用一个动宾短句说清 **实际行为变化**，避免“同步上游”“迁移测试”之类过程描述。正文只在需要说明触发条件、修复机制、兼容取舍或上游溯源时补充，避免重复主题；不要写“逐项迁移上游
+  BeanWrapperAutoGrowingTests 的……；infra-beans 对应测试全类通过”一类测试报告。
+- 若上游原测试或文档与代码一同提交，以生产行为为主题；仅测试或仅文档的独立提交才分别用 `:white_check_mark:` 或 `:memo:`。测试映射、运行命令及结果集中写入批末归档，不塞进每个提交正文。代码、原测试及适用中文文档优先放在同一个目标提交，不人为拆分凑数。
+- 提交信息可以按照上游的来，但是要保证中文
+
+## Agent 技能
+
+### 任务跟踪
+
+任务和规格记录在 `TAKETODAY/today-blog` 的 GitHub Issues 中，使用 `gh` CLI 操作。详见 `src/docs/agents/issue-tracker.md`。
+
+### 分诊标签
+
+使用默认的五个分诊标签：`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`。详见 `src/docs/agents/triage-labels.md`。
+
+### 领域文档
+
+采用单上下文布局：使用 `src/GLOSSARY.md` 和 `src/docs/adr/`。详见 `src/docs/agents/domain.md`。
