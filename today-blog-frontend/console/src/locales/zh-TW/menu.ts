@@ -1,4 +1,5 @@
 export default {
+  'menu.system.frontend-cache': '快取設定',
   'menu.blog': '部落格管理',
   'menu.blog.labels': '文章標籤',
   'menu.blog.articles': '文章列表',
