@@ -26,7 +26,7 @@ import cn.taketoday.blog.problem.ProblemException;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
 import infra.web.HandlerInterceptor;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.resource.ResourceHttpRequestHandler;
 
 /**
@@ -50,7 +50,7 @@ final class LoginInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public boolean preProcessing(HttpContext request, Object handler) throws IOException {
+  public boolean preProcessing(ServerHttpExchange request, Object handler) throws IOException {
     if (identities.getLoginUser(request) != null) {
       return true;
     }

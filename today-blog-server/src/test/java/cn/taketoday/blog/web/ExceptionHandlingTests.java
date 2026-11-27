@@ -27,7 +27,7 @@ import infra.core.io.PathMatchingPatternResourceLoader;
 import infra.http.HttpHeaders;
 import infra.http.HttpStatus;
 import infra.http.ProblemDetail;
-import infra.web.mock.MockHttpContext;
+import infra.web.mock.MockServerHttpExchange;
 import infra.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,7 +44,7 @@ class ExceptionHandlingTests {
 
   @Test
   void typedBusinessErrorsUseRequestLanguage() {
-    MockHttpContext request = new MockHttpContext();
+    MockServerHttpExchange request = new MockServerHttpExchange();
     request.getRequest().addHeader("Accept-Language", "en");
     var response = handler.problem(new ProblemException(ArticleProblems.PASSWORD_INVALID), request);
     assertThat(response.getStatusCode().value()).isEqualTo(403);
@@ -60,14 +60,14 @@ class ExceptionHandlingTests {
     assertThat(exception.getBody().getStatus()).isEqualTo(429);
     assertThat(exception.getHeaders().get("Retry-After")).containsExactly("60", "120");
 
-    var response = handler.problem(exception, new MockHttpContext());
+    var response = handler.problem(exception, new MockServerHttpExchange());
 
     assertThat(response.getHeaders().get("Retry-After")).containsExactly("60", "120");
   }
 
   @Test
   void typedBusinessErrorsCanCarryCustomDetail() {
-    MockHttpContext request = new MockHttpContext();
+    MockServerHttpExchange request = new MockServerHttpExchange();
     request.getRequest().addHeader("Accept-Language", "en");
     var response = handler.problem(ProblemException.of(ArticleProblems.PASSWORD_INVALID,
             "The password was rejected by the article owner."), request);
@@ -78,7 +78,7 @@ class ExceptionHandlingTests {
 
   @Test
   void localizesTypedCustomDetailUsingRequestLanguage() {
-    MockHttpContext request = new MockHttpContext();
+    MockServerHttpExchange request = new MockServerHttpExchange();
     request.getRequest().addHeader("Accept-Language", "en");
     var response = handler.problem(ProblemException.of(ArticleProblems.PASSWORD_INVALID,
             "request.rate_limit_exceeded"), request);
@@ -88,7 +88,7 @@ class ExceptionHandlingTests {
 
   @Test
   void customDetailAndTemplateArgumentsAreIndependent() {
-    MockHttpContext request = new MockHttpContext();
+    MockServerHttpExchange request = new MockServerHttpExchange();
     var exception = ProblemException.of(cn.taketoday.blog.problem.CommonProblems.PARAMETER_MISSING,
             "A custom parameter message.", "email");
 
@@ -100,14 +100,14 @@ class ExceptionHandlingTests {
   @Test
   void usesTypedCustomDetailForServerProblems() {
     var response = handler.problem(ProblemException.of(cn.taketoday.blog.problem.CommonProblems.INTERNAL_ERROR,
-            "secret SQL"), new MockHttpContext());
+            "secret SQL"), new MockServerHttpExchange());
 
     assertThat(response.getBody().getDetail()).isEqualTo("secret SQL");
   }
 
   @Test
   void replacesFrameworkDetailsAndPreservesHeadersAndStatus() {
-    MockHttpContext request = new MockHttpContext();
+    MockServerHttpExchange request = new MockServerHttpExchange();
     HttpHeaders headers = HttpHeaders.forWritable();
     headers.set("Allow", "GET");
     var response = handler.createResponseEntity(ProblemDetail.forStatus(HttpStatus.METHOD_NOT_ALLOWED),
@@ -121,7 +121,7 @@ class ExceptionHandlingTests {
   @Test
   void statusExceptionDoesNotExposeReason() {
     var response = handler.statusException(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-            "secret configuration"), new MockHttpContext());
+            "secret configuration"), new MockServerHttpExchange());
     assertThat(((ProblemDetail) response.getBody()).getDetail()).doesNotContain("secret");
   }
 }

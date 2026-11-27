@@ -27,7 +27,7 @@ import infra.beans.factory.annotation.Autowired;
 import infra.http.HttpHeaders;
 import infra.stereotype.Component;
 import infra.util.StringUtils;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.LocaleResolver;
 
 /**
@@ -51,7 +51,7 @@ public final class BlogLocaleResolver implements LocaleResolver {
   }
 
   @Override
-  public Locale resolveLocale(HttpContext request) {
+  public Locale resolveLocale(ServerHttpExchange request) {
     String selected = request.getHeader(LOCALE_HEADER);
     if ("site".equalsIgnoreCase(selected)) {
       return defaultLocale();
@@ -89,7 +89,7 @@ public final class BlogLocaleResolver implements LocaleResolver {
   }
 
   @Override
-  public void setLocale(HttpContext request, @Nullable Locale locale) {
+  public void setLocale(ServerHttpExchange request, @Nullable Locale locale) {
     throw new UnsupportedOperationException("Locale is resolved from request headers and site options");
   }
 

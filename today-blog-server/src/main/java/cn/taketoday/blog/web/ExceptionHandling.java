@@ -40,7 +40,7 @@ import infra.http.ProblemDetail;
 import infra.http.ResponseEntity;
 import infra.http.converter.HttpMessageNotReadableException;
 import infra.validation.FieldError;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.MultipartException;
 import infra.web.NotFoundHandler;
 import infra.web.annotation.ExceptionHandler;
@@ -70,7 +70,7 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   }
 
   @Override
-  public @Nullable Object handleNotFound(HttpContext request) {
+  public @Nullable Object handleNotFound(ServerHttpExchange request) {
     request.setStatus(HttpStatus.NOT_FOUND);
     if (pageNotFoundLogger.isWarnEnabled()) {
       pageNotFoundLogger.warn("No mapping for {} {}, [{}]",
@@ -81,31 +81,31 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   }
 
   @ExceptionHandler(ProblemException.class)
-  public ResponseEntity<ProblemDetail> problem(ProblemException exception, HttpContext request) {
+  public ResponseEntity<ProblemDetail> problem(ProblemException exception, ServerHttpExchange request) {
     ProblemDetail problem = problems.createWithDetail(exception.getProblem(), request,
             exception.getDetail(), exception.getArguments());
     return problems.response(problem, exception.getHeaders(), exception.getStatusCode(), request);
   }
 
   @ExceptionHandler(UnauthorizedException.class)
-  public ResponseEntity<ProblemDetail> unauthorized(HttpContext request) {
+  public ResponseEntity<ProblemDetail> unauthorized(ServerHttpExchange request) {
     return problems.response(CommonProblems.AUTH_REQUIRED, request);
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
-  public ResponseEntity<ProblemDetail> illegalArgument(IllegalArgumentException e, HttpContext request) {
+  public ResponseEntity<ProblemDetail> illegalArgument(IllegalArgumentException e, ServerHttpExchange request) {
     log.error("Unexpected illegal argument", e);
     return problems.response(CommonProblems.ILLEGAL_ARGUMENT, request);
   }
 
   @ExceptionHandler(InternalServerException.class)
-  public ResponseEntity<ProblemDetail> internal(InternalServerException internal, HttpContext request) {
+  public ResponseEntity<ProblemDetail> internal(InternalServerException internal, ServerHttpExchange request) {
     log.error("服务器内部错误", internal);
     return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
   @ExceptionHandler(ResponseStatusException.class)
-  public ResponseEntity<?> statusException(ResponseStatusException e, HttpContext request) {
+  public ResponseEntity<?> statusException(ResponseStatusException e, ServerHttpExchange request) {
     if (e.getStatusCode().value() >= 500) {
       log.error("Request failed", e);
     }
@@ -114,37 +114,37 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
   }
 
   @ExceptionHandler
-  public ResponseEntity<ProblemDetail> error(Throwable exception, HttpContext request) {
+  public ResponseEntity<ProblemDetail> error(Throwable exception, ServerHttpExchange request) {
     log.error("An Exception occurred", exception);
     return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
   @ExceptionHandler(NullPointerException.class)
-  public ResponseEntity<ProblemDetail> nullPointer(NullPointerException exception, HttpContext request) {
+  public ResponseEntity<ProblemDetail> nullPointer(NullPointerException exception, ServerHttpExchange request) {
     log.error("Null Pointer occurred", exception);
     return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
   @ExceptionHandler(NotMultipartRequestException.class)
-  public ResponseEntity<ProblemDetail> notMultipart(HttpContext request) {
+  public ResponseEntity<ProblemDetail> notMultipart(ServerHttpExchange request) {
     return problems.response(CommonProblems.INVALID_REQUEST, request);
   }
 
   @ExceptionHandler({ OSSException.class, ClientException.class })
-  public ResponseEntity<ProblemDetail> ossException(Exception e, HttpContext request) {
+  public ResponseEntity<ProblemDetail> ossException(Exception e, ServerHttpExchange request) {
     log.error("Object storage request failed", e);
     return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
   @ExceptionHandler(DataAccessResourceFailureException.class)
-  public ResponseEntity<ProblemDetail> dataAccessException(DataAccessResourceFailureException accessException, HttpContext request) {
+  public ResponseEntity<ProblemDetail> dataAccessException(DataAccessResourceFailureException accessException, ServerHttpExchange request) {
     log.error("数据库连接出错", accessException);
     return problems.response(CommonProblems.INTERNAL_ERROR, request);
   }
 
   @Override
   protected @Nullable ResponseEntity<@Nullable Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-          HttpHeaders headers, HttpStatusCode status, HttpContext request) {
+          HttpHeaders headers, HttpStatusCode status, ServerHttpExchange request) {
     ProblemDetail problem = problems.create(CommonProblems.VALIDATION_FAILED, request);
     problem.setProperty("errors", ex.getAllErrors().stream().map(error -> {
       Map<String, @Nullable Object> item = new LinkedHashMap<>();
@@ -160,29 +160,29 @@ class ExceptionHandling extends ResponseEntityExceptionHandler implements NotFou
 
   @Override
   protected @Nullable ResponseEntity<@Nullable Object> handleMissingRequestParameter(
-          MissingRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
+          MissingRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, ServerHttpExchange request) {
     return handleExceptionInternal(ex, problems.create(CommonProblems.PARAMETER_MISSING, request,
             ex.getParameterName()), headers, status, request);
   }
 
   @Override
-  protected @Nullable ResponseEntity<@Nullable Object> handleMultipartException(MultipartException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleMultipartException(MultipartException ex, HttpHeaders headers, HttpStatusCode status, ServerHttpExchange request) {
     return handleExceptionInternal(ex, problems.create(CommonProblems.forStatus(status), request), headers, status, request);
   }
 
   @Override
-  protected @Nullable ResponseEntity<@Nullable Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, ServerHttpExchange request) {
     return handleExceptionInternal(ex, problems.create(CommonProblems.INVALID_REQUEST, request), headers, status, request);
   }
 
   @Override
-  protected @Nullable ResponseEntity<@Nullable Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, HttpContext request) {
+  protected @Nullable ResponseEntity<@Nullable Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, ServerHttpExchange request) {
     return handleExceptionInternal(ex, problems.create(CommonProblems.INVALID_REQUEST, request), headers, status, request);
   }
 
   @Override
   protected ResponseEntity<@Nullable Object> createResponseEntity(@Nullable Object body,
-          @Nullable HttpHeaders headers, HttpStatusCode status, HttpContext request) {
+          @Nullable HttpHeaders headers, HttpStatusCode status, ServerHttpExchange request) {
     ProblemDetail problem;
     if (body instanceof ProblemDetail candidate && candidate.getProperty("code") != null) {
       problem = candidate;

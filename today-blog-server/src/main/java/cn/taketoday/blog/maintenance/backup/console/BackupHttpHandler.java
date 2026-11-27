@@ -30,7 +30,7 @@ import infra.http.ContentDisposition;
 import infra.http.HttpHeaders;
 import infra.http.HttpMethod;
 import infra.http.ResponseEntity;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
@@ -73,7 +73,7 @@ class BackupHttpHandler {
   }
 
   @GET("/{id}/download")
-  public ResponseEntity<?> download(@PathVariable long id, HttpContext request) {
+  public ResponseEntity<?> download(@PathVariable long id, ServerHttpExchange request) {
     BackupService.Download download = backups.download(id);
     String filename = "database-backup-" + id + ".sql.gz";
     var response = ResponseEntity.ok()

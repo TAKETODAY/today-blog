@@ -27,7 +27,7 @@ import infra.http.HttpStatus;
 import infra.http.HttpStatusCode;
 import infra.http.ProblemDetail;
 import infra.http.ResponseEntity;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.annotation.RequestMapping;
 import infra.web.annotation.RestController;
 import infra.web.server.error.ErrorController;
@@ -49,7 +49,7 @@ class ProblemErrorController implements ErrorController, SendErrorHandler {
   }
 
   @RequestMapping("${server.error.path:${error.path:/error}}")
-  public ResponseEntity<ProblemDetail> error(HttpContext request) {
+  public ResponseEntity<ProblemDetail> error(ServerHttpExchange request) {
     HttpStatusCode status = HttpStatusCode.valueOf(request.getStatus());
     if (!status.isError()) {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -58,7 +58,7 @@ class ProblemErrorController implements ErrorController, SendErrorHandler {
   }
 
   @Override
-  public void handleError(HttpContext request, @Nullable String message) throws IOException {
+  public void handleError(ServerHttpExchange request, @Nullable String message) throws IOException {
     request.send(error(request));
   }
 

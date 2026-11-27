@@ -33,7 +33,7 @@ import cn.taketoday.blog.web.Pageable;
 import infra.aot.hint.MemberCategory;
 import infra.aot.hint.annotation.RegisterReflection;
 import infra.core.style.ToStringBuilder;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -51,7 +51,7 @@ final class LazyPageable implements Pageable, Serializable {
 
   private final BlogConfig blogConfig;
 
-  private final HttpContext request;
+  private final ServerHttpExchange request;
 
   private final UserSessionResolver sessionResolver;
 
@@ -60,7 +60,7 @@ final class LazyPageable implements Pageable, Serializable {
   private final String pageSizeRequestParameterName;
 
   public LazyPageable(BlogConfig blogConfig, UserSessionResolver sessionResolver,
-          HttpContext request, String pageRequestParameterName, String pageSizeRequestParameterName) {
+          ServerHttpExchange request, String pageRequestParameterName, String pageSizeRequestParameterName) {
     this.blogConfig = blogConfig;
     this.sessionResolver = sessionResolver;
     this.request = request;

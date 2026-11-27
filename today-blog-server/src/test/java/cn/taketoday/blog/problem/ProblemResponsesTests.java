@@ -43,7 +43,7 @@ import infra.beans.factory.annotation.Autowired;
 import infra.context.ApplicationContext;
 import infra.test.context.junit.jupiter.JUnitConfig;
 import infra.core.io.PathMatchingPatternResourceLoader;
-import infra.web.mock.MockHttpContext;
+import infra.web.mock.MockServerHttpExchange;
 import infra.http.HttpStatus;
 import infra.validation.ObjectError;
 import jakarta.validation.Validation;
@@ -116,7 +116,7 @@ class ProblemResponsesTests {
 
   @Test
   void negotiatesLanguageAndFormatsArguments() {
-    MockHttpContext request = request("fr;q=1,en-US;q=0.8,zh-CN;q=0.5");
+    MockServerHttpExchange request = request("fr;q=1,en-US;q=0.8,zh-CN;q=0.5");
     var problem = problems.create(CommonProblems.PARAMETER_MISSING, request, "email");
     assertThat(problem.getTitle()).isEqualTo("Missing request parameter");
     assertThat(problem.getDetail()).isEqualTo("A required parameter is missing: email.");
@@ -323,8 +323,8 @@ class ProblemResponsesTests {
     return properties;
   }
 
-  private MockHttpContext request(String language) {
-    MockHttpContext request = new MockHttpContext(context);
+  private MockServerHttpExchange request(String language) {
+    MockServerHttpExchange request = new MockServerHttpExchange(context);
     request.getRequest().addHeader("Accept-Language", language);
     return request;
   }

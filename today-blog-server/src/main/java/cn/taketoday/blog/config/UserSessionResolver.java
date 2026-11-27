@@ -30,8 +30,8 @@ import cn.taketoday.blog.web.LoginInfo;
 import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.stereotype.Component;
-import infra.web.HttpContext;
-import infra.web.HttpContextHolder;
+import infra.web.HttpExchangeHolder;
+import infra.web.ServerHttpExchange;
 
 /**
  * 关于 获取用户会话 的处理器
@@ -62,14 +62,14 @@ public class UserSessionResolver {
   /**
    * 解析当前请求身份。显式 API Key 优先于会话，认证结果只缓存在当前请求。
    */
-  public LoginInfo resolve(HttpContext request) {
-    Object cached = request.getAttribute(LoginInfo.class.getName());
+  public LoginInfo resolve(ServerHttpExchange exchange) {
+    Object cached = exchange.getAttribute(LoginInfo.class.getName());
     if (cached instanceof LoginInfo info) {
       return info;
     }
     LoginInfo info = new LoginInfo();
-    if (usesApiKey(request)) {
-      String value = ApiKeyService.extractValue(request.getHeader("Authorization"), request.getHeader("X-API-Key"));
+    if (usesApiKey(exchange)) {
+      String value = ApiKeyService.extractValue(exchange.getHeader("Authorization"), exchange.getHeader("X-API-Key"));
       User user = apiKeyService.authenticate(value);
       if (user == null) {
         throw new UnauthorizedException("auth.invalid_api_key");
@@ -81,17 +81,17 @@ public class UserSessionResolver {
       }
     }
     else {
-      Session session = sessionManagerOperations.getSession(request, false);
+      Session session = sessionManagerOperations.getSession(exchange, false);
       if (session != null) {
         info.setLoginUser(User.find(session));
         info.setBlogger(Blogger.find(session));
       }
     }
-    request.setAttribute(LoginInfo.class.getName(), info);
+    exchange.setAttribute(LoginInfo.class.getName(), info);
     return info;
   }
 
-  public boolean usesApiKey(HttpContext request) {
+  public boolean usesApiKey(ServerHttpExchange request) {
     String authorization = request.getHeader("Authorization");
     return request.getHeader("X-API-Key") != null
             || (authorization != null && (authorization.equalsIgnoreCase("Bearer")
@@ -103,15 +103,15 @@ public class UserSessionResolver {
    */
   @Nullable
   public User getLoginUser() {
-    return getLoginUser(HttpContextHolder.required());
+    return getLoginUser(HttpExchangeHolder.required());
   }
 
   /**
    * 获取当前登录的用户
    */
   @Nullable
-  public User getLoginUser(HttpContext context) {
-    return resolve(context).getLoginUser();
+  public User getLoginUser(ServerHttpExchange exchange) {
+    return resolve(exchange).getLoginUser();
   }
 
   /**
@@ -119,14 +119,14 @@ public class UserSessionResolver {
    */
   @Nullable
   public Blogger getLoggedInBlogger() {
-    return getLoggedInBlogger(HttpContextHolder.required());
+    return getLoggedInBlogger(HttpExchangeHolder.required());
   }
 
   /**
    * 获取当前登录的博主
    */
   @Nullable
-  public Blogger getLoggedInBlogger(HttpContext request) {
+  public Blogger getLoggedInBlogger(ServerHttpExchange request) {
     return resolve(request).getBlogger();
   }
 
@@ -140,7 +140,7 @@ public class UserSessionResolver {
   /**
    * 获取当前登录的用户
    */
-  public Optional<User> loginUser(HttpContext request) {
+  public Optional<User> loginUser(ServerHttpExchange request) {
     return Optional.ofNullable(getLoginUser(request));
   }
 
@@ -154,7 +154,7 @@ public class UserSessionResolver {
   /**
    * 获取当前登录的博主
    */
-  public Optional<Blogger> loggedInBlogger(HttpContext request) {
+  public Optional<Blogger> loggedInBlogger(ServerHttpExchange request) {
     return Optional.ofNullable(getLoggedInBlogger(request));
   }
 

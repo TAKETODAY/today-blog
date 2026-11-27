@@ -35,7 +35,7 @@ import infra.http.ProblemDetail;
 import infra.http.ResponseEntity;
 import infra.stereotype.Component;
 import infra.validation.ObjectError;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.util.WebUtils;
 import jakarta.validation.ConstraintViolation;
 import lombok.CustomLog;
@@ -98,18 +98,18 @@ public final class ProblemResponses {
     throw new IllegalStateException("Cannot determine problem message basename: " + url);
   }
 
-  private static Locale getLocale(HttpContext request) {
+  private static Locale getLocale(ServerHttpExchange request) {
     return WebUtils.resolveLocale(request);
   }
 
-  public ProblemDetail create(Problem problem, HttpContext request, Object... arguments) {
+  public ProblemDetail create(Problem problem, ServerHttpExchange request, Object... arguments) {
     return createWithDetail(problem, request, null, arguments);
   }
 
   /**
    * 创建问题响应；请求级 detail 作为消息键按请求语言解析，找不到消息键时保留原文，并覆盖默认 detail。
    */
-  public ProblemDetail createWithDetail(Problem problem, HttpContext request, @Nullable String customDetail, Object... arguments) {
+  public ProblemDetail createWithDetail(Problem problem, ServerHttpExchange request, @Nullable String customDetail, Object... arguments) {
     Locale locale = getLocale(request);
     String code = problem.code();
     ProblemDetail detail = ProblemDetail.forStatus(problem.status());
@@ -141,7 +141,7 @@ public final class ProblemResponses {
     }
   }
 
-  public String validationMessage(ObjectError error, HttpContext request) {
+  public String validationMessage(ObjectError error, ServerHttpExchange request) {
     String template = error.getDefaultMessage();
     if (error.contains(ConstraintViolation.class)) {
       template = error.unwrap(ConstraintViolation.class).getMessageTemplate();
@@ -153,12 +153,12 @@ public final class ProblemResponses {
     return message(key, getLocale(request), "输入内容不合法。", "The input value is invalid.");
   }
 
-  public ResponseEntity<ProblemDetail> response(Problem type, HttpContext request, Object... arguments) {
+  public ResponseEntity<ProblemDetail> response(Problem type, ServerHttpExchange request, Object... arguments) {
     return response(create(type, request, arguments), null, type.status(), request);
   }
 
   public ResponseEntity<ProblemDetail> response(ProblemDetail problem, @Nullable HttpHeaders headers,
-          HttpStatusCode status, HttpContext request) {
+          HttpStatusCode status, ServerHttpExchange request) {
     problem.setStatus(status.value());
     prepare(request);
     return ResponseEntity.status(status)
@@ -167,7 +167,7 @@ public final class ProblemResponses {
             .body(problem);
   }
 
-  public void prepare(HttpContext request) {
+  public void prepare(ServerHttpExchange request) {
     request.setContentType(MediaType.APPLICATION_PROBLEM_JSON);
     request.setHeader(HttpHeaders.CONTENT_LANGUAGE, getLocale(request).toLanguageTag());
     request.addHeader(HttpHeaders.VARY, HttpHeaders.ACCEPT_LANGUAGE);

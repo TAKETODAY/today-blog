@@ -33,7 +33,7 @@ import infra.context.ApplicationListener;
 import infra.util.CollectionUtils;
 import infra.util.MapCache;
 import infra.web.HandlerInterceptor;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 
 /**
  * @author TODAY 2021/1/10 22:45
@@ -67,7 +67,7 @@ public class ArticleFilterInterceptor implements HandlerInterceptor, Application
 
   @Override
   @SuppressWarnings("unchecked")
-  public void postProcessing(HttpContext context, Object handler, @Nullable Object result) {
+  public void postProcessing(ServerHttpExchange context, Object handler, @Nullable Object result) {
     if (result instanceof ListableHttpResult<?> listable
             && identities.getLoggedInBlogger(context) == null) {
 

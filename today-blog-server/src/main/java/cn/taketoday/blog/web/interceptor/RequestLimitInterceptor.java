@@ -38,7 +38,7 @@ import infra.stereotype.Component;
 import infra.util.Assert;
 import infra.util.MapCache;
 import infra.web.HandlerInterceptor;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.InterceptorChain;
 import infra.web.handler.method.HandlerMethod;
 
@@ -85,7 +85,7 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Exception {
+  public @Nullable Object intercept(ServerHttpExchange request, InterceptorChain chain) throws Exception {
     if (identities.getLoggedInBlogger(request) == null) {
       // 非博主，进行限流
       HandlerMethod handlerMethod = HandlerMethod.resolve(chain.getHandler());
@@ -128,7 +128,7 @@ final class RequestLimitInterceptor implements HandlerInterceptor {
   /**
    * 接口的访问频次限制
    */
-  private boolean hasTooManyRequests(HttpContext request, HandlerMethod handler, RequestLimit requestLimit) {
+  private boolean hasTooManyRequests(ServerHttpExchange request, HandlerMethod handler, RequestLimit requestLimit) {
     Instant now = clock.instant();
     expiredChecker.checkIfNecessary(now);
 

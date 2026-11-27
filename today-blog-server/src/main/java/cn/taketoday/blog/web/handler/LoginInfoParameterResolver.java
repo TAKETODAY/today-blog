@@ -26,7 +26,7 @@ import cn.taketoday.blog.model.User;
 import cn.taketoday.blog.web.LoginInfo;
 import cn.taketoday.blog.web.interceptor.RequiresUser;
 import infra.stereotype.Component;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.handler.method.HandlerParameter;
 import infra.web.handler.method.ParameterResolvingStrategy;
 
@@ -66,7 +66,7 @@ class LoginInfoParameterResolver implements ParameterResolvingStrategy {
   }
 
   @Override
-  public @Nullable Object resolveArgument(HttpContext context, HandlerParameter parameter) {
+  public @Nullable Object resolveArgument(ServerHttpExchange context, HandlerParameter parameter) {
     LoginInfo identity = identities.resolve(context);
     if (parameter.is(LoginInfo.class)) {
       if (parameter.hasParameterAnnotation(RequiresUser.class) && !identity.isLoggedIn()) {

@@ -23,7 +23,7 @@ import java.util.Map;
 
 import infra.http.ProblemDetail;
 import infra.http.support.ProblemDetailJacksonMixin;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationFeature;
@@ -68,7 +68,7 @@ public abstract class ObjectUtils {
     objectMapper.writeValue(out, object);
   }
 
-  public static void writeValue(HttpContext context, Object value) throws IOException {
+  public static void writeValue(ServerHttpExchange context, Object value) throws IOException {
     objectMapper.writeValue(context.getWriter(), value);
   }
 

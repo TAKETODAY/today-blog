@@ -28,7 +28,7 @@ import cn.taketoday.blog.BlogConstant;
 import infra.http.HttpHeaders;
 import infra.logging.Logger;
 import infra.logging.LoggerFactory;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 
 /**
  * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
@@ -80,7 +80,7 @@ public class CSVUtils {
    * @param fileName 文件名
    * @param content 内容
    */
-  public static void exportCsv(String fileName, String content, HttpContext context) throws IOException {
+  public static void exportCsv(String fileName, String content, ServerHttpExchange context) throws IOException {
 
     // 读取字符编码
     HttpHeaders responseHeaders = context.responseHeaders();

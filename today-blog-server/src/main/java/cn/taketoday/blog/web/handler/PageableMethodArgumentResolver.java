@@ -25,7 +25,7 @@ import cn.taketoday.blog.config.UserSessionResolver;
 import cn.taketoday.blog.web.Pageable;
 import infra.stereotype.Component;
 import infra.util.Assert;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.handler.method.HandlerParameter;
 import infra.web.handler.method.ParameterResolvingStrategy;
 
@@ -65,7 +65,7 @@ public class PageableMethodArgumentResolver implements ParameterResolvingStrateg
   }
 
   @Override
-  public Object resolveArgument(HttpContext context, HandlerParameter parameter) {
+  public Object resolveArgument(ServerHttpExchange context, HandlerParameter parameter) {
     return new LazyPageable(blogConfig, sessionResolver, context, pageRequestParameterName, pageSizeRequestParameterName);
   }
 

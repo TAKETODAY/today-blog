@@ -27,7 +27,7 @@ import infra.http.server.PathContainer;
 import infra.stereotype.Component;
 import infra.web.Filter;
 import infra.web.FilterChain;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.util.pattern.PathPattern;
 import infra.web.util.pattern.PathPatternParser;
 
@@ -72,7 +72,7 @@ final class MaintenanceFilter implements Filter {
   }
 
   @Override
-  public void doFilter(HttpContext request, FilterChain chain) throws Exception {
+  public void doFilter(ServerHttpExchange request, FilterChain chain) throws Exception {
     MaintenanceStatus maintenanceStatus = serverStatus.getMaintenanceStatus();
     if (!maintenanceStatus.enabled() || available(request)) {
       chain.doFilter(request);
@@ -81,7 +81,7 @@ final class MaintenanceFilter implements Filter {
     writeUnavailable(request, maintenanceStatus);
   }
 
-  private static boolean available(HttpContext request) {
+  private static boolean available(ServerHttpExchange request) {
     PathContainer path = request.getRequestPath().pathWithinApplication();
     if (HEALTH_PATTERN.matches(path)) {
       return true;
@@ -100,7 +100,7 @@ final class MaintenanceFilter implements Filter {
     return HttpMethod.GET.equals(request.getMethod()) && UPGRADE_PATTERN.matches(path);
   }
 
-  private void writeUnavailable(HttpContext request, MaintenanceStatus status) throws Exception {
+  private void writeUnavailable(ServerHttpExchange request, MaintenanceStatus status) throws Exception {
     request.setStatus(HttpStatus.SERVICE_UNAVAILABLE);
     request.setHeader(HttpHeaders.RETRY_AFTER, Integer.toString(status.retryAfterSeconds()));
     request.setHeader(HttpHeaders.CACHE_CONTROL, HttpHeaders.NO_STORE);

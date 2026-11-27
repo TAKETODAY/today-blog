@@ -31,7 +31,7 @@ import infra.context.availability.ApplicationAvailability;
 import infra.core.io.PathMatchingPatternResourceLoader;
 import infra.http.ProblemDetail;
 import infra.test.context.junit.jupiter.JUnitConfig;
-import infra.web.mock.MockHttpContext;
+import infra.web.mock.MockServerHttpExchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -48,7 +48,7 @@ class MaintenanceFilterTests {
             true, "系统升级中", 60, MaintenanceStatus.Source.MANUAL));
 
     AtomicBoolean proceeded = new AtomicBoolean();
-    RecordingHttpContext context = request("GET", "/api/articles");
+    RecordingHttpExchange context = request("GET", "/api/articles");
 
     filter.doFilter(context, ignored -> proceeded.set(true));
 
@@ -61,7 +61,7 @@ class MaintenanceFilterTests {
 
   @Test
   void localizesDefaultMaintenance() throws Exception {
-    RecordingHttpContext context = request("GET", "/api/articles");
+    RecordingHttpExchange context = request("GET", "/api/articles");
     context.getRequest().addHeader("Accept-Language", "en-US");
     filter(new MaintenanceStatus(true, null, 30, MaintenanceStatus.Source.MANUAL))
             .doFilter(context, ignored -> {
@@ -82,17 +82,17 @@ class MaintenanceFilterTests {
     MaintenanceFilter filter = filter(new MaintenanceStatus(
             true, "系统升级中", 60, MaintenanceStatus.Source.UPGRADE));
 
-    MockHttpContext health = request("GET", MaintenanceFilter.HEALTH_PATH);
+    MockServerHttpExchange health = request("GET", MaintenanceFilter.HEALTH_PATH);
     AtomicBoolean healthProceeded = new AtomicBoolean();
     filter.doFilter(health, ignored -> healthProceeded.set(true));
     assertThat(healthProceeded).isTrue();
 
-    MockHttpContext status = request("GET", MaintenanceFilter.UPGRADE_PATH + "/1c1f4b1e-0000-4000-8000-000000000000");
+    MockServerHttpExchange status = request("GET", MaintenanceFilter.UPGRADE_PATH + "/1c1f4b1e-0000-4000-8000-000000000000");
     AtomicBoolean statusProceeded = new AtomicBoolean();
     filter.doFilter(status, ignored -> statusProceeded.set(true));
     assertThat(statusProceeded).isTrue();
 
-    MockHttpContext start = request("POST", MaintenanceFilter.UPGRADE_PATH + "/1c1f4b1e-0000-4000-8000-000000000000/start");
+    MockServerHttpExchange start = request("POST", MaintenanceFilter.UPGRADE_PATH + "/1c1f4b1e-0000-4000-8000-000000000000/start");
     AtomicBoolean startProceeded = new AtomicBoolean();
     filter.doFilter(start, ignored -> startProceeded.set(true));
     assertThat(startProceeded).isFalse();
@@ -112,7 +112,7 @@ class MaintenanceFilterTests {
     filter.doFilter(request("PUT", toggle), ignored -> updated.set(true));
     assertThat(updated).isTrue();
 
-    MockHttpContext rejected = request("GET", "/api/articles");
+    MockServerHttpExchange rejected = request("GET", "/api/articles");
     filter.doFilter(rejected, ignored -> {
     });
     assertThat(rejected.getStatus()).isEqualTo(503);
@@ -132,7 +132,7 @@ class MaintenanceFilterTests {
     filter.doFilter(request("POST", MaintenanceFilter.AUTH_PATH), ignored -> login.set(true));
     assertThat(login).isTrue();
 
-    MockHttpContext update = request("PUT", MaintenanceFilter.AUTH_PATH);
+    MockServerHttpExchange update = request("PUT", MaintenanceFilter.AUTH_PATH);
     filter.doFilter(update, ignored -> {
     });
     assertThat(update.getStatus()).isEqualTo(503);
@@ -155,8 +155,8 @@ class MaintenanceFilterTests {
     return new MaintenanceFilter(serverStatus, new ProblemResponses(new PathMatchingPatternResourceLoader()));
   }
 
-  private RecordingHttpContext request(String method, String uri) {
-    RecordingHttpContext context = new RecordingHttpContext(applicationContext);
+  private RecordingHttpExchange request(String method, String uri) {
+    RecordingHttpExchange context = new RecordingHttpExchange(applicationContext);
     context.getRequest().setMethod(method);
     context.getRequest().setRequestURI(uri);
     return context;
@@ -165,11 +165,11 @@ class MaintenanceFilterTests {
   /**
    * 记录过滤器直接发送的问题响应，避免单元测试依赖完整的 MVC 调度上下文。
    */
-  private static final class RecordingHttpContext extends MockHttpContext {
+  private static final class RecordingHttpExchange extends MockServerHttpExchange {
 
     private @Nullable ProblemDetail sentProblem;
 
-    RecordingHttpContext(ApplicationContext applicationContext) {
+    RecordingHttpExchange(ApplicationContext applicationContext) {
       super(applicationContext);
     }
 

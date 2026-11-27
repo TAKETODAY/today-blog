@@ -45,7 +45,7 @@ import infra.http.HttpStatus;
 import infra.http.ResponseEntity;
 import infra.session.Session;
 import infra.session.SessionManagerOperations;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.annotation.DELETE;
 import infra.web.annotation.GET;
 import infra.web.annotation.POST;
@@ -152,7 +152,7 @@ class AuthHttpHandler {
   @POST(params = "v2")
   @RequestLimit(unit = TimeUnit.MINUTES, count = 5)
   @Logging(title = "登录", content = "邮箱:[#{#from.email}]登录")
-  public User loginV2(@Valid @RequestBody UserFrom from, HttpContext request) {
+  public User loginV2(@Valid @RequestBody UserFrom from, ServerHttpExchange request) {
     User loginUser = userService.getByEmail(from.email);
     if (loginUser == null) {
       throw new ProblemException(CommonProblems.INVALID_CREDENTIALS);

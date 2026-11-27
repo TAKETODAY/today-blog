@@ -28,7 +28,7 @@ import infra.session.Session;
 import infra.session.SessionManagerOperations;
 import infra.session.SessionRepository;
 import infra.web.HandlerInterceptor;
-import infra.web.HttpContext;
+import infra.web.ServerHttpExchange;
 import infra.web.InterceptorChain;
 import infra.web.resource.ResourceHttpRequestHandler;
 
@@ -60,7 +60,7 @@ final class BloggerInterceptor implements HandlerInterceptor {
   }
 
   @Override
-  public @Nullable Object intercept(HttpContext request, InterceptorChain chain) throws Exception {
+  public @Nullable Object intercept(ServerHttpExchange request, InterceptorChain chain) throws Exception {
     if (identities.getLoginUser(request) != null) {
       if (identities.getLoggedInBlogger(request) != null) {
         if (!identities.usesApiKey(request)) {

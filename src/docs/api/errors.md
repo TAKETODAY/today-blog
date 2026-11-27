@@ -149,7 +149,7 @@ public Article obtainById(long id) {
 
 Service 决定具体业务问题并向上抛出；Controller 通常不必捕获或重新包装，
 `ExceptionHandling` 会统一交给 `ProblemResponses` 转为本地化 HTTP 响应。
-不要为了生成错误响应而向 Service 传入 `HttpContext`、响应对象或已经翻译的消息。
+不要为了生成错误响应而向 Service 传入 `ServerHttpExchange`、响应对象或已经翻译的消息。
 
 当前 `Problem` 包含 `HttpStatusCode`，属于带 HTTP 语义的应用错误契约，
 不是完全独立于传输协议的领域模型。它可以在进程内部跨层传播，
