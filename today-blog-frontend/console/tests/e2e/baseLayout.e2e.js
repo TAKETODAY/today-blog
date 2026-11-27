@@ -80,6 +80,36 @@ test('authenticated users can load and type in the Markdown editor', async () =>
   await page.waitForSelector('.CodeMirror');
 });
 
+test('the Markdown editor scroll area fills the side-by-side preview height', async () => {
+  await open('/articles/write');
+  await page.waitForSelector('.CodeMirror');
+  await page.evaluate(() => {
+    const editor = document.querySelector('.CodeMirror').CodeMirror;
+    editor.setValue('# E2E Markdown\n\n' + 'A long article paragraph.\n\n'.repeat(80));
+  });
+  await page.click('.editor-toolbar .side-by-side');
+  await page.waitForSelector('.editor-preview-active-side h1', { visible: true });
+
+  for (const height of [1000, 800, 300]) {
+    await page.setViewport({ width: 1440, height });
+    const bounds = await page.evaluate(() => {
+      const editor = document.querySelector('.CodeMirror-fullscreen').getBoundingClientRect();
+      const scroller = document.querySelector('.CodeMirror-scroll');
+      const preview = document.querySelector('.editor-preview-active-side').getBoundingClientRect();
+      // CodeMirror adds padding below the visible scroll area to conceal the native scrollbar.
+      const scrollerBottom = scroller.getBoundingClientRect().bottom - parseFloat(getComputedStyle(scroller).paddingBottom);
+      return { editorTop: editor.top, scrollerBottom, previewTop: preview.top, previewBottom: preview.bottom };
+    });
+    expect(bounds.editorTop).toBe(bounds.previewTop);
+    expect(bounds.previewBottom).toBe(height);
+    expect(bounds.scrollerBottom).toBe(bounds.previewBottom);
+  }
+
+  await page.click('.editor-toolbar button.fullscreen');
+  expect(await page.$('.editor-preview-active-side')).toBeNull();
+  expect(await page.$eval('.CodeMirror-scroll', scroller => getComputedStyle(scroller).maxHeight)).toBe('600px');
+});
+
 test.each(['side', 'top', 'mix'])('settings remains available with %s navigation after reload', async layout => {
   await open('/system/account');
   await page.waitForSelector('[aria-label="界面设置"]');

@@ -519,6 +519,12 @@ span.CodeMirror-selectedtext {
 	border-bottom-right-radius: 0!important
 }
 
+.CodeMirror-fullscreen .CodeMirror-scroll {
+	/* Use the viewport height instead of the normal editor's height limits. */
+	min-height: 0!important;
+	max-height: none!important
+}
+
 .CodeMirror-sided {
 	width: 50%!important
 }
