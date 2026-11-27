@@ -105,6 +105,7 @@ export default class Editor extends React.PureComponent {
 
   componentWillUnmount() {
     this.removeEvents()
+    this.markdown?.toTextArea()
   }
 
   createEditor = () => {
@@ -143,10 +144,9 @@ export default class Editor extends React.PureComponent {
   }
 
   removeEvents = () => {
-    if (this.editorEl && this.editorToolbarEl) {
-      this.editorEl.removeEventListener("keyup", this.eventWrapper)
-      this.editorEl.removeEventListener("paste", this.eventWrapper)
-      this.editorToolbarEl.removeEventListener("click", this.eventWrapper)
+    if (this.markdown) {
+      this.markdown.codemirror.off("change", this.eventWrapper)
+      this.markdown.codemirror.off("cursorActivity", this.getCursor)
     }
   }
 
@@ -155,9 +155,7 @@ export default class Editor extends React.PureComponent {
       this.editorEl = this.elementWrapperRef
       this.editorToolbarEl = this.elementWrapperRef.getElementsByClassName("editor-toolbar")[0]
 
-      this.editorEl.addEventListener("keyup", this.eventWrapper)
-      this.editorEl.addEventListener("paste", this.eventWrapper)
-      this.editorToolbarEl && this.editorToolbarEl.addEventListener("click", this.eventWrapper)
+      this.markdown.codemirror.on("change", this.eventWrapper)
 
       this.markdown.codemirror.on("cursorActivity", this.getCursor)
 

@@ -32,7 +32,7 @@ export default new class {
   }
 
   updateById(id, article) {
-    const createAt = moment(article.createAt).format('yyyy-MM-DD HH:mm:ss')
+    const createAt = article.createAt == null ? article.createAt : moment(article.createAt).toISOString()
     return http.put('/api/console/articles/' + id, { ...article, createAt })
   }
 

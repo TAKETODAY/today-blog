@@ -29,7 +29,9 @@ import { format, isEmpty } from "@/utils";
 import { ArticleItem } from "./data.d";
 import { deleteArticle, getCategories, queryArticles, updatePinned, updateStatus } from "./service";
 import { PlusOutlined } from "@ant-design/icons/lib";
-import { Link } from '@umijs/max';
+import { history, Link } from '@umijs/max';
+import DraftDialog from './drafts/DraftDialog';
+import { draftUrl } from './drafts/storage';
 import { ArticleLink } from "@/components/Article";
 import Image from "@/components/Image";
 import { CheckCircleOutlined, ExclamationCircleOutlined, SyncOutlined } from "@ant-design/icons";
@@ -117,6 +119,7 @@ export default () => {
   const actionRef = useRef<ActionType>()
   const [categories, setCategories] = useState({})
   const [pinning, setPinning] = useState<number[]>([])
+  const [draftsOpen, setDraftsOpen] = useState(false)
   const pinningIds = useRef(new Set<number>())
 
   const reload = async (): Promise<any> => {
@@ -309,10 +312,14 @@ export default () => {
                 <Link to="/articles/write" target="_blank">
                   <PlusOutlined/> {t('markdown')}
                 </Link>
-              </Button>
+              </Button>,
+              <Button key="drafts" onClick={() => setDraftsOpen(true)}>{t('localDrafts')}</Button>
             ]}
         />
-
+        <DraftDialog open={draftsOpen} onClose={() => setDraftsOpen(false)} onSelect={draft => {
+          setDraftsOpen(false);
+          history.push(draftUrl(draft));
+        }}/>
       </PageContainer>
   )
 }

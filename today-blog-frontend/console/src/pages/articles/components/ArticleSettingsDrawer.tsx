@@ -20,12 +20,12 @@
 
 import { useEffect, useState } from "react";
 import { articleMessage as t } from '@/utils/article-i18n';
-import { computeSummary, extractData, isEmpty, isNotEmpty, showHttpErrorMessageVoid } from "@/utils";
+import { computeSummary, extractData, isEmpty, showHttpErrorMessageVoid } from "@/utils";
 import { Button, Col, DatePicker, Drawer, Form, Input, Row, Select } from "antd";
 import articleService from "@/services/ArticleService";
 import { AxiosResponse } from "axios";
 import { PostCategory, PostLabel } from "@/pages/articles/components/article";
-import { ArticleItem } from "@/pages/articles/data";
+import { DraftPost } from '../drafts/storage';
 import { ReloadOutlined } from "@ant-design/icons";
 import ImageChooser from "@/components/ImageChooser"
 import moment from "moment";
@@ -33,13 +33,8 @@ import moment from "moment";
 const { Option } = Select;
 const { TextArea } = Input;
 
-function getInitialLabels(article: ArticleItem) {
-  if (isNotEmpty(article.labels)) {
-    const first = article.labels[0]
-    return (typeof first === 'string') ? [...article.labels]
-        : article.labels?.map((label: PostLabel) => label.name)
-  }
-  return []
+function getInitialLabels(article: DraftPost) {
+  return article.labels?.map(label => typeof label === 'string' ? label : label.name) || []
 }
 
 export default (props: any) => {
@@ -55,8 +50,8 @@ export default (props: any) => {
   useEffect(() => {
     // initial values
     const status = article.status ? article.status : "PUBLISHED"
-    const summary = isNotEmpty(article.summary) ? article.summary : computeSummary(article.content)
-    const createAt = moment(article.createAt)
+    const summary = article.summary ?? computeSummary(article.content)
+    const createAt = article.createAt === null ? null : moment(article.createAt)
     const labels = getInitialLabels(article)
 
     form.setFieldsValue({ ...article, createAt, summary, status, labels })
@@ -89,9 +84,8 @@ export default (props: any) => {
     })
   }
 
-  const onUpdateValues = (_: ArticleItem, item: ArticleItem) => {
-    console.debug("表单有变动=>\n变动：", _, "\n新值：", item)
-    onValuesChange({ ...item })
+  const onUpdateValues = (changed: DraftPost) => {
+    onValuesChange(changed)
   }
 
   return (
@@ -204,8 +198,9 @@ export default (props: any) => {
               </Form.Item>
               <Button type="primary" onClick={
                 () => {
-                  const summary = computeSummary(article.content);
+                  const summary = computeSummary(article.content) || '';
                   form.setFieldsValue({ summary })
+                  onValuesChange({ summary })
                 }}
               >
                 <ReloadOutlined/> {t('generateSummary')}
