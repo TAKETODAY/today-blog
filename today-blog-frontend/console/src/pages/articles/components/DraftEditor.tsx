@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { history, useLocation, useModel, useParams } from '@umijs/max';
-import { Alert, BackTop, Button, message, Modal, Space } from 'antd';
+import { Alert, BackTop, Button, message, Modal } from 'antd';
 import { PageLoading } from '@ant-design/pro-layout';
-import { PlusOutlined } from '@ant-design/icons';
+import { FolderOpenOutlined, SaveOutlined } from '@ant-design/icons';
 import MarkdownEditor from '@/components/Editor';
 import ImageChooserModal from '@/components/ImageChooserModal';
 import { Attachment } from '@/components/Attachment/data';
@@ -16,6 +16,7 @@ import DraftDialog from '../drafts/DraftDialog';
 import { useDraft } from '../drafts/useDraft';
 import { articleBaseUrl, renderArticleMarkdown } from 'core/article-markdown';
 import '@/assets/css/index.css';
+import './DraftEditor.less';
 
 const RichTextEditor = lazy(() => import('./RichTextEditor'));
 
@@ -106,7 +107,8 @@ function EditorSession({ userId, id, mode, articleId, onSelect }: {
   const editorOptions = {
     autosave: false,
     autofocus: false,
-    autoDownloadFontAwesome: true,
+    autoDownloadFontAwesome: false,
+    placeholder: t('writingPlaceholder'),
     renderMarkdown: (markdown: string) => renderArticleMarkdown(markdown,
       articleBaseUrl(siteHost, latestPost.current.uri || articleId)),
     toolbar: ['bold', 'italic', 'strikethrough', 'heading', '|', 'code', 'quote', 'unordered-list', 'ordered-list', '|',
@@ -211,33 +213,43 @@ function EditorSession({ userId, id, mode, articleId, onSelect }: {
   }
 
   return <>
-    <div className="container shadow-box" style={{ marginTop: 22 }}>
-      <div className="data-list-title" style={{ borderLeft: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <span style={{ flexShrink: 0 }}>{t(articleId ? 'editArticle' : 'write')}</span>
-        <Space style={{ fontWeight: 'normal' }}>
-          <span role="status" style={{ color: status === 'error' ? '#cf1322' : undefined }}>
-            {t(`localDraftStatus.${status}`)}{savedAt ? ` · ${new Date(savedAt).toLocaleString()}` : ''}
+    <div className="article-editor-shell">
+      <header className="article-editor-header">
+        <div className="article-editor-heading">
+          <h1>{t(articleId ? 'editArticle' : 'write')}</h1>
+          <span className="article-editor-mode">{t(mode)}</span>
+        </div>
+        <div className="article-editor-header-actions">
+          <span className={`article-editor-save-status is-${status}`} role="status" aria-live="polite">
+            <span className="article-editor-status-dot"/>
+            <span>{t(`localDraftStatus.${status}`)}</span>
+            {status === 'saved' && savedAt !== undefined && <span className="article-editor-save-time">{new Date(savedAt).toLocaleString()}</span>}
           </span>
-          <Button disabled={submitting} onClick={openDrafts}>{t('localDrafts')}</Button>
-        </Space>
-      </div>
-      <div className="data" style={{ marginTop: 10 }}>
+          <div className="article-editor-buttons">
+            <Button className="article-editor-drafts-button" icon={<FolderOpenOutlined/>} disabled={submitting} onClick={openDrafts}>
+              {t('localDrafts')}
+            </Button>
+            <Button type="primary" icon={<SaveOutlined/>} loading={submitting} onClick={() => setDrawerVisible(true)}>
+              {t('saveArticle')}
+            </Button>
+          </div>
+        </div>
+      </header>
+      <div className="article-editor-content">
         <input value={post.title || ''} maxLength={80} autoFocus autoComplete="off"
-               placeholder={t('titlePlaceholder')} className="article-title"
-               onChange={e => change({ title: e.target.value })} style={{ marginLeft: 10 }}/>
-        {mode === 'markdown' ? <div id="markdown-editor">
+               aria-label={t('articleTitle')} placeholder={t('titlePlaceholder')} className="article-editor-title"
+               onChange={e => change({ title: e.target.value })}/>
+        {mode === 'markdown' ? <div id="markdown-editor" className="article-editor-stage">
           <MarkdownEditor setEditor={setEditor} value={post.markdown}
                           onChange={(markdown, content) => change({ markdown, content })} options={editorOptions}/>
-        </div> : <div id="editor">
+        </div> : <div id="editor" className="article-editor-stage">
           <Suspense fallback={<PageLoading/>}>
             <RichTextEditor post={post} saveContent={content => change({ content })}/>
           </Suspense>
         </div>}
-        <div style={{ textAlign: 'center', padding: 10 }}>
-          <Button type="primary" loading={submitting} onClick={() => setDrawerVisible(true)}>
-            <PlusOutlined/> {t('saveArticle')}
-          </Button>
-        </div>
+        <footer className="article-editor-footer">
+          {t('localDraftHint')}
+        </footer>
       </div>
     </div>
     <BackTop/>

@@ -70,6 +70,7 @@ test('signed-in non-bloggers cannot open the article editor', async () => {
 test('authenticated users can load and type in the Markdown editor', async () => {
   await open('/articles/write');
   await page.waitForSelector('.CodeMirror');
+  expect(await page.$('.editor-toolbar button.bold svg')).not.toBeNull();
   const value = await page.evaluate(() => {
     const editor = document.querySelector('.CodeMirror').CodeMirror;
     editor.setValue('# E2E Markdown');
@@ -77,7 +78,32 @@ test('authenticated users can load and type in the Markdown editor', async () =>
   });
   expect(value).toBe('# E2E Markdown');
   await page.reload();
+  await page.waitForSelector('.article-editor-save-status.is-saved');
   await page.waitForSelector('.CodeMirror');
+  expect(await page.$eval('.CodeMirror', element => element.CodeMirror.getValue())).toBe('# E2E Markdown');
+});
+
+test.each([390, 720])('local drafts can be resumed without horizontal overflow at %ipx', async width => {
+  await page.setViewport({ width, height: 844 });
+  await open('/articles/write');
+  await page.waitForSelector('.article-editor-drafts-button');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.evaluate(() => {
+    localStorage.setItem('today-blog:article-drafts:1:narrow', JSON.stringify({
+      version: 1, id: 'narrow', mode: 'markdown', savedAt: Date.now(),
+      post: { title: 'LongDraftTitle'.repeat(5), markdown: '# Saved draft' },
+    }));
+  });
+  await page.click('.article-editor-drafts-button');
+  const row = '[data-draft-id="narrow"]';
+  await page.waitForSelector(row, { visible: true });
+  await page.waitForFunction(() => {
+    const modal = document.querySelector('.draft-dialog');
+    return modal && getComputedStyle(modal).opacity === '1' && getComputedStyle(modal).transform === 'none';
+  });
+  expect(await page.$eval('.draft-dialog .ant-modal-content', modal => modal.scrollWidth <= modal.clientWidth)).toBe(true);
+  await page.click(`${row} .draft-list-resume`);
+  await page.waitForFunction(() => document.querySelector('.CodeMirror')?.CodeMirror.getValue() === '# Saved draft');
 });
 
 test('the Markdown editor scroll area fills the side-by-side preview height', async () => {

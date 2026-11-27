@@ -33,6 +33,7 @@ import 'codemirror/mode/gfm/gfm.js';
 import CodeMirrorSpellChecker from 'codemirror-spell-checker'
 import { renderMarkdown } from 'core/article-markdown';
 import CodeMirror from 'codemirror';
+import { toolbarIcon } from './toolbar-icons';
 import { articleMessage } from '@/utils/article-i18n';
 
 import { getSession, getStorage, saveSession, saveStorage } from '@/utils'
@@ -222,8 +223,9 @@ function createToolbarButton(options, enableActions, enableTooltips, shortcuts, 
   el.appendChild(icon);
 
   // If there is a custom icon markup set, use that
-  if (typeof options.icon !== 'undefined') {
-    el.innerHTML = options.icon;
+  const iconMarkup = typeof options.icon === 'undefined' ? toolbarIcon(options.name) : options.icon;
+  if (typeof options.icon !== 'undefined' || iconMarkup) {
+    el.innerHTML = iconMarkup;
   }
 
   if (options.action && enableActions) {

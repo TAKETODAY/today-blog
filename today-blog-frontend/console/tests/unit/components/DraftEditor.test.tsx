@@ -94,19 +94,19 @@ describe('draft dialog in article editor', () => {
     await act(async () => document.querySelector<HTMLButtonElement>('.ant-modal-close').click());
     expect(container.querySelector('textarea').value).toBe('Unsaved text');
     await click('localDrafts', container);
-    const row = document.querySelector('[data-row-key="second"]');
+    const row = document.querySelector('[data-draft-id="second"]');
     await click('resumeDraft', row);
     expect(location.pathname).toBe('/articles/write');
     expect(new URLSearchParams(location.search).get('articleId')).toBe('42');
-    expect(container.querySelector<HTMLInputElement>('.article-title').value).toBe('Second');
+    expect(container.querySelector<HTMLInputElement>('.article-editor-title').value).toBe('Second');
     expect(container.querySelector('textarea').value).toBe('Second text');
     expect(articleService.getById).not.toHaveBeenCalled();
     expect(history.push).not.toHaveBeenCalled();
     await click('localDrafts', container);
-    await click('resumeDraft', document.querySelector('[data-row-key="first"]'));
+    await click('resumeDraft', document.querySelector('[data-draft-id="first"]'));
     expect(new URLSearchParams(location.search).get('articleId')).toBe('');
     expect(container.querySelector('textarea').value).toBe('Unsaved text');
-    expect(container.querySelector<HTMLInputElement>('.article-title').value).toBe('First');
+    expect(container.querySelector<HTMLInputElement>('.article-editor-title').value).toBe('First');
   });
 
   it('does not expose a separate drafts page', () => {
