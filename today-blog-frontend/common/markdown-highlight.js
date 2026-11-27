@@ -15,12 +15,14 @@ import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import yaml from 'highlight.js/lib/languages/yaml';
 
-// Keep the editor's common blog languages without shipping every grammar.
+// Keep common blog languages without shipping every grammar.
 const languages = {
   bash, css, diff, groovy, java, javascript, json, kotlin, markdown,
   plaintext, python, sql, typescript, xml, yaml,
 };
 
-Object.entries(languages).forEach(([name, language]) => hljs.registerLanguage(name, language));
+for (const [name, language] of Object.entries(languages)) {
+  hljs.registerLanguage(name, language);
+}
 
 export default hljs;

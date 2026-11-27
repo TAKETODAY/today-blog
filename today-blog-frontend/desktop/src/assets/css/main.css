@@ -126,67 +126,6 @@ div.info_nav_btn .active {
   border-bottom: 3px solid #0092ee;
 }
 
-.markdown img {
-  background-color: #fff;
-  box-sizing: content-box;
-  max-width: 100%;
-}
-
-.markdown ol li {
-  list-style-type: decimal;
-}
-
-.markdown blockquote, .markdown details, .markdown dl, .markdown ol, .markdown p, .markdown pre, .markdown table, .markdown ul {
-  margin-bottom: 16px;
-  margin-top: 0;
-}
-
-.markdown table {
-  display: block;
-  overflow: auto;
-  width: 100%;
-}
-
-.markdown table tr {
-  background-color: #fff;
-  border-top: 1px solid #c6cbd1;
-}
-
-.markdown table th {
-  font-weight: 600;
-}
-
-.markdown table td, .markdown table th {
-  border: 1px solid #dfe2e5;
-  padding: 6px 13px;
-}
-
-.markdown table tr:nth-child(2n) {
-  background-color: #f6f8fa;
-}
-
-.markdown ul li {
-  list-style: outside;
-}
-
-.markdown ul, .markdown ol {
-  padding-left: 2em;
-}
-
-.markdown h2, .markdown h1 {
-  border-bottom: 1px solid #eaecef;
-  padding-bottom: .3em;
-}
-
-.markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
-  font-weight: 600;
-  line-height: 1.25;
-  margin-bottom: 16px;
-  margin-top: 24px;
-}
-
-/* markdown end*/
-
 .blue-shadow {
   box-shadow: 0 0 3px #0092ee;
 }

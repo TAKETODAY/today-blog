@@ -20,7 +20,8 @@
 
 import * as React from "react"
 import "./markdown.css"
-import "./github.css"
+import 'core/article-markdown.css';
+import 'core/markdown-highlight.css';
 
 import Markdown from "./markdown"
 
@@ -115,9 +116,6 @@ export default class Editor extends React.PureComponent {
         useSession: true
       },
       autofocus: true,
-      renderingConfig: {
-        linkify: true,
-      },
       initialValue: this.props.value,
       autoDownloadFontAwesome: false,
       status: ["lines", "words"],
@@ -131,7 +129,11 @@ export default class Editor extends React.PureComponent {
       ]
     }
 
-    this.markdown = new Markdown(Object.assign(initialOptions, this.props.options))
+    this.markdown = new Markdown({
+      ...initialOptions,
+      ...this.props.options,
+      renderMarkdown: this.props.options?.renderMarkdown ? text => this.props.options.renderMarkdown(text) : undefined,
+    });
   }
 
   eventWrapper = () => {

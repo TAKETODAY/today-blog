@@ -1,7 +1,8 @@
 import * as React from "react"
 import markdown from "./markdown"
 import "./markdown.css"
-import "../../assets/css/github.css"
+import 'core/article-markdown.css';
+import 'core/markdown-highlight.css';
 
 let _id = 0
 
@@ -92,9 +93,6 @@ export default class Editor extends React.PureComponent {
         useSession: true
       },
       autofocus: true,
-      renderingConfig: {
-
-      },
       initialValue: this.props.value,
       status: ["lines", "words"],
       tabSize: 4,

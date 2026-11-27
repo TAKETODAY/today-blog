@@ -14,11 +14,14 @@ jest.mock('@umijs/max', () => ({
 }));
 jest.mock('@/utils/article-i18n', () => ({ articleMessage: key => key }));
 jest.mock('@/utils', () => ({ showHttpErrorMessage: jest.fn() }));
-jest.mock('@/components/hooks', () => ({ useCDN: () => '' }));
+jest.mock('@/components/hooks', () => ({ useOptions: () => [{ 'site.host': 'https://blog.example' }] }));
 jest.mock('@/services/ArticleService', () => ({ getById: jest.fn(), create: jest.fn(), updateById: jest.fn() }));
-jest.mock('@/components/Editor', () => ({ value, onChange }) =>
-  <textarea aria-label="markdown" value={value || ''} onChange={e => onChange(e.target.value, e.target.value)}/>);
-jest.mock('@/pages/articles/components/ArticleSettingsDrawer', () => () => null);
+jest.mock('@/components/Editor', () => ({ value, onChange, options }) => <>
+  <textarea aria-label="markdown" value={value || ''} onChange={e => onChange(e.target.value, options.renderMarkdown(e.target.value))}/>
+  <div data-testid="preview" dangerouslySetInnerHTML={{ __html: options.renderMarkdown(value) }}/>
+</>);
+jest.mock('@/pages/articles/components/ArticleSettingsDrawer', () => ({ visible, onSubmit }) => visible
+  ? <button onClick={() => onSubmit({ uri: 'published' }, jest.fn())}>publish</button> : null);
 jest.mock('@/components/ImageChooserModal', () => () => null);
 
 describe('draft dialog in article editor', () => {
@@ -73,7 +76,7 @@ describe('draft dialog in article editor', () => {
   });
 
   async function click(label: string, scope: ParentNode = document) {
-    const button = Array.from(scope.querySelectorAll('button')).find(element => element.textContent === label);
+    const button = Array.from(scope.querySelectorAll('button')).find(element => element.textContent.trim() === label);
     expect(button).toBeDefined();
     await act(async () => button.click());
   }
@@ -108,5 +111,26 @@ describe('draft dialog in article editor', () => {
 
   it('does not expose a separate drafts page', () => {
     expect(routes.find(route => route.path === '/blog').routes.some(route => route.path === '/blog/drafts')).toBe(false);
+  });
+
+  it('saves HTML with the same Markdown rules as the preview', async () => {
+    const source = '# Title\n\n**bold** and [docs](../docs)';
+    const textarea = container.querySelector('textarea');
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, source);
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const preview = container.querySelector('[data-testid="preview"]').innerHTML;
+    expect(preview).toContain('<h1>Title</h1>');
+    expect(preview).toContain('href="https://blog.example/docs"');
+    (articleService.create as jest.Mock).mockResolvedValueOnce({});
+    (history.replace as jest.Mock).mockImplementationOnce(() => {});
+    await click('saveArticle', container);
+    await click('publish', container);
+    expect(articleService.create).toHaveBeenCalledWith(expect.objectContaining({
+      markdown: source,
+      content: preview,
+      uri: 'published',
+    }));
   });
 });

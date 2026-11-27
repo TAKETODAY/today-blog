@@ -34,9 +34,7 @@ import 'codemirror/lib/codemirror.css';
 import CodeMirror from 'codemirror';
 import { getSession, saveSession, getStorage, saveStorage } from "core";
 import CodeMirrorSpellChecker from 'codemirror-spell-checker';
-import hljs from './highlight';
-import markdownIt from 'markdown-it';
-import emoji from 'markdown-it-emoji';
+import { renderMarkdown } from 'core/article-markdown';
 import { toolbarIcon } from './icons';
 
 // Some variables
@@ -1552,7 +1550,7 @@ function EasyMDE(options) {
 
   // Editor preview styling class.
   if (!Object.prototype.hasOwnProperty.call(options, 'previewClass')) {
-    options.previewClass = 'editor-preview';
+    options.previewClass = ['editor-preview', 'markdown'];
   }
 
   // Handle status bar
@@ -1626,36 +1624,6 @@ function EasyMDE(options) {
   else {
     this.value(options.initialValue || '');
   }
-
-  // markdownIt
-  // -------------------------------------
-  const renderingConfig = Object.assign({
-    html: false,                // Enable HTML tags in source
-    xhtmlOut: false,            // Use '/' to close single tags (<br />).This is only for full CommonMark compatibility.
-    breaks: false,              // Convert '\n' in paragraphs into <br>
-    langPrefix: 'language-',    // CSS language prefix for fenced blocks. Can be useful for external highlighters.
-    linkify: true,              // Autoconvert URL-like text to links
-    typographer: false,         // Enable some language-neutral replacement + quotes beautification
-    // Double + single quotes replacement pairs, when typographer enabled,
-    // and smartquotes on. Could be either a String or an Array.
-    //
-    // For example, you can use '«»„“' for Russian, '„“‚‘' for German,
-    // and ['«\xA0', '\xA0»', '‹\xA0', '\xA0›'] for French (including nbsp).
-    // quotes: '“”‘’',
-
-    // Highlighter function. Should return escaped HTML,
-    // or '' if the source string is not changed and should be escaped externally.
-    // If result starts with <pre... internal wrapper is skipped.
-    highlight: function (str, lang) {
-      if (lang && hljs.getLanguage(lang)) {
-        try {
-          return hljs.highlight(lang, str).value
-        } catch (__) { }
-      }
-      return '' // use external default escaping
-    }
-  }, options.renderingConfig || {})
-  this.markdownIt = markdownIt(renderingConfig).use(emoji)
 
   if (options.uploadImage) {
     var self = this;
@@ -1766,24 +1734,7 @@ EasyMDE.prototype.updateStatusBar = function (itemName, content) {
  * Default markdown render.
  */
 EasyMDE.prototype.markdown = function (text) {
-  // Convert the markdown to HTML
-  if (!text) {
-    text = this.value()
-  }
-  let htmlText = this.markdownIt.render(text);
-  // Sanitize HTML
-
-  const { renderingConfig } = this.options;
-  if (renderingConfig) {
-    if (typeof renderingConfig.sanitizerFunction === 'function') {
-      htmlText = renderingConfig.sanitizerFunction.call(this, htmlText);
-    }
-    if (renderingConfig.addEveryAnchorTargetBlank) {
-      // Edit the HTML anchors to add 'target="_blank"'.
-      return addAnchorTargetBlank(htmlText);
-    }
-  }
-  return htmlText
+  return renderMarkdown(text ?? this.value());
 };
 
 /**

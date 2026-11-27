@@ -1,11 +1,11 @@
-import hljs from '../src/components/Editor/highlight';
+import hljs from 'core/markdown-highlight';
 
 test.each(['java', 'javascript', 'typescript', 'json', 'xml', 'sql', 'bash', 'yaml'])('%s grammar is available', language => {
   expect(hljs.getLanguage(language)).toBeTruthy();
 });
 
 test('highlights Java and preserves HTML escaping', () => {
-  const result = hljs.highlight('java', 'public class Example { String value = "<script>"; }');
+  const result = hljs.highlight('public class Example { String value = "<script>"; }', { language: 'java' });
   expect(result.value).toContain('hljs-keyword');
   expect(result.value).toContain('&lt;script&gt;');
   expect(result.value).not.toContain('<script>');

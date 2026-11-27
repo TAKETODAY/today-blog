@@ -21,7 +21,7 @@ import 'antd/es/form/style';
 import 'antd/es/input/style';
 import 'antd/es/message/style';
 import 'antd/es/skeleton/style';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import zone from '../assets/images/share/zone.png';
 import AdminLink from '../components/AdminLink';
@@ -32,7 +32,9 @@ import { applySEO, extractData, getArticleId, getRandLabel, getSummary, isEmpty,
 
 import { setTitle } from "../utils/common"
 import { store } from "src/redux/store";
-import lazyload from "core/lazyload";
+import { articleBaseUrl, renderArticleBody } from 'core/article-markdown';
+import 'core/article-markdown.css';
+import 'core/markdown-highlight.css';
 import { useRequest, useSessionStorageState } from "ahooks";
 
 import { useBreadcrumb, useQueryParams, useUserSession } from "../components/hooks";
@@ -94,16 +96,6 @@ export default () => {
         }, 1500);
       }
 
-      try {
-        lazyload.init({
-          offset: 100,
-          throttle: 250,
-          unload: false,
-        })
-      }
-      catch (e) {
-        logging("懒加载出错")
-      }
       return article
     }).catch(err => {
       const { status } = err.response || { status: 0 }
@@ -133,6 +125,14 @@ export default () => {
   const shareZone = useCallback(() => {
     shareQQZone(buildOptions(article))
   }, [article])
+
+  const siteHost = store.getState().options['site.host'];
+  const articleBody = useMemo(() => {
+    if (!article) {
+      return '';
+    }
+    return renderArticleBody(article, articleBaseUrl(siteHost, article.uri || articleId));
+  }, [article, articleId, siteHost]);
 
 
   if (error) {
@@ -184,7 +184,7 @@ export default () => {
             </span>
           </>}
         </div>
-        <div className="markdown contentTxt" dangerouslySetInnerHTML={{ __html: article.content }}/>
+        <div className="markdown contentTxt" dangerouslySetInnerHTML={{ __html: articleBody }}/>
       </article>
       {isNotEmpty(article.labels) &&
           <div className="article-tags" id="tagcloud">

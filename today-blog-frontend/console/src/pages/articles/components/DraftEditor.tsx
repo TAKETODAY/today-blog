@@ -6,7 +6,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import MarkdownEditor from '@/components/Editor';
 import ImageChooserModal from '@/components/ImageChooserModal';
 import { Attachment } from '@/components/Attachment/data';
-import { useCDN } from '@/components/hooks';
+import { useOptions } from '@/components/hooks';
 import { showHttpErrorMessage } from '@/utils';
 import { articleMessage as t } from '@/utils/article-i18n';
 import articleService from '@/services/ArticleService';
@@ -14,6 +14,7 @@ import ArticleDrawer from './ArticleSettingsDrawer';
 import { ArticleDraft, DraftPost, EditorMode, draftPost, newDraftId } from '../drafts/storage';
 import DraftDialog from '../drafts/DraftDialog';
 import { useDraft } from '../drafts/useDraft';
+import { articleBaseUrl, renderArticleMarkdown } from 'core/article-markdown';
 import '@/assets/css/index.css';
 
 const RichTextEditor = lazy(() => import('./RichTextEditor'));
@@ -55,7 +56,8 @@ function EditorSession({ userId, id, mode, articleId, onSelect }: {
   onSelect: (draft: Pick<ArticleDraft, 'id' | 'mode' | 'articleId'>) => void;
 }) {
   const { post, restored, initialize, change, flush, complete, discard, status, savedAt } = useDraft(userId, id, mode, articleId);
-  const cdn = useCDN();
+  const [options] = useOptions();
+  const siteHost = options['site.host'];
   const [editor, setEditor] = useState<any>();
   const [modalVisible, setModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -64,6 +66,8 @@ function EditorSession({ userId, id, mode, articleId, onSelect }: {
   const [loadFailed, setLoadFailed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const activeSession = useRef(true);
+  const latestPost = useRef(post);
+  latestPost.current = post;
 
   useEffect(() => {
     activeSession.current = true;
@@ -91,8 +95,10 @@ function EditorSession({ userId, id, mode, articleId, onSelect }: {
 
   function imageCallback(attachment: Attachment) {
     const cm = editor.codemirror;
-    cm.replaceSelection('<img src="/assets/images/loading.gif" data-original="'
-      + cdn + attachment.uri + '" alt="' + attachment.name + '">');
+    const image = document.createElement('img');
+    image.setAttribute('src', `${options['site.cdn'] || ''}${attachment.uri}`);
+    image.setAttribute('alt', attachment.name);
+    cm.replaceSelection(image.outerHTML);
     cm.focus();
     setModalVisible(false);
   }
@@ -101,7 +107,8 @@ function EditorSession({ userId, id, mode, articleId, onSelect }: {
     autosave: false,
     autofocus: false,
     autoDownloadFontAwesome: true,
-    renderingConfig: { html: true },
+    renderMarkdown: (markdown: string) => renderArticleMarkdown(markdown,
+      articleBaseUrl(siteHost, latestPost.current.uri || articleId)),
     toolbar: ['bold', 'italic', 'strikethrough', 'heading', '|', 'code', 'quote', 'unordered-list', 'ordered-list', '|',
       'link', 'image', {
         name: 'custom', action: () => setModalVisible(true), className: 'fa fa-upload', title: t('chooseAttachment'),
@@ -156,7 +163,10 @@ function EditorSession({ userId, id, mode, articleId, onSelect }: {
                                     onClose={() => setDraftsOpen(false)} onSelect={switchDraft} onDeleted={onDeleted}/>;
 
   async function onSubmit(values: any, onFinally: () => void) {
-    const article = onValuesChange(values);
+    const article = onValuesChange(mode === 'markdown' ? {
+      ...values,
+      content: renderArticleMarkdown(post.markdown, articleBaseUrl(siteHost, values.uri || post.uri || articleId)),
+    } : { ...values, markdown: '' });
     flush();
     setSubmitting(true);
     try {
