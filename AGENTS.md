@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## 代码排版规则
+
+- 新增或修改代码时，注释独占行，放在所说明代码之前；代码行末不追加注释。Javadoc 使用多行格式。
+- `if`、`else`、`for`、`while`、`do` 等控制语句始终保留完整的 `{}`，即使语句体只有一行；语言不支持花括号的语法按其自身规范书写。
+- 块体采用多行格式：起始 `{` 后换行，语句逐行书写，结束 `}` 独占行；方法、构造器、`try/catch/finally` 和块形式的 lambda/Gradle 闭包同样遵循，不压缩成单行。
+- 修改既有文件时，所触及的代码遵循以上规则；未经要求不批量重排无关代码。
+- 新增 Java 顶层类型（包括测试）时，类级 Javadoc 必须包含 `@author <a href="https://github.com/TAKETODAY">Harry Yang</a>` 和 `@since <引入版本> <YYYY/MM/DD>`（例如 `@since 4.0 2026/11/18`）。修改已有类型时保留原有的 `@author` 和 `@since`。
+
 ## Java 文件版权头
 
 新增 Java 文件（包括测试）在 `package` 声明之前使用以下完整版权头，逐行保留模板内容：
@@ -23,10 +31,10 @@
  */
 ```
 
-- **后端（`blog-api/`）**: Gradle 9.8.1（wrapper），最低支持 Java 17（`blog-api/build.gradle` 中
+- **后端（`today-blog-server/`）**: Gradle 9.8.1（wrapper），最低支持 Java 17（`today-blog-server/build.gradle` 中
   `sourceCompatibility/targetCompatibility = VERSION_17`），推荐使用 JDK 25（`.sdkmanrc` 锁定 `25-librca`）。根项目名 `today-blog`。
-- **前端（`blog-frontend/`）**: pnpm 10.33 monorepo，4 个子包：`console/`、`desktop/`、`mobile/`、`common/`。
-- 两套系统独立运作，没有统一的编排器。
+- **前端（`today-blog-frontend/`）**: `console/`、`desktop/`、`common/` 分别维护 pnpm 锁文件。根项目的 `./gradlew release` 同时构建前后端。
+- **公共代码（`today-blog-core/`）**: 使用 `java-library`，仅依赖 `infra-core`；服务器与 CLI 复用密码编码、日期、字符串等基础能力。业务实现、Web、数据库及服务器装配保留在 `today-blog-server/`；有实际复用需求后再提取 `today-blog-server-core`。
 
 ## 后端框架：TODAY Infrastructure（不是 Spring Boot）
 
@@ -35,6 +43,33 @@
 `org.springframework.*`。**
 
 框架详细文档（Context7 LLM 可读）: https://context7.com/taketoday/today-infrastructure/llms.txt
+
+### 查阅框架文档规则
+
+- **写后端代码前先查文档**：涉及 `infra.*` 的注解、接口、类名或方法签名不确定时，先读
+  https://context7.com/taketoday/today-infrastructure/llms.txt（可用 `webfetch` 抓取），不要凭 Spring Boot 记忆推断。
+- **以文档为准，不以 Spring 文档为准**：TODAY Infrastructure 大量 API 与 Spring 同名但行为/签名可能不同；冲突时一律采用框架文档。
+- **禁止凭印象造 API**：文档中查不到的类、注解属性或方法不要写；无法确认时先看项目内已有用法
+  （`today-blog-server/src/main/java` 中的 `infra.*` 导入）或直接询问用户。
+- **只导 `infra.*` 包**：任何 `org.springframework.*` 导入都是错误；Servlet 容器相关实现同理（框架使用 Netty，不是 Tomcat/Jetty）。
+- **文档覆盖范围**：框架文档涵盖 core/beans、AOP、web/webmvc（含 FreeMarker 视图、函数式路由、URI 编码）、数据访问（JDBC、事务、OXM）、
+  缓存、调度、RestClient、测试框架（`@InfraTest`、`MockMvcTester`、`RestTestClient`）、GraalVM 等；优先按模块目录定位章节。
+
+### 文档中易错的常用 API
+
+| 场景         | 正确用法                                                                                            |
+|--------------|-----------------------------------------------------------------------------------------------------|
+| 应用启动     | `infra.app.Application.run(XxxApplication.class, args)` + `@InfraApplication`                       |
+| 请求方法注解 | `@GET` / `@POST` / `@PUT` / `@DELETE`（`infra.web.annotation.*`），不是 `@GetMapping` 系列          |
+| 控制器       | `@RestController` = `@Controller` + `@ResponseBody`（同一包）                                       |
+| 请求参数     | `@RequestBody`、`@PathVariable`、`@RequestParam`；`Part` 用于文件上传（`infra.web.multipart.Part`） |
+| 临时目录     | `infra.core.ApplicationTemp`（`getDir(...)`），不要硬编码 `java.io.tmpdir`                          |
+| 事务         | `infra.transaction.annotation.Transactional`                                                        |
+| JDBC         | `infra.jdbc.core.JdbcTemplate` / `NamedParameterJdbcTemplate`（支持 `:name` 命名参数）              |
+| 缓存         | `@EnableCaching` + `infra.cache.support.CaffeineCacheManager`                                       |
+| 事件         | `infra.context.ApplicationEventPublisher` + `@EventListener`                                        |
+| 测试         | `@InfraTest`、`MockMvcTester`、`RestTestClient`（项目内优先使用 `@WebAPITest`）                     |
+| 启动插桩     | `ApplicationStartup.start(...)`（`StartupStep` + `tag`）                                            |
 
 ### 框架核心概念
 
@@ -62,7 +97,7 @@
 
 ### 项目核心文件
 
-- 入口类: `blog-api/src/main/java/cn/taketoday/blog/BlogApplication.java`
+- 入口类: `today-blog-server/src/main/java/cn/taketoday/blog/BlogApplication.java`
 - 自动配置声明: `META-INF/config/infra.context.annotation.config.AutoConfiguration.imports`（指向 `AppConfig`）
 - 主配置: `cn.taketoday.blog.config.AppConfig`（缓存、会话、FreeMarker 视图、Flyway 策略）
 - 自定义注解: `@ConfigBinding`（配置前缀绑定，如 `prefix "site."`）
@@ -70,19 +105,20 @@
 ## 后端常用命令
 
 ```bash
-./gradlew :blog-api:build          # 编译 + 测试 + 打包
-./gradlew :blog-api:test           # 只运行测试
-./gradlew :blog-api:run            # 启动开发服务器
-./gradlew :blog-api:clean installInfraDist  # 生产构建
+./gradlew :today-blog-server:build          # 编译 + 测试 + 打包
+./gradlew :today-blog-server:test           # 只运行服务器测试
+./gradlew :today-blog-core:test             # 运行公共模块测试
+./gradlew :today-blog-server:run            # 启动开发服务器
+./gradlew :today-blog-server:clean installInfraDist  # 生产构建
 ./gradlew clean                    # 清理所有
 
 # 运行单个测试类
-./gradlew :blog-api:test --tests "cn.taketoday.blog.web.http.ArticleHttpHandlerTests"
+./gradlew :today-blog-server:test --tests "cn.taketoday.blog.web.http.ArticleHttpHandlerTests"
 
 # AOT 处理（GraalVM Native Image 准备，测试中禁用）
-./gradlew :blog-api:processAot
+./gradlew :today-blog-server:processAot
 # Native Image 构建
-./gradlew :blog-api:nativeBuild
+./gradlew :today-blog-server:nativeBuild
 ```
 
 ## 后端测试注意事项
@@ -117,31 +153,29 @@ Flyway 迁移文件位于 `src/main/resources/db/migration/`，基线版本 `3.1
 ## 前端命令
 
 ```bash
-# Console（管理后台）— React 17 + UmiJS 3 + Ant Design Pro 4
-cd blog-frontend/console
+# 在仓库根目录安装锁定依赖，或安装后构建 Console 和 Desktop
+./gradlew :today-blog-frontend:installFrontendDependencies
+./gradlew :today-blog-frontend:buildReleaseFrontend
+
+# Console（管理后台）— React 18 + Umi 4 + Ant Design 4
+cd today-blog-frontend/console
 pnpm dev          # 开发服务器（代理到 localhost:8080）
 pnpm build        # 生产构建
-pnpm lint         # lint（会自动执行 umi g tmp 生成临时文件）
+pnpm lint         # lint
 pnpm tsc          # TypeScript 类型检查
 pnpm test         # 单元测试
 pnpm test:e2e     # E2E 测试（Puppeteer）
 
-# Desktop（公开博客）— React 16 + CRA + react-app-rewired
-cd blog-frontend/desktop
+# Desktop（公开博客）— React 18 + Vite
+cd today-blog-frontend/desktop
 pnpm start        # 开发服务器（代理到 localhost:8080）
-pnpm build        # 生产构建
-
-# Mobile（公开博客）— Vue 2 + vue-cli-service
-cd blog-frontend/mobile
-pnpm serve        # 开发服务器
 pnpm build        # 生产构建
 ```
 
 ## 前端陷阱
 
-- **`NODE_OPTIONS=--openssl-legacy-provider`**：console 和 desktop 构建时需要（老版本 webpack + 新版 Node.js）。
-- Console lint 依赖 Umi 生成文件：lint 脚本会自动执行 `umi g tmp` 生成临时文件后再 lint。
-- Desktop 通过 `react-app-rewired` + `customize-cra` 覆盖 webpack 配置。 **不要 eject。**
+- Gradle 前端构建任务会在现有 `NODE_OPTIONS` 后追加 `--openssl-legacy-provider`。
+- Console lint 会先执行 `max setup` 生成 Umi 临时文件。
 - Console 测试使用 Puppeteer 环境（`tests/PuppeteerEnvironment.js`），E2E 测试需先启动开发服务器。
 
 ## Gradle buildSrc 自定义插件
@@ -183,7 +217,6 @@ pnpm build        # 生产构建
   BeanWrapperAutoGrowingTests 的……；infra-beans 对应测试全类通过”一类测试报告。
 - 若上游原测试或文档与代码一同提交，以生产行为为主题；仅测试或仅文档的独立提交才分别用 `:white_check_mark:` 或 `:memo:`。测试映射、运行命令及结果集中写入批末归档，不塞进每个提交正文。代码、原测试及适用中文文档优先放在同一个目标提交，不人为拆分凑数。
 - 提交信息可以按照上游的来，但是要保证中文
-
 
 ## Agent 技能
 

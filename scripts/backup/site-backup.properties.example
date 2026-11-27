@@ -1,0 +1,29 @@
+# /etc/today-blog/site-backup.properties: root:root 0600，使用 UTF-8。
+# 替换示例路径和公钥。这里不存放密码或 age 私钥。
+output=/var/backups/today-blog
+releaseZip=/var/lib/today-blog-release-artifacts/current-release.zip
+cliJar=/usr/local/lib/today-blog/cli.jar
+installer=/var/lib/today-blog-release-artifacts/install-server.sh
+age=/usr/bin/age
+tar=/usr/bin/tar
+recipient=替换为age1开头的公钥
+
+# 仅在已确认没有其他写入者，或已在执行前停止它们时改为 true。
+noExternalWriters=false
+# OSS 默认不选；仅显式选择 OSS 时调用 root 管理的导出器。
+# ossExporter=/usr/local/lib/today-blog/site-oss-export
+# offsiteUploader=/usr/local/lib/today-blog/site-offsite-upload
+
+source.upload=/var/lib/today-blog/data/upload
+source.app-config=/etc/today-blog/today-blog.env
+source.proxy-config=/etc/nginx/sites-available/today-blog.conf
+# 逐项列出生效的外部文件。使用真实文件路径，不要填写符号链接。
+# source.app-yaml=/etc/today-blog/application-prod.yaml
+# source.systemd-override=/etc/systemd/system/today-blog.service.d/override.conf
+# source.mapping-roots=/etc/today-blog/release-mapping-roots
+# source.upgrade-config=/etc/today-blog/upgrade.properties
+# source.db-backup-config=/etc/today-blog/backup.cnf
+# source.data-root=/etc/today-blog/data-root
+# source.runbook=/etc/today-blog/recovery-notes.md
+# source.custom-static=/var/www/blog-custom
+# source.website-theme=/var/www/blog-theme

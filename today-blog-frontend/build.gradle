@@ -1,0 +1,136 @@
+import java.util.regex.Pattern
+
+plugins {
+  id 'base'
+  id 'java-library'
+}
+
+description = 'TODAY BLOG frontend applications'
+
+def frontend = layout.projectDirectory
+def nodeOptions = providers.environmentVariable('NODE_OPTIONS').orElse('')
+def systemPath = providers.environmentVariable('PATH').orElse('').get()
+def pnpmCommand = providers.gradleProperty('pnpmExecutable')
+    .orElse(providers.environmentVariable('PNPM_EXECUTABLE')).getOrNull()
+if (pnpmCommand == null) {
+  def candidates = systemPath.split(Pattern.quote(File.pathSeparator))
+      .collect { directory ->
+        new File(directory, 'pnpm')
+      }
+  pnpmCommand = candidates.find { candidate ->
+    candidate.isFile() && candidate.canExecute()
+  }?.absolutePath ?: 'pnpm'
+}
+
+def pnpmDirectory = new File(pnpmCommand).absoluteFile.parent
+def frontendPath = pnpmDirectory + File.pathSeparator + systemPath
+def buildNodeOptions = (nodeOptions.get() + ' --openssl-legacy-provider').trim()
+def nodeVersion = providers.exec {
+  environment 'PATH', frontendPath
+  commandLine 'node', '--version'
+}.standardOutput.asText
+
+def commonInputs = fileTree(frontend.dir('common')) {
+  exclude '**/node_modules/**', '**/.DS_Store'
+}
+
+def installDependencies = tasks.register('installFrontendDependencies') {
+  group = 'frontend'
+  description = '安装 Common、Console 和 Desktop 的锁定依赖。'
+}
+
+['common', 'console', 'desktop'].each { module ->
+  def installModule = tasks.register("install${module.capitalize()}Dependencies", Exec) {
+    group = 'frontend'
+    description = "安装 ${module} 前端依赖。"
+    mustRunAfter ':validateRelease'
+    workingDir frontend.dir(module)
+    environment 'PATH', frontendPath
+    commandLine pnpmCommand, 'install', '--frozen-lockfile'
+  }
+  installDependencies.configure {
+    dependsOn installModule
+  }
+}
+
+def frontendBuilds = [console: 'dist', desktop: 'build'].collect { module, output ->
+  def moduleDir = frontend.dir(module)
+  def outputDir = moduleDir.dir(output)
+  def sources = fileTree(moduleDir) {
+    include 'src/**', 'public/**', 'config/**', 'mock/**', '*.html', '*.json', '*.js', '*.mjs',
+        '*.cjs', '*.ts', '.env*', '.npmrc', 'pnpm-lock.yaml', 'pnpm-workspace.yaml'
+    exclude '**/.umi/**', '**/.umi-production/**', '**/.umi-e2e/**', '**/.DS_Store'
+  }
+  def pnpmVersion = providers.exec {
+    workingDir moduleDir
+    environment 'PATH', frontendPath
+    commandLine pnpmCommand, '--version'
+  }.standardOutput.asText
+
+  tasks.named('clean', Delete) {
+    delete outputDir
+  }
+  tasks.register("build${module.capitalize()}", Exec) {
+    group = 'frontend'
+    description = "构建 ${module} 前端。"
+    dependsOn installDependencies
+    workingDir moduleDir
+    environment 'NODE_OPTIONS', buildNodeOptions
+    environment 'PATH', frontendPath
+    commandLine pnpmCommand, 'build'
+
+    inputs.files(sources, commonInputs, frontend.file('package.json'))
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.property('nodeVersion', nodeVersion)
+    inputs.property('pnpmVersion', pnpmVersion)
+    inputs.property('nodeOptions', buildNodeOptions)
+    ['VITE_', 'UMI_', 'REACT_APP_', 'BROWSERSLIST'].each { prefix ->
+      inputs.property("environment.${prefix}", providers.environmentVariablesPrefixedBy(prefix))
+    }
+    ['NODE_ENV', 'CONSOLE_E2E', 'ANALYZE'].each { name ->
+      inputs.property("environment.${name}", providers.environmentVariable(name).orElse(''))
+    }
+    outputs.dir(outputDir)
+  }
+}
+
+def buildReleaseFrontend = tasks.register('buildReleaseFrontend') {
+  group = 'distribution'
+  description = '安装依赖并构建发行所需的 Console 和 Desktop 前端。'
+  dependsOn frontendBuilds
+}
+
+tasks.named('processResources') {
+  dependsOn buildReleaseFrontend
+  from(frontend.dir('console/dist')) {
+    into 'frontend/console'
+  }
+  from(frontend.dir('desktop/build')) {
+    into 'frontend/desktop'
+  }
+}
+
+tasks.named('jar') {
+  dependsOn buildReleaseFrontend
+  archiveBaseName = 'today-blog-frontend'
+}
+
+tasks.withType(JavaCompile).configureEach {
+  options.release = 17
+}
+
+dependencies {
+  compileOnly platform('cn.taketoday:infra-bom:5.0-Draft.10-SNAPSHOT')
+  compileOnly 'cn.taketoday:infra-webmvc'
+  testImplementation platform('cn.taketoday:infra-bom:5.0-Draft.10-SNAPSHOT')
+  testImplementation 'cn.taketoday:infra-starter-test'
+  testImplementation 'cn.taketoday:infra-starter-webmvc-test'
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}
+
+tasks.named('assemble') {
+  dependsOn buildReleaseFrontend
+}

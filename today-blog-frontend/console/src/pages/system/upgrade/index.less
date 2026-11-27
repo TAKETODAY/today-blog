@@ -1,0 +1,47 @@
+.upgrade-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.upgrade-secondary {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 13px;
+}
+
+.system-update-page {
+  .upgrade-table {
+    margin-left: -24px;
+    margin-right: -24px;
+  }
+
+  .ant-page-header-heading-left {
+    min-width: 0;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .ant-page-header-heading-title {
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  .ant-page-header-heading-sub-title {
+    white-space: normal;
+  }
+
+  @media (max-width: 575px) {
+    .upgrade-table {
+      margin-left: -16px;
+      margin-right: -16px;
+    }
+
+    .ant-page-header-heading-sub-title {
+      width: 100%;
+      margin-right: 0;
+    }
+  }
+}

@@ -1,0 +1,97 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.config;
+
+import java.io.File;
+import java.nio.file.Path;
+
+import cn.taketoday.blog.model.Attachment;
+import cn.taketoday.blog.updater.RuntimeLayout;
+import cn.taketoday.blog.updater.StoredPath;
+import infra.beans.factory.annotation.Autowired;
+import infra.context.properties.ConfigurationProperties;
+import infra.stereotype.Component;
+
+/**
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 4.0 2022/8/12 18:59
+ */
+@Component
+@Deprecated
+@ConfigurationProperties(prefix = "attachment")
+public class AttachmentConfig {
+
+  private String outsideResource;
+
+  /**
+   * CDN
+   */
+  private String cdnHostPrefix;
+
+  @Autowired
+  public AttachmentConfig(RuntimeLayout layout) {
+    this.outsideResource = layout.data().toString();
+  }
+
+  public void setCdnHostPrefix(String cdnHostPrefix) {
+    this.cdnHostPrefix = cdnHostPrefix;
+  }
+
+  public void setOutsideResource(String outsideResource) {
+    this.outsideResource = outsideResource;
+  }
+
+  public String getCdnHostPrefix() {
+    return cdnHostPrefix;
+  }
+
+  public String getOutsideResource() {
+    return outsideResource;
+  }
+
+  public String getRemoteURL(String uri) {
+    return cdnHostPrefix == null || cdnHostPrefix.isBlank() ? uri : cdnHostPrefix + uri;
+  }
+
+  public File getLocalFile(Attachment attachment) {
+    return getLocalFile(attachment.getLocation());
+  }
+
+  public File getLocalFile(String location) {
+    return Path.of(outsideResource).resolve(attachmentPath(location)).toFile();
+  }
+
+  public String relativeLocation(String location) {
+    Path path = attachmentPath(location);
+    return path.toString().replace(path.getFileSystem().getSeparator(), "/");
+  }
+
+  private static Path attachmentPath(String location) {
+    // 兼容原来直接用 /upload/... URL 作为本地路径的记录。
+    Path path = StoredPath.parse(location.startsWith("/upload/") ? location.substring(1) : location);
+    if (!path.startsWith("upload") || path.getNameCount() < 2) {
+      throw new IllegalArgumentException("附件路径必须位于上传目录内");
+    }
+    return path;
+  }
+
+  public String getUploadDir() {
+    return outsideResource + "/upload/";
+  }
+
+}

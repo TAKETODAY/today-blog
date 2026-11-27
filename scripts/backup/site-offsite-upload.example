@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# 安装到 root 管理的位置，按部署替换 remote。rclone 配置文件 0600。
+set -euo pipefail
+umask 077
+archive=${1:?}
+remote=blog-backups:today-blog/restore-points
+target=$remote/${archive##*/}
+rclone=(/usr/bin/rclone --config /etc/today-blog/site-offsite.rclone.conf)
+
+# 只上传新增恢复点，不用 sync，也不执行删除。
+"${rclone[@]}" copyto --immutable "$archive" "$target"
+local_hash=$(/usr/bin/sha256sum < "$archive")
+remote_hash=$("${rclone[@]}" cat "$target" | /usr/bin/sha256sum)
+[[ "$local_hash" == "$remote_hash" ]]

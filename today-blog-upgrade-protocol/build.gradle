@@ -1,0 +1,22 @@
+plugins {
+  id 'java-library'
+}
+
+description = 'TODAY BLOG upgrade protocol shared by the API and the standalone updater'
+
+tasks.withType(JavaCompile).configureEach {
+  options.release = 17
+}
+
+// 纯 JDK 协议层：升级包校验、发行文件映射、升级参数和磁盘文件协议。
+// 不得引入 infra、JDBC 或 Web 依赖，避免 API 进程被升级器实现类污染。
+dependencies {
+  testImplementation platform('org.junit:junit-bom:5.14.2')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+  testImplementation 'org.assertj:assertj-core:3.27.7'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+  useJUnitPlatform()
+}

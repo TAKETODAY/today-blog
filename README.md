@@ -15,30 +15,38 @@
   嵌入式服务器、虚拟线程、Flyway 迁移、FreeMarker、Caffeine 缓存）、MySQL
 - **前端**：
     1. 公开 PC 博客使用 React + Vite
-    2. 后台管理使用 React + Ant Design（UmiJS 3）
+    2. 后台管理使用 React + Ant Design（Umi 4）
 
 ## 📁 项目结构
 
 ```text
 today-blog-opensource
-├── blog-api/                  # 后端 REST API（公开 API /console/* 管理 API）
-├── blog-frontend/             # 前端 monorepo（pnpm workspace）
-│   ├── console/               # 后台管理（React 17 + UmiJS 3 + Ant Design Pro 4）
-│   ├── desktop/               # PC 端公开博客（React 16 + CRA）
+├── today-blog-core/                 # 公共基础能力（密码编码、日期、字符串和通用返回值）
+├── today-blog-server/               # 服务器实现（公开 API /console/* 管理 API）
+├── today-blog-cli/                  # 独立运维 CLI
+├── today-blog-upgrade-protocol/     # API 与 CLI 共用的升级协议
+├── today-blog-frontend/             # 前端 Gradle 子项目（通过 pnpm 构建）
+│   ├── console/               # 后台管理（React 18 + Umi 4 + Ant Design 4）
+│   ├── desktop/               # PC 端公开博客（React 18 + Vite）
 │   └── common/                # 前端共享模块
 ├── buildSrc/                  # Gradle 自定义插件
 └── resources/                 # 站点静态资源
 ```
 
+`today-blog-core` 提供服务器与 CLI 可复用的基础能力，仅依赖 `infra-core`，不依赖 Web、数据库或应用模块。
+服务器业务、持久化模型、附件配置、HTTP 路由与启动装配集中在 `today-blog-server`；升级协议仍独立维护。
+只有出现明确的服务器公共能力复用需求时，才增加 `today-blog-server-core`，不预先创建接口转发层。
+模块重命名不改变应用标识 `today-blog-api`、启动器 `blog-api`、发行包内的 `api/` 目录及 HTTP 路径。
+
 ## 🧰 环境要求
 
-| 依赖    | 版本                                               | 说明                                                                |
-|---------|----------------------------------------------------|---------------------------------------------------------------------|
-| JDK     | **17+**（最低），推荐 **25**（SDKMAN `25-librca`） | 后端编译与运行                                                      |
-| Gradle  | 随 wrapper 自动下载（9.8.x）                       | 无需手动安装，使用 `./gradlew`                                      |
-| MySQL   | 8.x                                                | 本地开发数据库，`localhost:3306`                                    |
+| 依赖    | 版本                                               | 说明                                                                                |
+|---------|----------------------------------------------------|-------------------------------------------------------------------------------------|
+| JDK     | **17+**（最低），推荐 **25**（SDKMAN `25-librca`） | 后端编译与运行                                                                      |
+| Gradle  | 随 wrapper 自动下载（9.8.x）                       | 无需手动安装，使用 `./gradlew`                                                      |
+| MySQL   | 8.x                                                | 本地开发数据库，`localhost:3306`                                                    |
 | Node.js | 18 及以上（建议 Node LTS）                         | Console 仍使用旧版 webpack，相关脚本已内置 `NODE_OPTIONS=--openssl-legacy-provider` |
-| pnpm    | 10.x                                               | 前端 monorepo 包管理（可用 Corepack 启用）                          |
+| pnpm    | 12.x（已验证）                                      | 前端依赖安装与构建                                                                  |
 
 > 测试无需 MySQL：后端测试通过内嵌 **MariaDB4j**（端口 3307）运行。
 
@@ -55,13 +63,13 @@ CREATE DATABASE IF NOT EXISTS today DEFAULT CHARACTER SET utf8mb4;
 执行初始化脚本（建库 + 全量建表）：
 
 ```bash
-mysql -uroot -ppassword today < blog-api/src/main/resources/db/schema.sql
+mysql -uroot -ppassword today < today-blog-server/src/main/resources/db/schema.sql
 ```
 
 可选：导入演示数据：
 
 ```bash
-mysql -uroot -ppassword today < blog-api/src/main/resources/db/data.sql
+mysql -uroot -ppassword today < today-blog-server/src/main/resources/db/data.sql
 ```
 
 启动后端时 Flyway 会自动完成增量迁移（`repair → baseline(3.1.0) → migrate`），无需手动处理后续版本。
@@ -69,29 +77,29 @@ mysql -uroot -ppassword today < blog-api/src/main/resources/db/data.sql
 ### 2. 启动后端
 
 ```bash
-./gradlew :blog-api:run
+./gradlew :today-blog-server:run
 ```
 
 服务默认监听 `http://localhost:8080`，默认激活 `dev` profile。
 
 ### 3. 启动前端
 
-在 `blog-frontend/` 根目录安装一次所有 workspace 依赖：
+在仓库根目录执行以下命令，按各自的锁文件安装前端依赖：
 
 ```bash
-cd blog-frontend && pnpm install
+./gradlew :today-blog-frontend:installFrontendDependencies
 ```
 
 | 端                  | 目录                    | 命令         | 访问地址              | 代理目标                   |
 |---------------------|-------------------------|--------------|-----------------------|----------------------------|
-| Console（管理后台） | `blog-frontend/console` | `pnpm dev`   | http://localhost:8000 | `/api` `/upload` → `:8080` |
-| Desktop（PC 博客）  | `blog-frontend/desktop` | `pnpm start` | http://localhost:3000 | → `:8080`                  |
+| Console（管理后台） | `today-blog-frontend/console` | `pnpm dev`   | http://localhost:8000 | `/api` `/upload` → `:8080` |
+| Desktop（PC 博客）  | `today-blog-frontend/desktop` | `pnpm start` | http://localhost:3000 | → `:8080`                  |
 
 开发时请保持后端先运行于 `:8080`，前端通过代理转发请求。
 
 ## ⚙️ 配置文件说明
 
-后端配置位于 `blog-api/src/main/resources/`：
+后端配置位于 `today-blog-server/src/main/resources/`：
 
 | 文件                    | 说明                                                                                                 |
 |-------------------------|------------------------------------------------------------------------------------------------------|
@@ -111,16 +119,17 @@ cd blog-frontend && pnpm install
 切换环境 profile：
 
 ```bash
-./gradlew :blog-api:run -Dinfra.profiles.active=prod
+./gradlew :today-blog-server:run -Dinfra.profiles.active=prod
 # 或
-JAVA_OPTS="-Dinfra.profiles.active=prod" ./blog-api
+JAVA_OPTS="-Dinfra.profiles.active=prod" ./today-blog-server/build/install/blog-api/bin/blog-api
 ```
 
 ## 🧪 测试
 
 ```bash
-./gradlew :blog-api:test              # 全部测试
-./gradlew :blog-api:test --tests "cn.taketoday.blog.web.http.ArticleHttpHandlerTests"   # 单个测试类
+./gradlew :today-blog-core:test :today-blog-upgrade-protocol:test :today-blog-cli:test :today-blog-server:test
+# 单个服务器测试类
+./gradlew :today-blog-server:test --tests "cn.taketoday.blog.web.http.ArticleHttpHandlerTests"
 ```
 
 - 测试使用内嵌 MariaDB4j（端口 3307）， **无需本地 MySQL**，用例默认 `@Transactional` 自动回滚。
@@ -128,13 +137,21 @@ JAVA_OPTS="-Dinfra.profiles.active=prod" ./blog-api
 
 ## 📦 生产构建与部署
 
-构建发行包：
+在仓库根目录一键构建完整发行包（API、Console、Desktop 和独立运维 CLI）：
 
 ```bash
-./gradlew :blog-api:clean installInfraDist
+./gradlew release
 ```
 
-产物位于 `blog-api/build/install/`，包含可直接运行的脚本（被打包进 `bin/`）：
+产物为 `build/today-blog-<version>-<build>.zip` 和 `build/dist/today-blog-cli.jar`。
+也可以单独构建前端或 API：
+
+```bash
+./gradlew :today-blog-frontend:buildReleaseFrontend
+./gradlew :today-blog-server:installDist
+```
+
+API 发行目录为 `today-blog-server/build/install/blog-api/`，包含可直接运行的脚本：
 
 ```bash
 start.sh     # 后台启动（写入 app.pid）
@@ -146,37 +163,31 @@ find.sh      # 查看进程
 生产环境以 `prod` profile 启动（记得先用 `application-prod.yaml` 配置真实数据源）：
 
 ```bash
-./gradlew :blog-api:run -Dinfra.profiles.active=prod
-# 或直接运行发行包
-./blog-api/bin/start.sh
+./gradlew :today-blog-server:run -Dinfra.profiles.active=prod
+# 或在前台运行发行包（日志输出到控制台）
+JAVA_OPTS=-Dinfra.profiles.active=prod ./today-blog-server/build/install/blog-api/bin/blog-api
 ```
+
+生产环境后台运行请使用[部署文档](src/docs/deployment.md)中的 `today-blog start` 或 systemd 托管。
 
 可选：构建 GraalVM Native Image（需 GraalVM 及 `-PincludeAOT`）：
 
 ```bash
-./gradlew :blog-api:clean nativeBuild -PincludeAOT
-```
-
-前端生产构建：
-
-```bash
-# console（构建时同样需要 openssl-legacy-provider，脚本已内置）
-cd blog-frontend/console && pnpm build
-# desktop
-cd blog-frontend/desktop && pnpm build
+./gradlew :today-blog-server:clean nativeBuild -PincludeAOT
 ```
 
 ## 📚 API 文档
 
 项目提供 OpenAPI 3.0 规范文件，可直接导入 Swagger UI / Redoc 等工具浏览：
 
-- **规范文件**：`blog-api/docs/openapi.yaml`
+- **规范文件**：`today-blog-server/docs/openapi.yaml`
 - **本地预览**：将文件导入 https://editor.swagger.io 或本地 Swagger UI 即可查看全部接口与鉴权说明。
 
 其余入口：
 
-- **代码即文档**：公开 API 位于 `blog-api/src/main/java/cn/taketoday/blog/web/http/`，管理后台 API 位于 `web/console/`（路径前缀 `/console/*`），直接阅读 `@RestController` 即可。
-- **Console 生成**：在 `blog-frontend/console` 下执行 `pnpm openapi`（umi openapi）可基于后端接口生成类型定义。
+- **代码即文档**：公开 API 位于 `today-blog-server/src/main/java/cn/taketoday/blog/web/http/`，管理后台 API 位于 `web/console/`（路径前缀 `/console/*`
+  ），直接阅读 `@RestController` 即可。
+- **Console 生成**：在 `today-blog-frontend/console` 下执行 `pnpm openapi`（umi openapi）可基于后端接口生成类型定义。
 - **鉴权**：登录 / 博主接口支持浏览器会话（`SESSION` Cookie，博主接口需博主账号）或 API Key，见下文「API Key」章节。
 
 ## 🔑 API Key
@@ -225,3 +236,7 @@ API Key 每个请求重新验证，仅设置当前请求身份，不创建或修
 ## 📄 开源协议
 
 使用 [GPLv3](https://github.com/TAKETODAY/today-infrastructure/blob/master/LICENSE) 开源协议
+
+# 部署与在线升级
+
+完整发行包构建、systemd 首次部署和后台升级说明见 [部署文档](src/docs/deployment.md)。当前版本仅校验文件完整性，不验证安装包来源。

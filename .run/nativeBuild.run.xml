@@ -10,7 +10,7 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value=":blog-api:nativeBuild" />
+          <option value=":today-blog-server:nativeBuild" />
         </list>
       </option>
       <option name="vmOptions" />

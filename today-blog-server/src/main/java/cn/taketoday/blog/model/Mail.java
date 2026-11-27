@@ -1,0 +1,59 @@
+/*
+ * Copyright 2017 - 2026 the original author or authors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see [https://www.gnu.org/licenses/]
+ */
+
+package cn.taketoday.blog.model;
+
+import java.time.Instant;
+
+import cn.taketoday.blog.model.enums.MailStatus;
+import infra.persistence.annotation.Column;
+import infra.persistence.annotation.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 邮件发送记录
+ *
+ * @author <a href="https://github.com/TAKETODAY">Harry Yang</a>
+ * @since 3.2 2025/3/5 22:19
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+@Table("t_mail")
+public class Mail extends BasicModel {
+
+  @Column("recipient")
+  private String to;
+
+  private String subject;
+
+  private String content;
+
+  private Instant sentAt;
+
+  /** 发送状态，见 {@link MailStatus} */
+  private MailStatus status;
+
+  private Integer attempts;
+
+  private Instant lastAttemptAt;
+
+  private String lastError;
+
+  private String attachment;
+
+}
